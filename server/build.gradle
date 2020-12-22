@@ -10,8 +10,8 @@ plugins {
 }
 
 group = 'org.owasp.herder'
-version = '4.0.0-testing'
-description = 'Security Shepherd'
+version = '0.0.1'
+description = 'Herder'
 
 repositories {
     mavenCentral()
@@ -150,7 +150,6 @@ sonarqube {
 spotless {
   format 'misc', {
         target '**/.gitignore', '**/*.gradle', '**/*.md', '**/*.sh'
-
     trimTrailingWhitespace()
     indentWithSpaces()
     endWithNewline()
