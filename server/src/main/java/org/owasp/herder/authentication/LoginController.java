@@ -23,7 +23,6 @@ package org.owasp.herder.authentication;
 
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 import org.owasp.herder.user.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

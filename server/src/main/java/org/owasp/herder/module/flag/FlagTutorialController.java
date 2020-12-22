@@ -22,7 +22,6 @@
 package org.owasp.herder.module.flag;
 
 import lombok.RequiredArgsConstructor;
-
 import org.owasp.herder.authentication.ControllerAuthentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;

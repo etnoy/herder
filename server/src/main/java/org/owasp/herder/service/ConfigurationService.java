@@ -24,7 +24,6 @@ package org.owasp.herder.service;
 import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.owasp.herder.configuration.ConfigurationRepository;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.ConfigurationKeyNotFoundException;

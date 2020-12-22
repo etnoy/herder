@@ -22,7 +22,6 @@
 package org.owasp.herder.configuration;
 
 import lombok.Generated;
-
 import org.owasp.herder.authentication.AuthenticationManager;
 import org.owasp.herder.authentication.SecurityContextRepository;
 import org.springframework.context.annotation.Bean;

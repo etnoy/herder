@@ -39,7 +39,6 @@ import org.owasp.herder.scoring.ModulePoint;
 import org.owasp.herder.scoring.ScoreService;
 import org.owasp.herder.scoring.ScoreboardEntry;
 import org.owasp.herder.scoring.ScoreboardRepository;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;

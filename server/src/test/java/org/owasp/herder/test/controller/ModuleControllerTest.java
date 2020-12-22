@@ -40,7 +40,6 @@ import org.owasp.herder.module.ModuleListItem;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.ModuleSolutions;
 import org.owasp.herder.scoring.SubmissionService;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;

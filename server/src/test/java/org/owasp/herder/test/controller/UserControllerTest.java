@@ -36,7 +36,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.user.User;
 import org.owasp.herder.user.UserController;
 import org.owasp.herder.user.UserService;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;

@@ -38,7 +38,6 @@ import org.owasp.herder.exception.NotAuthenticatedException;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialController;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;

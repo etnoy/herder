@@ -44,7 +44,6 @@ import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.csrf.CsrfAttack;
 import org.owasp.herder.module.csrf.CsrfAttackRepository;
 import org.owasp.herder.module.csrf.CsrfService;
-
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;

@@ -27,7 +27,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
-
 import org.owasp.herder.exception.InvalidFlagStateException;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;

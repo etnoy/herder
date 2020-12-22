@@ -24,10 +24,8 @@ package org.owasp.herder.authentication;
 import java.io.Serializable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import org.owasp.herder.validation.ValidPassword;
-
 import lombok.Value;
+import org.owasp.herder.validation.ValidPassword;
 
 @Value
 public class PasswordRegistrationDto implements Serializable {

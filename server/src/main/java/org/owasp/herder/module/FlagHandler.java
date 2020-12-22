@@ -25,7 +25,6 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.InvalidFlagStateException;
 import org.owasp.herder.exception.InvalidUserIdException;

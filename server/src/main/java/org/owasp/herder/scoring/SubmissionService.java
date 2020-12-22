@@ -24,7 +24,6 @@ package org.owasp.herder.scoring;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
-
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.module.FlagHandler;

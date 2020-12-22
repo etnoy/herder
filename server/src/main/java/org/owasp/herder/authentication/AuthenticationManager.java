@@ -22,7 +22,6 @@
 package org.owasp.herder.authentication;
 
 import lombok.RequiredArgsConstructor;
-
 import org.owasp.herder.user.UserService;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

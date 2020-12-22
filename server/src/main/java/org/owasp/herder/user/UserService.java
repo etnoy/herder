@@ -24,12 +24,11 @@ package org.owasp.herder.user;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.owasp.herder.authentication.PasswordAuth;
+import org.owasp.herder.authentication.PasswordAuth.PasswordAuthBuilder;
 import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.authentication.UserAuth;
 import org.owasp.herder.authentication.UserAuthRepository;
-import org.owasp.herder.authentication.PasswordAuth.PasswordAuthBuilder;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;

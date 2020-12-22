@@ -23,7 +23,6 @@ package org.owasp.herder.module;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.InvalidFlagException;

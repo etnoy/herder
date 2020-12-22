@@ -23,7 +23,6 @@ package org.owasp.herder.scoring;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.scoring.Correction.CorrectionBuilder;
 import org.springframework.stereotype.Service;

@@ -23,7 +23,6 @@ package org.owasp.herder.module.xss;
 
 import java.util.List;
 import lombok.EqualsAndHashCode;
-
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.ModuleService;

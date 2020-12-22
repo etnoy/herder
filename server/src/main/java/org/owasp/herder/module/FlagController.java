@@ -22,7 +22,6 @@
 package org.owasp.herder.module;
 
 import lombok.RequiredArgsConstructor;
-
 import org.owasp.herder.authentication.ControllerAuthentication;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;

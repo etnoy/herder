@@ -22,7 +22,6 @@
 package org.owasp.herder.module;
 
 import lombok.RequiredArgsConstructor;
-
 import org.owasp.herder.exception.EmptyModuleNameException;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.module.ModuleListItem.ModuleListItemBuilder;

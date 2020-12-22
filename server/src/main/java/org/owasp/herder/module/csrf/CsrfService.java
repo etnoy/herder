@@ -23,7 +23,6 @@ package org.owasp.herder.module.csrf;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-
 import org.owasp.herder.module.FlagHandler;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;

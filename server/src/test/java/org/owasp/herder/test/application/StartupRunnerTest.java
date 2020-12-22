@@ -39,7 +39,6 @@ import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.user.UserService;
-
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 

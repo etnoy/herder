@@ -23,7 +23,6 @@ package org.owasp.herder.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateClassNameException;
 import org.owasp.herder.exception.InvalidClassIdException;

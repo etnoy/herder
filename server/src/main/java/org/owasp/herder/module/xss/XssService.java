@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-
 import org.owasp.herder.exception.XssEvaluationException;
 import org.springframework.stereotype.Component;
 

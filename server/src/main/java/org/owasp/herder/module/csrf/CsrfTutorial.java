@@ -23,7 +23,6 @@ package org.owasp.herder.module.csrf;
 
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
-
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.ModuleService;

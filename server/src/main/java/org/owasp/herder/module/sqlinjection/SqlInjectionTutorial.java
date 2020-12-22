@@ -23,7 +23,6 @@ package org.owasp.herder.module.sqlinjection;
 
 import java.util.Base64;
 import lombok.EqualsAndHashCode;
-
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.FlagHandler;

@@ -38,7 +38,6 @@ import org.owasp.herder.exception.NotAuthenticatedException;
 import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.module.xss.XssTutorialController;
 import org.owasp.herder.module.xss.XssTutorialResponse;
-
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
