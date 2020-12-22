@@ -1,0 +1,14 @@
+<form class="form" [formGroup]="claimForm" (ngSubmit)="getFlag()">
+  <h3 class="h3 mb-3 font-weight-normal text-center">
+    Click to claim your free flag
+  </h3>
+  <button [disabled]="loading" class="btn btn-primary">
+    <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+    Claim
+  </button>
+</form>
+<div *ngIf="result">
+  <ul>
+    <p>Flag is {{ result.flag }}</p>
+  </ul>
+</div>

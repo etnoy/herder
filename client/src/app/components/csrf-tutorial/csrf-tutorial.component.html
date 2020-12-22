@@ -1,0 +1,19 @@
+<h3>Csrf Tutorial</h3>
+<div *ngIf="tutorialResult">
+  <p *ngIf="tutorialResult.message">
+    {{ tutorialResult.message }}
+  </p>
+  <p *ngIf="tutorialResult.pseudonym">
+    Please visit
+    <a
+      [routerLink]="['activate', tutorialResult.pseudonym]"
+      routerLinkActive="active"
+      >this page</a
+    >
+    to vote.
+  </p>
+  <p *ngIf="tutorialResult.flag">
+    Congratulations, flag is {{ tutorialResult.flag }}
+  </p>
+  <p *ngIf="tutorialResult.error">Error: {{ tutorialResult.error }}</p>
+</div>

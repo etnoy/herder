@@ -1,0 +1,17 @@
+<div class="auth-wrapper">
+  <div class="row">
+    <div class="inner-main">
+      <ul>
+        <ng-container *ngFor="let module of modules">
+          <li *ngIf="module.name">
+            <p>
+              <a href="module/{{ module.name }}">{{ module.name }}</a
+              >&nbsp;
+              <span *ngIf="module.isSolved">Solved</span>
+            </p>
+          </li>
+        </ng-container>
+      </ul>
+    </div>
+  </div>
+</div>

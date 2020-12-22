@@ -1,0 +1,38 @@
+<form class="form" [formGroup]="queryForm" (ngSubmit)="submitQuery()">
+  <h3 class="h3 mb-3 font-weight-normal text-center">
+    Please search our database
+  </h3>
+  <div class="form-group">
+    <label>Query</label>
+    <input
+      type="text"
+      class="form-control"
+      formControlName="query"
+      placeholder="Enter query"
+      required
+    />
+  </div>
+  <button [disabled]="loading" class="btn btn-primary">
+    <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+    Search
+  </button>
+</form>
+<div *ngIf="submitted && result?.length === 0 && !errorResult">
+  <h3 class="h3 mb-3 font-weight-normal text-center">
+    Search results
+  </h3>
+  <p>No result.</p>
+</div>
+<div *ngIf="result?.length > 0">
+  <h3 class="h3 mb-3 font-weight-normal text-center">
+    Search results
+  </h3>
+  <ul>
+    <li *ngFor="let result of result">
+      <p *ngIf="!result.error">
+        NAME={{ result.name }}, COMMENT={{ result.comment }}
+      </p>
+      <p *ngIf="result.error">Error: {{ result.error }}</p>
+    </li>
+  </ul>
+</div>

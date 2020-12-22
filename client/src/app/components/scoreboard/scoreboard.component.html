@@ -1,0 +1,36 @@
+<div class="auth-wrapper">
+  <div class="row">
+    <div class="inner-main">
+      <ul>
+        <ng-container *ngFor="let score of scores">
+          <li>
+            <p>
+              {{ score.rank }} :
+              <a href="scoreboard/{{ score.userId }}">
+                {{ score.userId }} has {{ score.score }} points.
+                <span *ngIf="score.goldMedals > 0"
+                  >{{ score.goldMedals }} gold medal<span
+                    *ngIf="score.goldMedals > 1"
+                    >s</span
+                  >.</span
+                >
+                <span *ngIf="score.silverMedals > 0"
+                  >{{ score.silverMedals }} silver medal<span
+                    *ngIf="score.silverMedals > 1"
+                    >s</span
+                  >.</span
+                >
+                <span *ngIf="score.bronzeMedals > 0"
+                  >{{ score.bronzeMedals }} bronze medal<span
+                    *ngIf="score.bronzeMedals > 1"
+                    >s</span
+                  >.</span
+                >
+              </a>
+            </p>
+          </li>
+        </ng-container>
+      </ul>
+    </div>
+  </div>
+</div>

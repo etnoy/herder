@@ -1,0 +1,39 @@
+<div class="auth-wrapper">
+  <form
+    *ngIf="!solved"
+    class="form-signin"
+    [formGroup]="flagForm"
+    (ngSubmit)="submitFlag()"
+  >
+    <div class="form-group">
+      <label>Flag</label>
+      <input
+        type="text"
+        class="form-control"
+        formControlName="flag"
+        placeholder="Enter flag"
+        [ngClass]="{
+          'is-invalid': submitted && flagForm.controls.flag.errors
+        }"
+        required
+      />
+      <div
+        *ngIf="submitted && flagForm.controls.flag.errors"
+        class="invalid-feedback"
+      >
+        <div *ngIf="flagForm.controls.flag.errors.required">
+          Flag is required
+        </div>
+      </div>
+    </div>
+    <button [disabled]="loading" class="btn btn-primary">
+      <span
+        *ngIf="loading"
+        class="spinner-border spinner-border-sm mr-1"
+      ></span>
+      Submit
+    </button>
+  </form>
+  <p *ngIf="solved">Module already solved</p>
+</div>
+<ng-template appModuleUrl></ng-template>
