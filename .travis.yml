@@ -15,14 +15,12 @@ jobs:
       name: Backend code style check
       before_install:
         - cd server
-        - git fetch --unshallow
       script:
         - ./gradlew spotlessCheck
     - stage: test
       name: Backend unit tests and coverage
       before_install:
         - cd server
-        - git fetch --unshallow
       script:
         - ./gradlew test jacocoTestReport sonarqube --info
         
@@ -31,7 +29,6 @@ jobs:
       services: mysql
       before_install:
         - cd server
-        - git fetch --unshallow
         - wget https://repo.mysql.com//mysql-apt-config_0.8.10-1_all.deb
         - sudo dpkg -i mysql-apt-config_0.8.10-1_all.deb
         - sudo apt-get update -q
