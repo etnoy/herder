@@ -141,7 +141,7 @@ test {
 
 sonarqube {
     properties {
-        property "sonar.projectName", "Herder" 
+        property "sonar.projectName", "Herder"
         property "sonar.projectKey", "etnoy_herder"
         properties["sonar.tests"] += "src/integration-test/java"
     }
