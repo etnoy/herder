@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { UserScoreComponent } from './user-score.component';
 import { RouterModule } from '@angular/router';
@@ -8,10 +8,10 @@ describe('UserScoreComponent', () => {
   let component: UserScoreComponent;
   let fixture: ComponentFixture<UserScoreComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [UserScoreComponent],
-      imports: [RouterModule.forRoot([]), HttpClientTestingModule],
+      imports: [RouterModule.forRoot([], { relativeLinkResolution: 'legacy' }), HttpClientTestingModule],
     }).compileComponents();
   }));
 

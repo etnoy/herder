@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { HttpClientModule } from '@angular/common/http';
 import { SqlInjectionTutorialComponent } from './sql-injection-tutorial.component';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -8,7 +8,7 @@ describe('SqlInjectionTutorialComponent', () => {
   let component: SqlInjectionTutorialComponent;
   let fixture: ComponentFixture<SqlInjectionTutorialComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [SqlInjectionTutorialComponent],
       imports: [
