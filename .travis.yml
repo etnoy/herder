@@ -62,6 +62,26 @@ jobs:
         - npm install -g @angular/cli
       script:
         - ng test
+    - stage: test
+      language: node_js
+      services: xvfb
+      name: Angular E2E tests
+      addons:
+          apt:
+              sources:
+                  - google-chrome
+              packages:
+                  - google-chrome-stable
+      before_install:
+        - cd client
+        - nvm install 12
+      install:
+        - npm install
+        - npm install -g @angular/cli
+      script:
+        - npm run e2e -- --protractor-config=e2e/protractor-ci.conf.js
+          
+       
 addons:
   sonarcloud:
     organization: etnoy
