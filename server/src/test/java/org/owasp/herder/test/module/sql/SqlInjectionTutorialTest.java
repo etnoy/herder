@@ -1,23 +1,20 @@
-/* 
+/*
  * Copyright 2018-2020 Jonathan Jogenfors, jonathan@jogenfors.se
  * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is furnished to do
- * so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
  * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package org.owasp.herder.test.module.sql;
 
@@ -26,10 +23,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import io.r2dbc.spi.R2dbcBadGrammarException;
-import lombok.NonNull;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,13 +36,17 @@ import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.sqlinjection.SqlInjectionDatabaseClientFactory;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow;
-import org.springframework.data.r2dbc.BadSqlGrammarException;
 import org.springframework.data.r2dbc.core.DatabaseClient;
+import org.springframework.r2dbc.BadSqlGrammarException;
+import io.r2dbc.spi.R2dbcBadGrammarException;
+import lombok.NonNull;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+@SuppressWarnings("deprecation")
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SqlInjectionTutorial unit test")
 class SqlInjectionTutorialTest {
@@ -64,22 +61,22 @@ class SqlInjectionTutorialTest {
 
   SqlInjectionTutorial sqlInjectionTutorial;
 
-  @Mock SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
+  @Mock
+  SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
 
-  @Mock ModuleService moduleService;
+  @Mock
+  ModuleService moduleService;
 
-  @Mock FlagHandler flagHandler;
+  @Mock
+  FlagHandler flagHandler;
 
-  @Mock KeyService keyService;
+  @Mock
+  KeyService keyService;
 
   private DatabaseClient getClient(final String args, final Flux<SqlInjectionTutorialRow> rows) {
     final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class, RETURNS_DEEP_STUBS);
-    when(mockDatabaseClient
-            .execute(any(String.class))
-            .as(SqlInjectionTutorialRow.class)
-            .fetch()
-            .all())
-        .thenReturn(rows);
+    when(mockDatabaseClient.execute(any(String.class)).as(SqlInjectionTutorialRow.class).fetch()
+        .all()).thenReturn(rows);
     return mockDatabaseClient;
   }
 
@@ -88,9 +85,7 @@ class SqlInjectionTutorialTest {
 
     class SqlInjectionTutorialChild extends SqlInjectionTutorial {
 
-      public SqlInjectionTutorialChild(
-          ModuleService moduleService,
-          FlagHandler flagHandler,
+      public SqlInjectionTutorialChild(ModuleService moduleService, FlagHandler flagHandler,
           SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory,
           KeyService keyService) {
         super(moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
@@ -102,11 +97,9 @@ class SqlInjectionTutorialTest {
       }
     }
 
-    EqualsVerifier.forClass(SqlInjectionTutorial.class)
-        .withRedefinedSuperclass()
+    EqualsVerifier.forClass(SqlInjectionTutorial.class).withRedefinedSuperclass()
         .withRedefinedSubclass(SqlInjectionTutorialChild.class)
-        .withIgnoredAnnotations(NonNull.class)
-        .verify();
+        .withIgnoredAnnotations(NonNull.class).verify();
   }
 
   @Test
@@ -118,9 +111,8 @@ class SqlInjectionTutorialTest {
 
     when(moduleService.create(MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
-    sqlInjectionTutorial =
-        new SqlInjectionTutorial(
-            moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
+    sqlInjectionTutorial = new SqlInjectionTutorial(moduleService, flagHandler,
+        sqlInjectionDatabaseClientFactory, keyService);
 
     final byte[] randomBytes = {120, 56, 111};
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
@@ -130,25 +122,17 @@ class SqlInjectionTutorialTest {
     final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class, RETURNS_DEEP_STUBS);
     when(sqlInjectionDatabaseClientFactory.create(any())).thenReturn(mockDatabaseClient);
 
-    when(mockDatabaseClient
-            .execute(any(String.class))
-            .as(SqlInjectionTutorialRow.class)
-            .fetch()
-            .all())
-        .thenReturn(
-            Flux.error(
-                new BadSqlGrammarException(
-                    "Error", query, new R2dbcBadGrammarException("Syntax error, yo"))));
+    when(mockDatabaseClient.execute(any(String.class)).as(SqlInjectionTutorialRow.class).fetch()
+        .all())
+            .thenReturn(Flux.error(new BadSqlGrammarException("Error", query,
+                new R2dbcBadGrammarException("Syntax error, yo"))));
 
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
-        .assertNext(
-            row -> {
-              assertThat(row.getName()).isNull();
-              assertThat(row.getComment()).isNull();
-              assertThat(row.getError())
-                  .isEqualTo("io.r2dbc.spi.R2dbcBadGrammarException: Syntax error, yo");
-            })
-        .verifyComplete();
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query)).assertNext(row -> {
+      assertThat(row.getName()).isNull();
+      assertThat(row.getComment()).isNull();
+      assertThat(row.getError())
+          .isEqualTo("io.r2dbc.spi.R2dbcBadGrammarException: Syntax error, yo");
+    }).verifyComplete();
   }
 
   @Test
@@ -162,9 +146,8 @@ class SqlInjectionTutorialTest {
 
     when(flagHandler.getDynamicFlag(mockUserId, MODULE_NAME)).thenReturn(Mono.just(mockFlag));
 
-    sqlInjectionTutorial =
-        new SqlInjectionTutorial(
-            moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
+    sqlInjectionTutorial = new SqlInjectionTutorial(moduleService, flagHandler,
+        sqlInjectionDatabaseClientFactory, keyService);
 
     sqlInjectionTutorial.getInit().block();
 
@@ -177,17 +160,12 @@ class SqlInjectionTutorialTest {
         mock(SqlInjectionTutorialRow.class);
 
     when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
-        .thenAnswer(
-            args ->
-                getClient(
-                    args.getArgument(0, String.class),
-                    Flux.just(mockSqlInjectionTutorialRow1, mockSqlInjectionTutorialRow2)));
+        .thenAnswer(args -> getClient(args.getArgument(0, String.class),
+            Flux.just(mockSqlInjectionTutorialRow1, mockSqlInjectionTutorialRow2)));
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
-        .expectNext(mockSqlInjectionTutorialRow1)
-        .expectNext(mockSqlInjectionTutorialRow2)
-        .expectComplete()
-        .verify();
+        .expectNext(mockSqlInjectionTutorialRow1).expectNext(mockSqlInjectionTutorialRow2)
+        .expectComplete().verify();
   }
 
   @Test
@@ -201,18 +179,13 @@ class SqlInjectionTutorialTest {
 
     when(moduleService.create(MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
-    sqlInjectionTutorial =
-        new SqlInjectionTutorial(
-            moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
+    sqlInjectionTutorial = new SqlInjectionTutorial(moduleService, flagHandler,
+        sqlInjectionDatabaseClientFactory, keyService);
 
     final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class, RETURNS_DEEP_STUBS);
 
-    when(mockDatabaseClient
-            .execute(any(String.class))
-            .as(SqlInjectionTutorialRow.class)
-            .fetch()
-            .all())
-        .thenReturn(Flux.error(new RuntimeException()));
+    when(mockDatabaseClient.execute(any(String.class)).as(SqlInjectionTutorialRow.class).fetch()
+        .all()).thenReturn(Flux.error(new RuntimeException()));
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
         .expectError(RuntimeException.class);
