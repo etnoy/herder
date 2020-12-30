@@ -27,6 +27,7 @@ import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.ModuleService;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
@@ -41,6 +42,8 @@ import reactor.core.publisher.Mono;
 public class SqlInjectionTutorial extends BaseModule {
 
   private static final String MODULE_NAME = "sql-injection-tutorial";
+
+  private static final int DB_CLOSE_DELAY = 600;
 
   private final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
 
@@ -57,21 +60,30 @@ public class SqlInjectionTutorial extends BaseModule {
   }
 
   public Flux<SqlInjectionTutorialRow> submitQuery(final long userId, final String usernameQuery) {
-    final String randomUserName =
-        Base64.getEncoder().encodeToString(keyService.generateRandomBytes(16));
+
+    final String dbConnectionUrl =
+        String.format("r2dbc:h2:mem:///sql-injection-tutorial-for-uid%d", userId);
+
+    final String cachedConnectionUrl = dbConnectionUrl + ";IFEXISTS=TRUE";
+
+    final DatabaseClient cachedDatabaseClient =
+        sqlInjectionDatabaseClientFactory.create(cachedConnectionUrl);
+
+    final Mono<String> randomUserName =
+        Mono.just(Base64.getEncoder().encodeToString(keyService.generateRandomBytes(16)));
     // Generate a dynamic flag and add it as a row to the database creation script.
-    // The flag is
-    // different for every user to prevent copying flags
+    // The flag is different for every user to prevent copying flags
     final Mono<String> insertionQuery =
         getFlag(userId)
             // Curly braces need to be URL encoded
             .map(flag -> flag.replace("{", "%7B"))
             .map(flag -> flag.replace("}", "%7D"))
+            .zipWith(randomUserName)
             .map(
-                flag ->
+                tuple ->
                     String.format(
                         "INSERT INTO sqlinjection.users values ('%s', 'Well done, flag is %s')",
-                        randomUserName, flag));
+                        tuple.getT2(), tuple.getT1()));
 
     // Create a connection URL to a H2SQL in-memory database. Each submission call
     // creates a completely new instance of this database.
@@ -79,12 +91,10 @@ public class SqlInjectionTutorial extends BaseModule {
         insertionQuery.map(
             query ->
                 String.format(
-                    "r2dbc:h2:mem:///sql-injection-tutorial-for-uid%d;"
-                        // Load the initial sql file
-                        + "INIT=RUNSCRIPT FROM 'classpath:module/sql-injection-tutorial.sql'"
-                        + "%s%s",
+                    // Load the initial sql file
+                    "%s;DB_CLOSE_DELAY=%d;INIT=RUNSCRIPT FROM 'classpath:module/sql-injection-tutorial.sql'%s%s",
                     // %5C%3B is a backslash and semicolon URL-encoded
-                    userId, "%5C%3B", query));
+                    dbConnectionUrl, DB_CLOSE_DELAY, "%5C%3B", query));
 
     // Create a DatabaseClient that allows us to manually interact with the database
     final Mono<DatabaseClient> databaseClientMono =
@@ -95,15 +105,37 @@ public class SqlInjectionTutorial extends BaseModule {
     final String injectionQuery =
         String.format("SELECT * FROM sqlinjection.users WHERE name = '%s'", usernameQuery);
 
-    return databaseClientMono
-        // Execute database query
-        .flatMapMany(
+    final Flux<SqlInjectionTutorialRow> cachedResult =
+        cachedDatabaseClient
+            .execute(injectionQuery)
+            .as(SqlInjectionTutorialRow.class)
+            .fetch()
+            .all();
+
+    final Flux<SqlInjectionTutorialRow> freshResult =
+        databaseClientMono
+            // Execute database query
+            .flatMapMany(
             databaseClient ->
                 databaseClient
                     .execute(injectionQuery)
                     .as(SqlInjectionTutorialRow.class)
                     .fetch()
-                    .all())
+                    .all());
+
+    return cachedResult
+        .onErrorResume(
+            exception -> {
+              if (exception instanceof DataAccessResourceFailureException) {
+                System.out.println("Cache miss");
+                // Cache miss
+                return freshResult;
+
+              } else {
+                // All other errors are handled in the usual way
+                return Flux.error(exception);
+              }
+            })
         // Handle errors
         .onErrorResume(
             exception -> {
@@ -113,6 +145,7 @@ public class SqlInjectionTutorial extends BaseModule {
                     SqlInjectionTutorialRow.builder()
                         .error(exception.getCause().toString())
                         .build());
+
               } else {
                 // All other errors are handled in the usual way
                 return Flux.error(exception);

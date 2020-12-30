@@ -90,6 +90,8 @@ class SqlInjectionTutorialIT {
   void submitSql_CorrectAttackQuery_ReturnsWholeDatabase() {
     final Long userId = userService.create("TestUser1").block();
 
+    sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1").blockLast();
+
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(6)
         .expectComplete()
