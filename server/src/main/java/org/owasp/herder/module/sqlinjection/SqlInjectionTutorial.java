@@ -21,8 +21,11 @@
  */
 package org.owasp.herder.module.sqlinjection;
 
+import io.r2dbc.h2.H2ConnectionConfiguration;
+import io.r2dbc.h2.H2ConnectionFactory;
 import java.util.Base64;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.FlagHandler;
@@ -38,6 +41,7 @@ import reactor.core.publisher.Mono;
 // this is fixed
 @SuppressWarnings("deprecation")
 @Component
+@Slf4j
 @EqualsAndHashCode(callSuper = true)
 public class SqlInjectionTutorial extends BaseModule {
 
@@ -59,46 +63,61 @@ public class SqlInjectionTutorial extends BaseModule {
     this.keyService = keyService;
   }
 
+  public Mono<Void> populate(DatabaseClient databaseClient, final long userId) {
+    final String hiddenName =
+        Base64.getEncoder().encodeToString(keyService.generateRandomBytes(16));
+
+    final String populationQuery =
+        "DROP ALL OBJECTS;"
+            + "CREATE SCHEMA sqlinjection;"
+            + "CREATE TABLE sqlinjection.users (name VARCHAR(255) PRIMARY KEY, comment VARCHAR(255));"
+            + "INSERT INTO sqlinjection.users values ('Jonathan Jogenfors', 'System Author');"
+            + "INSERT INTO sqlinjection.users values ('Niklas Johansson', 'Teacher');"
+            + "INSERT INTO sqlinjection.users values ('Jan-Åke Larsson', 'Professor');"
+            + "INSERT INTO sqlinjection.users values ('Guilherme B. Xavier','Examiner');"
+            + "INSERT INTO sqlinjection.users values ('OR 1=1', 'You are close! Surround the query with single quotes so that your code is interpreted');";
+
+    final String flagQuery = "INSERT INTO sqlinjection.users values ($1, $2);";
+
+    log.trace("Populating SQL Injection Tutorial database");
+
+    return databaseClient
+        .execute(populationQuery)
+        .then()
+        .then(getFlag(userId))
+        .flatMap(
+            flag ->
+                databaseClient
+                    .execute(flagQuery)
+                    .bind("$1", hiddenName)
+                    .bind("$2", "Well done, flag is " + flag)
+                    .then())
+        .then();
+  }
+
+  public DatabaseClient getDatabaseClient(final long userId) {
+    return getDatabaseClient(userId, "");
+  }
+
+  public DatabaseClient getDatabaseClient(final long userId, final String dbOptions) {
+    final String dbName = String.format("%s-uid-%d", MODULE_NAME, userId);
+
+    final H2ConnectionConfiguration h2DatabaseConfig =
+        H2ConnectionConfiguration.builder().inMemory(dbName).option(dbOptions).build();
+
+    final H2ConnectionFactory connectionFactory = new H2ConnectionFactory(h2DatabaseConfig);
+
+    return DatabaseClient.create(connectionFactory);
+  }
+
   public Flux<SqlInjectionTutorialRow> submitQuery(final long userId, final String usernameQuery) {
 
-    final String dbConnectionUrl =
-        String.format("r2dbc:h2:mem:///sql-injection-tutorial-for-uid%d", userId);
-
-    final String cachedConnectionUrl = dbConnectionUrl + ";IFEXISTS=TRUE";
-
-    final DatabaseClient cachedDatabaseClient =
-        sqlInjectionDatabaseClientFactory.create(cachedConnectionUrl);
-
-    final Mono<String> randomUserName =
-        Mono.just(Base64.getEncoder().encodeToString(keyService.generateRandomBytes(16)));
-    // Generate a dynamic flag and add it as a row to the database creation script.
-    // The flag is different for every user to prevent copying flags
-    final Mono<String> insertionQuery =
-        getFlag(userId)
-            // Curly braces need to be URL encoded
-            .map(flag -> flag.replace("{", "%7B"))
-            .map(flag -> flag.replace("}", "%7D"))
-            .zipWith(randomUserName)
-            .map(
-                tuple ->
-                    String.format(
-                        "INSERT INTO sqlinjection.users values ('%s', 'Well done, flag is %s')",
-                        tuple.getT2(), tuple.getT1()));
-
-    // Create a connection URL to a H2SQL in-memory database. Each submission call
-    // creates a completely new instance of this database.
-    final Mono<String> connectionUrl =
-        insertionQuery.map(
-            query ->
-                String.format(
-                    // Load the initial sql file
-                    "%s;DB_CLOSE_DELAY=%d;INIT=RUNSCRIPT FROM 'classpath:module/sql-injection-tutorial.sql'%s%s",
-                    // %5C%3B is a backslash and semicolon URL-encoded
-                    dbConnectionUrl, DB_CLOSE_DELAY, "%5C%3B", query));
+    final String dbCloseDelayOption = String.format("DB_CLOSE_DELAY=%d;", DB_CLOSE_DELAY);
 
     // Create a DatabaseClient that allows us to manually interact with the database
-    final Mono<DatabaseClient> databaseClientMono =
-        connectionUrl.map(sqlInjectionDatabaseClientFactory::create);
+    final DatabaseClient databaseClient = getDatabaseClient(userId, dbCloseDelayOption);
+
+    final DatabaseClient cachedDatabaseClient = getDatabaseClient(userId, "IFEXISTS=TRUE;");
 
     // Create the database query. Yes, this is vulnerable to SQL injection. That's
     // the whole point.
@@ -113,22 +132,26 @@ public class SqlInjectionTutorial extends BaseModule {
             .all();
 
     final Flux<SqlInjectionTutorialRow> freshResult =
-        databaseClientMono
+        populate(databaseClient, userId)
             // Execute database query
-            .flatMapMany(
-            databaseClient ->
+            .thenMany(
                 databaseClient
                     .execute(injectionQuery)
                     .as(SqlInjectionTutorialRow.class)
                     .fetch()
                     .all());
 
+    freshResult.blockLast();
+
     return cachedResult
         .onErrorResume(
             exception -> {
+              // TODO: must have finer-grained exception filter here
               if (exception instanceof DataAccessResourceFailureException) {
-                System.out.println("Cache miss");
+                // TODO: remove this debug info
+                log.trace("Cache miss");
                 // Cache miss
+
                 return freshResult;
 
               } else {
@@ -151,5 +174,6 @@ public class SqlInjectionTutorial extends BaseModule {
                 return Flux.error(exception);
               }
             });
+    // .doAfterTerminate(() -> populate(databaseClient, userId));
   }
 }

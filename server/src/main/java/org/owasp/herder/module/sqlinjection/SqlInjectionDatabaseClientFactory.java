@@ -21,19 +21,18 @@
  */
 package org.owasp.herder.module.sqlinjection;
 
-import io.r2dbc.spi.ConnectionFactories;
+import io.r2dbc.h2.H2ConnectionConfiguration;
+import io.r2dbc.h2.H2ConnectionFactory;
 import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 
 @SuppressWarnings("deprecation")
 @Component
 public class SqlInjectionDatabaseClientFactory {
-  public DatabaseClient create(final String connectionUrl) {
-    // We have to replace all spaces with URL-encoded spaces for r2dbc to work
-    final String escapedUrl = connectionUrl.replace(" ", "%20");
+  public DatabaseClient create(final H2ConnectionConfiguration h2ConnectionConfiguration) {
+    final H2ConnectionFactory connectionFactory =
+        new H2ConnectionFactory(h2ConnectionConfiguration);
 
-    // Create a connection factory from the URL
-    // Create a database client from the connection factory
-    return DatabaseClient.create(ConnectionFactories.get(escapedUrl));
+    return DatabaseClient.create(connectionFactory);
   }
 }

@@ -81,16 +81,14 @@ class SqlInjectionTutorialIT {
   }
 
   @Test
-  void submitSql_QueryWithNoMatches_EmptyResultSet() {
+  void submitQuery_QueryWithNoMatches_EmptyResultSet() {
     final Long userId = userService.create("TestUser1").block();
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "test")).expectComplete().verify();
   }
 
   @Test
-  void submitSql_CorrectAttackQuery_ReturnsWholeDatabase() {
+  void submitQuery_CorrectAttackQuery_ReturnsWholeDatabase() {
     final Long userId = userService.create("TestUser1").block();
-
-    sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1").blockLast();
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(6)
@@ -99,7 +97,7 @@ class SqlInjectionTutorialIT {
   }
 
   @Test
-  void submitSql_SqlSyntaxError_ReturnsError() {
+  void submitQuery_SqlSyntaxError_ReturnsError() {
     final Long userId = userService.create("TestUser1").block();
 
     final String errorMessage =
@@ -116,7 +114,7 @@ class SqlInjectionTutorialIT {
   }
 
   @Test
-  void submitSql_CorrectAttackQuery_ReturnedFlagIsCorrect() {
+  void submitQuery_CorrectAttackQuery_ReturnedFlagIsCorrect() {
     final Long userId = userService.create("TestUser1").block();
 
     final Mono<String> flagMono =
@@ -140,7 +138,7 @@ class SqlInjectionTutorialIT {
   }
 
   @Test
-  void submitSql_CorrectAttackQuery_ModifiedFlagIsWrong() {
+  void submitQuery_CorrectAttackQuery_ModifiedFlagIsWrong() {
     final Long userId = userService.create("TestUser1").block();
 
     final Mono<String> flagVerificationMono =
@@ -174,5 +172,19 @@ class SqlInjectionTutorialIT {
         new SqlInjectionTutorial(
             moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
     sqlInjectionTutorial.getInit().block();
+  }
+
+  @Test
+  void submitQuery_InjectionDeletesAll_DoesNotImpactDatabase() {
+    final Long userId = userService.create("TestUser1").block();
+
+    sqlInjectionTutorial.submitQuery(userId, "1'; DROP ALL OBJECTS; --").blockLast();
+
+    System.out.println(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1").blockLast());
+
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
+        .expectNextCount(6)
+        .expectComplete()
+        .verify();
   }
 }

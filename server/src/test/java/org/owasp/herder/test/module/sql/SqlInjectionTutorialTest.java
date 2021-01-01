@@ -179,12 +179,12 @@ class SqlInjectionTutorialTest {
     final SqlInjectionTutorialRow mockSqlInjectionTutorialRow2 =
         mock(SqlInjectionTutorialRow.class);
 
-    when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
-        .thenAnswer(
-            args ->
-                getClient(
-                    args.getArgument(0, String.class),
-                    Flux.just(mockSqlInjectionTutorialRow1, mockSqlInjectionTutorialRow2)));
+    //    when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
+    //        .thenAnswer(
+    //            args ->
+    //                getClient(
+    //                    args.getArgument(0, String.class),
+    //                    Flux.just(mockSqlInjectionTutorialRow1, mockSqlInjectionTutorialRow2)));
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
         .expectNext(mockSqlInjectionTutorialRow1)

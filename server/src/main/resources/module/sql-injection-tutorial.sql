@@ -1,4 +1,4 @@
-DROP SCHEMA IF EXISTS sqlinjection cascade;
+DROP ALL OBJECTS;
 CREATE SCHEMA IF NOT EXISTS sqlinjection;
 
 CREATE TABLE sqlinjection.users (
