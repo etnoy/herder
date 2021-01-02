@@ -141,8 +141,6 @@ public class SqlInjectionTutorial extends BaseModule {
                     .fetch()
                     .all());
 
-    freshResult.blockLast();
-
     return cachedResult
         .onErrorResume(
             exception -> {
@@ -173,7 +171,12 @@ public class SqlInjectionTutorial extends BaseModule {
                 // All other errors are handled in the usual way
                 return Flux.error(exception);
               }
+            })
+        .doAfterTerminate(
+            () -> {
+              log.info("Re-populate");
+              populate(databaseClient, userId).subscribe();
+              log.info("Re-populated done");
             });
-    // .doAfterTerminate(() -> populate(databaseClient, userId));
   }
 }

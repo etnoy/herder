@@ -97,6 +97,21 @@ class SqlInjectionTutorialIT {
   }
 
   @Test
+  void submitQuery_RepeatedCorrectAttackQuery_ReturnsWholeDatabaseFromCache() {
+    final Long userId = userService.create("TestUser1").block();
+
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
+        .expectNextCount(6)
+        .expectComplete()
+        .verify();
+
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
+        .expectNextCount(6)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
   void submitQuery_SqlSyntaxError_ReturnsError() {
     final Long userId = userService.create("TestUser1").block();
 
@@ -175,12 +190,11 @@ class SqlInjectionTutorialIT {
   }
 
   @Test
-  void submitQuery_InjectionDeletesAll_DoesNotImpactDatabase() {
+  void submitQuery_InjectionDeletesAll_DoesNotImpactDatabase() throws InterruptedException {
     final Long userId = userService.create("TestUser1").block();
 
     sqlInjectionTutorial.submitQuery(userId, "1'; DROP ALL OBJECTS; --").blockLast();
-
-    System.out.println(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1").blockLast());
+    Thread.sleep(1000);
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(6)
