@@ -21,11 +21,7 @@
  */
 package org.owasp.herder.module.sqlinjection;
 
-import io.r2dbc.h2.H2ConnectionConfiguration;
-import io.r2dbc.h2.H2ConnectionFactory;
 import java.util.Base64;
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.FlagHandler;
@@ -34,6 +30,11 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
+import io.r2dbc.h2.H2Connection;
+import io.r2dbc.h2.H2ConnectionConfiguration;
+import io.r2dbc.h2.H2ConnectionFactory;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -63,61 +64,55 @@ public class SqlInjectionTutorial extends BaseModule {
     this.keyService = keyService;
   }
 
-  public Mono<Void> populate(DatabaseClient databaseClient, final long userId) {
+  private Mono<Void> populate(DatabaseClient databaseClient, final long userId) {
     final String hiddenName =
         Base64.getEncoder().encodeToString(keyService.generateRandomBytes(16));
 
-    final String populationQuery =
-        "DROP ALL OBJECTS;"
-            + "CREATE SCHEMA sqlinjection;"
-            + "CREATE TABLE sqlinjection.users (name VARCHAR(255) PRIMARY KEY, comment VARCHAR(255));"
-            + "INSERT INTO sqlinjection.users values ('Jonathan Jogenfors', 'System Author');"
-            + "INSERT INTO sqlinjection.users values ('Niklas Johansson', 'Teacher');"
-            + "INSERT INTO sqlinjection.users values ('Jan-Åke Larsson', 'Professor');"
-            + "INSERT INTO sqlinjection.users values ('Guilherme B. Xavier','Examiner');"
-            + "INSERT INTO sqlinjection.users values ('OR 1=1', 'You are close! Surround the query with single quotes so that your code is interpreted');";
+    final Mono<String> populationQuery =
+        getFlag(userId)
+            .map(
+                flag ->
+                    String.format(
+                        "DROP ALL OBJECTS;"
+                            + "CREATE SCHEMA sqlinjection;"
+                            + "CREATE TABLE sqlinjection.users (name VARCHAR(255) PRIMARY KEY, comment VARCHAR(255));"
+                            + "INSERT INTO sqlinjection.users values ('Jonathan Jogenfors', 'System Author');"
+                            + "INSERT INTO sqlinjection.users values ('Niklas Johansson', 'Teacher');"
+                            + "INSERT INTO sqlinjection.users values ('Jan-Åke Larsson', 'Professor');"
+                            + "INSERT INTO sqlinjection.users values ('Guilherme B. Xavier','Examiner');"
+                            + "INSERT INTO sqlinjection.users values ('OR 1=1', 'You are close! Surround the query with single quotes so that your code is interpreted');"
+                            + "INSERT INTO sqlinjection.users values ('%s', 'Well done, flag is %s');",
+                        hiddenName, flag));
 
-    final String flagQuery = "INSERT INTO sqlinjection.users values ($1, $2);";
-
-    log.trace("Populating SQL Injection Tutorial database");
-
-    return databaseClient
-        .execute(populationQuery)
-        .then()
-        .then(getFlag(userId))
-        .flatMap(
-            flag ->
-                databaseClient
-                    .execute(flagQuery)
-                    .bind("$1", hiddenName)
-                    .bind("$2", "Well done, flag is " + flag)
-                    .then())
-        .then();
+    return populationQuery.flatMap(query -> databaseClient.execute(query).then());
   }
 
-  public DatabaseClient getDatabaseClient(final long userId) {
-    return getDatabaseClient(userId, "");
-  }
-
-  public DatabaseClient getDatabaseClient(final long userId, final String dbOptions) {
+  private H2ConnectionFactory getConnectionFactory(final long userId, final String dbOptions) {
     final String dbName = String.format("%s-uid-%d", MODULE_NAME, userId);
 
     final H2ConnectionConfiguration h2DatabaseConfig =
         H2ConnectionConfiguration.builder().inMemory(dbName).option(dbOptions).build();
 
-    final H2ConnectionFactory connectionFactory = new H2ConnectionFactory(h2DatabaseConfig);
-
-    return DatabaseClient.create(connectionFactory);
+    return new H2ConnectionFactory(h2DatabaseConfig);
   }
 
   public Flux<SqlInjectionTutorialRow> submitQuery(final long userId, final String usernameQuery) {
 
     final String dbCloseDelayOption = String.format("DB_CLOSE_DELAY=%d;", DB_CLOSE_DELAY);
 
-    // Create a DatabaseClient that allows us to manually interact with the database
-    final DatabaseClient databaseClient = getDatabaseClient(userId, dbCloseDelayOption);
+    final H2ConnectionFactory connectionFactory = getConnectionFactory(userId, dbCloseDelayOption);
 
-    final DatabaseClient cachedDatabaseClient = getDatabaseClient(userId, "IFEXISTS=TRUE;");
+    // Create a DatabaseClient that allows us to manually interact with the database
+    final DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
+
+    final Mono<H2Connection> h2Connection = connectionFactory.create();
+
+    final H2ConnectionFactory cachedConnectionFactory =
+        getConnectionFactory(userId, "IFEXISTS=TRUE;");
+
+    final DatabaseClient cachedDatabaseClient = DatabaseClient.create(cachedConnectionFactory);
+
+    final Mono<H2Connection> cachedH2Connection = cachedConnectionFactory.create();
 
     // Create the database query. Yes, this is vulnerable to SQL injection. That's
     // the whole point.
@@ -172,11 +167,6 @@ public class SqlInjectionTutorial extends BaseModule {
                 return Flux.error(exception);
               }
             })
-        .doAfterTerminate(
-            () -> {
-              log.info("Re-populate");
-              populate(databaseClient, userId).subscribe();
-              log.info("Re-populated done");
-            });
+        .doAfterTerminate(() -> populate(databaseClient, userId).subscribe());
   }
 }

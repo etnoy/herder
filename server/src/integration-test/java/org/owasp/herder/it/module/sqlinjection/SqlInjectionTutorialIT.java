@@ -196,6 +196,8 @@ class SqlInjectionTutorialIT {
     sqlInjectionTutorial.submitQuery(userId, "1'; DROP ALL OBJECTS; --").blockLast();
     Thread.sleep(1000);
 
+    System.out.println(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1").blockLast());
+    
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(6)
         .expectComplete()
