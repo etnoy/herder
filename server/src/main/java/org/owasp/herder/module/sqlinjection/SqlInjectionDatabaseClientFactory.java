@@ -29,10 +29,10 @@ import org.springframework.stereotype.Component;
 @SuppressWarnings("deprecation")
 @Component
 public class SqlInjectionDatabaseClientFactory {
-  public DatabaseClient create(final H2ConnectionConfiguration h2ConnectionConfiguration) {
-    final H2ConnectionFactory connectionFactory =
-        new H2ConnectionFactory(h2ConnectionConfiguration);
+  public DatabaseClient create(final String dbName) {
+    final H2ConnectionConfiguration h2ConnectionConfiguration =
+        H2ConnectionConfiguration.builder().inMemory(dbName).option("DB_CLOSE_DELAY=60").build();
 
-    return DatabaseClient.create(connectionFactory);
+    return DatabaseClient.create(new H2ConnectionFactory(h2ConnectionConfiguration));
   }
 }

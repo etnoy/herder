@@ -52,6 +52,12 @@ import reactor.test.StepVerifier;
 @DisplayName("SqlInjectionTutorial integration test")
 class SqlInjectionTutorialIT {
 
+  @BeforeAll
+  private static void reactorVerbose() {
+    // Tell Reactor to print verbose error messages
+    Hooks.onOperatorDebug();
+  }
+
   SqlInjectionTutorial sqlInjectionTutorial;
 
   @Autowired TestUtils testUtils;
@@ -70,10 +76,13 @@ class SqlInjectionTutorialIT {
 
   @Autowired KeyService keyService;
 
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
+  @BeforeEach
+  private void clear() {
+    testUtils.deleteAll().block();
+    sqlInjectionTutorial =
+        new SqlInjectionTutorial(
+            moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
+    sqlInjectionTutorial.getInit().block();
   }
 
   private String extractFlagFromRow(final SqlInjectionTutorialRow row) {
@@ -81,49 +90,25 @@ class SqlInjectionTutorialIT {
   }
 
   @Test
-  void submitQuery_QueryWithNoMatches_EmptyResultSet() {
-    final Long userId = userService.create("TestUser1").block();
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "test")).expectComplete().verify();
-  }
-
-  @Test
-  void submitQuery_CorrectAttackQuery_ReturnsWholeDatabase() {
+  void submitQuery_CorrectAttackQuery_ModifiedFlagIsWrong() {
     final Long userId = userService.create("TestUser1").block();
 
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-        .expectNextCount(6)
-        .expectComplete()
-        .verify();
-  }
+    final Mono<String> flagVerificationMono =
+        sqlInjectionTutorial
+            .submitQuery(userId, "' OR '1' = '1")
+            .skip(5)
+            .next()
+            .map(this::extractFlagFromRow);
 
-  @Test
-  void submitQuery_RepeatedCorrectAttackQuery_ReturnsWholeDatabaseFromCache() {
-    final Long userId = userService.create("TestUser1").block();
-
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-        .expectNextCount(6)
-        .expectComplete()
-        .verify();
-
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-        .expectNextCount(6)
-        .expectComplete()
-        .verify();
-  }
-
-  @Test
-  void submitQuery_SqlSyntaxError_ReturnsError() {
-    final Long userId = userService.create("TestUser1").block();
-
-    final String errorMessage =
-        "io.r2dbc.spi.R2dbcBadGrammarException: [42000] [42000] "
-            + "Syntax error in SQL statement \"SELECT * FROM sqlinjection.users "
-            + "WHERE name = ''[*]'\"; SQL statement:\n"
-            + "SELECT * FROM sqlinjection.users WHERE name = ''' [42000-200]";
-
+    // Take the flag we got from the tutorial, modify it, and expect validation to fail
     StepVerifier.create(
-            sqlInjectionTutorial.submitQuery(userId, "'").map(SqlInjectionTutorialRow::getError))
-        .expectNext(errorMessage)
+            flagVerificationMono
+                .flatMap(
+                    flag ->
+                        submissionService.submit(
+                            userId, sqlInjectionTutorial.getModuleName(), flag + "wrong"))
+                .map(Submission::isValid))
+        .expectNext(false)
         .expectComplete()
         .verify();
   }
@@ -153,40 +138,13 @@ class SqlInjectionTutorialIT {
   }
 
   @Test
-  void submitQuery_CorrectAttackQuery_ModifiedFlagIsWrong() {
+  void submitQuery_CorrectAttackQuery_ReturnsWholeDatabase() {
     final Long userId = userService.create("TestUser1").block();
 
-    final Mono<String> flagVerificationMono =
-        sqlInjectionTutorial
-            .submitQuery(userId, "' OR '1' = '1")
-            .skip(5)
-            .next()
-            .map(this::extractFlagFromRow);
-
-    // Take the flag we got from the tutorial, modify it, and expect validation to fail
-    StepVerifier.create(
-            flagVerificationMono
-                .flatMap(
-                    flag ->
-                        submissionService.submit(
-                            userId, sqlInjectionTutorial.getModuleName(), flag + "wrong"))
-                .map(Submission::isValid))
-        .expectNext(false)
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
+        .expectNextCount(6)
         .expectComplete()
         .verify();
-  }
-
-  // TODO:
-
-  // ' OR '1=1 gives numberformatexception
-
-  @BeforeEach
-  private void clear() {
-    testUtils.deleteAll().block();
-    sqlInjectionTutorial =
-        new SqlInjectionTutorial(
-            moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
-    sqlInjectionTutorial.getInit().block();
   }
 
   @Test
@@ -194,12 +152,74 @@ class SqlInjectionTutorialIT {
     final Long userId = userService.create("TestUser1").block();
 
     sqlInjectionTutorial.submitQuery(userId, "1'; DROP ALL OBJECTS; --").blockLast();
-    Thread.sleep(1000);
-
     System.out.println(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1").blockLast());
-    
+
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(6)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  void submitQuery_QueryWithNoMatches_EmptyResultSet() {
+    final Long userId = userService.create("TestUser1").block();
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "test")).expectComplete().verify();
+  }
+
+  @Test
+  void submitQuery_QueryWithOneMatch_OneItemInResultSet() {
+    final Long userId = userService.create("TestUser1").block();
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "Jonathan Jogenfors"))
+        .expectNextCount(1)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  void submitQuery_RepeatedCorrectAttackQuery_ReturnsWholeDatabaseFromCache() {
+    final Long userId = userService.create("TestUser1").block();
+
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
+        .expectNextCount(6)
+        .expectComplete()
+        .verify();
+
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
+        .expectNextCount(6)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  void submitQuery_InvalidQueryWithOneApostrophe_ReturnsError() {
+    final Long userId = userService.create("TestUser1").block();
+
+    final String errorMessage =
+        "org.h2.jdbc.JdbcSQLSyntaxErrorException: "
+            + "Syntax error in SQL statement \"SELECT * FROM sqlinjection.users "
+            + "WHERE name = ''[*]'\"; SQL statement:\n"
+            + "SELECT * FROM sqlinjection.users WHERE name = ''' [42000-200]";
+
+    StepVerifier.create(
+            sqlInjectionTutorial.submitQuery(userId, "'").map(SqlInjectionTutorialRow::getError))
+        .expectNext(errorMessage)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  void submitQuery_InvalidQueryOneEqualsOne_NumberFormatException() {
+    final Long userId = userService.create("TestUser1").block();
+
+    final String errorMessage =
+        "org.h2.jdbc.JdbcSQLDataException: Data conversion error converting \"1=1\"; SQL statement:\n"
+            + "SELECT * FROM sqlinjection.users WHERE name = '' OR '1=1' [22018-200]";
+
+    StepVerifier.create(
+            sqlInjectionTutorial
+                .submitQuery(userId, "' OR '1=1")
+                .map(SqlInjectionTutorialRow::getError))
+        .expectNext(errorMessage)
         .expectComplete()
         .verify();
   }

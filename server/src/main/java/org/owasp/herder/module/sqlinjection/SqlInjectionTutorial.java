@@ -26,15 +26,11 @@ import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.ModuleService;
-import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
-import io.r2dbc.h2.H2Connection;
-import io.r2dbc.h2.H2ConnectionConfiguration;
-import io.r2dbc.h2.H2ConnectionFactory;
 import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -42,13 +38,10 @@ import reactor.core.publisher.Mono;
 // this is fixed
 @SuppressWarnings("deprecation")
 @Component
-@Slf4j
 @EqualsAndHashCode(callSuper = true)
 public class SqlInjectionTutorial extends BaseModule {
 
   private static final String MODULE_NAME = "sql-injection-tutorial";
-
-  private static final int DB_CLOSE_DELAY = 600;
 
   private final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
 
@@ -87,86 +80,33 @@ public class SqlInjectionTutorial extends BaseModule {
     return populationQuery.flatMap(query -> databaseClient.execute(query).then());
   }
 
-  private H2ConnectionFactory getConnectionFactory(final long userId, final String dbOptions) {
+  public Flux<SqlInjectionTutorialRow> submitQuery(final long userId, final String usernameQuery) {
     final String dbName = String.format("%s-uid-%d", MODULE_NAME, userId);
 
-    final H2ConnectionConfiguration h2DatabaseConfig =
-        H2ConnectionConfiguration.builder().inMemory(dbName).option(dbOptions).build();
-
-    return new H2ConnectionFactory(h2DatabaseConfig);
-  }
-
-  public Flux<SqlInjectionTutorialRow> submitQuery(final long userId, final String usernameQuery) {
-
-    final String dbCloseDelayOption = String.format("DB_CLOSE_DELAY=%d;", DB_CLOSE_DELAY);
-
-    final H2ConnectionFactory connectionFactory = getConnectionFactory(userId, dbCloseDelayOption);
-
-    // Create a DatabaseClient that allows us to manually interact with the database
-    final DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
-
-    final Mono<H2Connection> h2Connection = connectionFactory.create();
-
-    final H2ConnectionFactory cachedConnectionFactory =
-        getConnectionFactory(userId, "IFEXISTS=TRUE;");
-
-    final DatabaseClient cachedDatabaseClient = DatabaseClient.create(cachedConnectionFactory);
-
-    final Mono<H2Connection> cachedH2Connection = cachedConnectionFactory.create();
+    final DatabaseClient databaseClient = sqlInjectionDatabaseClientFactory.create(dbName);
 
     // Create the database query. Yes, this is vulnerable to SQL injection. That's
     // the whole point.
     final String injectionQuery =
         String.format("SELECT * FROM sqlinjection.users WHERE name = '%s'", usernameQuery);
 
-    final Flux<SqlInjectionTutorialRow> cachedResult =
-        cachedDatabaseClient
-            .execute(injectionQuery)
-            .as(SqlInjectionTutorialRow.class)
-            .fetch()
-            .all();
-
-    final Flux<SqlInjectionTutorialRow> freshResult =
-        populate(databaseClient, userId)
-            // Execute database query
-            .thenMany(
-                databaseClient
-                    .execute(injectionQuery)
-                    .as(SqlInjectionTutorialRow.class)
-                    .fetch()
-                    .all());
-
-    return cachedResult
-        .onErrorResume(
-            exception -> {
-              // TODO: must have finer-grained exception filter here
-              if (exception instanceof DataAccessResourceFailureException) {
-                // TODO: remove this debug info
-                log.trace("Cache miss");
-                // Cache miss
-
-                return freshResult;
-
-              } else {
-                // All other errors are handled in the usual way
-                return Flux.error(exception);
-              }
-            })
-        // Handle errors
+    return populate(databaseClient, userId)
+        // Execute database query
+        .thenMany(
+            databaseClient.execute(injectionQuery).as(SqlInjectionTutorialRow.class).fetch().all())
         .onErrorResume(
             exception -> {
               // We want to forward database syntax errors to the user
-              if (exception instanceof BadSqlGrammarException) {
+              if ((exception instanceof BadSqlGrammarException)
+                  || (exception instanceof DataIntegrityViolationException)) {
                 return Flux.just(
                     SqlInjectionTutorialRow.builder()
-                        .error(exception.getCause().toString())
+                        .error(exception.getCause().getCause().toString())
                         .build());
-
               } else {
                 // All other errors are handled in the usual way
                 return Flux.error(exception);
               }
-            })
-        .doAfterTerminate(() -> populate(databaseClient, userId).subscribe());
+            });
   }
 }
