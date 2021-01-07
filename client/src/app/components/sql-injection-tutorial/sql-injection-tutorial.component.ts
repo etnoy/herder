@@ -34,7 +34,10 @@ export class SqlInjectionTutorialComponent implements OnInit {
   ngOnInit(): void {}
 
   submitQuery() {
-    this.loading = true;
+    if (this.queryForm.controls.query.value === '') {
+      this.result = null;
+      return;
+    }
     return this.apiService
       .modulePostRequest(
         this.module.name,
@@ -44,12 +47,10 @@ export class SqlInjectionTutorialComponent implements OnInit {
       .subscribe(
         (data) => {
           this.alertService.clear();
-          this.loading = false;
           this.submitted = true;
           this.result = data;
         },
         (error) => {
-          this.loading = false;
           this.submitted = false;
           this.result = [];
           this.errorResult = '';

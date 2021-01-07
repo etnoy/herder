@@ -9,6 +9,7 @@
       class="form-control"
       formControlName="query"
       placeholder="Enter query"
+      (input)="submitQuery()"
       required
     />
   </div>
@@ -18,15 +19,11 @@
   </button>
 </form>
 <div *ngIf="submitted && result?.length === 0 && !errorResult">
-  <h3 class="h3 mb-3 font-weight-normal text-center">
-    Search results
-  </h3>
+  <h3 class="h3 mb-3 font-weight-normal text-center">Search results</h3>
   <p>No result.</p>
 </div>
 <div *ngIf="result?.length > 0">
-  <h3 class="h3 mb-3 font-weight-normal text-center">
-    Search results
-  </h3>
+  <h3 class="h3 mb-3 font-weight-normal text-center">Search results</h3>
   <ul>
     <li *ngFor="let result of result">
       <p *ngIf="!result.error">

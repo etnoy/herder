@@ -47,8 +47,8 @@ class SqlInjectionDatabaseClientFactoryTest {
 
   @Test
   void create_ValidConnectionUrl_ReturnsDatabaseClient() {
-    final String connectionUrl = "r2dbc:h2:mem:///db";
-    final DatabaseClient client = sqlInjectionDatabaseClientFactory.create(connectionUrl);
+    final String dbName = "testdb";
+    final DatabaseClient client = sqlInjectionDatabaseClientFactory.create(dbName);
     assertThat(client).isInstanceOf(DatabaseClient.class);
   }
 }
