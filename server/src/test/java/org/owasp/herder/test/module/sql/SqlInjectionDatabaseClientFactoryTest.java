@@ -22,6 +22,7 @@
 package org.owasp.herder.test.module.sql;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,10 +45,10 @@ class SqlInjectionDatabaseClientFactoryTest {
   private final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory =
       new SqlInjectionDatabaseClientFactory();
 
-    @Test
-    void create_ValidConnectionUrl_ReturnsDatabaseClient() {
-      final String dbName = "testdb";
-      final DatabaseClient client = sqlInjectionDatabaseClientFactory.create(dbName);
-      assertThat(client).isInstanceOf(DatabaseClient.class);
-    }
+  @Test
+  void create_ValidConnectionUrl_ReturnsDatabaseClient() {
+    final String dbName = "testdb";
+    final DatabaseClient client = sqlInjectionDatabaseClientFactory.create(dbName);
+    assertThat(client).isInstanceOf(DatabaseClient.class);
+  }
 }

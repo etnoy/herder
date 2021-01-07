@@ -25,6 +25,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import io.r2dbc.spi.R2dbcBadGrammarException;
+import lombok.NonNull;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,9 +48,6 @@ import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.data.r2dbc.core.DatabaseClient.GenericExecuteSpec;
 import org.springframework.data.r2dbc.core.DatabaseClient.TypedExecuteSpec;
 import org.springframework.data.r2dbc.core.FetchSpec;
-import io.r2dbc.spi.R2dbcBadGrammarException;
-import lombok.NonNull;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -109,40 +110,40 @@ class SqlInjectionTutorialTest {
     final Module mockModule = mock(Module.class);
     final String mockFlag = "mockedflag";
     final String query = "username";
-  
+
     when(moduleService.create(MODULE_NAME)).thenReturn(Mono.just(mockModule));
-  
+
     sqlInjectionTutorial =
         new SqlInjectionTutorial(
             moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
-  
+
     final byte[] randomBytes = {120, 56, 111};
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
-  
+
     when(flagHandler.getDynamicFlag(mockUserId, MODULE_NAME)).thenReturn(Mono.just(mockFlag));
-  
+
     final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
     when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
         .thenReturn(mockDatabaseClient);
-  
+
     final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
-  
+
     when(mockDatabaseClient.execute(any(String.class))).thenReturn(mockExecuteSpec);
-  
+
     when(mockExecuteSpec.then()).thenReturn(Mono.empty());
-  
+
     @SuppressWarnings("unchecked")
     final TypedExecuteSpec<SqlInjectionTutorialRow> typedExecuteSpec =
         (TypedExecuteSpec<SqlInjectionTutorialRow>) mock(TypedExecuteSpec.class);
-  
+
     when(mockExecuteSpec.as(SqlInjectionTutorialRow.class)).thenReturn(typedExecuteSpec);
-  
+
     @SuppressWarnings("unchecked")
     final FetchSpec<SqlInjectionTutorialRow> fetchSpec =
         (FetchSpec<SqlInjectionTutorialRow>) mock(FetchSpec.class);
-  
+
     when(typedExecuteSpec.fetch()).thenReturn(fetchSpec);
-  
+
     when(fetchSpec.all())
         .thenReturn(
             Flux.error(
@@ -152,7 +153,7 @@ class SqlInjectionTutorialTest {
                     new R2dbcBadGrammarException(
                         new R2dbcBadGrammarException(
                             "Syntax error, yo", new RuntimeException())))));
-  
+
     StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
         .assertNext(
             row -> {
@@ -210,7 +211,8 @@ class SqlInjectionTutorialTest {
                 new DataIntegrityViolationException(
                     "Error",
                     new DataIntegrityViolationException(
-                        "Error", new DataIntegrityViolationException(
+                        "Error",
+                        new DataIntegrityViolationException(
                             "Data integrity violation, yo", new RuntimeException())))));
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
@@ -219,7 +221,8 @@ class SqlInjectionTutorialTest {
               assertThat(row.getName()).isNull();
               assertThat(row.getComment()).isNull();
               assertThat(row.getError())
-                  .isEqualTo("org.springframework.dao.DataIntegrityViolationException: Data integrity violation, yo; nested exception is java.lang.RuntimeException");
+                  .isEqualTo(
+                      "org.springframework.dao.DataIntegrityViolationException: Data integrity violation, yo; nested exception is java.lang.RuntimeException");
             })
         .verifyComplete();
   }

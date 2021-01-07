@@ -22,6 +22,7 @@
 package org.owasp.herder.module.sqlinjection;
 
 import java.util.Base64;
+import lombok.EqualsAndHashCode;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.FlagHandler;
@@ -30,7 +31,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.r2dbc.BadSqlGrammarException;
 import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
-import lombok.EqualsAndHashCode;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
