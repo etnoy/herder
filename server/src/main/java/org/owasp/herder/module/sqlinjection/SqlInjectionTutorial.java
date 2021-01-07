@@ -1,5 +1,5 @@
 /* 
- * Copyright 2018-2020 Jonathan Jogenfors, jonathan@jogenfors.se
+ * Copyright 2018-2021 Jonathan Jogenfors, jonathan@jogenfors.se
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,6 +22,7 @@
 package org.owasp.herder.module.sqlinjection;
 
 import java.util.Base64;
+import lombok.EqualsAndHashCode;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.FlagHandler;
@@ -30,7 +31,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.r2dbc.BadSqlGrammarException;
 import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
-import lombok.EqualsAndHashCode;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
