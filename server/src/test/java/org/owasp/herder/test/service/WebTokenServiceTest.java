@@ -22,20 +22,34 @@
 package org.owasp.herder.test.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneId;
+import java.util.Date;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.authentication.WebTokenService;
+import io.jsonwebtoken.Clock;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WebTokenService unit test")
 class WebTokenServiceTest {
   private WebTokenService webTokenService;
+
+  public class FixedClock implements Clock {
+
+    private final Date now;
+
+    public FixedClock(Date now) {
+      this.now = now;
+    }
+
+    @Override
+    public Date now() {
+      return this.now;
+    }
+  }
 
   @Test
   void generateToken_ValidUserId_GeneratesValidToken() {
@@ -66,13 +80,12 @@ class WebTokenServiceTest {
   void validateToken_ExpiredToken_NotValid() {
     final long mockUserId = 843L;
 
-    final Clock longAgoClock =
-        Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+    final Clock longAgoClock = new FixedClock(Date.from(Instant.parse("2000-01-01T10:00:00.00Z")));
     setClock(longAgoClock);
 
     final String token = webTokenService.generateToken(mockUserId);
     final Clock tenYearsLaterClock =
-        Clock.fixed(Instant.parse("2010-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+        new FixedClock(Date.from(Instant.parse("2010-01-01T10:00:00.00Z")));
 
     setClock(tenYearsLaterClock);
     assertThat(webTokenService.validateToken(token)).isFalse();
@@ -91,12 +104,11 @@ class WebTokenServiceTest {
     final long mockUserId = 843L;
 
     final Clock farfutureClock =
-        Clock.fixed(Instant.parse("2010-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+        new FixedClock(Date.from(Instant.parse("2010-01-01T10:00:00.00Z")));
     setClock(farfutureClock);
 
     final String token = webTokenService.generateToken(mockUserId);
-    final Clock longAgoClock =
-        Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+    final Clock longAgoClock = new FixedClock(Date.from(Instant.parse("2000-01-01T10:00:00.00Z")));
 
     setClock(longAgoClock);
     assertThat(webTokenService.validateToken(token)).isTrue();
@@ -106,7 +118,7 @@ class WebTokenServiceTest {
   void validateToken_TokenExpiresRightNow_Valid() {
     final long mockUserId = 843L;
 
-    final Clock fixedClock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+    final Clock fixedClock = new FixedClock(Date.from(Instant.parse("2000-01-01T10:00:00.00Z")));
     setClock(fixedClock);
 
     final String token = webTokenService.generateToken(mockUserId);

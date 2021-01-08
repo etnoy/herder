@@ -22,14 +22,14 @@
 package org.owasp.herder.authentication;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Clock;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.impl.FixedClock;
+import io.jsonwebtoken.impl.DefaultClock;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import java.security.Key;
-import java.time.Clock;
 import java.util.Date;
 import org.springframework.stereotype.Service;
 
@@ -47,7 +47,7 @@ public class WebTokenService {
   }
 
   public void resetClock() {
-    this.clock = Clock.systemDefaultZone();
+    this.clock = new DefaultClock();
   }
 
   public void setClock(Clock clock) {
@@ -55,9 +55,8 @@ public class WebTokenService {
   }
 
   private Claims getAllClaimsFromToken(String token) {
-    io.jsonwebtoken.Clock jwtClock = new FixedClock(Date.from(this.clock.instant()));
     return Jwts.parserBuilder()
-        .setClock(jwtClock)
+        .setClock(clock)
         .setSigningKey(JWT_KEY)
         .build()
         .parseClaimsJws(token)
@@ -75,7 +74,7 @@ public class WebTokenService {
   private boolean isTokenExpired(final String token) {
     try {
       final Date expiration = getExpirationDateFromToken(token);
-      return expiration.before(Date.from(this.clock.instant()));
+      return expiration.before(clock.now());
     } catch (ExpiredJwtException e) {
       return true;
     }
@@ -83,8 +82,8 @@ public class WebTokenService {
 
   public String generateToken(final long userId) {
     // TODO: use clock durations here instead
-    final Date creationTime = new Date(clock.millis());
-    final Date expirationTime = new Date(clock.millis() + 1000 * EXPIRATION_TIME);
+    final Date creationTime = clock.now();
+    final Date expirationTime = new Date(clock.now().getTime() + 1000 * EXPIRATION_TIME);
 
     return Jwts.builder()
         .setSubject(Long.toString(userId))
