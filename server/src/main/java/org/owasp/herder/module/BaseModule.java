@@ -31,6 +31,7 @@ import org.owasp.herder.exception.InvalidFlagStateException;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+/** Base class for all CTF modules */
 @Component
 @ToString
 @EqualsAndHashCode
@@ -59,6 +60,12 @@ public abstract class BaseModule {
     }
   }
 
+  /**
+   * Computes the static flag for the given module. Throws {@link InvalidFlagStateException} if the
+   * module uses a dynamic flag
+   *
+   * @return The static flag.
+   */
   public Mono<String> getFlag() {
     return module.flatMap(
         m -> {
@@ -71,6 +78,12 @@ public abstract class BaseModule {
         });
   }
 
+  /**
+   * Computes the flag for this module
+   *
+   * @param userId The currently logged in user id
+   * @return The flag
+   */
   public Mono<String> getFlag(final long userId) {
     return module.flatMap(
         m -> {

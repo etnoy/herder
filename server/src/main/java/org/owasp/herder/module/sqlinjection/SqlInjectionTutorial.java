@@ -36,6 +36,7 @@ import reactor.core.publisher.Mono;
 
 // Spring R2dbc 1.2 lacks features present in version 1.1, we have to use deprecated functions until
 // this is fixed
+/** Tutorial module for SQL injections */
 @SuppressWarnings("deprecation")
 @Component
 @EqualsAndHashCode(callSuper = true)
