@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/etnoy/herder.svg?branch=master)](https://travis-ci.com/etnoy/SecurityShepherd)
+[![Build Status](https://travis-ci.com/etnoy/herder.svg?branch=master)](https://travis-ci.com/etnoy/herder)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=etnoy_herder&metric=coverage)](https://sonarcloud.io/dashboard?id=etnoy_herder)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=etnoy_herder&metric=alert_status)](https://sonarcloud.io/dashboard?id=etnoy_herder)
 

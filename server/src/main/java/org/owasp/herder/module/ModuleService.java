@@ -53,14 +53,14 @@ public final class ModuleService {
       return Mono.error(new NullPointerException("Module name cannot be null"));
     }
 
-    log.info("Creating new module in database with id " + moduleName);
+    log.info("Creating new module in database with name " + moduleName);
 
     return Mono.just(moduleName)
         .filterWhen(this::doesNotExistByName)
         .switchIfEmpty(
             Mono.error(
                 new DuplicateModuleNameException(
-                    String.format("Module id %s already exists", moduleName))))
+                    String.format("Module name %s already exists", moduleName))))
         .map(
             exists ->
                 Module.builder()
@@ -69,7 +69,7 @@ public final class ModuleService {
                     .key(keyService.generateRandomBytes(16))
                     .build())
         .flatMap(moduleRepository::save)
-        .doOnSuccess(created -> log.trace("Created module with id " + moduleName));
+        .doOnSuccess(created -> log.trace("Created module with name " + moduleName));
   }
 
   public Flux<Module> findAll() {
@@ -90,7 +90,6 @@ public final class ModuleService {
   }
 
   public Mono<Module> setDynamicFlag(final String moduleName) {
-
     return findByName(moduleName)
         .switchIfEmpty(Mono.error(new ModuleNameNotFoundException()))
         .map(module -> module.withFlagStatic(false))
