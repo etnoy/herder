@@ -25,15 +25,14 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.impl.FixedClock;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import java.security.Key;
 import java.time.Clock;
 import java.util.Date;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-@RequiredArgsConstructor
 @Service
 public class WebTokenService {
 
@@ -41,30 +40,49 @@ public class WebTokenService {
 
   public static final Key JWT_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
-  private final Clock clock;
+  private Clock clock;
 
-  public Claims getAllClaimsFromToken(String token) {
-    return Jwts.parserBuilder().setSigningKey(JWT_KEY).build().parseClaimsJws(token).getBody();
+  public WebTokenService() {
+    resetClock();
+  }
+
+  public void resetClock() {
+    this.clock = Clock.systemDefaultZone();
+  }
+
+  public void setClock(Clock clock) {
+    this.clock = clock;
+  }
+
+  private Claims getAllClaimsFromToken(String token) {
+    io.jsonwebtoken.Clock jwtClock = new FixedClock(Date.from(this.clock.instant()));
+    return Jwts.parserBuilder()
+        .setClock(jwtClock)
+        .setSigningKey(JWT_KEY)
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
   }
 
   public long getUserIdFromToken(final String token) {
     return Long.parseLong(getAllClaimsFromToken(token).getSubject());
   }
 
-  public Date getExpirationDateFromToken(final String token) {
+  private Date getExpirationDateFromToken(final String token) {
     return getAllClaimsFromToken(token).getExpiration();
   }
 
   private boolean isTokenExpired(final String token) {
     try {
       final Date expiration = getExpirationDateFromToken(token);
-      return expiration.before(new Date());
+      return expiration.before(Date.from(this.clock.instant()));
     } catch (ExpiredJwtException e) {
       return true;
     }
   }
 
   public String generateToken(final long userId) {
+    // TODO: use clock durations here instead
     final Date creationTime = new Date(clock.millis());
     final Date expirationTime = new Date(clock.millis() + 1000 * EXPIRATION_TIME);
 
