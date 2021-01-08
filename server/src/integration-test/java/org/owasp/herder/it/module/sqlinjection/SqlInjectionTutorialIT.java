@@ -96,7 +96,7 @@ class SqlInjectionTutorialIT {
     final Mono<String> flagVerificationMono =
         sqlInjectionTutorial
             .submitQuery(userId, "' OR '1' = '1")
-            .skip(5)
+            .skip(4)
             .next()
             .map(this::extractFlagFromRow);
 
@@ -120,7 +120,7 @@ class SqlInjectionTutorialIT {
     final Mono<String> flagMono =
         sqlInjectionTutorial
             .submitQuery(userId, "' OR '1' = '1")
-            .skip(5)
+            .skip(4)
             .next()
             .map(this::extractFlagFromRow);
 
@@ -142,7 +142,7 @@ class SqlInjectionTutorialIT {
     final Long userId = userService.create("TestUser1").block();
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-        .expectNextCount(6)
+        .expectNextCount(5)
         .expectComplete()
         .verify();
   }
@@ -155,7 +155,7 @@ class SqlInjectionTutorialIT {
     System.out.println(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1").blockLast());
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-        .expectNextCount(6)
+        .expectNextCount(5)
         .expectComplete()
         .verify();
   }
@@ -180,12 +180,12 @@ class SqlInjectionTutorialIT {
     final Long userId = userService.create("TestUser1").block();
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-        .expectNextCount(6)
+        .expectNextCount(5)
         .expectComplete()
         .verify();
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-        .expectNextCount(6)
+        .expectNextCount(5)
         .expectComplete()
         .verify();
   }

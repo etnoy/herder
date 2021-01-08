@@ -228,15 +228,18 @@ class SqlInjectionTutorialTest {
   }
 
   @Test
-  void submitQuery_OtherException_ThrowsException() {
+  void submitQuery_RuntimeException_ThrowsException() {
     final long mockUserId = 810L;
     final Module mockModule = mock(Module.class);
+    final String mockFlag = "mockedflag";
     final String query = "username";
 
     final byte[] randomBytes = {120, 56, 111};
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
 
     when(moduleService.create(MODULE_NAME)).thenReturn(Mono.just(mockModule));
+
+    when(flagHandler.getDynamicFlag(mockUserId, MODULE_NAME)).thenReturn(Mono.just(mockFlag));
 
     sqlInjectionTutorial =
         new SqlInjectionTutorial(
@@ -249,6 +252,8 @@ class SqlInjectionTutorialTest {
     final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
     when(mockDatabaseClient.execute(any(String.class))).thenReturn(mockExecuteSpec);
+
+    when(mockExecuteSpec.then()).thenReturn(Mono.empty());
 
     @SuppressWarnings("unchecked")
     final TypedExecuteSpec<SqlInjectionTutorialRow> typedExecuteSpec =
@@ -265,7 +270,8 @@ class SqlInjectionTutorialTest {
     when(fetchSpec.all()).thenReturn(Flux.error(new IllegalArgumentException()));
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
-        .expectError(IllegalArgumentException.class);
+        .expectError(IllegalArgumentException.class)
+        .verify();
   }
 
   @Test
