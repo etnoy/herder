@@ -26,7 +26,6 @@ import io.jsonwebtoken.Clock;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.impl.DefaultClock;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import java.security.Key;
@@ -47,7 +46,7 @@ public class WebTokenService {
   }
 
   public void resetClock() {
-    this.clock = new DefaultClock();
+    this.clock = new WebTokenClock();
   }
 
   public void setClock(Clock clock) {
