@@ -27,12 +27,9 @@ import java.util.Date;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.authentication.WebTokenService;
 import io.jsonwebtoken.Clock;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("WebTokenService unit test")
 class WebTokenServiceTest {
   private WebTokenService webTokenService;
