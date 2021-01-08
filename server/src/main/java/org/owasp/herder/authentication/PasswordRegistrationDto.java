@@ -25,7 +25,6 @@ import java.io.Serializable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Value;
-import org.owasp.herder.validation.ValidPassword;
 
 @Value
 public class PasswordRegistrationDto implements Serializable {
@@ -39,5 +38,5 @@ public class PasswordRegistrationDto implements Serializable {
   @Size(min = 1, message = "{Size.userDto.userName}")
   private String userName;
 
-  @ValidPassword @NotNull private String password;
+  @NotNull private String password;
 }
