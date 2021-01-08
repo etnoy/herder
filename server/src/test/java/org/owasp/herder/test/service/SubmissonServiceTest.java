@@ -46,6 +46,7 @@ import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.scoring.CorrectionRepository;
+import org.owasp.herder.scoring.RankedSubmission;
 import org.owasp.herder.scoring.RankedSubmissionRepository;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
@@ -104,6 +105,51 @@ class SubmissonServiceTest {
         .verify();
 
     verify(submissionRepository, times(1)).findAllByModuleName(mockModuleName);
+  }
+
+  @Test
+  void findAllRankedByUserId_InvalidUserId_ReturnsInvalidUserIdException() {
+    for (final long userId : TestUtils.INVALID_IDS) {
+      StepVerifier.create(submissionService.findAllRankedByUserId(userId))
+          .expectError(InvalidUserIdException.class)
+          .verify();
+    }
+  }
+
+  @Test
+  void findAllRankedByUserId_NoRankedSubmissionsExist_ReturnsEmpty() {
+    final long mockUserId = 279L;
+    when(rankedSubmissionRepository.findAllByUserId(mockUserId)).thenReturn(Flux.empty());
+    StepVerifier.create(submissionService.findAllRankedByUserId(mockUserId))
+        .expectComplete()
+        .verify();
+    verify(rankedSubmissionRepository, times(1)).findAllByUserId(mockUserId);
+  }
+
+  @Test
+  void findAllRankedByUserId_RankedSubmissionsExist_ReturnsRankedSubmissions() {
+    final long mockUserId = 809L;
+    final RankedSubmission mockRankedSubmission1 = mock(RankedSubmission.class);
+    final RankedSubmission mockRankedSubmission2 = mock(RankedSubmission.class);
+    final RankedSubmission mockRankedSubmission3 = mock(RankedSubmission.class);
+    final RankedSubmission mockRankedSubmission4 = mock(RankedSubmission.class);
+
+    when(rankedSubmissionRepository.findAllByUserId(mockUserId))
+        .thenReturn(
+            Flux.just(
+                mockRankedSubmission1,
+                mockRankedSubmission2,
+                mockRankedSubmission3,
+                mockRankedSubmission4));
+    StepVerifier.create(submissionService.findAllRankedByUserId(mockUserId))
+        .expectNext(mockRankedSubmission1)
+        .expectNext(mockRankedSubmission2)
+        .expectNext(mockRankedSubmission3)
+        .expectNext(mockRankedSubmission4)
+        .expectComplete()
+        .verify();
+
+    verify(rankedSubmissionRepository, times(1)).findAllByUserId(mockUserId);
   }
 
   @Test
