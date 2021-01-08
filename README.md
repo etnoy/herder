@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.com/etnoy/SecurityShepherd.svg?branch=dev)](https://travis-ci.com/etnoy/SecurityShepherd)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=etnoy_SecurityShepherd&metric=coverage)](https://sonarcloud.io/dashboard?id=etnoy_SecurityShepherd)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=etnoy_SecurityShepherd&metric=alert_status)](https://sonarcloud.io/dashboard?id=etnoy_SecurityShepherd)
+[![Build Status](https://travis-ci.com/etnoy/herder.svg?branch=master)](https://travis-ci.com/etnoy/SecurityShepherd)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=etnoy_herder&metric=coverage)](https://sonarcloud.io/dashboard?id=etnoy_herder)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=etnoy_herder&metric=alert_status)](https://sonarcloud.io/dashboard?id=etnoy_herder)
 
 # A rewrite of Security Shepherd
 I have used Shepherd for many years as a teaching tool in our infosec courses at Linköping University. In this setting, we run a CTF as part of the courses, resulting in >200 users in a CTF running over several months. Lately, I've become tired of running into bugs and issues due to a codebase that has outgrown its initial design. I have contributed a bit to the github repository, but now I'm taking a fresh look at everything.
