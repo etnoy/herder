@@ -97,9 +97,24 @@ public final class ModuleSolutions {
             });
   }
 
+  /**
+   * Finds the module matching the given name and show its solution status for the given user id
+   *
+   * @param userId The user id to find the status for
+   * @param moduleName The module to find
+   * @return A {@link ModuleListItem} containing the module with the solution status
+   */
   public Mono<ModuleListItem> findModuleByNameWithSolutionStatus(
       final long userId, final String moduleName) {
-
+    if (userId <= 0) {
+      return Mono.error(new InvalidUserIdException("User id must be a strictly positive integer"));
+    }
+    if (moduleName == null) {
+      return Mono.error(new NullPointerException("Module name cannot be null"));
+    }
+    if (moduleName.isEmpty()) {
+      return Mono.error(new EmptyModuleNameException("Module name cannot be empty"));
+    }
     final Mono<Module> moduleMono = moduleService.findByName(moduleName);
 
     final ModuleListItemBuilder moduleListItemBuilder = ModuleListItem.builder();

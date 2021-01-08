@@ -69,6 +69,111 @@ class ModuleSolutionsTest {
   @Mock private SubmissionService submissionService;
 
   @Test
+  void findModuleByNameWithSolutionStatus_EmptyModuleName_ReturnsInvalidModuleNameException() {
+    final long mockUserId = 690L;
+    StepVerifier.create(moduleSolutions.findModuleByNameWithSolutionStatus(mockUserId, ""))
+        .expectErrorMatches(
+            throwable ->
+                throwable instanceof EmptyModuleNameException
+                    && throwable.getMessage().equals("Module name cannot be empty"))
+        .verify();
+  }
+
+  @Test
+  void findModuleByNameWithSolutionStatus_InvalidUserid_ReturnsInvalidUserIdException() {
+    final String mockModuleName = "moduleName";
+    for (final long userId : TestUtils.INVALID_IDS) {
+      StepVerifier.create(
+              moduleSolutions.findModuleByNameWithSolutionStatus(userId, mockModuleName))
+          .expectErrorMatches(
+              throwable ->
+                  throwable instanceof InvalidUserIdException
+                      && throwable
+                          .getMessage()
+                          .equals("User id must be a strictly positive integer"))
+          .verify();
+    }
+  }
+
+  @Test
+  void findModuleByNameWithSolutionStatus_ModuleDoesNotExist_ReturnsEmpty() {
+    final String mockModuleName = "moduleName";
+    final long mockUserId = 1000L;
+
+    when(moduleService.findByName(mockModuleName)).thenReturn(Mono.empty());
+    when(submissionService.findAllValidModuleNamesByUserId(mockUserId)).thenReturn(Mono.empty());
+
+    StepVerifier.create(
+            moduleSolutions.findModuleByNameWithSolutionStatus(mockUserId, mockModuleName))
+        .expectComplete()
+        .verify();
+
+    verify(moduleService, times(1)).findByName(mockModuleName);
+    verify(submissionService, times(1)).findAllValidModuleNamesByUserId(mockUserId);
+  }
+
+  @Test
+  void findModuleByNameWithSolutionStatus_ModuleExistsButNotSolved_ReturnsListItem() {
+    final String mockModuleName = "moduleName";
+    final long mockUserId = 1000L;
+
+    final Module mockModule = mock(Module.class);
+    when(mockModule.getName()).thenReturn(mockModuleName);
+    when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
+    when(submissionService.findAllValidModuleNamesByUserId(mockUserId))
+        .thenReturn(Mono.just(new ArrayList<String>()));
+    final ModuleListItemBuilder moduleListItemBuilder = ModuleListItem.builder();
+
+    final ModuleListItem listItem =
+        moduleListItemBuilder.name(mockModuleName).isSolved(false).build();
+
+    StepVerifier.create(
+            moduleSolutions.findModuleByNameWithSolutionStatus(mockUserId, mockModuleName))
+        .expectNext(listItem)
+        .expectComplete()
+        .verify();
+
+    verify(moduleService, times(1)).findByName(mockModuleName);
+    verify(submissionService, times(1)).findAllValidModuleNamesByUserId(mockUserId);
+  }
+
+  @Test
+  void findModuleByNameWithSolutionStatus_ModuleExistsAndIsSolved_ReturnsListItem() {
+    final String mockModuleName = "moduleName";
+    final long mockUserId = 1000L;
+
+    final Module mockModule = mock(Module.class);
+    when(mockModule.getName()).thenReturn(mockModuleName);
+    when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
+    when(submissionService.findAllValidModuleNamesByUserId(mockUserId))
+        .thenReturn(Mono.just(Arrays.asList(new String[] {mockModuleName})));
+    final ModuleListItemBuilder moduleListItemBuilder = ModuleListItem.builder();
+
+    final ModuleListItem listItem =
+        moduleListItemBuilder.name(mockModuleName).isSolved(true).build();
+
+    StepVerifier.create(
+            moduleSolutions.findModuleByNameWithSolutionStatus(mockUserId, mockModuleName))
+        .expectNext(listItem)
+        .expectComplete()
+        .verify();
+
+    verify(moduleService, times(1)).findByName(mockModuleName);
+    verify(submissionService, times(1)).findAllValidModuleNamesByUserId(mockUserId);
+  }
+
+  @Test
+  void findModuleByNameWithSolutionStatus_NullModuleName_ReturnsInvalidModuleNameException() {
+    final Long mockUserId = 108L;
+    StepVerifier.create(moduleSolutions.findModuleByNameWithSolutionStatus(mockUserId, null))
+        .expectErrorMatches(
+            throwable ->
+                throwable instanceof NullPointerException
+                    && throwable.getMessage().equals("Module name cannot be null"))
+        .verify();
+  }
+
+  @Test
   void findOpenModuleByIdWithSolutionStatus_EmptyModuleName_ReturnsInvalidModuleNameException() {
     final long mockUserId = 690L;
     StepVerifier.create(moduleSolutions.findOpenModuleByIdWithSolutionStatus(mockUserId, ""))
@@ -120,6 +225,40 @@ class ModuleSolutionsTest {
   }
 
   @Test
+  void findOpenModuleByIdWithSolutionStatus_ModuleIsOpenAndHasNoSolution_ReturnsModule() {
+    final String mockModuleName = "moduleName";
+
+    final long mockUserId = 1000L;
+    final Module mockModule = mock(Module.class);
+
+    when(mockModule.getName()).thenReturn(mockModuleName);
+    when(mockModule.isOpen()).thenReturn(true);
+
+    when(submissionService.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
+        .thenReturn(Mono.empty());
+
+    when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
+
+    final ModuleListItemBuilder moduleListItemBuilder = ModuleListItem.builder();
+
+    final ModuleListItem listItem =
+        moduleListItemBuilder.name(mockModuleName).isSolved(false).build();
+
+    StepVerifier.create(
+            moduleSolutions.findOpenModuleByIdWithSolutionStatus(mockUserId, mockModuleName))
+        .expectNext(listItem)
+        .expectComplete()
+        .verify();
+
+    verify(mockModule, times(2)).getName();
+    verify(mockModule, times(2)).isOpen();
+
+    verify(submissionService, times(1))
+        .findAllValidByUserIdAndModuleName(mockUserId, mockModuleName);
+    verify(moduleService, times(1)).findByName(mockModuleName);
+  }
+
+  @Test
   void findOpenModuleByIdWithSolutionStatus_ModuleIsOpenAndHasSolution_ReturnsModule() {
     final String mockModuleName = "moduleName";
 
@@ -147,40 +286,6 @@ class ModuleSolutionsTest {
         .expectComplete()
         .verify();
 
-    verify(mockModule, times(2)).isOpen();
-
-    verify(submissionService, times(1))
-        .findAllValidByUserIdAndModuleName(mockUserId, mockModuleName);
-    verify(moduleService, times(1)).findByName(mockModuleName);
-  }
-
-  @Test
-  void findOpenModuleByIdWithSolutionStatus_ModuleIsOpenAndHasNoSolution_ReturnsModule() {
-    final String mockModuleName = "moduleName";
-
-    final long mockUserId = 1000L;
-    final Module mockModule = mock(Module.class);
-
-    when(mockModule.getName()).thenReturn(mockModuleName);
-    when(mockModule.isOpen()).thenReturn(true);
-
-    when(submissionService.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
-        .thenReturn(Mono.empty());
-
-    when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
-
-    final ModuleListItemBuilder moduleListItemBuilder = ModuleListItem.builder();
-
-    final ModuleListItem listItem =
-        moduleListItemBuilder.name(mockModuleName).isSolved(false).build();
-
-    StepVerifier.create(
-            moduleSolutions.findOpenModuleByIdWithSolutionStatus(mockUserId, mockModuleName))
-        .expectNext(listItem)
-        .expectComplete()
-        .verify();
-
-    verify(mockModule, times(2)).getName();
     verify(mockModule, times(2)).isOpen();
 
     verify(submissionService, times(1))
@@ -263,19 +368,12 @@ class ModuleSolutionsTest {
         .verify();
 
     verify(mockModule1, times(1)).getName();
-
     verify(mockModule1, never()).isOpen();
-
     verify(mockModule2, times(1)).getName();
-
     verify(mockModule2, never()).isOpen();
-
     verify(mockModule3, never()).getName();
-
     verify(mockModule3, never()).isOpen();
-
     verify(mockModule4, never()).getName();
-
     verify(mockModule4, never()).isOpen();
 
     verify(submissionService, times(1)).findAllValidModuleNamesByUserId(mockUserId);
