@@ -39,13 +39,13 @@ public class ScoreboardController {
 
   @GetMapping(path = "scoreboard")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<ScoreboardEntry> scoreboard() {
+  public Flux<ScoreboardEntry> getScoreboard() {
     return scoreService.getScoreboard();
   }
 
   @GetMapping(path = "scoreboard/{userId}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<RankedSubmission> getById(@PathVariable final long userId) {
+  public Flux<RankedSubmission> getScoreboardByUserId(@PathVariable final long userId) {
     return submissionService.findAllRankedByUserId(userId);
   }
 }

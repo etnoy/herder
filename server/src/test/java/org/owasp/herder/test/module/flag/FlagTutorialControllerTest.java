@@ -24,6 +24,7 @@ package org.owasp.herder.test.module.flag;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +42,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("FlagController unit test")
+@DisplayName("FlagTutorialController unit test")
 class FlagTutorialControllerTest {
 
   @BeforeAll
@@ -56,12 +57,6 @@ class FlagTutorialControllerTest {
 
   @Mock private ControllerAuthentication controllerAuthentication;
 
-  @BeforeEach
-  private void setUp() {
-    // Set up the system under test
-    flagTutorialController = new FlagTutorialController(flagTutorial, controllerAuthentication);
-  }
-
   @Test
   void getFlag_UserNotAuthenticated_ReturnsException() {
     when(controllerAuthentication.getUserId())
@@ -72,6 +67,12 @@ class FlagTutorialControllerTest {
         .verify();
 
     verify(controllerAuthentication, times(1)).getUserId();
+  }
+
+  @BeforeEach
+  private void setUp() {
+    // Set up the system under test
+    flagTutorialController = new FlagTutorialController(flagTutorial, controllerAuthentication);
   }
 
   @Test
