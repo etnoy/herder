@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '2.4.1'
-    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    id 'org.springframework.boot' version '2.6.2'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'eclipse'
     id 'jacoco'
     id "io.freefair.lombok" version "6.3.0"
@@ -12,6 +12,9 @@ plugins {
 group = 'org.owasp.herder'
 version = '0.0.1'
 description = 'Herder'
+
+// Require a log4j version not vulnerable to log4shell
+ext['log4j2.version'] = '2.17.1'
 
 repositories {
     mavenCentral()
