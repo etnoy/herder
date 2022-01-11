@@ -26,11 +26,7 @@ jobs:
       with:
         java-version: '11'
         distribution: 'adopt'
-    - name: Build with Gradle
-      uses: gradle/gradle-build-action@v2
-      with:
-        arguments: build
-        build-root-directory: server
+        
     - uses: actions/cache@v2
       with:
         path: |
@@ -38,15 +34,12 @@ jobs:
           ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
-          ${{ runner.os }}-gradle-          
-          
-  sonarcloud:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v2
+          ${{ runner.os }}-gradle-   
+    - name: Build with Gradle
+      uses: gradle/gradle-build-action@v2
       with:
-        # Disabling shallow clone is recommended for improving relevancy of reporting
-        fetch-depth: 0
+        arguments: build
+        build-root-directory: server      
     - name: SonarCloud Scan
       uses: sonarsource/sonarcloud-github-action@master
       with:
