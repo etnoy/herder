@@ -7,3 +7,4 @@
 .sts4-cache/
 .gradle
 /build/
+*.fpr
