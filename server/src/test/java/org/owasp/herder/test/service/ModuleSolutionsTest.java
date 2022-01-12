@@ -74,8 +74,7 @@ class ModuleSolutionsTest {
     StepVerifier.create(moduleSolutions.findModuleByNameWithSolutionStatus(mockUserId, ""))
         .expectErrorMatches(
             throwable ->
-                throwable instanceof EmptyModuleNameException
-                    && throwable.getMessage().equals("Module name cannot be empty"))
+                throwable instanceof EmptyModuleNameException)
         .verify();
   }
 
@@ -87,10 +86,7 @@ class ModuleSolutionsTest {
               moduleSolutions.findModuleByNameWithSolutionStatus(userId, mockModuleName))
           .expectErrorMatches(
               throwable ->
-                  throwable instanceof InvalidUserIdException
-                      && throwable
-                          .getMessage()
-                          .equals("User id must be a strictly positive integer"))
+                  throwable instanceof InvalidUserIdException)
           .verify();
     }
   }
@@ -168,8 +164,7 @@ class ModuleSolutionsTest {
     StepVerifier.create(moduleSolutions.findModuleByNameWithSolutionStatus(mockUserId, null))
         .expectErrorMatches(
             throwable ->
-                throwable instanceof NullPointerException
-                    && throwable.getMessage().equals("Module name cannot be null"))
+                throwable instanceof NullPointerException)
         .verify();
   }
 
@@ -179,8 +174,7 @@ class ModuleSolutionsTest {
     StepVerifier.create(moduleSolutions.findOpenModuleByIdWithSolutionStatus(mockUserId, ""))
         .expectErrorMatches(
             throwable ->
-                throwable instanceof EmptyModuleNameException
-                    && throwable.getMessage().equals("Module name cannot be empty"))
+                throwable instanceof EmptyModuleNameException)
         .verify();
   }
 
@@ -192,10 +186,7 @@ class ModuleSolutionsTest {
               moduleSolutions.findOpenModuleByIdWithSolutionStatus(userId, mockModuleName))
           .expectErrorMatches(
               throwable ->
-                  throwable instanceof InvalidUserIdException
-                      && throwable
-                          .getMessage()
-                          .equals("User id must be a strictly positive integer"))
+                  throwable instanceof InvalidUserIdException)
           .verify();
     }
   }
@@ -299,8 +290,7 @@ class ModuleSolutionsTest {
     StepVerifier.create(moduleSolutions.findOpenModuleByIdWithSolutionStatus(mockUserId, null))
         .expectErrorMatches(
             throwable ->
-                throwable instanceof NullPointerException
-                    && throwable.getMessage().equals("Module name cannot be null"))
+                throwable instanceof NullPointerException)
         .verify();
   }
 
