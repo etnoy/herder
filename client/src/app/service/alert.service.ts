@@ -37,6 +37,6 @@ export class AlertService {
   }
 
   clear() {
-    this.subject.next(new alert('alert'));
+    this.subject.next({ type: 'error' });
   }
 }
