@@ -148,6 +148,7 @@ sonarqube {
         property 'sonar.host.url', 'https://sonarcloud.io'
         property "sonar.projectName", "Herder"
         property "sonar.projectKey", "etnoy_herder"
+        property "sonar.organization", "etnoy"
         properties["sonar.tests"] += "src/integration-test/java"
     }
 }
