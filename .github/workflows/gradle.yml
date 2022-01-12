@@ -35,14 +35,17 @@ jobs:
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
           ${{ runner.os }}-gradle-   
-    - name: Build with Gradle
+    - name: Cache SonarCloud packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+    - name: Build and analyze
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: build
+        arguments: build jacocoTestReport sonarqube 
         build-root-directory: server      
-    - name: SonarCloud Scan
-      uses: sonarsource/sonarcloud-github-action@master
-      with:
         projectBaseDir: server
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
