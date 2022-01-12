@@ -12,7 +12,7 @@ on:
 defaults:
   run:
     shell: bash
-    working-directory: server
+    working-directory: client
 
 jobs:
   build:
