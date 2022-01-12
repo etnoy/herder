@@ -1,4 +1,4 @@
-[![Build](https://github.com/etnoy/herder/actions/workflows/gradle.yml/badge.svg)](https://github.com/etnoy/herder/actions/workflows/gradle.yml)
+[![Backend](https://github.com/etnoy/herder/actions/workflows/backend.yml/badge.svg)](https://github.com/etnoy/herder/actions/workflows/backend.yml)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=etnoy_herder&metric=coverage)](https://sonarcloud.io/dashboard?id=etnoy_herder)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=etnoy_herder&metric=alert_status)](https://sonarcloud.io/dashboard?id=etnoy_herder)
 
