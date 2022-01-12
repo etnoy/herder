@@ -28,7 +28,4 @@ public class InvalidUserIdException extends RuntimeException {
 
   private static final long serialVersionUID = -6203877167408885331L;
 
-  public InvalidUserIdException(final String message) {
-    super(message);
-  }
 }
