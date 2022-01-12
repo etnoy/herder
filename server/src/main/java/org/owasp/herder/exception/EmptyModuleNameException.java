@@ -24,7 +24,7 @@ package org.owasp.herder.exception;
 public class EmptyModuleNameException extends RuntimeException {
   private static final long serialVersionUID = -505553415557894220L;
 
-  public EmptyModuleNameException(final String message) {
-    super(message);
+  public EmptyModuleNameException() {
+    super();
   }
 }

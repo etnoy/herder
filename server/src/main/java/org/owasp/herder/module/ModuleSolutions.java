@@ -40,7 +40,7 @@ public final class ModuleSolutions {
 
   public Flux<ModuleListItem> findOpenModulesByUserIdWithSolutionStatus(final long userId) {
     if (userId <= 0) {
-      return Flux.error(new InvalidUserIdException("User id must be a strictly positive integer"));
+      return Flux.error(new InvalidUserIdException());
     }
 
     final ModuleListItemBuilder moduleListItemBuilder = ModuleListItem.builder();
@@ -67,13 +67,13 @@ public final class ModuleSolutions {
   public Mono<ModuleListItem> findOpenModuleByIdWithSolutionStatus(
       final long userId, final String moduleName) {
     if (userId <= 0) {
-      return Mono.error(new InvalidUserIdException("User id must be a strictly positive integer"));
+      return Mono.error(new InvalidUserIdException());
     }
     if (moduleName == null) {
-      return Mono.error(new NullPointerException("Module name cannot be null"));
+      return Mono.error(new NullPointerException());
     }
     if (moduleName.isEmpty()) {
-      return Mono.error(new EmptyModuleNameException("Module name cannot be empty"));
+      return Mono.error(new EmptyModuleNameException());
     }
 
     final ModuleListItemBuilder moduleListItemBuilder = ModuleListItem.builder();
@@ -107,13 +107,13 @@ public final class ModuleSolutions {
   public Mono<ModuleListItem> findModuleByNameWithSolutionStatus(
       final long userId, final String moduleName) {
     if (userId <= 0) {
-      return Mono.error(new InvalidUserIdException("User id must be a strictly positive integer"));
+      return Mono.error(new InvalidUserIdException());
     }
     if (moduleName == null) {
-      return Mono.error(new NullPointerException("Module name cannot be null"));
+      return Mono.error(new NullPointerException());
     }
     if (moduleName.isEmpty()) {
-      return Mono.error(new EmptyModuleNameException("Module name cannot be empty"));
+      return Mono.error(new EmptyModuleNameException());
     }
     final Mono<Module> moduleMono = moduleService.findByName(moduleName);
 
