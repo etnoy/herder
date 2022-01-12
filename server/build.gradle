@@ -12,6 +12,7 @@ plugins {
 group = 'org.owasp.herder'
 version = '0.0.1'
 description = 'Herder'
+sourceCompatibility = '11'
 
 // Require a log4j version not vulnerable to log4shell
 ext['log4j2.version'] = '2.17.1'
@@ -93,7 +94,7 @@ dependencies {
     integrationTestImplementation 'org.apache.commons:commons-lang3:3.11'
 }
 
-sourceCompatibility = '11'
+
 
 configurations {
     compileOnly {
@@ -144,6 +145,7 @@ test {
 
 sonarqube {
     properties {
+        property 'sonar.host.url', 'https://sonarcloud.io'
         property "sonar.projectName", "Herder"
         property "sonar.projectKey", "etnoy_herder"
         properties["sonar.tests"] += "src/integration-test/java"
