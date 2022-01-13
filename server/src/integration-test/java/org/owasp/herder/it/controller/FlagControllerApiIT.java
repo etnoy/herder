@@ -1,5 +1,5 @@
 /* 
- * Copyright 2018-2021 Jonathan Jogenfors, jonathan@jogenfors.se
+ * Copyright 2018-2022 Jonathan Jogenfors, jonathan@jogenfors.se
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -89,8 +89,72 @@ class FlagControllerApiIT {
   }
 
   @Test
+  @DisplayName("Submitting an invalid dynamic flag should return false")
+  void submitFlag_InvalidDynamicFlag_Incorrect() throws Exception {
+    final String loginName = "testUser";
+    final String password = "password";
+    final String moduleName = "test-module";
+
+    final String hashedPassword = passwordEncoder.encode(password);
+    moduleService.create(moduleName).block();
+    final long userId =
+        userService.createPasswordUser("Test User", loginName, hashedPassword).block();
+
+    String token =
+        JsonPath.parse(
+                new String(
+                    webTestClient
+                        .post()
+                        .uri("/api/v1/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(
+                            BodyInserters.fromPublisher(
+                                Mono.just(
+                                    "{\"userName\": \""
+                                        + loginName
+                                        + "\", \"password\": \""
+                                        + password
+                                        + "\"}"),
+                                String.class))
+                        .exchange()
+                        .expectStatus()
+                        .isOk()
+                        .expectBody()
+                        .returnResult()
+                        .getResponseBody()))
+            .read("$.token");
+
+    final String flag = flagHandler.getDynamicFlag(userId, moduleName).block() + "invalid";
+
+    final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
+
+    final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
+        BodyInserters.fromValue(flag);
+
+    final Flux<Submission> moduleSubmissionFlux =
+        webTestClient
+            .post()
+            .uri(endpoint)
+            .header("Authorization", "Bearer " + token)
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(submissionBody)
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .returnResult(Submission.class)
+            .getResponseBody();
+
+    StepVerifier.create(moduleSubmissionFlux.map(Submission::isValid))
+        // We expect the submission to be invalid
+        .expectNext(false)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
   @DisplayName("Submitting an invalid static flag should return false")
-  void submitFlag_InvalidStaticFlag_Success() throws Exception {
+  void submitFlag_InvalidStaticFlag_Incorrect() throws Exception {
     final String loginName = "testUser";
     final String password = "paLswOrdha17£@£sh";
     final String moduleName = "test-module";
@@ -184,6 +248,341 @@ class FlagControllerApiIT {
   }
 
   @Test
+  @DisplayName("Submitting a valid dynamic flag should return true")
+  void submitFlag_ValidDynamicFlag_Success() throws Exception {
+    final String loginName = "testUser";
+    final String password = "password";
+    final String moduleName = "test-module";
+
+    final String hashedPassword = passwordEncoder.encode(password);
+    moduleService.create(moduleName).block();
+    final long userId =
+        userService.createPasswordUser("Test User", loginName, hashedPassword).block();
+
+    String token =
+        JsonPath.parse(
+                new String(
+                    webTestClient
+                        .post()
+                        .uri("/api/v1/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(
+                            BodyInserters.fromPublisher(
+                                Mono.just(
+                                    "{\"userName\": \""
+                                        + loginName
+                                        + "\", \"password\": \""
+                                        + password
+                                        + "\"}"),
+                                String.class))
+                        .exchange()
+                        .expectStatus()
+                        .isOk()
+                        .expectBody()
+                        .returnResult()
+                        .getResponseBody()))
+            .read("$.token");
+
+    final String flag = flagHandler.getDynamicFlag(userId, moduleName).block();
+
+    final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
+
+    final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
+        BodyInserters.fromValue(flag);
+
+    final Flux<Submission> moduleSubmissionFlux =
+        webTestClient
+            .post()
+            .uri(endpoint)
+            .header("Authorization", "Bearer " + token)
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(submissionBody)
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .returnResult(Submission.class)
+            .getResponseBody();
+
+    StepVerifier.create(moduleSubmissionFlux.map(Submission::isValid))
+        // We expect the submission to be valid
+        .expectNext(true)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  @DisplayName(
+      "Submitting a valid dynamic flag surrounded by whitespace other than spaces should return false")
+  void submitFlag_ValidDynamicFlagWithOtherWhitespace_Incorrect() throws Exception {
+    final String loginName = "testUser";
+    final String password = "password";
+    final String moduleName = "test-module";
+
+    final String hashedPassword = passwordEncoder.encode(password);
+    moduleService.create(moduleName).block();
+    final long userId =
+        userService.createPasswordUser("Test User", loginName, hashedPassword).block();
+
+    String token =
+        JsonPath.parse(
+                new String(
+                    webTestClient
+                        .post()
+                        .uri("/api/v1/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(
+                            BodyInserters.fromPublisher(
+                                Mono.just(
+                                    "{\"userName\": \""
+                                        + loginName
+                                        + "\", \"password\": \""
+                                        + password
+                                        + "\"}"),
+                                String.class))
+                        .exchange()
+                        .expectStatus()
+                        .isOk()
+                        .expectBody()
+                        .returnResult()
+                        .getResponseBody()))
+            .read("$.token");
+
+    final String flag = flagHandler.getDynamicFlag(userId, moduleName).block();
+
+    final String flagWithInvalidWhitespace = "\n" + flag + "\t";
+
+    final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
+
+    final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
+        BodyInserters.fromValue(flagWithInvalidWhitespace);
+
+    final Flux<Submission> moduleSubmissionFlux =
+        webTestClient
+            .post()
+            .uri(endpoint)
+            .header("Authorization", "Bearer " + token)
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(submissionBody)
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .returnResult(Submission.class)
+            .getResponseBody();
+
+    StepVerifier.create(moduleSubmissionFlux.map(Submission::isValid))
+        // We expect the submission to be invalid
+        .expectNext(false)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  @DisplayName("Submitting a valid dynamic flag surrounded by whitespace should return true")
+  void submitFlag_ValidDynamicFlagWithSpaces_Success() throws Exception {
+    final String loginName = "testUser";
+    final String password = "password";
+    final String moduleName = "test-module";
+
+    final String hashedPassword = passwordEncoder.encode(password);
+    moduleService.create(moduleName).block();
+    final long userId =
+        userService.createPasswordUser("Test User", loginName, hashedPassword).block();
+
+    String token =
+        JsonPath.parse(
+                new String(
+                    webTestClient
+                        .post()
+                        .uri("/api/v1/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(
+                            BodyInserters.fromPublisher(
+                                Mono.just(
+                                    "{\"userName\": \""
+                                        + loginName
+                                        + "\", \"password\": \""
+                                        + password
+                                        + "\"}"),
+                                String.class))
+                        .exchange()
+                        .expectStatus()
+                        .isOk()
+                        .expectBody()
+                        .returnResult()
+                        .getResponseBody()))
+            .read("$.token");
+
+    final String flag = flagHandler.getDynamicFlag(userId, moduleName).block();
+
+    final String flagWithSpaces = "    " + flag + "         ";
+
+    final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
+
+    final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
+        BodyInserters.fromValue(flagWithSpaces);
+
+    final Flux<Submission> moduleSubmissionFlux =
+        webTestClient
+            .post()
+            .uri(endpoint)
+            .header("Authorization", "Bearer " + token)
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(submissionBody)
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .returnResult(Submission.class)
+            .getResponseBody();
+
+    StepVerifier.create(moduleSubmissionFlux.map(Submission::isValid))
+        // We expect the submission to be valid
+        .expectNext(true)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  @DisplayName("Submitting a valid dynamic flag in lowercase should return true")
+  void submitFlag_ValidLowerCaseDynamicFlag_Success() throws Exception {
+    final String loginName = "testUser";
+    final String password = "password";
+    final String moduleName = "test-module";
+
+    final String hashedPassword = passwordEncoder.encode(password);
+    moduleService.create(moduleName).block();
+    final long userId =
+        userService.createPasswordUser("Test User", loginName, hashedPassword).block();
+
+    String token =
+        JsonPath.parse(
+                new String(
+                    webTestClient
+                        .post()
+                        .uri("/api/v1/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(
+                            BodyInserters.fromPublisher(
+                                Mono.just(
+                                    "{\"userName\": \""
+                                        + loginName
+                                        + "\", \"password\": \""
+                                        + password
+                                        + "\"}"),
+                                String.class))
+                        .exchange()
+                        .expectStatus()
+                        .isOk()
+                        .expectBody()
+                        .returnResult()
+                        .getResponseBody()))
+            .read("$.token");
+
+    final String flag = flagHandler.getDynamicFlag(userId, moduleName).block();
+
+    final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
+
+    final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
+        BodyInserters.fromValue(flag.toLowerCase());
+
+    final Flux<Submission> moduleSubmissionFlux =
+        webTestClient
+            .post()
+            .uri(endpoint)
+            .header("Authorization", "Bearer " + token)
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(submissionBody)
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .returnResult(Submission.class)
+            .getResponseBody();
+
+    StepVerifier.create(moduleSubmissionFlux.map(Submission::isValid))
+        // We expect the submission to be valid
+        .expectNext(true)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  @DisplayName("Submitting a valid static flag in lowercase should return true")
+  void submitFlag_ValidLowerCaseStaticFlag_Success() throws Exception {
+    final String loginName = "testUser";
+    final String password = "paLswOrdha17£@£sh";
+    final String moduleName = "test-module";
+
+    final String flag = "thisisaflagWITHSOMEUPPERCASEandlowercase";
+
+    moduleService.create(moduleName).block().getId();
+    moduleService.setStaticFlag(moduleName, flag).block();
+
+    webTestClient
+        .post()
+        .uri("/api/v1/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+            BodyInserters.fromValue(
+                new PasswordRegistrationDto("TestUserDisplayName", loginName, password)))
+        .exchange()
+        .expectStatus()
+        .isCreated();
+
+    String token =
+        JsonPath.parse(
+                new String(
+                    webTestClient
+                        .post()
+                        .uri("/api/v1/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(
+                            BodyInserters.fromPublisher(
+                                Mono.just(
+                                    "{\"userName\": \""
+                                        + loginName
+                                        + "\", \"password\": \""
+                                        + password
+                                        + "\"}"),
+                                String.class))
+                        .exchange()
+                        .expectStatus()
+                        .isOk()
+                        .expectBody()
+                        .returnResult()
+                        .getResponseBody()))
+            .read("$.token");
+
+    final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
+
+    final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
+        BodyInserters.fromValue(flag.toLowerCase());
+
+    final Flux<Submission> moduleSubmissionFlux =
+        webTestClient
+            .post()
+            .uri(endpoint)
+            .header("Authorization", "Bearer " + token)
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(submissionBody)
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .returnResult(Submission.class)
+            .getResponseBody();
+
+    StepVerifier.create(moduleSubmissionFlux.map(Submission::isValid))
+        // We expect the submission to be valid
+        .expectNext(true)
+        // We're done
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
   @DisplayName("Submitting a valid static flag should return true")
   void submitFlag_ValidStaticFlag_Success() throws Exception {
     final String loginName = "testUser";
@@ -258,8 +657,161 @@ class FlagControllerApiIT {
   }
 
   @Test
-  @DisplayName("Submitting a valid dynamic flag should return true")
-  void submitFlag_ValidDynamicFlag_Success() throws Exception {
+  @DisplayName(
+      "Submitting a valid static flag surrounded by whitespace other than spaces should return false")
+  void submitFlag_ValidStaticFlagWithOtherWhiteSpace_Incorrect() throws Exception {
+    final String loginName = "testUser";
+    final String password = "paLswOrdha17£@£sh";
+    final String moduleName = "test-module";
+
+    final String flag = "thisisaflag";
+
+    final String flagWithSpaces = "\n" + flag + "\t";
+
+    moduleService.create(moduleName).block().getId();
+    moduleService.setStaticFlag(moduleName, flag).block();
+
+    webTestClient
+        .post()
+        .uri("/api/v1/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+            BodyInserters.fromValue(
+                new PasswordRegistrationDto("TestUserDisplayName", loginName, password)))
+        .exchange()
+        .expectStatus()
+        .isCreated();
+
+    String token =
+        JsonPath.parse(
+                new String(
+                    webTestClient
+                        .post()
+                        .uri("/api/v1/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(
+                            BodyInserters.fromPublisher(
+                                Mono.just(
+                                    "{\"userName\": \""
+                                        + loginName
+                                        + "\", \"password\": \""
+                                        + password
+                                        + "\"}"),
+                                String.class))
+                        .exchange()
+                        .expectStatus()
+                        .isOk()
+                        .expectBody()
+                        .returnResult()
+                        .getResponseBody()))
+            .read("$.token");
+
+    final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
+
+    final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
+        BodyInserters.fromValue(flagWithSpaces);
+
+    final Flux<Submission> moduleSubmissionFlux =
+        webTestClient
+            .post()
+            .uri(endpoint)
+            .header("Authorization", "Bearer " + token)
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(submissionBody)
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .returnResult(Submission.class)
+            .getResponseBody();
+
+    StepVerifier.create(moduleSubmissionFlux.map(Submission::isValid))
+        // We expect the submission to be invalid
+        .expectNext(false)
+        // We're done
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  @DisplayName("Submitting a valid static flag surrounded by spaces should return true")
+  void submitFlag_ValidStaticFlagWithSpaces_Success() throws Exception {
+    final String loginName = "testUser";
+    final String password = "paLswOrdha17£@£sh";
+    final String moduleName = "test-module";
+
+    final String flag = "thisisaflag";
+
+    final String flagWithSpaces = "     " + flag + "         ";
+
+    moduleService.create(moduleName).block().getId();
+    moduleService.setStaticFlag(moduleName, flag).block();
+
+    webTestClient
+        .post()
+        .uri("/api/v1/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+            BodyInserters.fromValue(
+                new PasswordRegistrationDto("TestUserDisplayName", loginName, password)))
+        .exchange()
+        .expectStatus()
+        .isCreated();
+
+    String token =
+        JsonPath.parse(
+                new String(
+                    webTestClient
+                        .post()
+                        .uri("/api/v1/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(
+                            BodyInserters.fromPublisher(
+                                Mono.just(
+                                    "{\"userName\": \""
+                                        + loginName
+                                        + "\", \"password\": \""
+                                        + password
+                                        + "\"}"),
+                                String.class))
+                        .exchange()
+                        .expectStatus()
+                        .isOk()
+                        .expectBody()
+                        .returnResult()
+                        .getResponseBody()))
+            .read("$.token");
+
+    final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
+
+    final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
+        BodyInserters.fromValue(flagWithSpaces);
+
+    final Flux<Submission> moduleSubmissionFlux =
+        webTestClient
+            .post()
+            .uri(endpoint)
+            .header("Authorization", "Bearer " + token)
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(submissionBody)
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .returnResult(Submission.class)
+            .getResponseBody();
+
+    StepVerifier.create(moduleSubmissionFlux.map(Submission::isValid))
+        // We expect the submission to be valid
+        .expectNext(true)
+        // We're done
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  @DisplayName("Submitting a valid dynamic flag in uppercase should return true")
+  void submitFlag_ValidUpperCaseDynamicFlag_Success() throws Exception {
     final String loginName = "testUser";
     final String password = "password";
     final String moduleName = "test-module";
@@ -298,7 +850,7 @@ class FlagControllerApiIT {
     final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
 
     final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
-        BodyInserters.fromValue(flag);
+        BodyInserters.fromValue(flag.toUpperCase());
 
     final Flux<Submission> moduleSubmissionFlux =
         webTestClient
@@ -322,16 +874,27 @@ class FlagControllerApiIT {
   }
 
   @Test
-  @DisplayName("Submitting an invalid dynamic flag should return false")
-  void submitFlag_InvalidDynamicFlag_Success() throws Exception {
+  @DisplayName("Submitting a valid static flag in uppercase should return true")
+  void submitFlag_ValidUpperCaseStaticFlag_Success() throws Exception {
     final String loginName = "testUser";
-    final String password = "password";
+    final String password = "paLswOrdha17£@£sh";
     final String moduleName = "test-module";
 
-    final String hashedPassword = passwordEncoder.encode(password);
-    moduleService.create(moduleName).block();
-    final long userId =
-        userService.createPasswordUser("Test User", loginName, hashedPassword).block();
+    final String flag = "thisisaflagWITHSOMEUPPERCASE";
+
+    moduleService.create(moduleName).block().getId();
+    moduleService.setStaticFlag(moduleName, flag).block();
+
+    webTestClient
+        .post()
+        .uri("/api/v1/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+            BodyInserters.fromValue(
+                new PasswordRegistrationDto("TestUserDisplayName", loginName, password)))
+        .exchange()
+        .expectStatus()
+        .isCreated();
 
     String token =
         JsonPath.parse(
@@ -357,12 +920,10 @@ class FlagControllerApiIT {
                         .getResponseBody()))
             .read("$.token");
 
-    final String flag = flagHandler.getDynamicFlag(userId, moduleName).block() + "invalid";
-
     final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
 
     final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
-        BodyInserters.fromValue(flag);
+        BodyInserters.fromValue(flag.toUpperCase());
 
     final Flux<Submission> moduleSubmissionFlux =
         webTestClient
@@ -379,8 +940,9 @@ class FlagControllerApiIT {
             .getResponseBody();
 
     StepVerifier.create(moduleSubmissionFlux.map(Submission::isValid))
-        // We expect the submission to be invalid
-        .expectNext(false)
+        // We expect the submission to be valid
+        .expectNext(true)
+        // We're done
         .expectComplete()
         .verify();
   }
