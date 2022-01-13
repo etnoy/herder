@@ -112,9 +112,21 @@
               "devServerTarget": "herder:serve:production"
             }
           }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
         }
       }
     }
   },
-  "defaultProject": "herder"
+  "defaultProject": "herder",
+  "cli": {
+    "defaultCollection": "@angular-eslint/schematics"
+  }
 }

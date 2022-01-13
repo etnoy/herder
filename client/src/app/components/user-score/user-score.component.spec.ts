@@ -8,12 +8,17 @@ describe('UserScoreComponent', () => {
   let component: UserScoreComponent;
   let fixture: ComponentFixture<UserScoreComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [UserScoreComponent],
-      imports: [RouterModule.forRoot([], { relativeLinkResolution: 'legacy' }), HttpClientTestingModule],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [UserScoreComponent],
+        imports: [
+          RouterModule.forRoot([], { relativeLinkResolution: 'legacy' }),
+          HttpClientTestingModule,
+        ],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(UserScoreComponent);

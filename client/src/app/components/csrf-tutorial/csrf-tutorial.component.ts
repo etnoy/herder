@@ -8,7 +8,7 @@ import { CsrfTutorialResult } from 'src/app/model/csrf-tutorial-result';
 @Component({
   selector: 'app-csrf-injection-tutorial',
   templateUrl: './csrf-tutorial.component.html',
-  styleUrls: ['./csrf-tutorial.component.css']
+  styleUrls: ['./csrf-tutorial.component.css'],
 })
 export class CsrfTutorialComponent implements OnInit {
   queryForm: FormGroup;
@@ -26,7 +26,7 @@ export class CsrfTutorialComponent implements OnInit {
     private alertService: AlertService
   ) {
     this.queryForm = this.fb.group({
-      query: ['']
+      query: [''],
     });
     this.tutorialResult = null;
     this.errorResult = '';
@@ -52,13 +52,13 @@ export class CsrfTutorialComponent implements OnInit {
     this.apiService
       .moduleGetRequest(this.module.name, 'activate/' + pseudonym)
       .subscribe(
-        data => {
+        (data) => {
           this.alertService.clear();
           this.loading = false;
           this.submitted = true;
           this.tutorialResult = data;
         },
-        error => {
+        (error) => {
           this.loading = false;
           this.submitted = false;
           this.tutorialResult = null;
@@ -79,12 +79,12 @@ export class CsrfTutorialComponent implements OnInit {
   public loadTutorial(): void {
     this.loading = true;
     this.apiService.moduleGetRequest(this.module.name, '').subscribe(
-      data => {
+      (data) => {
         this.alertService.clear();
         this.loading = false;
         this.tutorialResult = data;
       },
-      error => {
+      (error) => {
         this.loading = false;
         this.tutorialResult = null;
         this.errorResult = '';

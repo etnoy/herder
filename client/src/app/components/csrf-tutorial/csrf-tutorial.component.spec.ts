@@ -9,17 +9,19 @@ describe('CsrfTutorialComponent', () => {
   let component: CsrfTutorialComponent;
   let fixture: ComponentFixture<CsrfTutorialComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [CsrfTutorialComponent],
-      imports: [
-        RouterTestingModule,
-        HttpClientModule,
-        FormsModule,
-        ReactiveFormsModule,
-      ],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [CsrfTutorialComponent],
+        imports: [
+          RouterTestingModule,
+          HttpClientModule,
+          FormsModule,
+          ReactiveFormsModule,
+        ],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(CsrfTutorialComponent);

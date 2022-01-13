@@ -8,12 +8,14 @@ describe('ModulesComponent', () => {
   let component: ModuleListComponent;
   let fixture: ComponentFixture<ModuleListComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [ModuleListComponent],
-      imports: [HttpClientTestingModule, RouterTestingModule]
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [ModuleListComponent],
+        imports: [HttpClientTestingModule, RouterTestingModule],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ModuleListComponent);

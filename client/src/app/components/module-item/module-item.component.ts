@@ -90,9 +90,8 @@ export class ModuleItemComponent implements OnInit {
             break;
           }
         }
-        const componentFactory = this.componentFactoryResolver.resolveComponentFactory(
-          currentModule
-        );
+        const componentFactory =
+          this.componentFactoryResolver.resolveComponentFactory(currentModule);
 
         const viewContainerRef = this.moduleDirective.viewContainerRef;
         viewContainerRef.clear();
@@ -126,7 +125,7 @@ export class ModuleItemComponent implements OnInit {
             this.alertService.error(`Invalid flag`);
           }
         },
-        (error) => {
+        () => {
           this.alertService.error(`An error occurred`);
         }
       );

@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { Submission } from 'src/app/model/submission';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from 'src/app/service/api.service';
 import { UserScore } from 'src/app/model/user-score';

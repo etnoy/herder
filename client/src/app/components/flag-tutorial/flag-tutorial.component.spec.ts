@@ -9,17 +9,19 @@ describe('FlagTutorialComponent', () => {
   let component: FlagTutorialComponent;
   let fixture: ComponentFixture<FlagTutorialComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [FlagTutorialComponent],
-      imports: [
-        RouterTestingModule,
-        HttpClientModule,
-        FormsModule,
-        ReactiveFormsModule,
-      ],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [FlagTutorialComponent],
+        imports: [
+          RouterTestingModule,
+          HttpClientModule,
+          FormsModule,
+          ReactiveFormsModule,
+        ],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(FlagTutorialComponent);

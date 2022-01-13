@@ -6,7 +6,7 @@ import { ApiService } from 'src/app/service/api.service';
 @Component({
   selector: 'app-signup',
   templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.css']
+  styleUrls: ['./signup.component.css'],
 })
 export class SignupComponent implements OnInit {
   signupForm: FormGroup;
@@ -19,14 +19,12 @@ export class SignupComponent implements OnInit {
     this.signupForm = this.fb.group({
       displayName: [''],
       userName: [''],
-      password: ['']
+      password: [''],
     });
   }
 
-  ngOnInit() {}
-
   registerUser() {
-    this.apiService.signUp(this.signupForm.value).subscribe(res => {
+    this.apiService.signUp(this.signupForm.value).subscribe((res) => {
       if (res.result) {
         this.signupForm.reset();
         this.router.navigate(['login']);

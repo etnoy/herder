@@ -4,7 +4,6 @@ import { ApiService } from '../../service/api.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AlertService } from 'src/app/service/alert.service';
 import { first } from 'rxjs/operators';
-import { throwError } from 'rxjs';
 
 @Component({
   selector: 'app-signin',
@@ -53,7 +52,7 @@ export class LoginComponent implements OnInit {
       .login(this.loginForm.value)
       .pipe(first())
       .subscribe(
-        (data) => {
+        () => {
           this.router.navigate([this.returnUrl]);
         },
         (error) => {

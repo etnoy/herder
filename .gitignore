@@ -4,3 +4,4 @@ server/.factorypath
 .project
 .settings
 /.gradle/
+.vscode

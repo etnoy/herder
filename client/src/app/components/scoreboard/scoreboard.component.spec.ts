@@ -9,12 +9,18 @@ describe('ScoreboardComponent', () => {
   let component: ScoreboardComponent;
   let fixture: ComponentFixture<ScoreboardComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [ScoreboardComponent],
-      imports: [HttpClientModule, RouterTestingModule, HttpClientTestingModule],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [ScoreboardComponent],
+        imports: [
+          HttpClientModule,
+          RouterTestingModule,
+          HttpClientTestingModule,
+        ],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ScoreboardComponent);

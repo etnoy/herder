@@ -9,17 +9,19 @@ describe('XssTutorialComponent', () => {
   let component: XssTutorialComponent;
   let fixture: ComponentFixture<XssTutorialComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [XssTutorialComponent],
-      imports: [
-        HttpClientModule,
-        RouterTestingModule,
-        FormsModule,
-        ReactiveFormsModule,
-      ],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [XssTutorialComponent],
+        imports: [
+          HttpClientModule,
+          RouterTestingModule,
+          FormsModule,
+          ReactiveFormsModule,
+        ],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(XssTutorialComponent);

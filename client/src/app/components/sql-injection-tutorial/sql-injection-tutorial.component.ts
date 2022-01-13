@@ -31,8 +31,6 @@ export class SqlInjectionTutorialComponent implements OnInit {
     this.errorResult = '';
   }
 
-  ngOnInit(): void {}
-
   submitQuery() {
     if (this.queryForm.controls.query.value === '') {
       this.result = null;

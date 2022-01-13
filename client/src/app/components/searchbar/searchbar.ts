@@ -6,7 +6,6 @@ import {
   map,
   filter,
 } from 'rxjs/operators';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 interface State {
   id: number;

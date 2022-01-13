@@ -29,8 +29,6 @@ export class FlagTutorialComponent implements OnInit {
     this.loading = false;
   }
 
-  ngOnInit(): void {}
-
   public getFlag() {
     this.loading = true;
     this.apiService.moduleGetRequest(this.module.name, '').subscribe(

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ApiService } from '../../service/api.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Module } from 'src/app/model/module';
@@ -10,7 +10,7 @@ import { XssTutorialResult } from 'src/app/model/xss-tutorial-result';
   templateUrl: './xss-tutorial.component.html',
   styleUrls: ['./xss-tutorial.component.css'],
 })
-export class XssTutorialComponent implements OnInit {
+export class XssTutorialComponent {
   queryForm: FormGroup;
   result: XssTutorialResult;
   loading = false;
@@ -27,8 +27,6 @@ export class XssTutorialComponent implements OnInit {
     });
     this.result = null;
   }
-
-  ngOnInit(): void {}
 
   submitQuery() {
     // stop here if form is invalid
