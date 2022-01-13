@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ApiService } from '../../service/api.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Module } from 'src/app/model/module';
@@ -10,7 +10,7 @@ import { SqlInjectionTutorialResult } from 'src/app/model/sql-injection-tutorial
   templateUrl: './sql-injection-tutorial.component.html',
   styleUrls: ['./sql-injection-tutorial.component.css'],
 })
-export class SqlInjectionTutorialComponent implements OnInit {
+export class SqlInjectionTutorialComponent {
   queryForm: FormGroup;
   result: SqlInjectionTutorialResult[];
   errorResult: string;

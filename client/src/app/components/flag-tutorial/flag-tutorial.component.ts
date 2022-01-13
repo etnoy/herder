@@ -10,7 +10,7 @@ import { FlagTutorialResult } from 'src/app/model/flag-tutorial-result';
   templateUrl: './flag-tutorial.component.html',
   styleUrls: ['./flag-tutorial.component.css'],
 })
-export class FlagTutorialComponent implements OnInit {
+export class FlagTutorialComponent {
   claimForm: FormGroup;
   result: FlagTutorialResult;
 

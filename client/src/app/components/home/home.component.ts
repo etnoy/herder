@@ -3,7 +3,7 @@ import { ApiService } from 'src/app/service/api.service';
 import { User } from 'src/app/model/user';
 
 @Component({ templateUrl: 'home.component.html' })
-export class HomeComponent implements OnInit {
+export class HomeComponent {
   currentUser: User;
 
   constructor(private apiService: ApiService) {
