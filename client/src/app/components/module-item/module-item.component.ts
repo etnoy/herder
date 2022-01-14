@@ -86,8 +86,6 @@ export class ModuleItemComponent implements OnInit {
           }
           default: {
             return throwError(() => 'shortName cannot be resolved');
-
-            break;
           }
         }
 
