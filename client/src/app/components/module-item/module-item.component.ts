@@ -91,6 +91,8 @@ export class ModuleItemComponent implements OnInit {
 
         const viewContainerRef = this.moduleDirective.viewContainerRef;
         viewContainerRef.clear();
+
+        // Load the selected module
         const componentRef = viewContainerRef.createComponent(currentModule);
 
         (componentRef.instance as typeof currentModule).module = this.module;
@@ -114,6 +116,7 @@ export class ModuleItemComponent implements OnInit {
           this.loading = false;
           if (submission.isValid) {
             this.alertService.success(`Well done, module complete`);
+            this.solved = true;
             this.flagForm = this.fb.group({
               flag: [''],
             });
