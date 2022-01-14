@@ -1,20 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ApiService } from '../../service/api.service';
 import { Router, ActivatedRoute } from '@angular/router';
-import { AlertService } from 'src/app/service/alert.service';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { first } from 'rxjs/operators';
+import { AlertService } from 'src/app/service/alert.service';
+import { ApiService } from 'src/app/service/api.service';
 
-@Component({
-  selector: 'app-signin',
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css'],
-})
+@Component({ templateUrl: 'login.component.html' })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
-  returnUrl: string;
-  submitted = false;
   loading = false;
+  submitted = false;
+  returnUrl: string;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -22,17 +18,15 @@ export class LoginComponent implements OnInit {
     private router: Router,
     private apiService: ApiService,
     private alertService: AlertService
-  ) {
-    if (this.apiService.currentUserValue) {
-      this.router.navigate(['/']);
-    }
-  }
+  ) {}
 
   ngOnInit() {
     this.loginForm = this.formBuilder.group({
       userName: ['', Validators.required],
       password: ['', Validators.required],
     });
+
+    // get return url from route parameters or default to '/'
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
   }
 
@@ -48,14 +42,15 @@ export class LoginComponent implements OnInit {
     }
 
     this.loading = true;
+
     this.apiService
       .login(this.loginForm.value)
       .pipe(first())
-      .subscribe(
-        () => {
+      .subscribe({
+        next: () => {
           this.router.navigate([this.returnUrl]);
         },
-        (error) => {
+        error: (error) => {
           this.loading = false;
           let msg = '';
           if (error.error instanceof ErrorEvent) {
@@ -72,7 +67,7 @@ export class LoginComponent implements OnInit {
             }
           }
           this.alertService.error(msg);
-        }
-      );
+        },
+      });
   }
 }

@@ -126,6 +126,7 @@ export class ModuleItemComponent implements OnInit {
           }
         },
         () => {
+          this.loading = false;
           this.alertService.error(`An error occurred`);
         }
       );

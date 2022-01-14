@@ -70,8 +70,8 @@ export class ApiService {
   }
 
   // Sign-in
-  login(user: User) {
-    return this.http.post<any>(`${this.endpoint}/login`, user).pipe(
+  login(creds: User) {
+    return this.http.post<any>(`${this.endpoint}/login`, creds).pipe(
       map((returnedUser) => {
         // store user details and jwt token in local storage to keep user logged in between page refreshes
         localStorage.setItem('currentUser', JSON.stringify(returnedUser));

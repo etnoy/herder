@@ -19,14 +19,7 @@ export class ErrorInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     return next.handle(request).pipe(
       catchError((err) => {
-        if (err.status === 401) {
-          // auto logout if 401 response returned from api
-          this.apiService.logout();
-          location.reload();
-        }
-
-        const error = err.error.message || err.statusText;
-        return throwError(error);
+        return throwError(err);
       })
     );
   }
