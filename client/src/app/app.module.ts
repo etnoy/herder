@@ -21,6 +21,7 @@ import { ErrorInterceptor } from './shared/error.interceptor';
 import { ScoreboardComponent } from './components/scoreboard/scoreboard.component';
 import { UserScoreComponent } from './components/user-score/user-score.component';
 import { FlagTutorialComponent } from './components/flag-tutorial/flag-tutorial.component';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
   declarations: [
@@ -46,6 +47,7 @@ import { FlagTutorialComponent } from './components/flag-tutorial/flag-tutorial.
     ReactiveFormsModule,
     FormsModule,
     SearchbarModule,
+    NgbModule,
   ],
   providers: [
     {
