@@ -21,7 +21,6 @@ import { FlagTutorialComponent } from '../flag-tutorial/flag-tutorial.component'
 @Component({
   selector: 'app-module-item',
   templateUrl: './module-item.component.html',
-  styleUrls: ['./module-item.component.css'],
 })
 export class ModuleItemComponent implements OnInit {
   flagForm: FormGroup;
@@ -113,8 +112,8 @@ export class ModuleItemComponent implements OnInit {
 
     return this.apiService
       .submitFlag(this.module.name, this.flagForm.controls.flag.value)
-      .subscribe(
-        (submission: Submission) => {
+      .subscribe({
+        next: (submission: Submission) => {
           this.loading = false;
           if (submission.isValid) {
             this.alertService.success(`Well done, module complete`);
@@ -125,10 +124,10 @@ export class ModuleItemComponent implements OnInit {
             this.alertService.error(`Invalid flag`);
           }
         },
-        () => {
+        error: () => {
           this.loading = false;
           this.alertService.error(`An error occurred`);
-        }
-      );
+        },
+      });
   }
 }

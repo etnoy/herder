@@ -8,7 +8,6 @@ import { FlagTutorialResult } from 'src/app/model/flag-tutorial-result';
 @Component({
   selector: 'app-flag-tutorial',
   templateUrl: './flag-tutorial.component.html',
-  styleUrls: ['./flag-tutorial.component.css'],
 })
 export class FlagTutorialComponent {
   claimForm: FormGroup;
@@ -31,14 +30,14 @@ export class FlagTutorialComponent {
 
   public getFlag() {
     this.loading = true;
-    this.apiService.moduleGetRequest(this.module.name, '').subscribe(
-      (data) => {
+    this.apiService.moduleGetRequest(this.module.name, '').subscribe({
+      next: (data) => {
         this.alertService.clear();
         this.loading = false;
         this.submitted = true;
         this.result = data;
       },
-      (error) => {
+      error: (error) => {
         this.loading = false;
         this.submitted = false;
         this.result = null;
@@ -51,7 +50,7 @@ export class FlagTutorialComponent {
           msg = `An error occurred`;
         }
         this.alertService.error(msg);
-      }
-    );
+      },
+    });
   }
 }

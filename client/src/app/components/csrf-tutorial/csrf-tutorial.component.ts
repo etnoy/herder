@@ -8,7 +8,6 @@ import { CsrfTutorialResult } from 'src/app/model/csrf-tutorial-result';
 @Component({
   selector: 'app-csrf-injection-tutorial',
   templateUrl: './csrf-tutorial.component.html',
-  styleUrls: ['./csrf-tutorial.component.css'],
 })
 export class CsrfTutorialComponent implements OnInit {
   queryForm: FormGroup;
@@ -51,14 +50,14 @@ export class CsrfTutorialComponent implements OnInit {
   public activate(pseudonym: string): void {
     this.apiService
       .moduleGetRequest(this.module.name, 'activate/' + pseudonym)
-      .subscribe(
-        (data) => {
+      .subscribe({
+        next: (data) => {
           this.alertService.clear();
           this.loading = false;
           this.submitted = true;
           this.tutorialResult = data;
         },
-        (error) => {
+        error: (error) => {
           this.loading = false;
           this.submitted = false;
           this.tutorialResult = null;
@@ -72,19 +71,19 @@ export class CsrfTutorialComponent implements OnInit {
             msg = `An error occurred`;
           }
           this.alertService.error(msg);
-        }
-      );
+        },
+      });
   }
 
   public loadTutorial(): void {
     this.loading = true;
-    this.apiService.moduleGetRequest(this.module.name, '').subscribe(
-      (data) => {
+    this.apiService.moduleGetRequest(this.module.name, '').subscribe({
+      next: (data) => {
         this.alertService.clear();
         this.loading = false;
         this.tutorialResult = data;
       },
-      (error) => {
+      error: (error) => {
         this.loading = false;
         this.tutorialResult = null;
         this.errorResult = '';
@@ -96,7 +95,7 @@ export class CsrfTutorialComponent implements OnInit {
           msg = `An error occurred`;
         }
         this.alertService.error(msg);
-      }
-    );
+      },
+    });
   }
 }

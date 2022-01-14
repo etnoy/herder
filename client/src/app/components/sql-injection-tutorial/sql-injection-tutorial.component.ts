@@ -8,7 +8,6 @@ import { SqlInjectionTutorialResult } from 'src/app/model/sql-injection-tutorial
 @Component({
   selector: 'app-sql-injection-tutorial',
   templateUrl: './sql-injection-tutorial.component.html',
-  styleUrls: ['./sql-injection-tutorial.component.css'],
 })
 export class SqlInjectionTutorialComponent {
   queryForm: FormGroup;
@@ -42,13 +41,13 @@ export class SqlInjectionTutorialComponent {
         'search',
         this.queryForm.controls.query.value
       )
-      .subscribe(
-        (data) => {
+      .subscribe({
+        next: (data) => {
           this.alertService.clear();
           this.submitted = true;
           this.result = data;
         },
-        (error) => {
+        error: (error) => {
           this.submitted = false;
           this.result = [];
           this.errorResult = '';
@@ -60,7 +59,7 @@ export class SqlInjectionTutorialComponent {
             msg = `An error occurred`;
           }
           this.alertService.error(msg);
-        }
-      );
+        },
+      });
   }
 }
