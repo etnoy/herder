@@ -8,7 +8,6 @@ import { XssTutorialResult } from 'src/app/model/xss-tutorial-result';
 @Component({
   selector: 'app-xss-tutorial',
   templateUrl: './xss-tutorial.component.html',
-  styleUrls: ['./xss-tutorial.component.css'],
 })
 export class XssTutorialComponent {
   queryForm: FormGroup;

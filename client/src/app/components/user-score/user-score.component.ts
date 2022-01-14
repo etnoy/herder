@@ -6,7 +6,6 @@ import { UserScore } from 'src/app/model/user-score';
 @Component({
   selector: 'app-user-score',
   templateUrl: './user-score.component.html',
-  styleUrls: ['./user-score.component.css'],
 })
 export class UserScoreComponent implements OnInit {
   submissions: UserScore[];
