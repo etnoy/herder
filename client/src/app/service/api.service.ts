@@ -146,6 +146,6 @@ export class ApiService {
       // server-side error
       msg = `Error Code: ${error.status}\nMessage: ${error.message}`;
     }
-    return throwError(msg);
+    return throwError(() => msg);
   }
 }

@@ -52,7 +52,7 @@ export class ModuleItemComponent implements OnInit {
     this.route.url.subscribe((segments: UrlSegment[]) => {
       if (!Array.isArray(segments) || !segments.length) {
         // no parameters given, return error
-        throwError('Invalid argument');
+        return throwError(() => 'Invalid argument');
       }
       const id = segments[0].path;
 
@@ -85,16 +85,15 @@ export class ModuleItemComponent implements OnInit {
             break;
           }
           default: {
-            throwError('shortName cannot be resolved');
+            return throwError(() => 'shortName cannot be resolved');
+
             break;
           }
         }
-        const componentFactory =
-          this.componentFactoryResolver.resolveComponentFactory(currentModule);
 
         const viewContainerRef = this.moduleDirective.viewContainerRef;
         viewContainerRef.clear();
-        const componentRef = viewContainerRef.createComponent(componentFactory);
+        const componentRef = viewContainerRef.createComponent(currentModule);
 
         (componentRef.instance as typeof currentModule).module = this.module;
       });
