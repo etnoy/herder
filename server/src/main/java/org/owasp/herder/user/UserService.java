@@ -1,16 +1,16 @@
-/* 
- * Copyright 2018-2021 Jonathan Jogenfors, jonathan@jogenfors.se
- * 
+/*
+ * Copyright 2018-2022 Jonathan Jogenfors, jonathan@jogenfors.se
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,15 +21,20 @@
  */
 package org.owasp.herder.user;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.format.DateTimeFormatter;
+
+import org.owasp.herder.authentication.AuthResponse;
+import org.owasp.herder.authentication.AuthResponse.AuthResponseBuilder;
 import org.owasp.herder.authentication.PasswordAuth;
 import org.owasp.herder.authentication.PasswordAuth.PasswordAuthBuilder;
 import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.authentication.UserAuth;
 import org.owasp.herder.authentication.UserAuthRepository;
 import org.owasp.herder.crypto.KeyService;
+import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
@@ -38,14 +43,17 @@ import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.UserIdNotFoundException;
 import org.owasp.herder.service.ClassService;
 import org.owasp.herder.user.User.UserBuilder;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
 public final class UserService {
 
@@ -59,15 +67,28 @@ public final class UserService {
 
   private final KeyService keyService;
 
-  public Mono<Long> count() {
-    return userRepository.count();
+  private final WebTokenKeyManager webTokenKeyManager;
+
+  private Clock clock;
+
+  public UserService(
+      UserRepository userRepository,
+      UserAuthRepository userAuthRepository,
+      PasswordAuthRepository passwordAuthRepository,
+      ClassService classService,
+      KeyService keyService,
+      WebTokenKeyManager webTokenKeyManager) {
+    this.userRepository = userRepository;
+    this.userAuthRepository = userAuthRepository;
+    this.passwordAuthRepository = passwordAuthRepository;
+    this.classService = classService;
+    this.keyService = keyService;
+    this.webTokenKeyManager = webTokenKeyManager;
+    resetClock();
   }
 
-  public Mono<Boolean> authenticate(final String username, final String password) {
-    if (username == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (password == null) {
+  public Mono<AuthResponse> authenticate(final String username, final String password) {
+    if ((username == null) || (password == null)) {
       return Mono.error(new NullPointerException());
     }
     if (username.isEmpty()) {
@@ -79,25 +100,53 @@ public final class UserService {
     // Initialize the encoder
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(16);
 
-    return
-    // Find the password auth
-    findPasswordAuthByLoginName(username)
-        // Extract the password hash
-        .map(PasswordAuth::getHashedPassword)
-        // Check if hash matches
-        .map(hashedPassword -> encoder.matches(password, hashedPassword))
-        .defaultIfEmpty(false);
+    final Mono<PasswordAuth> passwordAuthMono = // Find the password auth
+        findPasswordAuthByLoginName(username)
+            .filter(passwordAuth -> encoder.matches(password, passwordAuth.getHashedPassword()))
+            .switchIfEmpty(Mono.error(new BadCredentialsException("Invalid username or password")));
+
+    final Mono<UserAuth> userAuthMono =
+        passwordAuthMono.map(PasswordAuth::getUserId).flatMap(this::findUserAuthByUserId);
+
+    final AuthResponseBuilder authResponseBuilder = AuthResponse.builder();
+
+    return Mono.zip(passwordAuthMono, userAuthMono)
+        .map(
+            tuple -> {
+              final LocalDateTime suspendedUntil = tuple.getT2().getSuspendedUntil();
+              boolean isSuspended = true;
+              if (suspendedUntil == null) {
+                isSuspended = false;
+              } else {
+                isSuspended = tuple.getT2().getSuspendedUntil().isAfter(LocalDateTime.now());
+              }
+
+              if (!tuple.getT2().isEnabled()) {
+                // Account is not enabled
+                throw new DisabledException("Account disabled");
+
+              } else if (isSuspended) {
+                // Account is suspended until a given date
+
+                // TODO: make this testable by introducing testclock
+
+                final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+
+                throw new LockedException(
+                    String.format(
+                        "Account suspended until %s",
+                        tuple.getT2().getSuspendedUntil().format(formatter)));
+              } else {
+                authResponseBuilder.userName(username);
+                authResponseBuilder.userId(tuple.getT1().getUserId());
+                authResponseBuilder.isAdmin(tuple.getT2().isAdmin());
+              }
+              return authResponseBuilder.build();
+            });
   }
 
-  public Flux<SimpleGrantedAuthority> getAuthoritiesByUserId(final long userId) {
-    if (userId <= 0) {
-      return Flux.error(new InvalidUserIdException());
-    }
-    return findUserAuthByUserId(userId)
-        .filter(UserAuth::isAdmin)
-        .map(userAuth -> new SimpleGrantedAuthority("ROLE_ADMIN"))
-        .flux()
-        .concatWithValues(new SimpleGrantedAuthority("ROLE_USER"));
+  public Mono<Long> count() {
+    return userRepository.count();
   }
 
   public Mono<Long> create(final String displayName) {
@@ -178,7 +227,8 @@ public final class UserService {
               return userIdMono.delayUntil(
                   userId -> {
                     Mono<UserAuth> userAuthMono =
-                        userAuthRepository.save(UserAuth.builder().userId(userId).build());
+                        userAuthRepository.save(
+                            UserAuth.builder().userId(userId).isEnabled(true).build());
 
                     Mono<PasswordAuth> passwordAuthMono =
                         passwordAuthRepository.save(passwordAuthBuilder.userId(userId).build());
@@ -195,7 +245,8 @@ public final class UserService {
     return passwordAuthRepository
         .deleteByUserId(userId)
         .then(userAuthRepository.deleteByUserId(userId))
-        .then(userRepository.deleteById(userId));
+        .then(userRepository.deleteById(userId))
+        .doOnSuccess(__ -> kick(userId));
   }
 
   public Mono<Void> demote(final long userId) {
@@ -208,6 +259,21 @@ public final class UserService {
     return findUserAuthByUserId(userId)
         .map(userAuth -> userAuth.withAdmin(false))
         .flatMap(userAuthRepository::save)
+        .doOnSuccess(__ -> kick(userId))
+        .then();
+  }
+
+  public Mono<Void> disable(final long userId) {
+    if (userId <= 0) {
+      return Mono.error(new InvalidUserIdException());
+    }
+
+    log.info("Disabling user with id " + userId);
+
+    return findUserAuthByUserId(userId)
+        .map(userAuth -> userAuth.withEnabled(false))
+        .flatMap(userAuthRepository::save)
+        .doOnSuccess(__ -> kick(userId))
         .then();
   }
 
@@ -222,6 +288,20 @@ public final class UserService {
 
   private Mono<Boolean> doesNotExistByLoginName(final String loginName) {
     return passwordAuthRepository.findByLoginName(loginName).map(u -> false).defaultIfEmpty(true);
+  }
+
+  public Mono<Void> enable(final long userId) {
+    if (userId <= 0) {
+      return Mono.error(new InvalidUserIdException());
+    }
+
+    log.info("Enabling user with id " + userId);
+
+    return findUserAuthByUserId(userId)
+        .map(userAuth -> userAuth.withEnabled(true))
+        .flatMap(userAuthRepository::save)
+        .doOnSuccess(__ -> kick(userId))
+        .then();
   }
 
   public Flux<User> findAll() {
@@ -301,6 +381,16 @@ public final class UserService {
     return passwordAuthRepository.findByLoginName(loginName).map(PasswordAuth::getUserId);
   }
 
+  public void kick(final long userId) {
+    if (userId <= 0) {
+      throw new InvalidUserIdException();
+    }
+
+    log.info("Revoking all tokens for user with id " + userId);
+
+    webTokenKeyManager.invalidateAccessToken(userId);
+  }
+
   private Mono<String> loginNameAlreadyExists(final String loginName) {
     return Mono.error(
         new DuplicateUserLoginNameException("Login name " + loginName + " already exists"));
@@ -316,7 +406,12 @@ public final class UserService {
     return findUserAuthByUserId(userId)
         .map(userAuth -> userAuth.withAdmin(true))
         .flatMap(userAuthRepository::save)
+        .doOnSuccess(__ -> kick(userId))
         .then();
+  }
+
+  public void resetClock() {
+    this.clock = Clock.systemDefaultZone();
   }
 
   public Mono<User> setClassId(final long userId, final long classId) {
@@ -337,7 +432,12 @@ public final class UserService {
         .flatMap(this::findById)
         .zipWith(classIdMono)
         .map(tuple -> tuple.getT1().withClassId(tuple.getT2()))
-        .flatMap(userRepository::save);
+        .flatMap(userRepository::save)
+        .doOnSuccess(__ -> kick(userId));
+  }
+
+  public void setClock(Clock clock) {
+    this.clock = clock;
   }
 
   public Mono<User> setDisplayName(final long userId, final String displayName) {
@@ -367,5 +467,41 @@ public final class UserService {
         .zipWith(displayNameMono)
         .map(tuple -> tuple.getT1().withDisplayName(tuple.getT2()))
         .flatMap(userRepository::save);
+  }
+
+  public Mono<Void> suspendUntil(final long userId, final Duration duration) {
+    return suspendUntil(userId, LocalDateTime.now().plus(duration), null);
+  }
+
+  public Mono<Void> suspendUntil(
+      final long userId, final Duration duration, final String suspensionMessage) {
+    return suspendUntil(userId, LocalDateTime.now().plus(duration), suspensionMessage);
+  }
+
+  public Mono<Void> suspendUntil(final long userId, final LocalDateTime suspensionDate) {
+    return suspendUntil(userId, suspensionDate, null);
+  }
+
+  public Mono<Void> suspendUntil(
+      final long userId, final LocalDateTime suspensionDate, final String suspensionMessage) {
+    if (userId <= 0) {
+      return Mono.error(new InvalidUserIdException());
+    }
+
+    if (suspensionDate.isBefore(LocalDateTime.now(clock))) {
+      return Mono.error(new IllegalArgumentException("Suspension date must be in the future"));
+    }
+
+    log.info("Suspending user with id " + userId + " until " + suspensionDate.toString());
+
+    return findUserAuthByUserId(userId)
+        .map(
+            userAuth ->
+                userAuth
+                    .withSuspendedUntil(suspensionDate)
+                    .withSuspensionMessage(suspensionMessage))
+        .flatMap(userAuthRepository::save)
+        .doOnSuccess(__ -> kick(userId))
+        .then();
   }
 }

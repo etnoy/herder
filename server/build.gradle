@@ -90,7 +90,7 @@ dependencies {
     integrationTestRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 
     integrationTestImplementation 'nl.jqno.equalsverifier:equalsverifier:3.4.2'
-    integrationTestImplementation 'io.projectreactor:reactor-test:3.3.4.RELEASE'
+    integrationTestImplementation 'io.projectreactor:reactor-test:3.4.14'
     integrationTestImplementation 'org.apache.commons:commons-lang3:3.11'
 }
 

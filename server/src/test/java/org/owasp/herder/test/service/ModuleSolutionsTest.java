@@ -1,16 +1,16 @@
-/* 
- * Copyright 2018-2021 Jonathan Jogenfors, jonathan@jogenfors.se
- * 
+/*
+ * Copyright 2018-2022 Jonathan Jogenfors, jonathan@jogenfors.se
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -53,7 +53,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("ModuleSolutions unit test")
+@DisplayName("ModuleSolutions unit tests")
 class ModuleSolutionsTest {
 
   @BeforeAll
@@ -72,9 +72,7 @@ class ModuleSolutionsTest {
   void findModuleByNameWithSolutionStatus_EmptyModuleName_ReturnsInvalidModuleNameException() {
     final long mockUserId = 690L;
     StepVerifier.create(moduleSolutions.findModuleByNameWithSolutionStatus(mockUserId, ""))
-        .expectErrorMatches(
-            throwable ->
-                throwable instanceof EmptyModuleNameException)
+        .expectErrorMatches(throwable -> throwable instanceof EmptyModuleNameException)
         .verify();
   }
 
@@ -84,9 +82,7 @@ class ModuleSolutionsTest {
     for (final long userId : TestUtils.INVALID_IDS) {
       StepVerifier.create(
               moduleSolutions.findModuleByNameWithSolutionStatus(userId, mockModuleName))
-          .expectErrorMatches(
-              throwable ->
-                  throwable instanceof InvalidUserIdException)
+          .expectErrorMatches(throwable -> throwable instanceof InvalidUserIdException)
           .verify();
     }
   }
@@ -162,9 +158,7 @@ class ModuleSolutionsTest {
   void findModuleByNameWithSolutionStatus_NullModuleName_ReturnsInvalidModuleNameException() {
     final Long mockUserId = 108L;
     StepVerifier.create(moduleSolutions.findModuleByNameWithSolutionStatus(mockUserId, null))
-        .expectErrorMatches(
-            throwable ->
-                throwable instanceof NullPointerException)
+        .expectErrorMatches(throwable -> throwable instanceof NullPointerException)
         .verify();
   }
 
@@ -172,9 +166,7 @@ class ModuleSolutionsTest {
   void findOpenModuleByIdWithSolutionStatus_EmptyModuleName_ReturnsInvalidModuleNameException() {
     final long mockUserId = 690L;
     StepVerifier.create(moduleSolutions.findOpenModuleByIdWithSolutionStatus(mockUserId, ""))
-        .expectErrorMatches(
-            throwable ->
-                throwable instanceof EmptyModuleNameException)
+        .expectErrorMatches(throwable -> throwable instanceof EmptyModuleNameException)
         .verify();
   }
 
@@ -184,9 +176,7 @@ class ModuleSolutionsTest {
     for (final long userId : TestUtils.INVALID_IDS) {
       StepVerifier.create(
               moduleSolutions.findOpenModuleByIdWithSolutionStatus(userId, mockModuleName))
-          .expectErrorMatches(
-              throwable ->
-                  throwable instanceof InvalidUserIdException)
+          .expectErrorMatches(throwable -> throwable instanceof InvalidUserIdException)
           .verify();
     }
   }
@@ -288,9 +278,7 @@ class ModuleSolutionsTest {
   void findOpenModuleByIdWithSolutionStatus_NullModuleName_ReturnsInvalidModuleNameException() {
     final Long mockUserId = 108L;
     StepVerifier.create(moduleSolutions.findOpenModuleByIdWithSolutionStatus(mockUserId, null))
-        .expectErrorMatches(
-            throwable ->
-                throwable instanceof NullPointerException)
+        .expectErrorMatches(throwable -> throwable instanceof NullPointerException)
         .verify();
   }
 
@@ -335,8 +323,7 @@ class ModuleSolutionsTest {
     when(mockModule2.getName()).thenReturn(mockModule2Name);
 
     final Mono<List<String>> mockedValidSolutionsList =
-        Mono.just(
-            new ArrayList<String>(Arrays.asList(mockModule1Name, mockModule2Name, mockModule3Id)));
+        Mono.just(new ArrayList<>(Arrays.asList(mockModule1Name, mockModule2Name, mockModule3Id)));
 
     when(submissionService.findAllValidModuleNamesByUserId(mockUserId))
         .thenReturn(mockedValidSolutionsList);

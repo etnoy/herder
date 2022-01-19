@@ -1,16 +1,16 @@
-/* 
- * Copyright 2018-2021 Jonathan Jogenfors, jonathan@jogenfors.se
- * 
+/*
+ * Copyright 2018-2022 Jonathan Jogenfors, jonathan@jogenfors.se
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,9 +23,12 @@ package org.owasp.herder.authentication;
 
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.owasp.herder.authentication.LoginResponse.LoginResponseBuilder;
+import org.owasp.herder.crypto.WebTokenService;
 import org.owasp.herder.user.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,23 +48,35 @@ public class LoginController {
   private final PasswordEncoder passwordEncoder;
 
   @PostMapping(value = "/login")
-  public Mono<ResponseEntity<AuthResponse>> login(@RequestBody @Valid PasswordLoginDto loginDto) {
+  public Mono<ResponseEntity<LoginResponse>> login(@RequestBody @Valid PasswordLoginDto loginDto) {
+    final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
     return userService
-        .findUserIdByLoginName(loginDto.getUserName())
-        .filterWhen(
-            userId -> userService.authenticate(loginDto.getUserName(), loginDto.getPassword()))
-        .map(webTokenService::generateToken)
-        .map(token -> new AuthResponse(token, loginDto.getUserName()))
-        .map(authResponse -> new ResponseEntity<>(authResponse, HttpStatus.OK))
-        .defaultIfEmpty(new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+        .authenticate(loginDto.getUserName(), loginDto.getPassword())
+        .map(
+            authResponse -> {
+              final String accessToken =
+                  webTokenService.generateToken(authResponse.getUserId(), authResponse.isAdmin());
+              final LoginResponse loginResponse =
+                  loginResponseBuilder.accessToken(accessToken).build();
+              return new ResponseEntity<>(loginResponse, HttpStatus.OK);
+            })
+        .onErrorResume(
+            AuthenticationException.class,
+            throwable -> {
+              final LoginResponse loginResponse =
+                  loginResponseBuilder.errorMessage(throwable.getMessage()).build();
+              return Mono.just(new ResponseEntity<>(loginResponse, HttpStatus.UNAUTHORIZED));
+            });
   }
 
   @PostMapping(path = "/register")
   @ResponseStatus(HttpStatus.CREATED)
-  public Mono<Long> register(@Valid @RequestBody final PasswordRegistrationDto registerDto) {
-    return userService.createPasswordUser(
-        registerDto.getDisplayName(),
-        registerDto.getUserName(),
-        passwordEncoder.encode(registerDto.getPassword()));
+  public Mono<Void> register(@Valid @RequestBody final PasswordRegistrationDto registrationDto) {
+    return userService
+        .createPasswordUser(
+            registrationDto.getDisplayName(),
+            registrationDto.getUserName(),
+            passwordEncoder.encode(registrationDto.getPassword()))
+        .then();
   }
 }

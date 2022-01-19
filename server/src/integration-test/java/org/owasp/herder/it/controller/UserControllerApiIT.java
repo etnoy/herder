@@ -1,16 +1,16 @@
-/* 
- * Copyright 2018-2021 Jonathan Jogenfors, jonathan@jogenfors.se
- * 
+/*
+ * Copyright 2018-2022 Jonathan Jogenfors, jonathan@jogenfors.se
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -55,8 +55,8 @@ import reactor.test.StepVerifier;
     properties = {"application.runner.enabled=false"})
 @AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
-@DisplayName("UserController integration test")
-class UserControllerIT {
+@DisplayName("UserController API integration tests")
+class UserControllerApiIT {
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages
@@ -96,7 +96,7 @@ class UserControllerIT {
                         .expectBody()
                         .returnResult()
                         .getResponseBody()))
-            .read("$.token");
+            .read("$.accessToken");
 
     webTestClient
         .get()
@@ -116,7 +116,7 @@ class UserControllerIT {
     final long userId =
         userService.createPasswordUser("Test User", loginName, hashedPassword).block();
 
-    String token =
+    final String token =
         JsonPath.parse(
                 new String(
                     webTestClient
@@ -136,7 +136,7 @@ class UserControllerIT {
                         .expectBody()
                         .returnResult()
                         .getResponseBody()))
-            .read("$.token");
+            .read("$.accessToken");
 
     webTestClient
         .get()
@@ -150,11 +150,33 @@ class UserControllerIT {
     // Promote user to admin
     userService.promote(userId).block();
 
+    String newToken =
+        JsonPath.parse(
+                new String(
+                    webTestClient
+                        .post()
+                        .uri("/api/v1/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(
+                            BodyInserters.fromPublisher(
+                                Mono.just(
+                                    "{\"userName\": \""
+                                        + loginName
+                                        + "\", \"password\": \"test\"}"),
+                                String.class))
+                        .exchange()
+                        .expectStatus()
+                        .isOk()
+                        .expectBody()
+                        .returnResult()
+                        .getResponseBody()))
+            .read("$.accessToken");
+
     // Now the user should be able to see user list
     webTestClient
         .get()
         .uri("/api/v1/users")
-        .header("Authorization", "Bearer " + token)
+        .header("Authorization", "Bearer " + newToken)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectStatus()
@@ -166,22 +188,20 @@ class UserControllerIT {
     final String loginName = "test";
     final String password = "paLswOrdha17£@£sh";
 
-    HashSet<Long> userIdSet = new HashSet<Long>();
+    HashSet<Long> userIdSet = new HashSet<>();
 
-    final long userId =
-        webTestClient
-            .post()
-            .uri("/api/v1/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(
-                BodyInserters.fromValue(
-                    new PasswordRegistrationDto("TestUserDisplayName", loginName, password)))
-            .exchange()
-            .expectStatus()
-            .isCreated()
-            .expectBody(Long.class)
-            .returnResult()
-            .getResponseBody();
+    webTestClient
+        .post()
+        .uri("/api/v1/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+            BodyInserters.fromValue(
+                new PasswordRegistrationDto("TestUserDisplayName", loginName, password)))
+        .exchange()
+        .expectStatus()
+        .isCreated();
+
+    final long userId = userService.findUserIdByLoginName(loginName).block();
 
     // Promote this user to admin
     userService.promote(userId).block();
@@ -210,37 +230,33 @@ class UserControllerIT {
                         .expectBody()
                         .returnResult()
                         .getResponseBody()))
-            .read("$.token");
+            .read("$.accessToken");
 
-    userIdSet.add(
-        webTestClient
-            .post()
-            .uri("/api/v1/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(
-                BodyInserters.fromValue(
-                    new PasswordRegistrationDto("TestUser2", "loginName2", "paLswOrdha17£@£sh")))
-            .exchange()
-            .expectStatus()
-            .isCreated()
-            .expectBody(Long.class)
-            .returnResult()
-            .getResponseBody());
+    webTestClient
+        .post()
+        .uri("/api/v1/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+            BodyInserters.fromValue(
+                new PasswordRegistrationDto("TestUser2", "loginName2", "paLswOrdha17£@£sh")))
+        .exchange()
+        .expectStatus()
+        .isCreated();
 
-    userIdSet.add(
-        webTestClient
-            .post()
-            .uri("/api/v1/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(
-                BodyInserters.fromValue(
-                    new PasswordRegistrationDto("TestUser3", "loginName3", "paLswOrdha17£@£sh")))
-            .exchange()
-            .expectStatus()
-            .isCreated()
-            .expectBody(Long.class)
-            .returnResult()
-            .getResponseBody());
+    userIdSet.add(userService.findUserIdByLoginName("loginName2").block());
+
+    webTestClient
+        .post()
+        .uri("/api/v1/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+            BodyInserters.fromValue(
+                new PasswordRegistrationDto("TestUser3", "loginName3", "paLswOrdha17£@£sh")))
+        .exchange()
+        .expectStatus()
+        .isCreated();
+
+    userIdSet.add(userService.findUserIdByLoginName("loginName3").block());
 
     StepVerifier.create(
             webTestClient
@@ -257,7 +273,7 @@ class UserControllerIT {
                 .getResponseBody()
                 .map(User::getId))
         .recordWith(HashSet::new)
-        .thenConsumeWhile(x -> true)
+        .thenConsumeWhile(__ -> true)
         .expectRecordedMatches(x -> x.equals(userIdSet))
         .expectComplete()
         .verify();
@@ -268,28 +284,26 @@ class UserControllerIT {
     final String loginName = "test";
     final String password = "paLswOrdha17£@£sh";
 
-    final int userId =
-        webTestClient
-            .post()
-            .uri("/api/v1/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(
-                BodyInserters.fromPublisher(
-                    Mono.just(
-                        "{\"displayName\": \""
-                            + loginName
-                            + "\", \"userName\": \""
-                            + loginName
-                            + "\",  \"password\": \""
-                            + password
-                            + "\"}"),
-                    String.class))
-            .exchange()
-            .expectStatus()
-            .isCreated()
-            .expectBody(Integer.class)
-            .returnResult()
-            .getResponseBody();
+    webTestClient
+        .post()
+        .uri("/api/v1/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+            BodyInserters.fromPublisher(
+                Mono.just(
+                    "{\"displayName\": \""
+                        + loginName
+                        + "\", \"userName\": \""
+                        + loginName
+                        + "\",  \"password\": \""
+                        + password
+                        + "\"}"),
+                String.class))
+        .exchange()
+        .expectStatus()
+        .isCreated();
+
+    final long userId = userService.findUserIdByLoginName("test").block();
 
     // Promote this user to admin
     userService.promote(userId).block();
@@ -316,12 +330,12 @@ class UserControllerIT {
                         .expectBody()
                         .returnResult()
                         .getResponseBody()))
-            .read("$.token");
+            .read("$.accessToken");
 
     FluxExchangeResult<User> getResult =
         webTestClient
             .get()
-            .uri("/api/v1/user/" + Integer.toString(userId))
+            .uri("/api/v1/user/" + Long.toString(userId))
             .header("Authorization", "Bearer " + token)
             .accept(MediaType.APPLICATION_JSON)
             .exchange()

@@ -1,16 +1,16 @@
-/* 
- * Copyright 2018-2021 Jonathan Jogenfors, jonathan@jogenfors.se
- * 
+/*
+ * Copyright 2018-2022 Jonathan Jogenfors, jonathan@jogenfors.se
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,6 +30,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,12 +40,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.authentication.PasswordAuth;
 import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.authentication.UserAuth;
 import org.owasp.herder.authentication.UserAuthRepository;
 import org.owasp.herder.crypto.KeyService;
+import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
@@ -55,15 +59,19 @@ import org.owasp.herder.test.util.TestUtils;
 import org.owasp.herder.user.User;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("UserService unit test")
+@DisplayName("UserService unit tests")
 class UserServiceTest {
 
   @BeforeAll
@@ -83,6 +91,8 @@ class UserServiceTest {
   @Mock private ClassService classService;
 
   @Mock private KeyService keyService;
+
+  @Mock private WebTokenKeyManager webTokenKeyManager;
 
   @Test
   void authenticate_EmptyPassword_ReturnsIllegalArgumentException() {
@@ -105,8 +115,10 @@ class UserServiceTest {
 
     when(passwordAuthRepository.findByLoginName(mockedLoginName)).thenReturn(Mono.empty());
     StepVerifier.create(userService.authenticate(mockedLoginName, mockedPassword))
-        .expectNext(false)
-        .expectComplete()
+        .expectErrorMatches(
+            throwable ->
+                throwable instanceof AuthenticationException
+                    && throwable.getMessage().equals("Invalid username or password"))
         .verify();
     verify(passwordAuthRepository, times(1)).findByLoginName(mockedLoginName);
   }
@@ -126,39 +138,120 @@ class UserServiceTest {
   }
 
   @Test
-  void authenticate_ValidUsernameAndPassword_ReturnsTrue() {
+  void authenticate_ValidUsernameAndPassword_Authenticates() {
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(16);
+    final Long mockedUserId = 614L;
     final String mockedLoginName = "MockUser";
     final String mockedPassword = "MockPassword";
     final String mockedPasswordHash = encoder.encode(mockedPassword);
     final PasswordAuth mockedPasswordAuth = mock(PasswordAuth.class);
+    final UserAuth mockedUserAuth = mock(UserAuth.class);
 
     when(passwordAuthRepository.findByLoginName(mockedLoginName))
         .thenReturn(Mono.just(mockedPasswordAuth));
     when(mockedPasswordAuth.getHashedPassword()).thenReturn(mockedPasswordHash);
+    when(mockedPasswordAuth.getUserId()).thenReturn(mockedUserId);
+    when(userAuthRepository.findByUserId(mockedUserId)).thenReturn(Mono.just(mockedUserAuth));
+    when(mockedUserAuth.isEnabled()).thenReturn(true);
+
+    when(mockedUserAuth.getSuspendedUntil()).thenReturn(null);
+
     StepVerifier.create(userService.authenticate(mockedLoginName, mockedPassword))
-        .expectNext(true)
+        .assertNext(
+            authResponse -> {
+              assertThat(authResponse.getUserId()).isEqualTo(mockedUserId);
+              assertThat(authResponse.getUserName()).isEqualTo(mockedLoginName);
+            })
         .expectComplete()
         .verify();
     verify(passwordAuthRepository, times(1)).findByLoginName(mockedLoginName);
   }
 
   @Test
-  void authenticate_ValidUsernameButInvalidPassword_ReturnsTrue() {
+  void authenticate_ValidUsernameAndPasswordButUserNotEnabled_DoesNotAuthenticates() {
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(16);
+    final Long mockedUserId = 614L;
+    final String mockedLoginName = "MockUser";
+    final String mockedPassword = "MockPassword";
+    final String mockedPasswordHash = encoder.encode(mockedPassword);
+    final PasswordAuth mockedPasswordAuth = mock(PasswordAuth.class);
+    final UserAuth mockedUserAuth = mock(UserAuth.class);
+
+    when(passwordAuthRepository.findByLoginName(mockedLoginName))
+        .thenReturn(Mono.just(mockedPasswordAuth));
+    when(mockedPasswordAuth.getHashedPassword()).thenReturn(mockedPasswordHash);
+    when(mockedPasswordAuth.getUserId()).thenReturn(mockedUserId);
+    when(userAuthRepository.findByUserId(mockedUserId)).thenReturn(Mono.just(mockedUserAuth));
+    when(mockedUserAuth.isEnabled()).thenReturn(false);
+
+    LocalDateTime longAgo = LocalDateTime.MIN;
+    when(mockedUserAuth.getSuspendedUntil()).thenReturn(longAgo);
+
+    StepVerifier.create(userService.authenticate(mockedLoginName, mockedPassword))
+        .expectErrorMatches(
+            throwable ->
+                throwable instanceof DisabledException
+                    && throwable.getMessage().equals("Account disabled"))
+        .verify();
+
+    verify(passwordAuthRepository, times(1)).findByLoginName(mockedLoginName);
+  }
+
+  @Test
+  void authenticate_ValidUsernameAndPasswordButUserSuspended_DoesNotAuthenticates() {
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(16);
+    final Long mockedUserId = 614L;
+    final String mockedLoginName = "MockUser";
+    final String mockedPassword = "MockPassword";
+    final String mockedPasswordHash = encoder.encode(mockedPassword);
+    final PasswordAuth mockedPasswordAuth = mock(PasswordAuth.class);
+    final UserAuth mockedUserAuth = mock(UserAuth.class);
+
+    when(passwordAuthRepository.findByLoginName(mockedLoginName))
+        .thenReturn(Mono.just(mockedPasswordAuth));
+    when(mockedPasswordAuth.getHashedPassword()).thenReturn(mockedPasswordHash);
+    when(mockedPasswordAuth.getUserId()).thenReturn(mockedUserId);
+    when(userAuthRepository.findByUserId(mockedUserId)).thenReturn(Mono.just(mockedUserAuth));
+    when(mockedUserAuth.isEnabled()).thenReturn(true);
+
+    LocalDateTime futureDate = LocalDateTime.MAX;
+    when(mockedUserAuth.getSuspendedUntil()).thenReturn(futureDate);
+
+    StepVerifier.create(userService.authenticate(mockedLoginName, mockedPassword))
+        .expectErrorMatches(
+            throwable ->
+                throwable instanceof LockedException
+                    && throwable
+                        .getMessage()
+                        .equals("Account suspended until +999999999-12-31T23:59:59.999999999"))
+        .verify();
+  }
+
+  @Test
+  void authenticate_ValidUsernameButInvalidPassword_DoesNotAuthenticate() {
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(16);
     final String mockedLoginName = "MockUser";
     final String wrongPassword = "WrongPassword";
     final String mockedPassword = "MockPassword";
+
     final String mockedPasswordHash = encoder.encode(mockedPassword);
     final PasswordAuth mockedPasswordAuth = mock(PasswordAuth.class);
 
     when(passwordAuthRepository.findByLoginName(mockedLoginName))
         .thenReturn(Mono.just(mockedPasswordAuth));
     when(mockedPasswordAuth.getHashedPassword()).thenReturn(mockedPasswordHash);
+
+    when(passwordAuthRepository.findByLoginName(mockedLoginName))
+        .thenReturn(Mono.just(mockedPasswordAuth));
+    when(mockedPasswordAuth.getHashedPassword()).thenReturn(mockedPasswordHash);
+
     StepVerifier.create(userService.authenticate(mockedLoginName, wrongPassword))
-        .expectNext(false)
-        .expectComplete()
+        .expectErrorMatches(
+            throwable ->
+                throwable instanceof BadCredentialsException
+                    && throwable.getMessage().equals("Invalid username or password"))
         .verify();
+
     verify(passwordAuthRepository, times(1)).findByLoginName(mockedLoginName);
   }
 
@@ -423,6 +516,8 @@ class UserServiceTest {
 
     when(mockAuth.withAdmin(false)).thenReturn(mockDemotedAuth);
 
+    Mockito.doNothing().when(webTokenKeyManager).invalidateAccessToken(mockUserId);
+
     StepVerifier.create(userService.demote(mockUserId)).expectComplete().verify();
 
     verify(userRepository, never()).findById(any(Long.class));
@@ -434,6 +529,7 @@ class UserServiceTest {
     verify(mockAuth, times(1)).withAdmin(false);
     verify(userAuthRepository, never()).save(mockAuth);
     verify(userAuthRepository, times(1)).save(mockDemotedAuth);
+    verify(webTokenKeyManager, times(1)).invalidateAccessToken(mockUserId);
   }
 
   @Test
@@ -720,42 +816,6 @@ class UserServiceTest {
   }
 
   @Test
-  void getAuthoritiesByUserId_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
-      StepVerifier.create(userService.getAuthoritiesByUserId(userId))
-          .expectError(InvalidUserIdException.class)
-          .verify();
-    }
-  }
-
-  @Test
-  void getAuthoritiesByUserId_UserIsAdmin_ReturnsAdminAuthority() {
-    final long mockedUserId = 158L;
-    final UserAuth mockedUserAuth = mock(UserAuth.class);
-    when(userAuthRepository.findByUserId(mockedUserId)).thenReturn(Mono.just(mockedUserAuth));
-    when(mockedUserAuth.isAdmin()).thenReturn(true);
-    StepVerifier.create(userService.getAuthoritiesByUserId(mockedUserId))
-        .expectNext(new SimpleGrantedAuthority("ROLE_ADMIN"))
-        .expectNext(new SimpleGrantedAuthority("ROLE_USER"))
-        .expectComplete()
-        .verify();
-    verify(userAuthRepository, times(1)).findByUserId(mockedUserId);
-  }
-
-  @Test
-  void getAuthoritiesByUserId_UserIsNotAdmin_ReturnsUserAuthority() {
-    final long mockedUserId = 158L;
-    final UserAuth mockedUserAuth = mock(UserAuth.class);
-    when(userAuthRepository.findByUserId(mockedUserId)).thenReturn(Mono.just(mockedUserAuth));
-    when(mockedUserAuth.isAdmin()).thenReturn(false);
-    StepVerifier.create(userService.getAuthoritiesByUserId(mockedUserId))
-        .expectNext(new SimpleGrantedAuthority("ROLE_USER"))
-        .expectComplete()
-        .verify();
-    verify(userAuthRepository, times(1)).findByUserId(mockedUserId);
-  }
-
-  @Test
   void getKeyById_InvalidUserId_ReturnsInvalidUserIdException() {
     for (final long userId : TestUtils.INVALID_IDS) {
       StepVerifier.create(userService.findKeyById(userId))
@@ -1018,6 +1078,11 @@ class UserServiceTest {
     // Set up the system under test
     userService =
         new UserService(
-            userRepository, userAuthRepository, passwordAuthRepository, classService, keyService);
+            userRepository,
+            userAuthRepository,
+            passwordAuthRepository,
+            classService,
+            keyService,
+            webTokenKeyManager);
   }
 }
