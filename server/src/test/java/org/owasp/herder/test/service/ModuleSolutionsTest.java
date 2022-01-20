@@ -46,7 +46,7 @@ import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.ModuleSolutions;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.test.util.TestConstants;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -79,7 +79,7 @@ class ModuleSolutionsTest {
   @Test
   void findModuleByNameWithSolutionStatus_InvalidUserid_ReturnsInvalidUserIdException() {
     final String mockModuleName = "moduleName";
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(
               moduleSolutions.findModuleByNameWithSolutionStatus(userId, mockModuleName))
           .expectErrorMatches(throwable -> throwable instanceof InvalidUserIdException)
@@ -173,7 +173,7 @@ class ModuleSolutionsTest {
   @Test
   void findOpenModuleByIdWithSolutionStatus_InvalidUserid_ReturnsInvalidUserIdException() {
     final String mockModuleName = "moduleName";
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(
               moduleSolutions.findOpenModuleByIdWithSolutionStatus(userId, mockModuleName))
           .expectErrorMatches(throwable -> throwable instanceof InvalidUserIdException)
@@ -284,7 +284,7 @@ class ModuleSolutionsTest {
 
   @Test
   void findOpenModulesByUserIdWithSolutionStatus_InvalidUserid_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(moduleSolutions.findOpenModulesByUserIdWithSolutionStatus(userId))
           .expectError(InvalidUserIdException.class)
           .verify();

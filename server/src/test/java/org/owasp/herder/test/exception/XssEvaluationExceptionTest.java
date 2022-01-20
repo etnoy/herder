@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.exception.XssEvaluationException;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.test.util.TestConstants;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("XssEvaluationException unit tests")
@@ -40,7 +40,7 @@ class XssEvaluationExceptionTest {
 
   @Test
   void messageConstructor_ValidMessage_MessageIncluded() {
-    for (final String message : TestUtils.STRINGS) {
+    for (final String message : TestConstants.STRINGS) {
       XssEvaluationException exception = new XssEvaluationException(message);
       assertThat(exception.getMessage()).isEqualTo(message);
     }
@@ -48,7 +48,7 @@ class XssEvaluationExceptionTest {
 
   @Test
   void messageExceptionConstructor_ValidMessageAndException_MessageIncluded() {
-    for (final String message : TestUtils.STRINGS) {
+    for (final String message : TestConstants.STRINGS) {
       XssEvaluationException exception =
           new XssEvaluationException(message, new RuntimeException());
       assertThat(exception.getMessage()).isEqualTo(message);

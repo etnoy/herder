@@ -39,6 +39,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.crypto.KeyService;
+import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.ModulePointRepository;
 import org.owasp.herder.module.ModuleRepository;
@@ -50,16 +51,20 @@ import org.owasp.herder.scoring.ScoreboardEntry;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.service.ConfigurationService;
-import org.owasp.herder.test.util.TestUtils;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(properties = {"application.runner.enabled=false"})
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+    properties = {"application.runner.enabled=false"})
+@AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("ScoringService integration tests")
 class ScoringServiceIT {
@@ -87,17 +92,15 @@ class ScoringServiceIT {
 
   @Autowired ModulePointRepository modulePointRepository;
 
-  @Autowired FlagHandler flagComponent;
-
-  @Autowired Clock clock;
-
-  @Autowired TestUtils testService;
+  @Autowired FlagHandler flagHandler;
 
   @Autowired ConfigurationService configurationService;
 
   @Autowired KeyService keyService;
 
   @Autowired CryptoService cryptoService;
+
+  @Autowired IntegrationTestUtils integrationTestUtils;
 
   @Test
   void computeScoreForModule_SubmittedScores_ReturnsCorrectScoresForUsers() throws Exception {
@@ -268,6 +271,6 @@ class ScoringServiceIT {
 
   @BeforeEach
   private void clear() {
-    testService.deleteAll().block();
+    integrationTestUtils.resetState();
   }
 }

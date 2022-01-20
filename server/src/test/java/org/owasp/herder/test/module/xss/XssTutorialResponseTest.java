@@ -30,7 +30,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.module.xss.XssTutorialResponse;
 import org.owasp.herder.module.xss.XssTutorialResponse.XssTutorialResponseBuilder;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.test.util.TestConstants;
 
 @DisplayName("XssTutorialResponse unit tests")
 class XssTutorialResponseTest {
@@ -46,7 +46,7 @@ class XssTutorialResponseTest {
   @Test
   void buildAlert_ValidAlert_Builds() {
     final XssTutorialResponseBuilder xssTutorialResponseBuilder = XssTutorialResponse.builder();
-    for (final String alert : TestUtils.STRINGS_WITH_NULL) {
+    for (final String alert : TestConstants.STRINGS_WITH_NULL) {
       final XssTutorialResponse xssTutorialResponse =
           xssTutorialResponseBuilder.result("result").alert(alert).build();
       assertThat(xssTutorialResponse.getAlert()).isEqualTo(alert);
@@ -73,7 +73,7 @@ class XssTutorialResponseTest {
   @Test
   void buildResult_ValidResult_Builds() {
     final XssTutorialResponseBuilder xssTutorialResponseBuilder = XssTutorialResponse.builder();
-    for (final String result : TestUtils.STRINGS) {
+    for (final String result : TestConstants.STRINGS) {
       final XssTutorialResponse xssTutorialResponse =
           xssTutorialResponseBuilder.result(result).build();
       assertThat(xssTutorialResponse.getResult()).isEqualTo(result);

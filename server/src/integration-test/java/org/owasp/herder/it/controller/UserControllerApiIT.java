@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.authentication.PasswordRegistrationDto;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.user.User;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,9 +65,9 @@ class UserControllerApiIT {
 
   @Autowired UserService userService;
 
-  @Autowired private WebTestClient webTestClient;
+  @Autowired WebTestClient webTestClient;
 
-  @Autowired TestUtils testService;
+  @Autowired IntegrationTestUtils integrationTestUtils;
 
   @Test
   void getUserList_AuthenticatedUser_Forbidden() {
@@ -356,6 +356,6 @@ class UserControllerApiIT {
 
   @BeforeEach
   private void setUp() {
-    testService.deleteAll().block();
+    integrationTestUtils.resetState();
   }
 }

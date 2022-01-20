@@ -23,6 +23,8 @@ package org.owasp.herder.it.authentication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,23 +33,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.crypto.WebTokenKeyManager;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.it.util.IntegrationTestUtils;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.reactive.function.BodyInserters;
-
-import com.jayway.jsonpath.JsonPath;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import reactor.core.publisher.Hooks;
-import reactor.core.publisher.Mono;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
@@ -67,41 +62,18 @@ class LoginApiIT {
 
   @Autowired WebTestClient webTestClient;
 
-  @Autowired TestUtils testService;
-
   @Autowired WebTokenKeyManager webTokenKeyManager;
 
-  final String loginName = "test";
-  final String hashedPassword = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
+  @Autowired IntegrationTestUtils integrationTestUtils;
+
+  private long userId;
 
   @Test
   @DisplayName("Logging in with correct credentials should return a valid token")
   void canLoginWithValidCredentials() {
-
-    final Long userId =
-        userService.createPasswordUser("Test User", loginName, hashedPassword).block();
-
     final String token =
-        JsonPath.parse(
-                new String(
-                    webTestClient
-                        .post()
-                        .uri("/api/v1/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(
-                            BodyInserters.fromPublisher(
-                                Mono.just(
-                                    "{\"userName\": \""
-                                        + loginName
-                                        + "\", \"password\": \"test\"}"),
-                                String.class))
-                        .exchange()
-                        .expectStatus()
-                        .isOk()
-                        .expectBody(String.class)
-                        .returnResult()
-                        .getResponseBody()))
-            .read("$.accessToken");
+        integrationTestUtils.performAPILoginWithToken(
+            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
 
     final Claims claims =
         Jwts.parserBuilder()
@@ -110,85 +82,56 @@ class LoginApiIT {
             .parseClaimsJws(token)
             .getBody();
 
-    assertThat(claims.getSubject()).isEqualTo(userId.toString());
-  }
-
-  @Test
-  @DisplayName("Logging in with an incorrect password should return HTTP Unauthorized")
-  void canReturn401WhenLogginInWithWrongPassword() {
-
-    userService.createPasswordUser("Test User", loginName, hashedPassword).block();
-
-    webTestClient
-        .post()
-        .uri("/api/v1/login")
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(
-            BodyInserters.fromPublisher(
-                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"wrong\"}"),
-                String.class))
-        .exchange()
-        .expectStatus()
-        .isUnauthorized();
+    final String userIdString = Long.toString(userId);
+    assertThat(claims.getSubject()).isEqualTo(userIdString);
   }
 
   @Test
   @DisplayName("Logging in with an empty password should return HTTP Bad Request")
   void canReturn400WhenLogginInWithEmptyPassword() {
-    userService.createPasswordUser("Test User", loginName, hashedPassword).block();
-
-    webTestClient
-        .post()
-        .uri("/api/v1/login")
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(
-            BodyInserters.fromPublisher(
-                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"\"}"),
-                String.class))
-        .exchange()
+    integrationTestUtils
+        .performAPILogin(TestConstants.TEST_LOGIN_NAME, "")
         .expectStatus()
         .isBadRequest();
-  }
-
-  @Test
-  @DisplayName("Logging in with an incorrect username should return HTTP Unauthorized")
-  void canReturn401WhenLogginInWithWrongUsername() {
-
-    userService.createPasswordUser("Test User", loginName, hashedPassword).block();
-
-    webTestClient
-        .post()
-        .uri("/api/v1/login")
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(
-            BodyInserters.fromPublisher(
-                Mono.just("{\"userName\": \"doesnotexist\", \"password\": \"wrong\"}"),
-                String.class))
-        .exchange()
-        .expectStatus()
-        .isUnauthorized();
   }
 
   @Test
   @DisplayName("Logging in with an empty username should return HTTP Unauthorized")
   void canReturn400WhenLogginInWithEmptyUsername() {
-
-    userService.createPasswordUser("Test User", loginName, hashedPassword).block();
-
-    webTestClient
-        .post()
-        .uri("/api/v1/login")
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(
-            BodyInserters.fromPublisher(
-                Mono.just("{\"userName\": \"\", \"password\": \"wrong\"}"), String.class))
-        .exchange()
+    integrationTestUtils
+        .performAPILogin("", TestConstants.TEST_PASSWORD)
         .expectStatus()
         .isBadRequest();
   }
 
+  @Test
+  @DisplayName("Logging in with an incorrect password should return HTTP Unauthorized")
+  void canReturn401WhenLogginInWithWrongPassword() {
+    integrationTestUtils
+        .performAPILogin(TestConstants.TEST_LOGIN_NAME, "wrong")
+        .expectStatus()
+        .isUnauthorized();
+  }
+
+  @Test
+  @DisplayName("Logging in with an incorrect username should return HTTP Unauthorized")
+  void canReturn401WhenLogginInWithWrongUsername() {
+    integrationTestUtils
+        .performAPILogin("wrong", TestConstants.TEST_PASSWORD)
+        .expectStatus()
+        .isUnauthorized();
+  }
+
+  @Test
+  @DisplayName("Logging in with an incorrect username and password should return HTTP Unauthorized")
+  void canReturn401WhenLogginInWithWrongUsernameAndPassword() {
+    integrationTestUtils.performAPILogin("wrong", "still wrong").expectStatus().isUnauthorized();
+  }
+
   @BeforeEach
   private void setUp() {
-    testService.deleteAll().block();
+    integrationTestUtils.resetState();
+
+    userId = integrationTestUtils.createTestUser();
   }
 }

@@ -31,7 +31,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,7 +54,7 @@ import org.owasp.herder.exception.InvalidClassIdException;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.UserIdNotFoundException;
 import org.owasp.herder.service.ClassService;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.User;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
@@ -64,7 +63,6 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -459,7 +457,7 @@ class UserServiceTest {
 
   @Test
   void deleteById_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final Long userId : TestUtils.INVALID_IDS) {
+    for (final Long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(userService.deleteById(userId))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -485,7 +483,7 @@ class UserServiceTest {
 
   @Test
   void demote_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final Long userId : TestUtils.INVALID_IDS) {
+    for (final Long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(userService.demote(userId))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -613,7 +611,7 @@ class UserServiceTest {
 
   @Test
   void findById_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(userService.findById(userId))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -670,7 +668,7 @@ class UserServiceTest {
 
   @Test
   void findDisplayNameById_InvalidUserId_ReturnsInvalidUserIdExceptio() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(userService.findDisplayNameById(userId))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -745,7 +743,7 @@ class UserServiceTest {
 
   @Test
   void findPasswordAuthByUserId_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(userService.findPasswordAuthByUserId(userId))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -798,7 +796,7 @@ class UserServiceTest {
 
   @Test
   void findUserAuthByUserId_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(userService.findUserAuthByUserId(userId))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -817,7 +815,7 @@ class UserServiceTest {
 
   @Test
   void getKeyById_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(userService.findKeyById(userId))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -900,7 +898,7 @@ class UserServiceTest {
 
   @Test
   void promote_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(userService.promote(userId))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -944,7 +942,7 @@ class UserServiceTest {
 
   @Test
   void setClassId_InvalidClassId_ReturnsInvalidClassIdException() {
-    for (final long classId : TestUtils.INVALID_IDS) {
+    for (final long classId : TestConstants.INVALID_IDS) {
       StepVerifier.create(userService.setClassId(10L, classId))
           .expectError(InvalidClassIdException.class)
           .verify();
@@ -953,7 +951,7 @@ class UserServiceTest {
 
   @Test
   void setClassId_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(userService.setClassId(userId, 61))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -1015,7 +1013,7 @@ class UserServiceTest {
 
   @Test
   void setDisplayName_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(userService.setDisplayName(userId, "displayName"))
           .expectError(InvalidUserIdException.class)
           .verify();

@@ -25,26 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import java.security.Key;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.util.Date;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.crypto.WebTokenClock;
-import org.owasp.herder.crypto.WebTokenKeyManager;
-import org.owasp.herder.crypto.WebTokenService;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
@@ -52,6 +32,22 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import java.security.Key;
+import java.time.Clock;
+import java.util.Date;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.owasp.herder.crypto.WebTokenKeyManager;
+import org.owasp.herder.crypto.WebTokenService;
+import org.owasp.herder.test.util.TestConstants;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WebTokenService unit tests")
@@ -65,25 +61,20 @@ class WebTokenServiceTest {
 
   @Mock WebTokenKeyManager webTokenKeyManager;
 
-  private final Clock year2000Clock =
-      Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
-  private final WebTokenClock year2000WebTokenClock = new WebTokenClock(year2000Clock);
-
-  private final Clock year2100Clock =
-      Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.of("Z"));
-  private final WebTokenClock year2100WebTokenClock = new WebTokenClock(year2100Clock);
-
   @Test
   void generateToken_TokenExpired_TokenInvalid() {
 
-    setClock(year2000Clock);
+    setClock(TestConstants.longAgoClock);
 
     when(webTokenKeyManager.getOrGenerateKeyForUser(testUserId)).thenReturn(testKey);
 
     final String token = webTokenService.generateToken(testUserId, true);
 
     final JwtParser jwtParser =
-        Jwts.parserBuilder().setClock(year2100WebTokenClock).setSigningKey(testKey).build();
+        Jwts.parserBuilder()
+            .setClock(TestConstants.year2100WebTokenClock)
+            .setSigningKey(testKey)
+            .build();
 
     assertThatThrownBy(
             () -> {
@@ -99,12 +90,15 @@ class WebTokenServiceTest {
 
     when(webTokenKeyManager.getOrGenerateKeyForUser(testUserId)).thenReturn(testKey);
 
-    setClock(year2100Clock);
+    setClock(TestConstants.year2100Clock);
 
     final String token = webTokenService.generateToken(testUserId, true);
-    setClock(year2000Clock);
+    setClock(TestConstants.longAgoClock);
     final JwtParser jwtParser =
-        Jwts.parserBuilder().setSigningKey(testKey).setClock(year2000WebTokenClock).build();
+        Jwts.parserBuilder()
+            .setSigningKey(testKey)
+            .setClock(TestConstants.year2000WebTokenClock)
+            .build();
 
     assertThat(jwtParser.parseClaimsJws(token).getBody().get("role")).isEqualTo("admin");
   }
@@ -113,12 +107,15 @@ class WebTokenServiceTest {
   void generateToken_TokenExpiresInTheFutureAndRoleIsUser_Valid() {
     when(webTokenKeyManager.getOrGenerateKeyForUser(testUserId)).thenReturn(testKey);
 
-    setClock(year2100Clock);
+    setClock(TestConstants.year2100Clock);
 
     final String token = webTokenService.generateToken(testUserId, false);
-    setClock(year2000Clock);
+    setClock(TestConstants.longAgoClock);
     final JwtParser jwtParser =
-        Jwts.parserBuilder().setSigningKey(testKey).setClock(year2000WebTokenClock).build();
+        Jwts.parserBuilder()
+            .setSigningKey(testKey)
+            .setClock(TestConstants.year2000WebTokenClock)
+            .build();
 
     assertThat(jwtParser.parseClaimsJws(token).getBody().get("role")).isEqualTo("user");
   }
@@ -153,13 +150,12 @@ class WebTokenServiceTest {
 
   @Test
   void parseToken_EmptyUserId_ThrowsBadCredentialsException() {
-
     final String testToken =
         Jwts.builder()
             .claim("role", "user")
             .setIssuer("herder")
             .setSubject("")
-            .setIssuedAt(year2000WebTokenClock.now())
+            .setIssuedAt(TestConstants.year2000WebTokenClock.now())
             .setExpiration(new Date(Long.MAX_VALUE))
             .signWith(Keys.secretKeyFor(SignatureAlgorithm.HS512))
             .compact();
@@ -180,7 +176,7 @@ class WebTokenServiceTest {
             .claim("role", "user")
             .setIssuer("herder")
             .setSubject(null)
-            .setIssuedAt(year2000WebTokenClock.now())
+            .setIssuedAt(TestConstants.year2000WebTokenClock.now())
             .setExpiration(new Date(Long.MAX_VALUE))
             .signWith(Keys.secretKeyFor(SignatureAlgorithm.HS512))
             .compact();
@@ -206,7 +202,7 @@ class WebTokenServiceTest {
             .claim("role", "admin")
             .setIssuer("herder")
             .setSubject(testUserId.toString())
-            .setIssuedAt(year2000WebTokenClock.now())
+            .setIssuedAt(TestConstants.year2000WebTokenClock.now())
             .setExpiration(new Date(Long.MAX_VALUE))
             .signWith(userKey)
             .compact();
@@ -232,7 +228,7 @@ class WebTokenServiceTest {
             .claim("role", "bird")
             .setIssuer("herder")
             .setSubject(testUserId.toString())
-            .setIssuedAt(year2000WebTokenClock.now())
+            .setIssuedAt(TestConstants.year2000WebTokenClock.now())
             .setExpiration(new Date(Long.MAX_VALUE))
             .signWith(userKey)
             .compact();
@@ -255,7 +251,7 @@ class WebTokenServiceTest {
             .claim("role", "admin")
             .setIssuer("herder")
             .setSubject(testUserId.toString())
-            .setIssuedAt(year2000WebTokenClock.now())
+            .setIssuedAt(TestConstants.year2000WebTokenClock.now())
             .setExpiration(new Date(Long.MAX_VALUE))
             .signWith(testKey)
             .compact();
@@ -281,7 +277,7 @@ class WebTokenServiceTest {
             .claim("role", "user") //
             .setIssuer("herder") //
             .setSubject(testUserId.toString()) //
-            .setIssuedAt(year2000WebTokenClock.now()) //
+            .setIssuedAt(TestConstants.year2000WebTokenClock.now()) //
             .setExpiration(new Date(Long.MAX_VALUE)) //
             .signWith(testKey) //
             .compact();
@@ -307,17 +303,16 @@ class WebTokenServiceTest {
 
   @Test
   void parseToken_InvalidRole_ThrowsBadCredentialsException() {
-
     when(webTokenKeyManager.getKeyForUser(testUserId.toString())).thenReturn(testKey);
 
     final String testToken =
-        Jwts.builder() //
-            .claim("role", "wolf") //
-            .setIssuer("herder") //
-            .setSubject(testUserId.toString()) //
-            .setIssuedAt(year2000WebTokenClock.now()) //
-            .setExpiration(new Date(Long.MAX_VALUE)) //
-            .signWith(testKey) //
+        Jwts.builder()
+            .claim("role", "wolf")
+            .setIssuer("herder")
+            .setSubject(testUserId.toString())
+            .setIssuedAt(TestConstants.year2000WebTokenClock.now())
+            .setExpiration(new Date(Long.MAX_VALUE))
+            .signWith(testKey)
             .compact();
 
     assertThatThrownBy(
@@ -325,12 +320,11 @@ class WebTokenServiceTest {
               webTokenService.parseToken(testToken);
             })
         .isInstanceOf(BadCredentialsException.class)
-        .hasMessage("Invalid token");
+        .hasMessage("Invalid role in token");
   }
 
   @Test
   void parseToken_InvalidIssuer_ThrowsBadCredentialsException() {
-
     when(webTokenKeyManager.getKeyForUser(testUserId.toString())).thenReturn(testKey);
 
     final String testToken =
@@ -338,7 +332,7 @@ class WebTokenServiceTest {
             .claim("role", "user") //
             .setIssuer("wolf") //
             .setSubject(testUserId.toString()) //
-            .setIssuedAt(year2000WebTokenClock.now()) //
+            .setIssuedAt(TestConstants.year2000WebTokenClock.now()) //
             .setExpiration(new Date(Long.MAX_VALUE)) //
             .signWith(testKey) //
             .compact();

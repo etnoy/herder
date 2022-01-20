@@ -21,25 +21,14 @@
  */
 package org.owasp.herder.test.util;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import lombok.RequiredArgsConstructor;
+import java.time.ZoneId;
 import org.apache.commons.lang3.ArrayUtils;
-import org.owasp.herder.authentication.PasswordAuthRepository;
-import org.owasp.herder.authentication.UserAuthRepository;
-import org.owasp.herder.configuration.ConfigurationRepository;
-import org.owasp.herder.module.ModulePointRepository;
-import org.owasp.herder.module.ModuleRepository;
-import org.owasp.herder.module.csrf.CsrfAttackRepository;
-import org.owasp.herder.scoring.CorrectionRepository;
-import org.owasp.herder.scoring.SubmissionRepository;
-import org.owasp.herder.user.ClassRepository;
-import org.owasp.herder.user.UserRepository;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
+import org.owasp.herder.crypto.WebTokenClock;
 
-@Service
-@RequiredArgsConstructor
-public final class TestUtils {
+public final class TestConstants {
 
   public static final long[] INVALID_IDS = {-1L, -1000L, 0L, -1234567L, -500L};
 
@@ -133,56 +122,22 @@ public final class TestUtils {
 
   public static final String[] STRINGS_WITH_NULL = ArrayUtils.addAll(STRINGS, (String) null);
 
-  public static final byte[] INITIAL_BYTE_ARRAY = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  public static final String TEST_DISPLAY_NAME = "Test User";
+  public static final String TEST_LOGIN_NAME = "test";
+  public static final String TEST_PASSWORD = "test";
 
-  public static final byte[][] BYTE_ARRAYS = {INITIAL_BYTE_ARRAY, {}, {1}, {19, 26, 127, -128}};
+  // The password "test" hashed with BCrypt
+  public static final String HASHED_TEST_PASSWORD =
+      "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
 
-  public static final byte[][] BYTE_ARRAYS_WITH_NULL =
-      ArrayUtils.addAll(BYTE_ARRAYS, (byte[]) null);
+  public static final String TEST_MODULE_NAME = "Test Module";
+  public static final String TEST_STATIC_FLAG = "Static Test Flag 123 456";
 
-  private final UserRepository userRepository;
+  public static final Clock longAgoClock =
+      Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+  public static final WebTokenClock year2000WebTokenClock = new WebTokenClock(longAgoClock);
 
-  private final PasswordAuthRepository passwordAuthRepository;
-
-  private final ConfigurationRepository configurationRepository;
-
-  private final ClassRepository classRepository;
-
-  private final ModuleRepository moduleRepository;
-
-  private final CsrfAttackRepository csrfAttackRepository;
-
-  private final SubmissionRepository submissionRepository;
-
-  private final CorrectionRepository correctionRepository;
-
-  private final ModulePointRepository modulePointRepository;
-
-  private final UserAuthRepository userAuthRepository;
-
-  public Mono<Void> deleteAll() {
-    // Deleting data must be done in the right order due to db constraints
-    return
-    // Delete all score corrections
-    correctionRepository
-        .deleteAll()
-        // Delete all module scoring rules
-        .then(csrfAttackRepository.deleteAll())
-        // Delete all module scoring rules
-        .then(modulePointRepository.deleteAll())
-        // Delete all submissions
-        .then(submissionRepository.deleteAll())
-        // Delete all classes
-        .then(classRepository.deleteAll())
-        // Delete all modules
-        .then(moduleRepository.deleteAll())
-        // Delete all configuration
-        .then(configurationRepository.deleteAll())
-        // Delete all password auth data
-        .then(passwordAuthRepository.deleteAll())
-        // Delete all user auth data
-        .then(userAuthRepository.deleteAll())
-        // Delete all users
-        .then(userRepository.deleteAll());
-  }
+  public static final Clock year2100Clock =
+      Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+  public static final WebTokenClock year2100WebTokenClock = new WebTokenClock(year2100Clock);
 }

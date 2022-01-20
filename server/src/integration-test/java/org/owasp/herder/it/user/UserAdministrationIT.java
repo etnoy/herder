@@ -30,18 +30,23 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.it.util.IntegrationTestUtils;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.User;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(properties = {"application.runner.enabled=false"})
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+    properties = {"application.runner.enabled=false"})
+@AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("User administration integration tests")
 class UserAdministrationIT {
@@ -53,7 +58,7 @@ class UserAdministrationIT {
 
   @Autowired UserService userService;
 
-  @Autowired TestUtils testService;
+  @Autowired IntegrationTestUtils integrationTestUtils;
 
   @Test
   @DisplayName("Creating a password user should succeed")
@@ -77,7 +82,7 @@ class UserAdministrationIT {
   @Test
   @DisplayName("The database must handle non-latin display names")
   void canHandleNonLatinUsernames() {
-    for (final String displayName : TestUtils.STRINGS) {
+    for (final String displayName : TestConstants.STRINGS) {
       if (!displayName.isEmpty()) {
         StepVerifier.create(
                 userService
@@ -87,13 +92,13 @@ class UserAdministrationIT {
             .expectNext(displayName)
             .expectComplete()
             .verify();
-        testService.deleteAll().block();
+        integrationTestUtils.resetState();
       }
     }
   }
 
   @BeforeEach
   private void setUp() {
-    testService.deleteAll().block();
+    integrationTestUtils.resetState();
   }
 }

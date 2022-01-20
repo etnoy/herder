@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.xss.XssService;
@@ -39,17 +40,21 @@ import org.owasp.herder.module.xss.XssTutorialResponse;
 import org.owasp.herder.scoring.ScoreService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
-import org.owasp.herder.test.util.TestUtils;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(properties = {"application.runner.enabled=false"})
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+    properties = {"application.runner.enabled=false"})
+@AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("XssTutorial integration tests")
 class XssTutorialIT {
@@ -60,8 +65,6 @@ class XssTutorialIT {
   }
 
   XssTutorial xssTutorial;
-
-  @Autowired TestUtils testUtils;
 
   @Autowired UserService userService;
 
@@ -75,9 +78,11 @@ class XssTutorialIT {
 
   @Autowired FlagHandler flagHandler;
 
+  @Autowired IntegrationTestUtils integrationTestUtils;
+
   @BeforeEach
   private void setUp() {
-    testUtils.deleteAll().block();
+    integrationTestUtils.resetState();
     xssTutorial = new XssTutorial(xssService, moduleService, flagHandler);
     xssTutorial.getInit().block();
   }

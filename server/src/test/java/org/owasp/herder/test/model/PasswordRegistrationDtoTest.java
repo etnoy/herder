@@ -28,15 +28,15 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.authentication.PasswordRegistrationDto;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.test.util.TestConstants;
 
 @DisplayName("PasswordRegistrationDto unit tests")
 class PasswordRegistrationDtoTest {
   @Test
   void buildComment_ValidComment_Builds() {
-    for (final String displayName : TestUtils.STRINGS) {
-      for (final String userName : TestUtils.STRINGS) {
-        for (final String password : TestUtils.STRINGS) {
+    for (final String displayName : TestConstants.STRINGS) {
+      for (final String userName : TestConstants.STRINGS) {
+        for (final String password : TestConstants.STRINGS) {
           final PasswordRegistrationDto passwordRegistrationDto =
               new PasswordRegistrationDto(displayName, userName, password);
           assertThat(passwordRegistrationDto.getDisplayName()).isEqualTo(displayName);

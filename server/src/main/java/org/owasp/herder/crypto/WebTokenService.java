@@ -21,11 +21,17 @@
  */
 package org.owasp.herder.crypto;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwsHeader;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MissingClaimException;
+import io.jsonwebtoken.SigningKeyResolverAdapter;
 import java.security.Key;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Date;
-
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.authentication.Role;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -34,14 +40,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwsHeader;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MissingClaimException;
-import io.jsonwebtoken.SigningKeyResolverAdapter;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -131,12 +129,20 @@ public class WebTokenService {
       throw new BadCredentialsException("Invalid token", e);
     }
 
+    final String userIdErrorMessage =
+        "Invalid userid " + parsedClaims.getSubject() + " found in token";
+
     long userId;
     try {
       userId = Long.parseLong(parsedClaims.getSubject());
     } catch (NumberFormatException e) {
-      log.debug("Invalid userid found in token claim: " + parsedClaims.getSubject());
-      throw new BadCredentialsException("Invalid userid in token", e);
+      log.debug(userIdErrorMessage);
+      throw new BadCredentialsException(userIdErrorMessage, e);
+    }
+
+    if (userId <= 0) {
+      log.debug(userIdErrorMessage);
+      throw new BadCredentialsException(userIdErrorMessage);
     }
 
     final String role = parsedClaims.get("role", String.class);
@@ -165,7 +171,7 @@ public class WebTokenService {
 
   // Only used in unit tests
   public void resetClock() {
-    this.clock = new WebTokenClock(Clock.systemDefaultZone());
+    setClock(Clock.systemDefaultZone());
   }
 
   // Only used in unit tests

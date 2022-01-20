@@ -29,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.crypto.KeyService;
+import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.sqlinjection.SqlInjectionDatabaseClientFactory;
@@ -37,17 +38,21 @@ import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow;
 import org.owasp.herder.scoring.ScoreService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
-import org.owasp.herder.test.util.TestUtils;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(properties = {"application.runner.enabled=false"})
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+    properties = {"application.runner.enabled=false"})
+@AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("SqlInjectionTutorial integration tests")
 class SqlInjectionTutorialIT {
@@ -59,8 +64,6 @@ class SqlInjectionTutorialIT {
   }
 
   SqlInjectionTutorial sqlInjectionTutorial;
-
-  @Autowired TestUtils testUtils;
 
   @Autowired UserService userService;
 
@@ -76,9 +79,11 @@ class SqlInjectionTutorialIT {
 
   @Autowired KeyService keyService;
 
+  @Autowired IntegrationTestUtils integrationTestUtils;
+
   @BeforeEach
   private void clear() {
-    testUtils.deleteAll().block();
+    integrationTestUtils.resetState();
     sqlInjectionTutorial =
         new SqlInjectionTutorial(
             moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);

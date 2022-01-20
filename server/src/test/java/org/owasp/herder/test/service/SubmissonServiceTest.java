@@ -51,7 +51,7 @@ import org.owasp.herder.scoring.RankedSubmissionRepository;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.test.util.TestConstants;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -109,7 +109,7 @@ class SubmissonServiceTest {
 
   @Test
   void findAllRankedByUserId_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(submissionService.findAllRankedByUserId(userId))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -154,7 +154,7 @@ class SubmissonServiceTest {
 
   @Test
   void findAllValidByUserId_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(submissionService.findAllValidByUserId(userId))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -195,7 +195,7 @@ class SubmissonServiceTest {
   @Test
   void findAllValidByUserIdAndModuleName_InvalidUserId_ReturnsInvalidUserIdException() {
     final String mockModuleName = "id";
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(
               submissionService.findAllValidByUserIdAndModuleName(userId, mockModuleName))
           .expectError(InvalidUserIdException.class)
@@ -237,7 +237,7 @@ class SubmissonServiceTest {
 
   @Test
   void findAllValidIdsByUserId_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(submissionService.findAllValidModuleNamesByUserId(userId))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -342,7 +342,7 @@ class SubmissonServiceTest {
   @Test
   void submit_InvalidUserId_ReturnsInvalidUserIdException() {
     final String mockModuleName = "id";
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(submissionService.submit(userId, mockModuleName, "flag"))
           .expectError(InvalidUserIdException.class)
           .verify();
@@ -416,7 +416,7 @@ class SubmissonServiceTest {
   @Test
   void submitValid_InvalidUserId_ReturnsInvalidUserIdException() {
     final String mockModuleName = "id";
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(submissionService.submitValid(userId, mockModuleName))
           .expectError(InvalidUserIdException.class)
           .verify();

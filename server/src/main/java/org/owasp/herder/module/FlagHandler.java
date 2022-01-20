@@ -39,6 +39,8 @@ import reactor.core.publisher.Mono;
 @Service
 public final class FlagHandler {
 
+  private static final String DYNAMIC_FLAG_FORMAT = "flag{%s}";
+
   private final ModuleService moduleService;
 
   private final UserService userService;
@@ -47,7 +49,10 @@ public final class FlagHandler {
 
   private final CryptoService cryptoService;
 
-  private static final String FLAG_PREFIX = "flag";
+  public Mono<String> getDynamicFlag(final long userId, final String moduleName) {
+    return getSaltedHmac(userId, moduleName, "flag")
+        .map(flag -> String.format(DYNAMIC_FLAG_FORMAT, flag));
+  }
 
   public Mono<String> getSaltedHmac(
       final long userId, final String moduleName, final String prefix) {
@@ -150,10 +155,5 @@ public final class FlagHandler {
         .subscribe(log::debug);
 
     return isValid;
-  }
-
-  public Mono<String> getDynamicFlag(final long userId, final String moduleName) {
-    return getSaltedHmac(userId, moduleName, "flag")
-        .map(flag -> String.format("%s{%s}", FLAG_PREFIX, flag));
   }
 }

@@ -40,7 +40,7 @@ import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.scoring.Correction;
 import org.owasp.herder.scoring.CorrectionRepository;
 import org.owasp.herder.scoring.CorrectionService;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.test.util.TestConstants;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -73,7 +73,7 @@ class CorrectionServiceTest {
 
   @Test
   void submit_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestUtils.INVALID_IDS) {
+    for (final long userId : TestConstants.INVALID_IDS) {
       StepVerifier.create(correctionService.submit(userId, 500, ""))
           .expectError(InvalidUserIdException.class)
           .verify();

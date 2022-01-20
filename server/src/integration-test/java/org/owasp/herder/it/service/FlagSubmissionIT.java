@@ -21,7 +21,6 @@
  */
 package org.owasp.herder.it.service;
 
-import java.time.Clock;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
+import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
@@ -37,21 +37,26 @@ import org.owasp.herder.scoring.CorrectionRepository;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(properties = {"application.runner.enabled=false"})
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+    properties = {"application.runner.enabled=false"})
+@AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
-@DisplayName("SubmissionService integration tests")
-class SubmissionServiceIT {
+@DisplayName("Flag submission integration tests")
+class FlagSubmissionIT {
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages
@@ -64,8 +69,6 @@ class SubmissionServiceIT {
 
   @Autowired ModuleService moduleService;
 
-  @Autowired Clock clock;
-
   @Autowired ModuleRepository moduleRepository;
 
   @Autowired SubmissionRepository submissionRepository;
@@ -74,30 +77,29 @@ class SubmissionServiceIT {
 
   @Autowired UserRepository userRepository;
 
-  @Autowired TestUtils testService;
+  @Autowired FlagHandler flagHandler;
 
-  @Autowired FlagHandler flagComponent;
+  @Autowired IntegrationTestUtils integrationTestUtils;
+
+  private Mono<Long> userIdMono;
 
   @BeforeEach
   private void clear() {
-    testService.deleteAll().block();
+    integrationTestUtils.resetState();
+
+    userIdMono = Mono.just(integrationTestUtils.createTestUser());
+    integrationTestUtils.createStaticTestModule();
   }
 
   @Test
-  void submitFlag_DuplicateValidStaticFlag_ReturnModuleAlreadySolvedException() {
-    final String flag = "thisisaflag";
-    final String moduleName = "test-module";
-
-    final Mono<Long> userIdMono = userService.create("TestUser");
-
-    moduleService.create(moduleName).block();
-    moduleService.setStaticFlag(moduleName, flag).block();
-
+  @DisplayName("Duplicate submission of a static flag should throw an exception")
+  void canRejectDuplicateSubmissionsOfValidStaticFlags() {
     StepVerifier.create(
             userIdMono.flatMapMany(
                 userId ->
                     submissionService
-                        .submit(userId, moduleName, flag)
+                        .submit(
+                            userId, TestConstants.TEST_MODULE_NAME, TestConstants.TEST_STATIC_FLAG)
                         .repeat(2)
                         .map(Submission::isValid)))
         .expectNext(true)
@@ -106,20 +108,15 @@ class SubmissionServiceIT {
   }
 
   @Test
-  void submitFlag_ValidStaticFlag_Success() {
-    final String flag = "thisisaflag";
-    final String moduleName = "test-module";
-
-    final Mono<Long> userIdMono = userService.create("TestUser");
-
-    moduleService.create(moduleName).block();
-
-    moduleService.setStaticFlag(moduleName, flag).block();
-
+  @DisplayName("Valid submission of a static flag should be accepted")
+  void canAcceptValidStaticFlagSubmission() {
     StepVerifier.create(
             userIdMono.flatMap(
                 userId ->
-                    submissionService.submit(userId, moduleName, flag).map(Submission::isValid)))
+                    submissionService
+                        .submit(
+                            userId, TestConstants.TEST_MODULE_NAME, TestConstants.TEST_STATIC_FLAG)
+                        .map(Submission::isValid)))
         .expectNext(true)
         .expectComplete()
         .verify();

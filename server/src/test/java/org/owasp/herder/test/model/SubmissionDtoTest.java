@@ -28,14 +28,14 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.scoring.SubmissionDto;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.test.util.TestConstants;
 
 @DisplayName("SubmissionDto unit tests")
 class SubmissionDtoTest {
   @Test
   void buildComment_ValidComment_Builds() {
-    for (final long moduleName : TestUtils.LONGS) {
-      for (final String flag : TestUtils.STRINGS) {
+    for (final long moduleName : TestConstants.LONGS) {
+      for (final String flag : TestConstants.STRINGS) {
         final SubmissionDto submissionDto = new SubmissionDto(moduleName, flag);
         assertThat(submissionDto.getModuleName()).isEqualTo(moduleName);
         assertThat(submissionDto.getFlag()).isEqualTo(flag);

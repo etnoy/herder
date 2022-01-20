@@ -29,7 +29,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow.SqlInjectionTutorialRowBuilder;
-import org.owasp.herder.test.util.TestUtils;
+import org.owasp.herder.test.util.TestConstants;
 
 @DisplayName("SqlInjectionTutorialRow unit tests")
 class SqlInjectionTutorialRowTest {
@@ -46,7 +46,7 @@ class SqlInjectionTutorialRowTest {
   void buildComment_ValidComment_Builds() {
     final SqlInjectionTutorialRowBuilder sqlInjectionTutorialRowBuilder =
         SqlInjectionTutorialRow.builder();
-    for (final String comment : TestUtils.STRINGS) {
+    for (final String comment : TestConstants.STRINGS) {
       final SqlInjectionTutorialRow sqlInjectionTutorialRow =
           sqlInjectionTutorialRowBuilder.comment(comment).build();
       assertThat(sqlInjectionTutorialRow.getComment()).isEqualTo(comment);
@@ -57,7 +57,7 @@ class SqlInjectionTutorialRowTest {
   void buildError_ValidError_Builds() {
     final SqlInjectionTutorialRowBuilder sqlInjectionTutorialRowBuilder =
         SqlInjectionTutorialRow.builder();
-    for (final String error : TestUtils.STRINGS) {
+    for (final String error : TestConstants.STRINGS) {
       final SqlInjectionTutorialRow sqlInjectionTutorialRow =
           sqlInjectionTutorialRowBuilder.error(error).build();
       assertThat(sqlInjectionTutorialRow.getError()).isEqualTo(error);
@@ -80,7 +80,7 @@ class SqlInjectionTutorialRowTest {
   void buildName_ValidName_Builds() {
     final SqlInjectionTutorialRowBuilder sqlInjectionTutorialRowBuilder =
         SqlInjectionTutorialRow.builder();
-    for (final String name : TestUtils.STRINGS) {
+    for (final String name : TestConstants.STRINGS) {
       final SqlInjectionTutorialRow sqlInjectionTutorialRow =
           sqlInjectionTutorialRowBuilder.name(name).build();
       assertThat(sqlInjectionTutorialRow.getName()).isEqualTo(name);
