@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.Collection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -66,7 +67,7 @@ class WebTokenIT {
   @Autowired IntegrationTestUtils integrationTestUtils;
 
   @Test
-  @DisplayName("A token that is about to expired should still be valid")
+  @DisplayName("A token that is about to expire should still be valid")
   void canAcceptTokensThatHaveNotExpiredYet() {
     integrationTestUtils.createTestUser();
 
@@ -114,11 +115,12 @@ class WebTokenIT {
     assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
     assertThat(authentication.getPrincipal()).isEqualTo(userId);
     assertThat(authentication.getCredentials()).isEqualTo(accessToken);
-    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_USER")))
-        .isTrue();
-    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")))
-        .isFalse();
-    assertThat(authentication.getAuthorities()).hasSize(1);
+
+    // AssertJ cannot do list asserts on Collection<? extends ... >
+    @SuppressWarnings("unchecked")
+    Collection<SimpleGrantedAuthority> authorityList =
+        (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
+    assertThat(authorityList).containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
   }
 
   @Test
@@ -136,11 +138,14 @@ class WebTokenIT {
     assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
     assertThat(authentication.getPrincipal()).isEqualTo(userId);
     assertThat(authentication.getCredentials()).isEqualTo(accessToken);
-    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_USER")))
-        .isTrue();
-    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")))
-        .isTrue();
-    assertThat(authentication.getAuthorities()).hasSize(2);
+
+    // AssertJ cannot do list asserts on Collection<? extends ... >
+    @SuppressWarnings("unchecked")
+    Collection<SimpleGrantedAuthority> authorityList =
+        (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
+    assertThat(authorityList)
+        .containsExactlyInAnyOrder(
+            new SimpleGrantedAuthority("ROLE_USER"), new SimpleGrantedAuthority("ROLE_ADMIN"));
   }
 
   @Test
@@ -156,11 +161,12 @@ class WebTokenIT {
     assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
     assertThat(authentication.getPrincipal()).isEqualTo(userId);
     assertThat(authentication.getCredentials()).isEqualTo(accessToken);
-    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_USER")))
-        .isTrue();
-    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")))
-        .isFalse();
-    assertThat(authentication.getAuthorities()).hasSize(1);
+
+    // AssertJ cannot do list asserts on Collection<? extends ... >
+    @SuppressWarnings("unchecked")
+    Collection<SimpleGrantedAuthority> authorityList =
+        (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
+    assertThat(authorityList).containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
   }
 
   @Test

@@ -149,21 +149,14 @@ public class WebTokenService {
 
     ArrayList<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-    switch (role) {
-      case "admin":
-        {
-          authorities.add(new SimpleGrantedAuthority(Role.ROLE_ADMIN.name()));
-        }
-      case "user":
-        {
-          authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
-          break;
-        }
-      default:
-        {
-          // Invalid role found, bail out
-          throw new BadCredentialsException("Invalid role in token");
-        }
+    if (role.equals("admin")) {
+      authorities.add(new SimpleGrantedAuthority(Role.ROLE_ADMIN.name()));
+      authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
+    } else if (role.equals("user")) {
+      authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
+    } else {
+      // Invalid role found, bail out
+      throw new BadCredentialsException("Invalid role in token");
     }
 
     return new UsernamePasswordAuthenticationToken(userId, token, authorities);
