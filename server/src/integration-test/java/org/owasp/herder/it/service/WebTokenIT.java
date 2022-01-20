@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Clock;
 import java.time.ZoneId;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -81,7 +82,7 @@ class WebTokenIT {
             TestConstants.longAgoClock
                 .instant()
                 .plusMillis(webTokenService.getExpirationTime() - 1),
-            ZoneId.of("Z"));
+            ZoneId.systemDefault());
 
     // Set the clock to 1 second before the token expires
     setClock(rightBeforeTheTokenExpires);
@@ -199,7 +200,7 @@ class WebTokenIT {
             TestConstants.longAgoClock
                 .instant()
                 .plusMillis(webTokenService.getExpirationTime() + 1),
-            ZoneId.of("Z"));
+            ZoneId.systemDefault());
 
     // Set the clock to 1 second after the token expires
     setClock(rightAfterTheTokenExpires);

@@ -29,6 +29,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,6 +42,7 @@ import org.owasp.herder.scoring.Correction;
 import org.owasp.herder.scoring.CorrectionRepository;
 import org.owasp.herder.scoring.CorrectionService;
 import org.owasp.herder.test.util.TestConstants;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -89,7 +91,8 @@ class CorrectionServiceTest {
     when(correctionRepository.save(any(Correction.class)))
         .thenAnswer(correction -> Mono.just(correction.getArgument(0, Correction.class)));
 
-    final Clock fixedClock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+    final Clock fixedClock =
+        Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
 
     setClock(fixedClock);
 

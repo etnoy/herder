@@ -25,6 +25,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
 
@@ -134,10 +135,10 @@ public final class TestConstants {
   public static final String TEST_STATIC_FLAG = "Static Test Flag 123 456";
 
   public static final Clock longAgoClock =
-      Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+      Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
   public static final WebTokenClock year2000WebTokenClock = new WebTokenClock(longAgoClock);
 
   public static final Clock year2100Clock =
-      Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+      Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.systemDefault());
   public static final WebTokenClock year2100WebTokenClock = new WebTokenClock(year2100Clock);
 }
