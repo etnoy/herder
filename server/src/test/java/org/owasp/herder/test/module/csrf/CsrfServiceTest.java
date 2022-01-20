@@ -32,7 +32,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -45,7 +44,6 @@ import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.csrf.CsrfAttack;
 import org.owasp.herder.module.csrf.CsrfAttackRepository;
 import org.owasp.herder.module.csrf.CsrfService;
-
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;

@@ -35,7 +35,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -53,7 +52,6 @@ import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;

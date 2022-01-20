@@ -25,7 +25,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
 
