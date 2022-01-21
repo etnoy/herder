@@ -29,7 +29,7 @@ describe('CsrfTutorialComponent', () => {
     const module: Module = {
       name: 'test',
       parameters: [],
-      isSolved: null,
+      isSolved: false,
     };
     component.module = module;
     fixture.detectChanges();

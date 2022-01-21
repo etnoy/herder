@@ -3,19 +3,21 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
-    "sourceMap": true,
+    "sourceMap": false,
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
     "module": "es2020",
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es2015",
+    "target": "es2020",
     "typeRoots": ["node_modules/@types"],
-    "lib": ["es2018", "dom"]
+    "lib": ["es2020", "dom"],
+    "useUnknownInCatchVariables": true,
   },
   "angularCompilerOptions": {
     "strictTemplates": true,
-    "strictInjectionParameters": true
+    "strictInjectionParameters": true,
+    "fullTemplateTypeCheck": true,
   }
 }
