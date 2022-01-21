@@ -8,7 +8,7 @@ USE core;
 
 CREATE
     TABLE
-        USER(
+        user(
             id BIGINT AUTO_INCREMENT,
             display_name VARCHAR(191) NOT NULL UNIQUE,
             class_id INT NULL,
@@ -74,7 +74,7 @@ CREATE
             TIME TIMESTAMP NOT NULL,
             description VARCHAR(191),
             PRIMARY KEY(id),
-            FOREIGN KEY(user_id) REFERENCES USER(id)
+            FOREIGN KEY(user_id) REFERENCES user(id)
         ) ENGINE = InnoDB DEFAULT CHARACTER
     SET
         = utf8mb4;
@@ -111,7 +111,7 @@ CREATE
             last_login DATETIME NULL DEFAULT NULL,
             last_login_method VARCHAR(10) DEFAULT NULL,
             PRIMARY KEY(id),
-            FOREIGN KEY(user_id) REFERENCES USER(id)
+            FOREIGN KEY(user_id) REFERENCES user(id)
         ) ENGINE = InnoDB DEFAULT CHARACTER
     SET
         = utf8mb4;
@@ -123,7 +123,7 @@ CREATE
             user_id BIGINT NOT NULL UNIQUE,
             saml_id VARCHAR(40) NOT NULL UNIQUE,
             PRIMARY KEY(id),
-            FOREIGN KEY(user_id) REFERENCES USER(id)
+            FOREIGN KEY(user_id) REFERENCES user(id)
         ) ENGINE = InnoDB DEFAULT CHARACTER
     SET
         = utf8mb4;
@@ -137,7 +137,7 @@ CREATE
             hashed_password VARCHAR(191) NOT NULL,
             is_password_non_expired BOOLEAN DEFAULT FALSE,
             PRIMARY KEY(id),
-            FOREIGN KEY(user_id) REFERENCES USER(id)
+            FOREIGN KEY(user_id) REFERENCES user(id)
         ) ENGINE = InnoDB DEFAULT CHARACTER
     SET
         = utf8mb4;
@@ -166,7 +166,7 @@ CREATE
             ),
             FOREIGN KEY(
                 `user_id`
-            ) REFERENCES USER(id),
+            ) REFERENCES user(id),
             FOREIGN KEY(
                 `module_name`
             ) REFERENCES module(name)
@@ -205,7 +205,7 @@ CREATE
     ) SELECT
         submission_id,
         user_id,
-        `RANK`,
+        `rank`,
         ranks.module_name,
         TIME,
         flag,
@@ -223,7 +223,7 @@ CREATE
     LEFT JOIN module_point AS bonus_score ON
         (
             ranks.module_name = bonus_score.module_name
-            AND `RANK`= bonus_score.submission_rank
+            AND `rank`= bonus_score.submission_rank
         )
     INNER JOIN module_point AS base_score ON
         (
@@ -242,15 +242,15 @@ CREATE
         CAST(
             SUM( score ) AS SIGNED
         ) AS score,
-        SUM( CASE WHEN `RANK`= 1 THEN 1 ELSE 0 END ) AS gold_medals,
-        SUM( CASE WHEN `RANK`= 2 THEN 1 ELSE 0 END ) AS silver_medals,
-        SUM( CASE WHEN `RANK`= 3 THEN 1 ELSE 0 END ) AS bronze_medals
+        SUM( CASE WHEN `rank`= 1 THEN 1 ELSE 0 END ) AS gold_medals,
+        SUM( CASE WHEN `rank`= 2 THEN 1 ELSE 0 END ) AS silver_medals,
+        SUM( CASE WHEN `rank`= 3 THEN 1 ELSE 0 END ) AS bronze_medals
     FROM
         (
             SELECT
                 user_id,
                 score,
-                `RANK`,
+                `rank`,
                 0 AS display_name
             FROM
                 ranked_submission
@@ -267,7 +267,7 @@ CREATE
                 0,
                 display_name AS display_name
             FROM
-                USER
+                user
         ) AS all_scores
     GROUP BY
         user_id
