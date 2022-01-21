@@ -30,6 +30,11 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+      - name: Set up MySQL 8 server
+        uses: mirromutth/mysql-action@v1.1
+        with:
+          mysql database: "core"
+          mysql root password: "herder"
       - name: Cache SonarCloud packages
         uses: actions/cache@v1
         with:
@@ -37,14 +42,7 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
       - name: Build and test
-        run: ./gradlew spotlessCheck build jacocoTestReport sonarqube --info
+        run: ./gradlew spotlessCheck build jacocoTestReport sonarqube integrationTest --info
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      - name: Set up MySQL 8 server
-        uses: mirromutth/mysql-action@v1.1
-        with:
-          mysql database: "core"
-          mysql root password: "herder"
-      - name: Integration tests
-        run: ./gradlew integrationTest --info
