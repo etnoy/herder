@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: gradle/wrapper-validation-action@v1
       - name: Set up JDK 11
         uses: actions/setup-java@v2
@@ -30,6 +32,11 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+      - name: Start mysqld
+        run: |
+          sudo systemctl start mysql.service
+          sudo mysql < src/main/resources/schema-mysql.sql
+          sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"
       - name: Cache SonarCloud packages
         uses: actions/cache@v1
         with:
@@ -41,10 +48,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      - name: Start mysqld
-        run: |
-          sudo systemctl start mysql.service
-          sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"
-          sudo mysql < src/main/resources/schema-mysql.sql
       - name: Integration tests
         run: ./gradlew integrationTest --info
