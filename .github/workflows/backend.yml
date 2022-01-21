@@ -41,8 +41,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      - name: Integration tests
+      - name: Set up MySQL 8 server
         uses: mirromutth/mysql-action@v1.1
         with:
           mysql database: "core"
+      - name: Integration tests
         run: ./gradlew integrationTest --info
