@@ -14,10 +14,6 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    env:
-      DB_DATABASE: core
-      DB_USER: root
-      DB_PASSWORD: root
     steps:
       - uses: actions/checkout@v2
       - uses: gradle/wrapper-validation-action@v1
@@ -48,7 +44,7 @@ jobs:
       - name: Start mysqld
         run: |
           sudo systemctl start mysql.service
-          mysql -e "CREATE DATABASE ${{ env.DB_DATABASE }}; ALTER USER 'root'@'localhost' IDENTIFIED BY '';" -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
-          mysql -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }} < src/main/resources/schema-mysql.sql
+          sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"
+          sudo mysql < src/main/resources/schema-mysql.sql
       - name: Integration tests
         run: ./gradlew integrationTest --info
