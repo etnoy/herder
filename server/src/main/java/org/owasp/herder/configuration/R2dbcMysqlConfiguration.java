@@ -21,10 +21,6 @@
  */
 package org.owasp.herder.configuration;
 
-import dev.miku.r2dbc.mysql.MySqlConnectionConfiguration;
-import dev.miku.r2dbc.mysql.MySqlConnectionFactory;
-import io.r2dbc.spi.ConnectionFactory;
-import lombok.Generated;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -32,6 +28,11 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.r2dbc.connection.init.CompositeDatabasePopulator;
 import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer;
 import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator;
+
+import dev.miku.r2dbc.mysql.MySqlConnectionConfiguration;
+import dev.miku.r2dbc.mysql.MySqlConnectionFactory;
+import io.r2dbc.spi.ConnectionFactory;
+import lombok.Generated;
 
 @Generated
 @Configuration
@@ -43,7 +44,7 @@ public class R2dbcMysqlConfiguration {
         MySqlConnectionConfiguration.builder()
             .host("localhost")
             .username("root")
-            .password("")
+            .password("herder")
             .database("core")
             .build());
   }

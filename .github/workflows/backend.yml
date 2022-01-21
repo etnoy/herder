@@ -45,6 +45,6 @@ jobs:
         uses: mirromutth/mysql-action@v1.1
         with:
           mysql database: "core"
-          mysql user: "root"
+          mysql root password: "herder"
       - name: Integration tests
         run: ./gradlew integrationTest --info
