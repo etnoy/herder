@@ -44,7 +44,7 @@ public class R2dbcMysqlConfiguration {
         MySqlConnectionConfiguration.builder()
             .host("localhost")
             .username("root")
-            .password("herder")
+            .password("")
             .database("core")
             .build());
   }
