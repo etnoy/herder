@@ -78,6 +78,8 @@ public final class TestConstants {
   public static final LocalDateTime[] LOCALDATETIMES_WITH_NULL =
       ArrayUtils.addAll(LOCALDATETIMES, (LocalDateTime) null);
 
+  public static final byte[] TEST_BYTE_ARRAY = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
   public static final String INITIAL_STRING = "";
 
   public static final String[] STRINGS = {
@@ -132,6 +134,8 @@ public final class TestConstants {
 
   public static final String TEST_MODULE_NAME = "Test Module";
   public static final String TEST_STATIC_FLAG = "Static Test Flag 123 456";
+
+  public static final long TEST_USER_ID = 1234L;
 
   public static final Clock longAgoClock =
       Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());

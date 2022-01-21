@@ -72,11 +72,11 @@ export class ApiService {
   // Sign-in
   login(creds: User) {
     return this.http.post<any>(`${this.endpoint}/login`, creds).pipe(
-      map((authResponse) => {
+      map((loginResponse) => {
         // store user details and jwt token in local storage to keep user logged in between page refreshes
-        localStorage.setItem('currentUser', JSON.stringify(authResponse));
-        this.currentUserSubject.next(authResponse);
-        return authResponse;
+        localStorage.setItem('currentUser', JSON.stringify(loginResponse));
+        this.currentUserSubject.next(loginResponse);
+        return loginResponse;
       })
     );
   }
@@ -98,6 +98,16 @@ export class ApiService {
 
   getScoreboard(): Observable<any> {
     const api = `${this.endpoint}/scoreboard/`;
+    return this.http.get(api, { headers: this.headers }).pipe(
+      map((res: Response) => {
+        return res || {};
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  getUsers(): Observable<any> {
+    const api = `${this.endpoint}/users/`;
     return this.http.get(api, { headers: this.headers }).pipe(
       map((res: Response) => {
         return res || {};

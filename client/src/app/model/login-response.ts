@@ -1,5 +1,4 @@
-export class AuthResponse {
-  id: string;
+export class LoginResponse {
   userName: string;
   errorMessage: string;
   token: string;

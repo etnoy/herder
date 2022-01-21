@@ -39,6 +39,8 @@ public class ScoreboardEntry implements Serializable {
 
   @NonNull private Long userId;
 
+  @NonNull private String displayName;
+
   @NonNull private Long score;
 
   @NonNull private Long goldMedals;

@@ -57,7 +57,10 @@ public class LoginController {
               final String accessToken =
                   webTokenService.generateToken(authResponse.getUserId(), authResponse.isAdmin());
               final LoginResponse loginResponse =
-                  loginResponseBuilder.accessToken(accessToken).build();
+                  loginResponseBuilder
+                      .accessToken(accessToken)
+                      .userName(authResponse.getUserName())
+                      .build();
               return new ResponseEntity<>(loginResponse, HttpStatus.OK);
             })
         .onErrorResume(

@@ -84,7 +84,7 @@ class LoginControllerTest {
   }
 
   @Test
-  void login_ValidCredentials_ReturnsJWT() {
+  void login_ValidCredentials_ReturnsToken() {
     final String userName = "user";
     final String password = "password";
     final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(userName, password);
@@ -97,7 +97,8 @@ class LoginControllerTest {
             .userName(userName)
             .userId(mockUserId)
             .build();
-    final LoginResponse loginResponse = LoginResponse.builder().accessToken(mockJwt).build();
+    final LoginResponse loginResponse =
+        LoginResponse.builder().accessToken(mockJwt).userName(userName).build();
     final ResponseEntity<LoginResponse> tokenResponse =
         new ResponseEntity<>(loginResponse, HttpStatus.OK);
 

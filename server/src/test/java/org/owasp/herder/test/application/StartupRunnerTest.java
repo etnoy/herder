@@ -22,6 +22,7 @@
 package org.owasp.herder.test.application;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -70,11 +71,12 @@ class StartupRunnerTest {
 
   @Test
   void run_MockedServices_CallsMocks() {
-
     final long mockUserId = 602L;
     when(userService.createPasswordUser(
             "Admin", "admin", "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G"))
         .thenReturn(Mono.just(mockUserId));
+
+    when(userService.create(any(String.class))).thenReturn(Mono.empty());
 
     when(csrfTutorial.getInit()).thenReturn(Mono.empty());
     when(xssTutorial.getInit()).thenReturn(Mono.empty());

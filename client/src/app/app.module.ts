@@ -19,6 +19,7 @@ import { HomeComponent } from './components/home/home.component';
 import { AlertComponent } from './components/alert/alert.component';
 import { ErrorInterceptor } from './shared/error.interceptor';
 import { ScoreboardComponent } from './components/scoreboard/scoreboard.component';
+import { UserListComponent } from './components/userlist/userlist.component';
 import { UserScoreComponent } from './components/user-score/user-score.component';
 import { FlagTutorialComponent } from './components/flag-tutorial/flag-tutorial.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -38,6 +39,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     FlagTutorialComponent,
     ModuleDirective,
     ScoreboardComponent,
+    UserListComponent,
     UserScoreComponent,
   ],
   imports: [

@@ -10,11 +10,17 @@ import { AuthGuard } from './shared/auth.guard';
 import { HomeComponent } from './components/home/home.component';
 import { ScoreboardComponent } from './components/scoreboard/scoreboard.component';
 import { UserScoreComponent } from './components/user-score/user-score.component';
+import { UserListComponent } from './components/userlist/userlist.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent, canActivate: [AuthGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: SignupComponent },
+  {
+    path: 'users',
+    component: UserListComponent,
+    canActivate: [AuthGuard],
+  },
   {
     path: 'scoreboard',
     component: ScoreboardComponent,

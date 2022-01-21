@@ -7,7 +7,7 @@
             <p>
               {{ score.rank }} :
               <a href="scoreboard/{{ score.userId }}">
-                {{ score.userId }} has {{ score.score }} points.
+                {{ score.displayName }} has {{ score.score }} points.
                 <span *ngIf="score.goldMedals > 0"
                   >{{ score.goldMedals }} gold medal<span
                     *ngIf="score.goldMedals > 1"

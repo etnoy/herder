@@ -23,20 +23,22 @@ package org.owasp.herder.test.module;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.exception.InvalidFlagStateException;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.test.util.TestConstants;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -44,11 +46,6 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("BaseModule unit tests")
 class BaseModuleTest {
-
-  @Mock ModuleService moduleService;
-
-  @Mock FlagHandler flagHandler;
-
   private class TestModule extends BaseModule {
 
     protected TestModule(
@@ -66,14 +63,19 @@ class BaseModuleTest {
     Hooks.onOperatorDebug();
   }
 
+  @Mock ModuleService moduleService;
+
+  @Mock FlagHandler flagHandler;
+
+  @Mock Module mockModule;
+
   @Test
+  @DisplayName("The constructor should create a dynamic flag module")
   void constructor_DynamicFlag_ReturnsNewBaseModule() {
-    final Module mockModule = mock(Module.class);
-    final String mockModuleName = "test-module";
+    when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
-    when(moduleService.create(mockModuleName)).thenReturn(Mono.just(mockModule));
-
-    TestModule dynamicFlagModule = new TestModule(mockModuleName, moduleService, flagHandler, null);
+    TestModule dynamicFlagModule =
+        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, null);
 
     StepVerifier.create(dynamicFlagModule.getInit()).expectComplete().verify();
 
@@ -82,122 +84,118 @@ class BaseModuleTest {
   }
 
   @Test
+  @DisplayName("The constructor should create a static flag module")
   void constructor_StaticFlag_ReturnsNewBaseModule() {
-    final Module mockModule = mock(Module.class);
-    final String mockModuleName = "test-module";
-    final String mockStaticFlag = "flag";
+    final String testStaticFlag = "flag";
 
-    when(moduleService.create(mockModuleName)).thenReturn(Mono.just(mockModule));
-
-    when(moduleService.setStaticFlag(mockModuleName, mockStaticFlag))
+    when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
+    when(moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, testStaticFlag))
         .thenReturn(Mono.just(mockModule));
 
     TestModule staticFlagModule =
-        new TestModule(mockModuleName, moduleService, flagHandler, mockStaticFlag);
+        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, testStaticFlag);
 
     StepVerifier.create(staticFlagModule.getInit()).expectComplete().verify();
 
     assertThat(staticFlagModule.getModuleService()).isEqualTo(moduleService);
     assertThat(staticFlagModule.getFlagHandler()).isEqualTo(flagHandler);
 
-    verify(moduleService).setStaticFlag(mockModuleName, mockStaticFlag);
+    verify(moduleService, times(1)).setStaticFlag(TestConstants.TEST_MODULE_NAME, testStaticFlag);
   }
 
   @Test
-  void getFlag_StaticFlagNoUserId_ReturnsFlag() {
-    final Module mockModule = mock(Module.class);
-    final String mockModuleName = "test-module";
-    final String mockStaticFlag = "flag";
-
-    when(moduleService.create(mockModuleName)).thenReturn(Mono.just(mockModule));
-
-    when(moduleService.setStaticFlag(mockModuleName, mockStaticFlag))
-        .thenReturn(Mono.just(mockModule));
-
-    TestModule staticFlagModule =
-        new TestModule(mockModuleName, moduleService, flagHandler, mockStaticFlag);
-
-    staticFlagModule.getInit().block();
-
-    when(mockModule.isFlagStatic()).thenReturn(true);
-    when(mockModule.getStaticFlag()).thenReturn(mockStaticFlag);
-
-    StepVerifier.create(staticFlagModule.getFlag())
-        .expectNext(mockStaticFlag)
-        .expectComplete()
-        .verify();
-  }
-
-  @Test
-  void getFlag_StaticFlagWithUserId_ReturnsFlag() {
-    final Module mockModule = mock(Module.class);
-    final String mockModuleName = "test-module";
-    final String mockStaticFlag = "flag";
-    final Long mockUserId = 45L;
-
-    when(moduleService.create(mockModuleName)).thenReturn(Mono.just(mockModule));
-
-    when(moduleService.setStaticFlag(mockModuleName, mockStaticFlag))
-        .thenReturn(Mono.just(mockModule));
-
-    TestModule staticFlagModule =
-        new TestModule(mockModuleName, moduleService, flagHandler, mockStaticFlag);
-
-    staticFlagModule.getInit().block();
-
-    when(mockModule.isFlagStatic()).thenReturn(true);
-    when(mockModule.getStaticFlag()).thenReturn(mockStaticFlag);
-
-    StepVerifier.create(staticFlagModule.getFlag(mockUserId))
-        .expectNext(mockStaticFlag)
-        .expectComplete()
-        .verify();
-  }
-
-  @Test
-  void getFlag_DynamicFlagWithUserId_ReturnsFlag() {
-    final Module mockModule = mock(Module.class);
-    final String mockModuleName = "test-module";
-    final String mockStaticFlag = null;
-    final String mockDynamicFlag = "flag{123abc}";
-
-    final Long mockUserId = 45L;
-
-    when(moduleService.create(mockModuleName)).thenReturn(Mono.just(mockModule));
-
-    TestModule dynamicFlagModule =
-        new TestModule(mockModuleName, moduleService, flagHandler, mockStaticFlag);
-
-    when(flagHandler.getDynamicFlag(mockUserId, mockModuleName))
-        .thenReturn(Mono.just(mockDynamicFlag));
-
-    dynamicFlagModule.getInit().block();
-
-    when(mockModule.isFlagStatic()).thenReturn(false);
-
-    StepVerifier.create(dynamicFlagModule.getFlag(mockUserId))
-        .expectNext(mockDynamicFlag)
-        .expectComplete()
-        .verify();
-  }
-
-  @Test
+  @DisplayName("getFlag on a dynamic module should return error when called without userid")
   void getFlag_DynamicFlagWithoutUserId_ReturnsError() {
-    final Module mockModule = mock(Module.class);
-    final String mockModuleName = "test-module";
-    final String mockStaticFlag = null;
+    final String testStaticFlag = null;
 
-    when(moduleService.create(mockModuleName)).thenReturn(Mono.just(mockModule));
+    when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
     TestModule dynamicFlagModule =
-        new TestModule(mockModuleName, moduleService, flagHandler, mockStaticFlag);
+        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, testStaticFlag);
 
     dynamicFlagModule.getInit().block();
 
     when(mockModule.isFlagStatic()).thenReturn(false);
 
     StepVerifier.create(dynamicFlagModule.getFlag())
-        .expectError(InvalidFlagStateException.class)
+        .expectError(IllegalArgumentException.class)
         .verify();
+  }
+
+  @Test
+  @DisplayName("getFlag on a dynamic module should return dynamic flag")
+  void getFlag_DynamicFlagWithUserId_ReturnsFlag() {
+    final String testStaticFlag = null;
+    final String testDynamicFlag = "flag{123abc}";
+
+    when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
+
+    TestModule dynamicFlagModule =
+        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, testStaticFlag);
+
+    when(flagHandler.getDynamicFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_NAME))
+        .thenReturn(Mono.just(testDynamicFlag));
+
+    dynamicFlagModule.getInit().block();
+
+    when(mockModule.isFlagStatic()).thenReturn(false);
+
+    StepVerifier.create(dynamicFlagModule.getFlag(TestConstants.TEST_USER_ID))
+        .expectNext(testDynamicFlag)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  @DisplayName("getFlag on a static module should return static flag when called without userid")
+  void getFlag_StaticFlagNoUserId_ReturnsFlag() {
+    final String testStaticFlag = "flag";
+
+    when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
+
+    when(moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, testStaticFlag))
+        .thenReturn(Mono.just(mockModule));
+
+    TestModule staticFlagModule =
+        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, testStaticFlag);
+
+    staticFlagModule.getInit().block();
+
+    when(mockModule.isFlagStatic()).thenReturn(true);
+    when(mockModule.getStaticFlag()).thenReturn(testStaticFlag);
+
+    StepVerifier.create(staticFlagModule.getFlag())
+        .expectNext(testStaticFlag)
+        .expectComplete()
+        .verify();
+  }
+
+  @Test
+  @DisplayName("getFlag on a static module should return static flag when called with userid")
+  void getFlag_StaticFlagWithUserId_ReturnsFlag() {
+    final String testStaticFlag = "flag";
+
+    when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
+
+    when(moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, testStaticFlag))
+        .thenReturn(Mono.just(mockModule));
+
+    TestModule staticFlagModule =
+        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, testStaticFlag);
+
+    staticFlagModule.getInit().block();
+
+    when(mockModule.isFlagStatic()).thenReturn(true);
+    when(mockModule.getStaticFlag()).thenReturn(testStaticFlag);
+
+    StepVerifier.create(staticFlagModule.getFlag(TestConstants.TEST_USER_ID))
+        .expectNext(testStaticFlag)
+        .expectComplete()
+        .verify();
+  }
+
+  @BeforeEach
+  private void setUp() {
+    mockModule = mock(Module.class);
   }
 }

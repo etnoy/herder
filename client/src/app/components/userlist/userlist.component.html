@@ -1,0 +1,15 @@
+<div class="auth-wrapper">
+  <div class="row">
+    <div class="inner-main">
+      <ul>
+        <ng-container *ngFor="let user of users">
+          <li>
+            <p>
+              {{ user.id }}: {{ user.displayName }}
+            </p>
+          </li>
+        </ng-container>
+      </ul>
+    </div>
+  </div>
+</div>

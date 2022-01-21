@@ -53,10 +53,10 @@ public abstract class BaseModule {
     this.moduleService = moduleService;
     this.flagHandler = flagHandler;
     this.module = moduleService.create(moduleName);
-    if (staticFlag != null) {
-      this.init = Mono.when(this.module, moduleService.setStaticFlag(moduleName, staticFlag));
-    } else {
+    if (staticFlag == null) {
       this.init = Mono.when(this.module);
+    } else {
+      this.init = Mono.when(this.module, moduleService.setStaticFlag(moduleName, staticFlag));
     }
   }
 
@@ -73,7 +73,7 @@ public abstract class BaseModule {
             return Mono.just(m.getStaticFlag());
           } else {
             return Mono.error(
-                new InvalidFlagStateException("Cannot get dynamic flag without providing user id"));
+                new IllegalArgumentException("Cannot get dynamic flag without providing user id"));
           }
         });
   }

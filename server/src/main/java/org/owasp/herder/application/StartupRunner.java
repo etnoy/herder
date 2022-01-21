@@ -60,6 +60,10 @@ public class StartupRunner implements ApplicationRunner {
             .createPasswordUser(
                 "Admin", "admin", "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G")
             .block();
+    userService.create("Test user").block();
+    userService.create("Test user 2").block();
+    userService.create("Test user 3").block();
+
     userService.promote(userId).block();
     Mono.when(
             csrfTutorial.getInit(),

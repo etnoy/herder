@@ -67,7 +67,7 @@ import reactor.test.StepVerifier;
 @AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("ScoringService integration tests")
-class ScoringServiceIT {
+class ScoreboardIT {
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages
@@ -82,7 +82,7 @@ class ScoringServiceIT {
 
   @Autowired CorrectionService correctionService;
 
-  @Autowired ScoreService scoringService;
+  @Autowired ScoreService scoreService;
 
   @Autowired CorrectionRepository correctionRepository;
 
@@ -128,28 +128,28 @@ class ScoringServiceIT {
     moduleService.setStaticFlag("id1", flag).block();
 
     // Set scoring levels for module1
-    scoringService.setModuleScore("id1", 0, 100).block();
+    scoreService.setModuleScore("id1", 0, 100).block();
 
-    scoringService.setModuleScore("id1", 1, 50).block();
-    scoringService.setModuleScore("id1", 2, 40).block();
-    scoringService.setModuleScore("id1", 3, 30).block();
-    scoringService.setModuleScore("id1", 4, 20).block();
+    scoreService.setModuleScore("id1", 1, 50).block();
+    scoreService.setModuleScore("id1", 2, 40).block();
+    scoreService.setModuleScore("id1", 3, 30).block();
+    scoreService.setModuleScore("id1", 4, 20).block();
 
     // Create some other modules we aren't interested in
     moduleService.create("id2").block();
     moduleService.setStaticFlag("id2", flag).block();
 
     // Set scoring levels for module2
-    scoringService.setModuleScore("id2", 0, 50).block();
-    scoringService.setModuleScore("id2", 1, 30).block();
-    scoringService.setModuleScore("id2", 2, 10).block();
+    scoreService.setModuleScore("id2", 0, 50).block();
+    scoreService.setModuleScore("id2", 1, 30).block();
+    scoreService.setModuleScore("id2", 2, 10).block();
 
     moduleService.create("id3").block();
 
     moduleService.setStaticFlag("id3", flag).block();
 
     // You only get 1 point for this module
-    scoringService.setModuleScore("id3", 0, 1).block();
+    scoreService.setModuleScore("id3", 0, 1).block();
 
     // Create a fixed clock from which we will base our offset submission times
     final Clock startTime =
@@ -193,10 +193,11 @@ class ScoringServiceIT {
     submissionService.setClock(Clock.offset(correctionClock, Duration.ofHours(10)));
     correctionService.submit(userIds.get(1), 100, "Thanks for the bribe").block();
 
-    StepVerifier.create(scoringService.getScoreboard())
+    StepVerifier.create(scoreService.getScoreboard())
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(1L)
+                .displayName("0")
                 .userId(userIds.get(1))
                 .score(251L)
                 .goldMedals(0L)
@@ -207,6 +208,7 @@ class ScoringServiceIT {
             ScoreboardEntry.builder()
                 .rank(2L)
                 .userId(userIds.get(6))
+                .displayName("0")
                 .score(231L)
                 .goldMedals(3L)
                 .silverMedals(0L)
@@ -215,6 +217,7 @@ class ScoringServiceIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(3L)
+                .displayName("0")
                 .userId(userIds.get(5))
                 .score(201L)
                 .goldMedals(0L)
@@ -224,6 +227,7 @@ class ScoringServiceIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(4L)
+                .displayName("0")
                 .userId(userIds.get(0))
                 .score(171L)
                 .goldMedals(0L)
@@ -233,6 +237,7 @@ class ScoringServiceIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(4L)
+                .displayName("0")
                 .userId(userIds.get(4))
                 .score(171L)
                 .goldMedals(0L)
@@ -242,6 +247,7 @@ class ScoringServiceIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(6L)
+                .displayName("TestUser4")
                 .userId(userIds.get(3))
                 .score(0L)
                 .goldMedals(0L)
@@ -251,6 +257,7 @@ class ScoringServiceIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(6L)
+                .displayName("TestUser8")
                 .userId(userIds.get(7))
                 .score(0L)
                 .goldMedals(0L)
@@ -260,6 +267,7 @@ class ScoringServiceIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(8L)
+                .displayName("0")
                 .userId(userIds.get(2))
                 .score(-799L)
                 .goldMedals(0L)
@@ -268,6 +276,13 @@ class ScoringServiceIT {
                 .build())
         .expectComplete()
         .verify();
+  }
+
+  @Test
+  void canListScoreboard() {
+    userService.create("User1").block();
+    userService.create("User2").block();
+    scoreService.getScoreboard().blockLast();
   }
 
   @BeforeEach

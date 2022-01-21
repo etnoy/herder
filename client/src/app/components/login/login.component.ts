@@ -56,12 +56,13 @@ export class LoginComponent implements OnInit {
           let msg = '';
           if (error.error instanceof ErrorEvent) {
             // client-side error
-            msg = error.error.message;
+            msg = error.error.errorMessage;
           } else {
             // HTTP error
             if (error.status === 401) {
               // HTTP Unauthorized
-              msg = 'Incorrect username or password';
+              msg = error.error.errorMessage;
+
               this.loginForm.controls['password'].reset();
             } else {
               // We don't want to tell the user about any other error.
