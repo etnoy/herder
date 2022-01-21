@@ -47,5 +47,6 @@ jobs:
         run: |
           sudo systemctl start mysql.service
           mysql -u root -proot < src/main/resources/schema-mysql.sql
-          mysql -u root -proot -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"      - name: Integration tests
+          mysql -u root -proot -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"     
+      - name: Integration tests
         run: ./gradlew integrationTest jacocoTestReport --info
