@@ -14,8 +14,6 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    env:
-      MYSQL_DATABASE: core
     steps:
       - uses: actions/checkout@v2
         with:
@@ -45,10 +43,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      - name: Integration tests
+      - name: Prepare mysql database for integration tests
         run: |
           sudo systemctl start mysql.service
           mysql -u root -proot < src/main/resources/schema-mysql.sql
-          mysql -u root -proot -e "show tables from core;"
-          mysql -u root -proot -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"
-          ./gradlew integrationTest --info
+          mysql -u root -proot -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"      - name: Integration tests
+        run: ./gradlew integrationTest jacocoTestReport --info
