@@ -35,8 +35,8 @@ jobs:
       - name: Start mysqld
         run: |
           sudo systemctl start mysql.service
-          sudo mysql < src/main/resources/schema-mysql.sql
-          sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"
+          mysql -u root -proot < src/main/resources/schema-mysql.sql
+          mysql -u root -proot -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"
       - name: Cache SonarCloud packages
         uses: actions/cache@v1
         with:
