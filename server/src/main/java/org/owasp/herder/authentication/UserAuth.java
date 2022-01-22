@@ -21,20 +21,25 @@
  */
 package org.owasp.herder.authentication;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
-import org.springframework.data.annotation.Id;
 
 @Value
 @AllArgsConstructor
 @Builder
 @With
+@Table
 public final class UserAuth implements Serializable {
 
   private static final long serialVersionUID = -1511082836956413928L;

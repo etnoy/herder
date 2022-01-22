@@ -22,11 +22,15 @@
 package org.owasp.herder.module.sqlinjection;
 
 import java.io.Serializable;
+
+import org.springframework.data.relational.core.mapping.Table;
+
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
+@Table
 public class SqlInjectionTutorialRow implements Serializable {
   private static final long serialVersionUID = 6226793239207879891L;
 

@@ -22,15 +22,19 @@
 package org.owasp.herder.authentication;
 
 import java.io.Serializable;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
-import org.springframework.data.annotation.Id;
 
 @Value
 @Builder
 @With
+@Table
 public class SamlAuth implements Serializable {
   private static final long serialVersionUID = 211951930649985921L;
 

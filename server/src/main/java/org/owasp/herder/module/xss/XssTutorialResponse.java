@@ -22,12 +22,16 @@
 package org.owasp.herder.module.xss;
 
 import java.io.Serializable;
+
+import org.springframework.data.relational.core.mapping.Table;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
 @Value
 @Builder
+@Table
 public class XssTutorialResponse implements Serializable {
   private static final long serialVersionUID = 7515754390732953464L;
 
