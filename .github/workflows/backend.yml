@@ -46,6 +46,7 @@ jobs:
       - name: Prepare mysql database for integration tests
         run: |
           sudo systemctl start mysql.service
+          mysql -u root -proot -e "CREATE DATABASE core;"
           mysql -u root -proot -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"     
       - name: Integration tests
         run: ./gradlew integrationTest jacocoTestReport --info
