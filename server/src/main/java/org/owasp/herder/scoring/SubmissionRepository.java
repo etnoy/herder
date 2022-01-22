@@ -25,12 +25,12 @@ import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
 public interface SubmissionRepository extends ReactiveCrudRepository<Submission, Long> {
-  @Query("SELECT * from submission WHERE module_name = :module_name")
   public Flux<Submission> findAllByModuleName(@Param("module_name") final String moduleName);
 
   @Query("SELECT * from submission WHERE user_id = :user_id and is_valid = 1")

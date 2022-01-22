@@ -21,14 +21,13 @@
  */
 package org.owasp.herder.scoring;
 
-import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
+
 import reactor.core.publisher.Flux;
 
 @Repository
 public interface ScoreboardRepository extends ReactiveCrudRepository<ScoreboardEntry, Long> {
-  @Query("SELECT * from scoreboard WHERE user_id = :user_id")
   public Flux<ScoreboardEntry> findAllByUserId(@Param("user_id") final long userId);
 }

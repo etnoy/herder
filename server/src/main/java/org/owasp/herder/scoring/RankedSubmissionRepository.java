@@ -21,22 +21,19 @@
  */
 package org.owasp.herder.scoring;
 
-import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
 public interface RankedSubmissionRepository extends ReactiveCrudRepository<RankedSubmission, Long> {
-  @Query("SELECT * from ranked_submission WHERE module_name = :module_name")
   public Flux<RankedSubmission> findAllByModuleName(@Param("module_name") final long moduleName);
 
-  @Query("SELECT * from ranked_submission WHERE user_id = :user_id")
   public Flux<RankedSubmission> findAllByUserId(@Param("user_id") final long userId);
 
-  @Query("SELECT * from ranked_submission WHERE user_id = :user_id AND module_name = :module_name")
   public Mono<RankedSubmission> findAllByUserIdAndModuleName(
       @Param("user_id") final long userId, @Param("module_name") final long moduleName);
 }

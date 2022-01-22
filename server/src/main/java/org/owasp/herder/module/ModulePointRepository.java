@@ -22,14 +22,13 @@
 package org.owasp.herder.module;
 
 import org.owasp.herder.scoring.ModulePoint;
-import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
+
 import reactor.core.publisher.Flux;
 
 @Repository
 public interface ModulePointRepository extends ReactiveCrudRepository<ModulePoint, Long> {
-  @Query("SELECT * from module_point WHERE module_name = :moduleName")
   public Flux<ModulePoint> findAllByModuleName(@Param("moduleName") final int moduleName);
 }
