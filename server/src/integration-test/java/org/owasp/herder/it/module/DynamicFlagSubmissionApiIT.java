@@ -29,6 +29,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.ModuleController;
@@ -156,19 +158,17 @@ class DynamicFlagSubmissionApiIT {
 
   private String dynamicFlag;
 
-  @Test
+  @ParameterizedTest
+  @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
   @DisplayName("An invalid dynamic flag should be rejected")
-  void canRejectInvalidDynamicFlag() {
-    for (String invalidDynamicFlag : TestConstants.STRINGS) {
-      StepVerifier.create(
-              integrationTestUtils
-                  .submitFlagAndReturnSubmission(
-                      TestConstants.TEST_MODULE_NAME, token, invalidDynamicFlag)
-                  .map(Submission::isValid))
-          .expectNext(false)
-          .expectComplete()
-          .verify();
-    }
+  void canRejectInvalidDynamicFlag(final String testString) {
+    StepVerifier.create(
+            integrationTestUtils
+                .submitFlagAndReturnSubmission(TestConstants.TEST_MODULE_NAME, token, testString)
+                .map(Submission::isValid))
+        .expectNext(false)
+        .expectComplete()
+        .verify();
   }
 
   @Test

@@ -82,15 +82,14 @@ public final class TestConstants {
 
   public static final byte[] TEST_BYTE_ARRAY = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-  public static final String INITIAL_STRING = "";
-
   public static final String[] STRINGS = {
-    INITIAL_STRING,
     "Test String",
     "åäö",
     "me@example.com",
     "1;DROP TABLE users",
     " ",
+    "                           ",
+    "\t\n  ",
     "%",
     "_",
     "-",

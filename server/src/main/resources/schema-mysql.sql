@@ -45,7 +45,7 @@ CREATE
             id BIGINT AUTO_INCREMENT,
             name VARCHAR(191) NOT NULL UNIQUE,
             is_flag_static BOOLEAN DEFAULT FALSE,
-            static_flag VARCHAR(64) NULL,
+            static_flag VARCHAR(128) NULL,
             module_key BINARY(64) NOT NULL,
             is_open BOOLEAN DEFAULT FALSE,
             PRIMARY KEY(id)

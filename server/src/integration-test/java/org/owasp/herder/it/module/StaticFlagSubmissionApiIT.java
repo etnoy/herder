@@ -29,6 +29,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.ModuleController;
@@ -85,13 +87,14 @@ class StaticFlagSubmissionApiIT {
   @DisplayName("A valid static flag")
   class ValidStaticFlag {
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
     @DisplayName("should be accepted")
-    void canAcceptValidStaticFlag() {
+    void canAcceptValidStaticFlag(final String flagToTest) {
+      moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
       StepVerifier.create(
               integrationTestUtils
-                  .submitFlagAndReturnSubmission(
-                      TestConstants.TEST_MODULE_NAME, token, TestConstants.TEST_STATIC_FLAG)
+                  .submitFlagAndReturnSubmission(TestConstants.TEST_MODULE_NAME, token, flagToTest)
                   .map(Submission::isValid))
           .expectNext(true)
           .expectComplete()
