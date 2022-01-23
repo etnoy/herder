@@ -25,6 +25,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.stream.Stream;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
 
@@ -144,4 +146,8 @@ public final class TestConstants {
   public static final Clock year2100Clock =
       Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.systemDefault());
   public static final WebTokenClock year2100WebTokenClock = new WebTokenClock(year2100Clock);
+
+  public static Stream<String> testStringProvider() {
+    return Stream.of(STRINGS);
+  }
 }

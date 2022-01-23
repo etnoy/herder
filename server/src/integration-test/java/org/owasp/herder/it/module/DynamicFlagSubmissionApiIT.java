@@ -21,10 +21,10 @@
  */
 package org.owasp.herder.it.module;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
@@ -43,6 +43,9 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -54,6 +57,79 @@ import reactor.test.StepVerifier;
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("Dynamic flag submission API integration tests")
 class DynamicFlagSubmissionApiIT {
+  @Nested
+  @DisplayName("A valid dynamic flag")
+  class ValidDynamicFlag {
+
+    @Test
+    @DisplayName("should be accepted")
+    void canAcceptValidDynamicFlag() {
+      StepVerifier.create(
+              integrationTestUtils
+                  .submitFlagAndReturnSubmission(TestConstants.TEST_MODULE_NAME, token, dynamicFlag)
+                  .map(Submission::isValid))
+          .expectNext(true)
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName("should be accepted when surrounded by spaces")
+    void canAcceptValidDynamicFlagIfSurroundedBySpaces() {
+      final String flagWithSpaces = "    " + dynamicFlag + "         ";
+
+      StepVerifier.create(
+              integrationTestUtils
+                  .submitFlagAndReturnSubmission(
+                      TestConstants.TEST_MODULE_NAME, token, flagWithSpaces)
+                  .map(Submission::isValid))
+          .expectNext(true)
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName("should be accepted when in lowercase")
+    void canAcceptValidDynamicFlagInLowercase() {
+      StepVerifier.create(
+              integrationTestUtils
+                  .submitFlagAndReturnSubmission(
+                      TestConstants.TEST_MODULE_NAME, token, dynamicFlag.toLowerCase())
+                  .map(Submission::isValid))
+          .expectNext(true)
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName("should be accepted when in uppercase")
+    void canAcceptValidDynamicFlagInUppercase() {
+      StepVerifier.create(
+              integrationTestUtils
+                  .submitFlagAndReturnSubmission(
+                      TestConstants.TEST_MODULE_NAME, token, dynamicFlag.toUpperCase())
+                  .map(Submission::isValid))
+          .expectNext(true)
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName("should be rejected when surrounded by other whitespace")
+    void canRejectValidDynamicFlagIfSurroundedByOtherWhitespace() {
+      final String flagWithOtherWhitespace = "\n" + dynamicFlag + "\t";
+
+      StepVerifier.create(
+              integrationTestUtils
+                  .submitFlagAndReturnSubmission(
+                      TestConstants.TEST_MODULE_NAME, token, flagWithOtherWhitespace)
+                  .map(Submission::isValid))
+          .expectNext(false)
+          .expectComplete()
+          .verify();
+    }
+  }
+
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages
@@ -75,63 +151,10 @@ class DynamicFlagSubmissionApiIT {
   @Autowired PasswordEncoder passwordEncoder;
 
   @Autowired IntegrationTestUtils integrationTestUtils;
-
   private long userId;
   private String token;
+
   private String dynamicFlag;
-
-  @Test
-  @DisplayName("A valid dynamic flag should be accepted")
-  void canAcceptValidDynamicFlag() {
-    StepVerifier.create(
-            integrationTestUtils
-                .submitFlagAndReturnSubmission(TestConstants.TEST_MODULE_NAME, token, dynamicFlag)
-                .map(Submission::isValid))
-        .expectNext(true)
-        .expectComplete()
-        .verify();
-  }
-
-  @Test
-  @DisplayName("A valid dynamic flag should be accepted when surrounded by spaces")
-  void canAcceptValidDynamicFlagIfSurroundedBySpaces() {
-    final String flagWithSpaces = "    " + dynamicFlag + "         ";
-
-    StepVerifier.create(
-            integrationTestUtils
-                .submitFlagAndReturnSubmission(
-                    TestConstants.TEST_MODULE_NAME, token, flagWithSpaces)
-                .map(Submission::isValid))
-        .expectNext(true)
-        .expectComplete()
-        .verify();
-  }
-
-  @Test
-  @DisplayName("A valid dynamic flag should be accepted when in lowercase")
-  void canAcceptValidDynamicFlagInLowercase() {
-    StepVerifier.create(
-            integrationTestUtils
-                .submitFlagAndReturnSubmission(
-                    TestConstants.TEST_MODULE_NAME, token, dynamicFlag.toLowerCase())
-                .map(Submission::isValid))
-        .expectNext(true)
-        .expectComplete()
-        .verify();
-  }
-
-  @Test
-  @DisplayName("A valid dynamic flag should be accepted when in uppercase")
-  void canAcceptValidDynamicFlagInUppercase() {
-    StepVerifier.create(
-            integrationTestUtils
-                .submitFlagAndReturnSubmission(
-                    TestConstants.TEST_MODULE_NAME, token, dynamicFlag.toUpperCase())
-                .map(Submission::isValid))
-        .expectNext(true)
-        .expectComplete()
-        .verify();
-  }
 
   @Test
   @DisplayName("An invalid dynamic flag should be rejected")
@@ -164,21 +187,6 @@ class DynamicFlagSubmissionApiIT {
         .submitFlag(TestConstants.TEST_MODULE_NAME, null, "")
         .expectStatus()
         .isUnauthorized();
-  }
-
-  @Test
-  @DisplayName("A valid dynamic flag should be rejected when surrounded by other whitespace")
-  void canRejectValidDynamicFlagIfSurroundedByOtherWhitespace() {
-    final String flagWithOtherWhitespace = "\n" + dynamicFlag + "\t";
-
-    StepVerifier.create(
-            integrationTestUtils
-                .submitFlagAndReturnSubmission(
-                    TestConstants.TEST_MODULE_NAME, token, flagWithOtherWhitespace)
-                .map(Submission::isValid))
-        .expectNext(false)
-        .expectComplete()
-        .verify();
   }
 
   @BeforeEach

@@ -21,10 +21,10 @@
  */
 package org.owasp.herder.it.module;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
@@ -43,6 +43,9 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -78,62 +81,82 @@ class StaticFlagSubmissionApiIT {
 
   private String token;
 
-  @Test
-  @DisplayName("A valid static flag should be accepted")
-  void canAcceptValidStaticFlag() {
-    StepVerifier.create(
-            integrationTestUtils
-                .submitFlagAndReturnSubmission(
-                    TestConstants.TEST_MODULE_NAME, token, TestConstants.TEST_STATIC_FLAG)
-                .map(Submission::isValid))
-        .expectNext(true)
-        .expectComplete()
-        .verify();
-  }
+  @Nested
+  @DisplayName("A valid static flag")
+  class ValidStaticFlag {
 
-  @Test
-  @DisplayName("A valid static flag should be accepted when surrounded by spaces")
-  void canAcceptValidStaticFlagIfSurroundedBySpaces() {
-    final String flagWithSpaces = "     " + TestConstants.TEST_STATIC_FLAG + "         ";
+    @Test
+    @DisplayName("should be accepted")
+    void canAcceptValidStaticFlag() {
+      StepVerifier.create(
+              integrationTestUtils
+                  .submitFlagAndReturnSubmission(
+                      TestConstants.TEST_MODULE_NAME, token, TestConstants.TEST_STATIC_FLAG)
+                  .map(Submission::isValid))
+          .expectNext(true)
+          .expectComplete()
+          .verify();
+    }
 
-    StepVerifier.create(
-            integrationTestUtils
-                .submitFlagAndReturnSubmission(
-                    TestConstants.TEST_MODULE_NAME, token, flagWithSpaces)
-                .map(Submission::isValid))
-        .expectNext(true)
-        .expectComplete()
-        .verify();
-  }
+    @Test
+    @DisplayName("should be accepted when surrounded by spaces")
+    void canAcceptValidStaticFlagIfSurroundedBySpaces() {
+      final String flagWithSpaces = "     " + TestConstants.TEST_STATIC_FLAG + "         ";
 
-  @Test
-  @DisplayName("A valid static flag should be accepted when in lowercase")
-  void canAcceptValidStaticFlagInLowercase() {
-    StepVerifier.create(
-            integrationTestUtils
-                .submitFlagAndReturnSubmission(
-                    TestConstants.TEST_MODULE_NAME,
-                    token,
-                    TestConstants.TEST_STATIC_FLAG.toLowerCase())
-                .map(Submission::isValid))
-        .expectNext(true)
-        .expectComplete()
-        .verify();
-  }
+      StepVerifier.create(
+              integrationTestUtils
+                  .submitFlagAndReturnSubmission(
+                      TestConstants.TEST_MODULE_NAME, token, flagWithSpaces)
+                  .map(Submission::isValid))
+          .expectNext(true)
+          .expectComplete()
+          .verify();
+    }
 
-  @Test
-  @DisplayName("A valid static flag should be accepted when in uppercase")
-  void canAcceptValidStaticFlagInUppercase() {
-    StepVerifier.create(
-            integrationTestUtils
-                .submitFlagAndReturnSubmission(
-                    TestConstants.TEST_MODULE_NAME,
-                    token,
-                    TestConstants.TEST_STATIC_FLAG.toUpperCase())
-                .map(Submission::isValid))
-        .expectNext(true)
-        .expectComplete()
-        .verify();
+    @Test
+    @DisplayName("should be accepted when in lowercase")
+    void canAcceptValidStaticFlagInLowercase() {
+      StepVerifier.create(
+              integrationTestUtils
+                  .submitFlagAndReturnSubmission(
+                      TestConstants.TEST_MODULE_NAME,
+                      token,
+                      TestConstants.TEST_STATIC_FLAG.toLowerCase())
+                  .map(Submission::isValid))
+          .expectNext(true)
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName("should be accepted when in uppercase")
+    void canAcceptValidStaticFlagInUppercase() {
+      StepVerifier.create(
+              integrationTestUtils
+                  .submitFlagAndReturnSubmission(
+                      TestConstants.TEST_MODULE_NAME,
+                      token,
+                      TestConstants.TEST_STATIC_FLAG.toUpperCase())
+                  .map(Submission::isValid))
+          .expectNext(true)
+          .expectComplete()
+          .verify();
+    }
+
+    @Test
+    @DisplayName("should be rejected when surrounded by other whitespace")
+    void canRejectValidStaticFlagIfSurroundedByOtherWhitespace() {
+      final String flagWithOtherWhitespace = "\n" + TestConstants.TEST_STATIC_FLAG + "\t";
+
+      StepVerifier.create(
+              integrationTestUtils
+                  .submitFlagAndReturnSubmission(
+                      TestConstants.TEST_MODULE_NAME, token, flagWithOtherWhitespace)
+                  .map(Submission::isValid))
+          .expectNext(false)
+          .expectComplete()
+          .verify();
+    }
   }
 
   @Test
@@ -167,21 +190,6 @@ class StaticFlagSubmissionApiIT {
         .submitFlag(TestConstants.TEST_MODULE_NAME, null, TestConstants.TEST_STATIC_FLAG)
         .expectStatus()
         .isUnauthorized();
-  }
-
-  @Test
-  @DisplayName("A valid static flag should be rejected when surrounded by other whitespace")
-  void canRejectValidStaticFlagIfSurroundedByOtherWhitespace() {
-    final String flagWithOtherWhitespace = "\n" + TestConstants.TEST_STATIC_FLAG + "\t";
-
-    StepVerifier.create(
-            integrationTestUtils
-                .submitFlagAndReturnSubmission(
-                    TestConstants.TEST_MODULE_NAME, token, flagWithOtherWhitespace)
-                .map(Submission::isValid))
-        .expectNext(false)
-        .expectComplete()
-        .verify();
   }
 
   @BeforeEach

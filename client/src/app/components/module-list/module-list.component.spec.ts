@@ -4,7 +4,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ModuleListComponent } from './module-list.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 
-describe('ModulesComponent', () => {
+describe('ModuleListComponent', () => {
   let component: ModuleListComponent;
   let fixture: ComponentFixture<ModuleListComponent>;
 
