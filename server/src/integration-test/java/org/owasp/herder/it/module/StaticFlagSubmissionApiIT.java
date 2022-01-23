@@ -101,10 +101,14 @@ class StaticFlagSubmissionApiIT {
           .verify();
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
     @DisplayName("should be accepted when surrounded by spaces")
-    void canAcceptValidStaticFlagIfSurroundedBySpaces() {
-      final String flagWithSpaces = "     " + TestConstants.TEST_STATIC_FLAG + "         ";
+    void canAcceptValidStaticFlagIfSurroundedBySpaces(final String flagToTest) {
+
+      moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
+
+      final String flagWithSpaces = "     " + flagToTest + "         ";
 
       StepVerifier.create(
               integrationTestUtils
@@ -116,40 +120,44 @@ class StaticFlagSubmissionApiIT {
           .verify();
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
     @DisplayName("should be accepted when in lowercase")
-    void canAcceptValidStaticFlagInLowercase() {
+    void canAcceptValidStaticFlagInLowercase(final String flagToTest) {
+      moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
+
       StepVerifier.create(
               integrationTestUtils
                   .submitFlagAndReturnSubmission(
-                      TestConstants.TEST_MODULE_NAME,
-                      token,
-                      TestConstants.TEST_STATIC_FLAG.toLowerCase())
+                      TestConstants.TEST_MODULE_NAME, token, flagToTest.toLowerCase())
                   .map(Submission::isValid))
           .expectNext(true)
           .expectComplete()
           .verify();
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
     @DisplayName("should be accepted when in uppercase")
-    void canAcceptValidStaticFlagInUppercase() {
+    void canAcceptValidStaticFlagInUppercase(final String flagToTest) {
+      moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
+
       StepVerifier.create(
               integrationTestUtils
                   .submitFlagAndReturnSubmission(
-                      TestConstants.TEST_MODULE_NAME,
-                      token,
-                      TestConstants.TEST_STATIC_FLAG.toUpperCase())
+                      TestConstants.TEST_MODULE_NAME, token, flagToTest.toUpperCase())
                   .map(Submission::isValid))
           .expectNext(true)
           .expectComplete()
           .verify();
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
     @DisplayName("should be rejected when surrounded by other whitespace")
-    void canRejectValidStaticFlagIfSurroundedByOtherWhitespace() {
-      final String flagWithOtherWhitespace = "\n" + TestConstants.TEST_STATIC_FLAG + "\t";
+    void canRejectValidStaticFlagIfSurroundedByOtherWhitespace(final String flagToTest) {
+      final String flagWithOtherWhitespace = "\n" + flagToTest + "\t";
+      moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
 
       StepVerifier.create(
               integrationTestUtils
