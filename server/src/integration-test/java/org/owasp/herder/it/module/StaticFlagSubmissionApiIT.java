@@ -88,7 +88,7 @@ class StaticFlagSubmissionApiIT {
   class ValidStaticFlag {
 
     @ParameterizedTest
-    @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
+    @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should be accepted")
     void canAcceptValidStaticFlag(final String flagToTest) {
       moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
@@ -102,10 +102,9 @@ class StaticFlagSubmissionApiIT {
     }
 
     @ParameterizedTest
-    @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
+    @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should be accepted when surrounded by spaces")
     void canAcceptValidStaticFlagIfSurroundedBySpaces(final String flagToTest) {
-
       moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
 
       final String flagWithSpaces = "     " + flagToTest + "         ";
@@ -121,7 +120,7 @@ class StaticFlagSubmissionApiIT {
     }
 
     @ParameterizedTest
-    @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
+    @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should be accepted when in lowercase")
     void canAcceptValidStaticFlagInLowercase(final String flagToTest) {
       moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
@@ -137,7 +136,7 @@ class StaticFlagSubmissionApiIT {
     }
 
     @ParameterizedTest
-    @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
+    @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should be accepted when in uppercase")
     void canAcceptValidStaticFlagInUppercase(final String flagToTest) {
       moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
@@ -153,7 +152,7 @@ class StaticFlagSubmissionApiIT {
     }
 
     @ParameterizedTest
-    @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
+    @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should be rejected when surrounded by other whitespace")
     void canRejectValidStaticFlagIfSurroundedByOtherWhitespace(final String flagToTest) {
       final String flagWithOtherWhitespace = "\n" + flagToTest + "\t";
