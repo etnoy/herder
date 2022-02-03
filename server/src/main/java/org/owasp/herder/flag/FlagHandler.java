@@ -19,19 +19,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.module;
+package org.owasp.herder.flag;
+
+import org.owasp.herder.crypto.CryptoService;
+import org.owasp.herder.exception.FlagSubmissionRateLimitException;
+import org.owasp.herder.exception.InvalidFlagStateException;
+import org.owasp.herder.exception.InvalidFlagSubmissionRateLimitException;
+import org.owasp.herder.exception.InvalidUserIdException;
+import org.owasp.herder.exception.ModuleNameNotFoundException;
+import org.owasp.herder.module.Module;
+import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.service.ConfigurationService;
+import org.owasp.herder.service.FlagSubmissionRateLimiter;
+import org.owasp.herder.service.InvalidFlagRateLimiter;
+import org.owasp.herder.user.UserService;
+import org.springframework.stereotype.Service;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
+
+import io.github.bucket4j.Bucket;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.owasp.herder.crypto.CryptoService;
-import org.owasp.herder.exception.InvalidFlagStateException;
-import org.owasp.herder.exception.InvalidUserIdException;
-import org.owasp.herder.exception.ModuleNameNotFoundException;
-import org.owasp.herder.service.ConfigurationService;
-import org.owasp.herder.user.UserService;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -48,6 +57,10 @@ public final class FlagHandler {
   private final ConfigurationService configurationService;
 
   private final CryptoService cryptoService;
+
+  private final FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+
+  private final InvalidFlagRateLimiter invalidFlagRateLimiter;
 
   public Mono<String> getDynamicFlag(final long userId, final String moduleName) {
     return getSaltedHmac(userId, moduleName, "flag")
@@ -112,6 +125,13 @@ public final class FlagHandler {
             + " to moduleName "
             + moduleName);
 
+    // Check the rate limiter for flag submissions
+    Bucket submissionBucket = flagSubmissionRateLimiter.resolveBucket(userId);
+    if (!submissionBucket.tryConsume(1)) {
+      // limit is exceeded
+      return Mono.error(new FlagSubmissionRateLimitException());
+    }
+
     // Get the module from the repository
     final Mono<Module> currentModule = moduleService.findByName(moduleName);
 
@@ -133,6 +153,19 @@ public final class FlagHandler {
                     return getDynamicFlag(userId, moduleName)
                         .map(stripSpaces(submittedFlag)::equalsIgnoreCase);
                   }
+                })
+            .flatMap(
+                validationResult -> {
+                  // Check the rate limiter if the flag was invalid
+                  if (!Boolean.TRUE.equals(validationResult)) {
+                    // flag is invalid
+                    Bucket invalidFlagBucket = invalidFlagRateLimiter.resolveBucket(userId);
+                    if (!invalidFlagBucket.tryConsume(1)) {
+                      // limit is exceeded
+                      return Mono.error(new InvalidFlagSubmissionRateLimitException());
+                    }
+                  }
+                  return Mono.just(validationResult);
                 });
 
     // Do some logging. First, check if error occurred and then print logs

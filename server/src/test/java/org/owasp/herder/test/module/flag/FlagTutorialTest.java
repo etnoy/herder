@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.module.FlagHandler;
+import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.flag.FlagTutorial;

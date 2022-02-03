@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.time.Month;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,11 +38,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.authentication.ControllerAuthentication;
 import org.owasp.herder.exception.NotAuthenticatedException;
-import org.owasp.herder.module.FlagController;
+import org.owasp.herder.flag.FlagController;
 import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -114,7 +118,7 @@ class FlagControllerTest {
     when(moduleService.findByName(moduleName)).thenReturn(Mono.just(mockModule));
 
     StepVerifier.create(flagController.submitFlag(moduleName, flag))
-        .expectNext(submission)
+        .expectNext(new ResponseEntity<Submission>(submission, HttpStatus.OK))
         .expectComplete()
         .verify();
 

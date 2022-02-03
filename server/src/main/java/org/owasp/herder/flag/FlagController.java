@@ -19,18 +19,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.module;
+package org.owasp.herder.flag;
 
-import lombok.RequiredArgsConstructor;
 import org.owasp.herder.authentication.ControllerAuthentication;
+import org.owasp.herder.exception.RateLimitException;
+import org.owasp.herder.module.Module;
+import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -45,11 +51,17 @@ public class FlagController {
 
   @PostMapping(path = "flag/submit/{moduleName}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Mono<Submission> submitFlag(
+  public Mono<ResponseEntity<Submission>> submitFlag(
       @PathVariable("moduleName") final String moduleName, @RequestBody final String flag) {
     return controllerAuthentication
         .getUserId()
         .zipWith(moduleService.findByName(moduleName).map(Module::getName))
-        .flatMap(tuple -> submissionService.submit(tuple.getT1(), tuple.getT2(), flag));
+        .flatMap(tuple -> submissionService.submit(tuple.getT1(), tuple.getT2(), flag))
+        .map(submission -> new ResponseEntity<>(submission, HttpStatus.OK))
+        .onErrorResume(
+            RateLimitException.class,
+            throwable -> {
+              return Mono.just(new ResponseEntity<>(null, HttpStatus.TOO_MANY_REQUESTS));
+            });
   }
 }

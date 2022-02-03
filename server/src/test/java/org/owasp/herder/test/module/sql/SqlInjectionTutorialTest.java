@@ -36,7 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.KeyService;
-import org.owasp.herder.module.FlagHandler;
+import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.sqlinjection.SqlInjectionDatabaseClientFactory;

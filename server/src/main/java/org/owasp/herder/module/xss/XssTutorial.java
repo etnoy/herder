@@ -23,8 +23,9 @@ package org.owasp.herder.module.xss;
 
 import java.util.List;
 import lombok.EqualsAndHashCode;
+
+import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
-import org.owasp.herder.module.FlagHandler;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.xss.XssTutorialResponse.XssTutorialResponseBuilder;
 import org.springframework.stereotype.Component;

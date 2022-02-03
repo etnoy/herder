@@ -40,7 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.module.FlagHandler;
+import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.csrf.CsrfAttack;
 import org.owasp.herder.module.csrf.CsrfAttackRepository;
 import org.owasp.herder.module.csrf.CsrfService;

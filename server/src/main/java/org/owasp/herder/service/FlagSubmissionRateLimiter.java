@@ -19,16 +19,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.module.flag;
+package org.owasp.herder.service;
 
-import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.module.BaseModule;
-import org.owasp.herder.module.ModuleService;
-import org.springframework.stereotype.Component;
+import java.time.Duration;
 
-@Component
-public class FlagTutorial extends BaseModule {
-  public FlagTutorial(final ModuleService moduleService, final FlagHandler flagHandler) {
-    super("flag-tutorial", moduleService, flagHandler, null);
+import org.springframework.stereotype.Service;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.local.LocalBucketBuilder;
+
+@Service
+public final class FlagSubmissionRateLimiter extends RateLimiter {
+
+  @Override
+  LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder) {
+    return bucketBuilder.addLimit(Bandwidth.simple(5, Duration.ofMinutes(1)));
   }
 }

@@ -19,16 +19,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.module.flag;
+package org.owasp.herder.exception;
 
-import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.module.BaseModule;
-import org.owasp.herder.module.ModuleService;
-import org.springframework.stereotype.Component;
+public class FlagSubmissionRateLimitException extends RateLimitException {
+  private static final long serialVersionUID = 3438663842979291484L;
 
-@Component
-public class FlagTutorial extends BaseModule {
-  public FlagTutorial(final ModuleService moduleService, final FlagHandler flagHandler) {
-    super("flag-tutorial", moduleService, flagHandler, null);
+  public FlagSubmissionRateLimitException() {
+    super();
   }
 }

@@ -44,7 +44,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
-import org.owasp.herder.module.FlagHandler;
+import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.scoring.CorrectionRepository;
 import org.owasp.herder.scoring.RankedSubmission;
 import org.owasp.herder.scoring.RankedSubmissionRepository;

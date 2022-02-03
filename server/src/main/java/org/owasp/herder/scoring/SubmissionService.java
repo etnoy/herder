@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
-import org.owasp.herder.module.FlagHandler;
+import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.scoring.Submission.SubmissionBuilder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

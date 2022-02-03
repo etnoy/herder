@@ -37,11 +37,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.InvalidFlagStateException;
 import org.owasp.herder.exception.InvalidUserIdException;
-import org.owasp.herder.module.FlagHandler;
+import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.service.ConfigurationService;
+import org.owasp.herder.service.FlagSubmissionRateLimiter;
+import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.user.UserService;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -65,6 +68,10 @@ class FlagHandlerTest {
   @Mock private ConfigurationService configurationService;
 
   @Mock private CryptoService cryptoService;
+
+  @Mock private FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+
+  @Mock private InvalidFlagRateLimiter invalidFlagRateLimiter;
 
   @Test
   void getDynamicFlag_FlagIsStatic_ReturnsInvalidFlagStateException() {
@@ -167,7 +174,14 @@ class FlagHandlerTest {
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    flagHandler = new FlagHandler(moduleService, userService, configurationService, cryptoService);
+    flagHandler =
+        new FlagHandler(
+            moduleService,
+            userService,
+            configurationService,
+            cryptoService,
+            flagSubmissionRateLimiter,
+            invalidFlagRateLimiter);
   }
 
   @Test
