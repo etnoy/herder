@@ -100,6 +100,7 @@ export class ApiService {
     const api = `${this.endpoint}/scoreboard/`;
     return this.http.get(api, { headers: this.headers }).pipe(
       map((res: Response) => {
+        console.log(res);
         return res || {};
       }),
       catchError(this.handleError)

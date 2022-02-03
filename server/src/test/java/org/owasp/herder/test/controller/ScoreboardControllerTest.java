@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +41,7 @@ import org.owasp.herder.scoring.ScoreboardController;
 import org.owasp.herder.scoring.ScoreboardEntry;
 import org.owasp.herder.scoring.ScoreboardEntry.ScoreboardEntryBuilder;
 import org.owasp.herder.scoring.SubmissionService;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
@@ -101,9 +103,17 @@ class ScoreboardControllerTest {
     final long mockUserId = 6331L;
     final RankedSubmissionBuilder rankedSubmissionBuilder = RankedSubmission.builder();
     final RankedSubmission rankedSubmission1 =
-        rankedSubmissionBuilder.userId(2L).moduleName(9L).time(LocalDateTime.MIN).build();
+        rankedSubmissionBuilder
+            .userId(2L)
+            .moduleName("test-module")
+            .time(LocalDateTime.MIN)
+            .build();
     final RankedSubmission rankedSubmission2 =
-        rankedSubmissionBuilder.userId(2342L).moduleName(9456L).time(LocalDateTime.MAX).build();
+        rankedSubmissionBuilder
+            .userId(2342L)
+            .moduleName("test-module")
+            .time(LocalDateTime.MAX)
+            .build();
 
     final Flux<RankedSubmission> rankedSubmissions =
         Flux.just(rankedSubmission1, rankedSubmission2);

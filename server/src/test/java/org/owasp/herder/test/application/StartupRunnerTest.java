@@ -39,7 +39,9 @@ import org.owasp.herder.module.csrf.CsrfTutorial;
 import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.xss.XssTutorial;
+import org.owasp.herder.scoring.ScoreService;
 import org.owasp.herder.user.UserService;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 
@@ -69,6 +71,8 @@ class StartupRunnerTest {
 
   @Mock private FlagHandler flagHandler;
 
+  @Mock private ScoreService scoreService;
+
   @Test
   void run_MockedServices_CallsMocks() {
     final long mockUserId = 602L;
@@ -93,6 +97,11 @@ class StartupRunnerTest {
     // Set up the system under test
     startupRunner =
         new StartupRunner(
-            userService, xssTutorial, sqlInjectionTutorial, csrfTutorial, flagTutorial);
+            userService,
+            xssTutorial,
+            sqlInjectionTutorial,
+            csrfTutorial,
+            flagTutorial,
+            scoreService);
   }
 }

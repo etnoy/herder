@@ -21,11 +21,12 @@
  */
 package org.owasp.herder.scoring;
 
-import lombok.RequiredArgsConstructor;
 import org.owasp.herder.exception.InvalidRankException;
 import org.owasp.herder.module.ModulePointRepository;
 import org.owasp.herder.scoring.ModulePoint.ModulePointBuilder;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -38,8 +39,7 @@ public final class ScoreService {
   private final ScoreboardRepository scoreboardRepository;
 
   public Mono<ModulePoint> setModuleScore(
-      final String moduleName, final int rank, final int points) {
-
+      final String moduleName, final long rank, final long points) {
     if (rank < 0) {
       return Mono.error(new InvalidRankException("Rank must be zero or a positive integer"));
     }

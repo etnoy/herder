@@ -1,7 +1,7 @@
 export class Score {
   rank: number;
   userId: number;
-  displayName: String;
+  displayName: string;
   score: number;
   goldMedals: number;
   silverMedals: number;

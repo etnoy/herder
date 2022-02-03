@@ -45,7 +45,7 @@ public class ModulePoint implements Serializable {
 
   @Column("submission_rank")
   @NonNull
-  private Integer rank;
+  private Long rank;
 
-  @NonNull private Integer points;
+  @NonNull private Long points;
 }

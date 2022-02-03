@@ -21,12 +21,17 @@
  */
 package org.owasp.herder.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.Generated;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import lombok.Generated;
 
 @Generated
 @Configuration
@@ -34,9 +39,10 @@ public class ObjectMapperConfiguration {
   @Bean
   @Primary
   public ObjectMapper buildObjectMapper() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    // Required for parsing LocalDateTime
-    objectMapper.registerModule(new JavaTimeModule());
-    return objectMapper;
+    return new ObjectMapper()
+        .setAnnotationIntrospector(new JacksonAnnotationIntrospector())
+        .registerModule(new JavaTimeModule())
+        .setDateFormat(new StdDateFormat())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   }
 }

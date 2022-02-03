@@ -21,16 +21,18 @@
  */
 package org.owasp.herder.application;
 
-import lombok.RequiredArgsConstructor;
 import org.owasp.herder.module.csrf.CsrfTutorial;
 import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.xss.XssTutorial;
+import org.owasp.herder.scoring.ScoreService;
 import org.owasp.herder.user.UserService;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @ConditionalOnProperty(
@@ -52,6 +54,8 @@ public class StartupRunner implements ApplicationRunner {
 
   private final FlagTutorial flagTutorial;
 
+  private final ScoreService scoreService;
+
   @Override
   public void run(ApplicationArguments args) {
     // Create a default admin account
@@ -71,5 +75,18 @@ public class StartupRunner implements ApplicationRunner {
             xssTutorial.getInit(),
             sqlInjectionTutorial.getInit())
         .block();
+
+    scoreService.setModuleScore("csrf-tutorial", 0, 100).block();
+    scoreService.setModuleScore("csrf-tutorial", 1, 10).block();
+    scoreService.setModuleScore("csrf-tutorial", 2, 5).block();
+    scoreService.setModuleScore("csrf-tutorial", 3, 1).block();
+
+    scoreService.setModuleScore("xss-tutorial", 0, 120).block();
+
+    scoreService.setModuleScore("sql-injection-tutorial", 0, 50).block();
+    scoreService.setModuleScore("sql-injection-tutorial", 1, 500).block();
+    scoreService.setModuleScore("sql-injection-tutorial", 2, 5000).block();
+    scoreService.setModuleScore("sql-injection-tutorial", 3, 50000).block();
+    scoreService.setModuleScore("sql-injection-tutorial", 4, 500000).block();
   }
 }
