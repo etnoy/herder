@@ -26,9 +26,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.r2dbc.spi.R2dbcBadGrammarException;
-import lombok.NonNull;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,12 +39,17 @@ import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.sqlinjection.SqlInjectionDatabaseClientFactory;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow;
+import org.owasp.herder.scoring.ScoreService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.r2dbc.BadSqlGrammarException;
 import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.data.r2dbc.core.DatabaseClient.GenericExecuteSpec;
 import org.springframework.data.r2dbc.core.DatabaseClient.TypedExecuteSpec;
 import org.springframework.data.r2dbc.core.FetchSpec;
+
+import io.r2dbc.spi.R2dbcBadGrammarException;
+import lombok.NonNull;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -74,6 +76,8 @@ class SqlInjectionTutorialTest {
 
   @Mock ModuleService moduleService;
 
+  @Mock ScoreService scoreService;
+
   @Mock FlagHandler flagHandler;
 
   @Mock KeyService keyService;
@@ -88,7 +92,12 @@ class SqlInjectionTutorialTest {
           FlagHandler flagHandler,
           SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory,
           KeyService keyService) {
-        super(moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
+        super(
+            moduleService,
+            scoreService,
+            flagHandler,
+            sqlInjectionDatabaseClientFactory,
+            keyService);
       }
 
       @Override
@@ -115,7 +124,11 @@ class SqlInjectionTutorialTest {
 
     sqlInjectionTutorial =
         new SqlInjectionTutorial(
-            moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
+            moduleService,
+            scoreService,
+            flagHandler,
+            sqlInjectionDatabaseClientFactory,
+            keyService);
 
     final byte[] randomBytes = {120, 56, 111};
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
@@ -174,7 +187,11 @@ class SqlInjectionTutorialTest {
 
     sqlInjectionTutorial =
         new SqlInjectionTutorial(
-            moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
+            moduleService,
+            scoreService,
+            flagHandler,
+            sqlInjectionDatabaseClientFactory,
+            keyService);
 
     final byte[] randomBytes = {120, 56, 111};
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
@@ -239,7 +256,11 @@ class SqlInjectionTutorialTest {
 
     sqlInjectionTutorial =
         new SqlInjectionTutorial(
-            moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
+            moduleService,
+            scoreService,
+            flagHandler,
+            sqlInjectionDatabaseClientFactory,
+            keyService);
 
     final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
     when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
@@ -281,7 +302,11 @@ class SqlInjectionTutorialTest {
 
     sqlInjectionTutorial =
         new SqlInjectionTutorial(
-            moduleService, flagHandler, sqlInjectionDatabaseClientFactory, keyService);
+            moduleService,
+            scoreService,
+            flagHandler,
+            sqlInjectionDatabaseClientFactory,
+            keyService);
 
     sqlInjectionTutorial.getInit().block();
 

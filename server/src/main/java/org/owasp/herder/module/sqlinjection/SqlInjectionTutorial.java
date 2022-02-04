@@ -22,15 +22,18 @@
 package org.owasp.herder.module.sqlinjection;
 
 import java.util.Base64;
-import lombok.EqualsAndHashCode;
+
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.scoring.ScoreService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.r2dbc.BadSqlGrammarException;
 import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
+
+import lombok.EqualsAndHashCode;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -50,12 +53,22 @@ public class SqlInjectionTutorial extends BaseModule {
 
   public SqlInjectionTutorial(
       final ModuleService moduleService,
+      final ScoreService scoreService,
       final FlagHandler flagHandler,
       final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory,
       final KeyService keyService) {
-    super(MODULE_NAME, moduleService, flagHandler, null);
+    super(MODULE_NAME, moduleService, scoreService, flagHandler);
     this.sqlInjectionDatabaseClientFactory = sqlInjectionDatabaseClientFactory;
     this.keyService = keyService;
+  }
+
+  @Override
+  public Mono<Void> initialize() {
+    return Mono.when(
+        getScoreService().setModuleScore(MODULE_NAME, 0, 100),
+        getScoreService().setModuleScore(MODULE_NAME, 1, 10),
+        getScoreService().setModuleScore(MODULE_NAME, 2, 5),
+        getScoreService().setModuleScore(MODULE_NAME, 3, 1));
   }
 
   /**

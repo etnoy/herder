@@ -25,8 +25,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
-import lombok.NonNull;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +36,10 @@ import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.flag.FlagTutorial;
+import org.owasp.herder.scoring.ScoreService;
+
+import lombok.NonNull;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 
@@ -56,6 +58,8 @@ class FlagTutorialTest {
 
   @Mock ModuleService moduleService;
 
+  @Mock ScoreService scoreService;
+
   @Mock FlagHandler flagHandler;
 
   final Module mockModule = mock(Module.class);
@@ -66,14 +70,14 @@ class FlagTutorialTest {
     reset(mockModule);
     when(moduleService.create(MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
-    flagTutorial = new FlagTutorial(moduleService, flagHandler);
+    flagTutorial = new FlagTutorial(moduleService, scoreService, flagHandler);
   }
 
   @Test
   void equals_EqualsVerifier_AsExpected() {
     class FlagTutorialChild extends FlagTutorial {
       public FlagTutorialChild(ModuleService moduleService, FlagHandler flagHandler) {
-        super(moduleService, flagHandler);
+        super(moduleService, scoreService, flagHandler);
       }
 
       @Override

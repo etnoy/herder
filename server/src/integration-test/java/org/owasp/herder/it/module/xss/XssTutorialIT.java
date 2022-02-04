@@ -46,6 +46,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -83,7 +84,7 @@ class XssTutorialIT {
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
-    xssTutorial = new XssTutorial(xssService, moduleService, flagHandler);
+    xssTutorial = new XssTutorial(xssService, moduleService, scoreService, flagHandler);
     xssTutorial.getInit().block();
   }
 

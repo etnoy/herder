@@ -45,6 +45,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -117,7 +118,7 @@ class CsrfTutorialIT {
   @BeforeEach
   private void clear() {
     integrationTestUtils.resetState();
-    csrfTutorial = new CsrfTutorial(csrfService, moduleService, flagHandler);
+    csrfTutorial = new CsrfTutorial(csrfService, moduleService, scoreService, flagHandler);
     csrfTutorial.getInit().block();
   }
 

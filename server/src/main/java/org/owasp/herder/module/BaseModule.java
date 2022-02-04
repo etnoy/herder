@@ -23,6 +23,7 @@ package org.owasp.herder.module;
 
 import org.owasp.herder.exception.InvalidFlagStateException;
 import org.owasp.herder.flag.FlagHandler;
+import org.owasp.herder.scoring.ScoreService;
 import org.springframework.stereotype.Component;
 
 import lombok.AccessLevel;
@@ -43,6 +44,8 @@ public abstract class BaseModule {
 
   @Getter @NonNull ModuleService moduleService;
 
+  @Getter @NonNull ScoreService scoreService;
+
   @Getter @NonNull FlagHandler flagHandler;
 
   @NonNull Mono<Module> module;
@@ -50,17 +53,36 @@ public abstract class BaseModule {
   @Getter @NonNull Mono<Void> init;
 
   protected BaseModule(
-      String moduleName, ModuleService moduleService, FlagHandler flagHandler, String staticFlag) {
+      final String moduleName,
+      final ModuleService moduleService,
+      final ScoreService scoreService,
+      final FlagHandler flagHandler,
+      final String staticFlag) {
     this.moduleName = moduleName;
     this.moduleService = moduleService;
+    this.scoreService = scoreService;
     this.flagHandler = flagHandler;
     this.module = moduleService.create(moduleName);
-    if (staticFlag == null) {
-      this.init = Mono.when(this.module);
-    } else {
-      this.init = Mono.when(this.module, moduleService.setStaticFlag(moduleName, staticFlag));
-    }
+    this.init =
+        this.module
+            .then(moduleService.setStaticFlag(moduleName, staticFlag))
+            .then(this.initialize());
   }
+
+  protected BaseModule(
+      final String moduleName,
+      final ModuleService moduleService,
+      final ScoreService scoreService,
+      final FlagHandler flagHandler) {
+    this.moduleName = moduleName;
+    this.moduleService = moduleService;
+    this.scoreService = scoreService;
+    this.flagHandler = flagHandler;
+    this.module = moduleService.create(moduleName);
+    this.init = this.module.then(this.initialize());
+  }
+
+  public abstract Mono<Void> initialize();
 
   /**
    * Computes the static flag for the given module. Throws {@link InvalidFlagStateException} if the

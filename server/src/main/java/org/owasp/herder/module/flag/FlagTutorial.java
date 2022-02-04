@@ -24,11 +24,28 @@ package org.owasp.herder.module.flag;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.scoring.ScoreService;
 import org.springframework.stereotype.Component;
+
+import reactor.core.publisher.Mono;
 
 @Component
 public class FlagTutorial extends BaseModule {
-  public FlagTutorial(final ModuleService moduleService, final FlagHandler flagHandler) {
-    super("flag-tutorial", moduleService, flagHandler, null);
+  private static final String MODULE_NAME = "flag-tutorial";
+
+  public FlagTutorial(
+      final ModuleService moduleService,
+      final ScoreService scoreService,
+      final FlagHandler flagHandler) {
+    super("flag-tutorial", moduleService, scoreService, flagHandler);
+  }
+
+  @Override
+  public Mono<Void> initialize() {
+    return Mono.when(
+        getScoreService().setModuleScore(MODULE_NAME, 0, 100),
+        getScoreService().setModuleScore(MODULE_NAME, 1, 10),
+        getScoreService().setModuleScore(MODULE_NAME, 2, 5),
+        getScoreService().setModuleScore(MODULE_NAME, 3, 1));
   }
 }

@@ -21,14 +21,15 @@
  */
 package org.owasp.herder.module.csrf;
 
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
-
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.csrf.CsrfTutorialResult.CsrfTutorialResultBuilder;
+import org.owasp.herder.scoring.ScoreService;
 import org.springframework.stereotype.Component;
+
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -42,8 +43,9 @@ public class CsrfTutorial extends BaseModule {
   public CsrfTutorial(
       final CsrfService csrfService,
       final ModuleService moduleService,
+      final ScoreService scoreService,
       final FlagHandler flagHandler) {
-    super(MODULE_NAME, moduleService, flagHandler, null);
+    super(MODULE_NAME, moduleService, scoreService, flagHandler);
     this.csrfService = csrfService;
   }
 
@@ -100,5 +102,14 @@ public class CsrfTutorial extends BaseModule {
                 return Mono.just(csrfTutorialResultBuilder.error("Unknown target ID").build());
               }
             });
+  }
+
+  @Override
+  public Mono<Void> initialize() {
+    return Mono.when(
+        getScoreService().setModuleScore(MODULE_NAME, 0, 100),
+        getScoreService().setModuleScore(MODULE_NAME, 1, 10),
+        getScoreService().setModuleScore(MODULE_NAME, 2, 5),
+        getScoreService().setModuleScore(MODULE_NAME, 3, 1));
   }
 }

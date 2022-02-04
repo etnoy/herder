@@ -38,7 +38,9 @@ import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.scoring.ScoreService;
 import org.owasp.herder.test.util.TestConstants;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -49,11 +51,18 @@ class BaseModuleTest {
   private class TestModule extends BaseModule {
 
     protected TestModule(
-        String moduleName,
-        ModuleService moduleService,
-        FlagHandler flagHandler,
-        String staticFlag) {
-      super(moduleName, moduleService, flagHandler, staticFlag);
+        final String moduleName,
+        final ModuleService moduleService,
+        final ScoreService scoreService,
+        final FlagHandler flagHandler,
+        final String staticFlag) {
+      super(moduleName, moduleService, scoreService, flagHandler, staticFlag);
+    }
+
+    @Override
+    public Mono<Void> initialize() {
+      // TODO Auto-generated method stub
+      return null;
     }
   }
 
@@ -65,6 +74,8 @@ class BaseModuleTest {
 
   @Mock ModuleService moduleService;
 
+  @Mock ScoreService scoreService;
+
   @Mock FlagHandler flagHandler;
 
   @Mock Module mockModule;
@@ -75,7 +86,8 @@ class BaseModuleTest {
     when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
     TestModule dynamicFlagModule =
-        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, null);
+        new TestModule(
+            TestConstants.TEST_MODULE_NAME, moduleService, scoreService, flagHandler, null);
 
     StepVerifier.create(dynamicFlagModule.getInit()).expectComplete().verify();
 
@@ -93,7 +105,12 @@ class BaseModuleTest {
         .thenReturn(Mono.just(mockModule));
 
     TestModule staticFlagModule =
-        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, testStaticFlag);
+        new TestModule(
+            TestConstants.TEST_MODULE_NAME,
+            moduleService,
+            scoreService,
+            flagHandler,
+            testStaticFlag);
 
     StepVerifier.create(staticFlagModule.getInit()).expectComplete().verify();
 
@@ -111,7 +128,12 @@ class BaseModuleTest {
     when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
     TestModule dynamicFlagModule =
-        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, testStaticFlag);
+        new TestModule(
+            TestConstants.TEST_MODULE_NAME,
+            moduleService,
+            scoreService,
+            flagHandler,
+            testStaticFlag);
 
     dynamicFlagModule.getInit().block();
 
@@ -131,7 +153,12 @@ class BaseModuleTest {
     when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
     TestModule dynamicFlagModule =
-        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, testStaticFlag);
+        new TestModule(
+            TestConstants.TEST_MODULE_NAME,
+            moduleService,
+            scoreService,
+            flagHandler,
+            testStaticFlag);
 
     when(flagHandler.getDynamicFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_NAME))
         .thenReturn(Mono.just(testDynamicFlag));
@@ -157,7 +184,12 @@ class BaseModuleTest {
         .thenReturn(Mono.just(mockModule));
 
     TestModule staticFlagModule =
-        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, testStaticFlag);
+        new TestModule(
+            TestConstants.TEST_MODULE_NAME,
+            moduleService,
+            scoreService,
+            flagHandler,
+            testStaticFlag);
 
     staticFlagModule.getInit().block();
 
@@ -181,7 +213,12 @@ class BaseModuleTest {
         .thenReturn(Mono.just(mockModule));
 
     TestModule staticFlagModule =
-        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, flagHandler, testStaticFlag);
+        new TestModule(
+            TestConstants.TEST_MODULE_NAME,
+            moduleService,
+            scoreService,
+            flagHandler,
+            testStaticFlag);
 
     staticFlagModule.getInit().block();
 

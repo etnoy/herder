@@ -28,8 +28,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import lombok.NonNull;
-import nl.jqno.equalsverifier.EqualsVerifier;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +41,10 @@ import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.xss.XssService;
 import org.owasp.herder.module.xss.XssTutorial;
+import org.owasp.herder.scoring.ScoreService;
+
+import lombok.NonNull;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -63,6 +66,8 @@ class XssTutorialTest {
 
   @Mock XssService xssService;
 
+  @Mock ScoreService scoreService;
+
   @Mock FlagHandler flagHandler;
 
   final Module mockModule = mock(Module.class);
@@ -72,7 +77,7 @@ class XssTutorialTest {
     // Set up the system under test
     when(moduleService.create(MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
-    xssTutorial = new XssTutorial(xssService, moduleService, flagHandler);
+    xssTutorial = new XssTutorial(xssService, moduleService, scoreService, flagHandler);
   }
 
   @Test
@@ -81,7 +86,7 @@ class XssTutorialTest {
     class XssTutorialChild extends XssTutorial {
       public XssTutorialChild(
           XssService xssService, ModuleService moduleService, FlagHandler flagHandler) {
-        super(xssService, moduleService, flagHandler);
+        super(xssService, moduleService, scoreService, flagHandler);
       }
 
       @Override

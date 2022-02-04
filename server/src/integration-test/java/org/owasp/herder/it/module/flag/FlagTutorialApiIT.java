@@ -85,7 +85,7 @@ class FlagTutorialApiIT {
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
-    flagTutorial = new FlagTutorial(moduleService, flagHandler);
+    flagTutorial = new FlagTutorial(moduleService, scoreService, flagHandler);
     flagTutorial.getInit().block();
   }
 

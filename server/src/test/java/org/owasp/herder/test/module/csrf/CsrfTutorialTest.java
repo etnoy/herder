@@ -26,8 +26,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
-import lombok.NonNull;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +38,10 @@ import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.csrf.CsrfService;
 import org.owasp.herder.module.csrf.CsrfTutorial;
+import org.owasp.herder.scoring.ScoreService;
+
+import lombok.NonNull;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -61,6 +63,8 @@ class CsrfTutorialTest {
 
   @Mock CsrfService csrfService;
 
+  @Mock ScoreService scoreService;
+
   @Mock FlagHandler flagHandler;
 
   final Module mockModule = mock(Module.class);
@@ -71,7 +75,7 @@ class CsrfTutorialTest {
     reset(mockModule);
     when(moduleService.create(MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
-    csrfTutorial = new CsrfTutorial(csrfService, moduleService, flagHandler);
+    csrfTutorial = new CsrfTutorial(csrfService, moduleService, scoreService, flagHandler);
   }
 
   @Test
@@ -81,7 +85,7 @@ class CsrfTutorialTest {
 
       public CsrfTutorialChild(
           CsrfService csrfService, ModuleService moduleService, FlagHandler flagHandler) {
-        super(csrfService, moduleService, flagHandler);
+        super(csrfService, moduleService, scoreService, flagHandler);
       }
 
       @Override
