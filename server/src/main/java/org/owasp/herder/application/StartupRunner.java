@@ -42,7 +42,6 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class StartupRunner implements ApplicationRunner {
-
   private final UserService userService;
 
   private final XssTutorial xssTutorial;
@@ -59,7 +58,9 @@ public class StartupRunner implements ApplicationRunner {
     long userId =
         userService
             .createPasswordUser(
-                "Admin", "admin", "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G")
+                "Administrator",
+                "admin",
+                "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G")
             .block();
     userService.create("Test user").block();
     userService.create("Test user 2").block();
