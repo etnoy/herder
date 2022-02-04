@@ -23,11 +23,14 @@ package org.owasp.herder.authentication;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.web.server.context.ServerSecurityContextRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -45,6 +48,10 @@ public class SecurityContextRepository implements ServerSecurityContextRepositor
       return Mono.just(authorizationHeader.substring(7))
           .map(token -> new UsernamePasswordAuthenticationToken(null, token))
           .flatMap(authenticationManager::authenticate)
+          .onErrorMap(
+              er -> er instanceof AuthenticationException,
+              autEx ->
+                  new ResponseStatusException(HttpStatus.UNAUTHORIZED, autEx.getMessage(), autEx))
           .map(SecurityContextImpl::new);
     } else {
       return Mono.empty();
