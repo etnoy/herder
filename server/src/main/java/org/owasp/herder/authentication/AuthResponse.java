@@ -33,6 +33,6 @@ public final class AuthResponse implements Serializable {
   private static final long serialVersionUID = 5631647781132001719L;
 
   private Long userId;
-  private String userName;
+  private String displayName;
   @Builder.Default private boolean isAdmin = false;
 }

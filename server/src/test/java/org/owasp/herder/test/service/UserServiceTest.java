@@ -158,7 +158,6 @@ class UserServiceTest {
         .assertNext(
             authResponse -> {
               assertThat(authResponse.getUserId()).isEqualTo(mockedUserId);
-              assertThat(authResponse.getUserName()).isEqualTo(mockedLoginName);
             })
         .expectComplete()
         .verify();

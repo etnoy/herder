@@ -59,7 +59,7 @@ public class LoginController {
               final LoginResponse loginResponse =
                   loginResponseBuilder
                       .accessToken(accessToken)
-                      .userName(authResponse.getUserName())
+                      .displayName(authResponse.getDisplayName())
                       .build();
               return new ResponseEntity<>(loginResponse, HttpStatus.OK);
             })

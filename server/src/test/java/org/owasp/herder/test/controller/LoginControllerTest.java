@@ -94,11 +94,11 @@ class LoginControllerTest {
     final AuthResponse mockAuthResponse =
         AuthResponse.builder()
             .isAdmin(mockUserIsAdmin)
-            .userName(userName)
+            .displayName(userName)
             .userId(mockUserId)
             .build();
     final LoginResponse loginResponse =
-        LoginResponse.builder().accessToken(mockJwt).userName(userName).build();
+        LoginResponse.builder().accessToken(mockJwt).displayName(userName).build();
     final ResponseEntity<LoginResponse> tokenResponse =
         new ResponseEntity<>(loginResponse, HttpStatus.OK);
 

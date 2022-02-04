@@ -25,7 +25,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.authentication.AuthResponse;
 import org.owasp.herder.authentication.AuthResponse.AuthResponseBuilder;
 import org.owasp.herder.authentication.PasswordAuth;
@@ -48,8 +48,6 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -87,11 +85,11 @@ public final class UserService {
     resetClock();
   }
 
-  public Mono<AuthResponse> authenticate(final String username, final String password) {
-    if ((username == null) || (password == null)) {
+  public Mono<AuthResponse> authenticate(final String loginName, final String password) {
+    if ((loginName == null) || (password == null)) {
       return Mono.error(new NullPointerException());
     }
-    if (username.isEmpty()) {
+    if (loginName.isEmpty()) {
       return Mono.error(new IllegalArgumentException());
     }
     if (password.isEmpty()) {
@@ -101,16 +99,19 @@ public final class UserService {
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(16);
 
     final Mono<PasswordAuth> passwordAuthMono = // Find the password auth
-        findPasswordAuthByLoginName(username)
+        findPasswordAuthByLoginName(loginName)
             .filter(passwordAuth -> encoder.matches(password, passwordAuth.getHashedPassword()))
             .switchIfEmpty(Mono.error(new BadCredentialsException("Invalid username or password")));
 
-    final Mono<UserAuth> userAuthMono =
-        passwordAuthMono.map(PasswordAuth::getUserId).flatMap(this::findUserAuthByUserId);
+    final Mono<Long> userIdMono = passwordAuthMono.map(PasswordAuth::getUserId);
+
+    final Mono<UserAuth> userAuthMono = userIdMono.flatMap(this::findUserAuthByUserId);
+
+    final Mono<User> userMono = userIdMono.flatMap(this::findById);
 
     final AuthResponseBuilder authResponseBuilder = AuthResponse.builder();
 
-    return Mono.zip(passwordAuthMono, userAuthMono)
+    return Mono.zip(passwordAuthMono, userAuthMono, userMono)
         .map(
             tuple -> {
               final LocalDateTime suspendedUntil = tuple.getT2().getSuspendedUntil();
@@ -137,7 +138,7 @@ public final class UserService {
                         "Account suspended until %s",
                         tuple.getT2().getSuspendedUntil().format(formatter)));
               } else {
-                authResponseBuilder.userName(username);
+                authResponseBuilder.displayName(tuple.getT3().getDisplayName());
                 authResponseBuilder.userId(tuple.getT1().getUserId());
                 authResponseBuilder.isAdmin(tuple.getT2().isAdmin());
               }
