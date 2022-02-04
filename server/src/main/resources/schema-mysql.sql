@@ -21,9 +21,6 @@ CREATE
             PRIMARY KEY(id),
             INDEX class_id(
                 class_id ASC
-            ),
-            UNIQUE INDEX display_name_UNIQUE(
-                display_name ASC
             )
         ) ENGINE = InnoDB DEFAULT CHARACTER
     SET
@@ -249,27 +246,21 @@ CREATE
         SUM( CASE WHEN `rank`= 3 THEN 1 ELSE 0 END ) AS bronze_medals
     FROM
         (
-            SELECT
+	select user_id, score, `rank`, display_name from
+                   (SELECT
                 user_id,
                 score,
-                `rank`,
-                0 AS display_name
+                `rank`
             FROM
                 ranked_submission
-        UNION ALL SELECT
+                UNION ALL SELECT
                 user_id,
                 amount AS score,
-                0,
                 0
             FROM
-                correction
-        UNION ALL SELECT
-                id AS user_id,
-                0,
-                0,
-                display_name AS display_name
-            FROM
-                user
+                correction) scores
+                        JOIN 
+        user on user_id = user.id
         ) AS all_scores
     GROUP BY
         user_id
