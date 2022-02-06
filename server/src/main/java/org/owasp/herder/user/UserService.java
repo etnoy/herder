@@ -25,7 +25,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import lombok.extern.slf4j.Slf4j;
+
 import org.owasp.herder.authentication.AuthResponse;
 import org.owasp.herder.authentication.AuthResponse.AuthResponseBuilder;
 import org.owasp.herder.authentication.PasswordAuth;
@@ -48,6 +48,8 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -281,6 +283,14 @@ public final class UserService {
   private Mono<String> displayNameAlreadyExists(final String displayName) {
     return Mono.error(
         new DuplicateUserDisplayNameException("Display name " + displayName + " already exists"));
+  }
+
+  public Mono<Boolean> existsByDisplayName(final String displayName) {
+    return userRepository.findByDisplayName(displayName).map(u -> true).defaultIfEmpty(false);
+  }
+
+  public Mono<Boolean> existsByLoginName(final String loginName) {
+    return passwordAuthRepository.findByLoginName(loginName).map(u -> true).defaultIfEmpty(false);
   }
 
   private Mono<Boolean> doesNotExistByDisplayName(final String displayName) {

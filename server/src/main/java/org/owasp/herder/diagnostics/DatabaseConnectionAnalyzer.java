@@ -19,23 +19,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder;
+package org.owasp.herder.diagnostics;
 
-import java.time.Clock;
+import java.net.ConnectException;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.diagnostics.AbstractFailureAnalyzer;
+import org.springframework.boot.diagnostics.FailureAnalysis;
 
-@SpringBootApplication(scanBasePackages = {"org.owasp.herder"})
-public class HerderApplication {
+public class DatabaseConnectionAnalyzer extends AbstractFailureAnalyzer<ConnectException> {
 
-  public static void main(String[] args) throws Throwable {
-    SpringApplication.run(HerderApplication.class, args);
-  }
-
-  @Bean
-  public Clock clock() {
-    return Clock.systemDefaultZone();
+  @Override
+  protected FailureAnalysis analyze(Throwable rootFailure, ConnectException cause) {
+    return new FailureAnalysis(
+        "Failed to connect to database: " + cause.getMessage(),
+        "Ensure that the database server is running.",
+        cause);
   }
 }

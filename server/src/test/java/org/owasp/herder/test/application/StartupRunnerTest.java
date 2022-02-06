@@ -94,6 +94,11 @@ class StartupRunnerTest {
     // Set up the system under test
     startupRunner =
         new StartupRunner(
-            userService, xssTutorial, sqlInjectionTutorial, csrfTutorial, flagTutorial);
+            userService,
+            moduleService,
+            xssTutorial,
+            sqlInjectionTutorial,
+            csrfTutorial,
+            flagTutorial);
   }
 }

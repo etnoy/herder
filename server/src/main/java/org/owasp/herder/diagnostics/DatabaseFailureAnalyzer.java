@@ -19,23 +19,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder;
+package org.owasp.herder.diagnostics;
 
-import java.time.Clock;
+import org.springframework.boot.diagnostics.AbstractFailureAnalyzer;
+import org.springframework.boot.diagnostics.FailureAnalysis;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
+import io.r2dbc.spi.R2dbcBadGrammarException;
 
-@SpringBootApplication(scanBasePackages = {"org.owasp.herder"})
-public class HerderApplication {
+public class DatabaseFailureAnalyzer extends AbstractFailureAnalyzer<R2dbcBadGrammarException> {
 
-  public static void main(String[] args) throws Throwable {
-    SpringApplication.run(HerderApplication.class, args);
-  }
-
-  @Bean
-  public Clock clock() {
-    return Clock.systemDefaultZone();
+  @Override
+  protected FailureAnalysis analyze(Throwable rootFailure, R2dbcBadGrammarException cause) {
+    return new FailureAnalysis(
+        "Failed to open herder database: " + cause.getMessage(),
+        "Ensure that the herder database has been created. Refer to the herder documentation for details",
+        cause);
   }
 }

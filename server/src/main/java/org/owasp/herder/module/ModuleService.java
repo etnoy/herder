@@ -86,6 +86,10 @@ public final class ModuleService {
     return moduleRepository.findByName(moduleName);
   }
 
+  public Mono<Boolean> existsByName(final String moduleName) {
+    return findByName(moduleName).map(u -> true).defaultIfEmpty(false);
+  }
+
   private Mono<Boolean> doesNotExistByName(final String moduleName) {
     return findByName(moduleName).map(u -> false).defaultIfEmpty(true);
   }

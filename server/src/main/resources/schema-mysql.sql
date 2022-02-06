@@ -1,12 +1,12 @@
 SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 
 DROP
-    SCHEMA IF EXISTS core;
+    SCHEMA IF EXISTS herder;
 
 CREATE
-    SCHEMA core;
+    SCHEMA herder;
 
-USE core;
+USE herder;
 
 CREATE
     TABLE

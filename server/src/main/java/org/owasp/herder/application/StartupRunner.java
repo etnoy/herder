@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.application;
 
+import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.csrf.CsrfTutorial;
 import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
@@ -32,7 +33,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Mono;
 
 @ConditionalOnProperty(
     prefix = "application.runner",
@@ -44,6 +44,8 @@ import reactor.core.publisher.Mono;
 public class StartupRunner implements ApplicationRunner {
   private final UserService userService;
 
+  private final ModuleService moduleService;
+
   private final XssTutorial xssTutorial;
 
   private final SqlInjectionTutorial sqlInjectionTutorial;
@@ -54,24 +56,44 @@ public class StartupRunner implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
-    // Create a default admin account
-    long userId =
-        userService
-            .createPasswordUser(
-                "Administrator",
-                "admin",
-                "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G")
-            .block();
-    userService.create("Test user").block();
-    userService.create("Test user 2").block();
-    userService.create("Test user 3").block();
 
-    userService.promote(userId).block();
-    Mono.when(
-            csrfTutorial.getInit(),
-            flagTutorial.getInit(),
-            xssTutorial.getInit(),
-            sqlInjectionTutorial.getInit())
-        .block();
+    if (!userService.existsByLoginName("admin").block()) {
+      final long adminId =
+          userService
+              .createPasswordUser(
+                  "Administrator",
+                  "admin",
+                  "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G")
+              .block();
+      userService.promote(adminId).block();
+    }
+
+    if (!userService.existsByDisplayName("Test user").block()) {
+      userService.create("Test user").block();
+    }
+
+    if (!userService.existsByDisplayName("Test user 2").block()) {
+      userService.create("Test user 2").block();
+    }
+
+    if (!userService.existsByDisplayName("Test user 3").block()) {
+      userService.create("Test user 3").block();
+    }
+
+    if (!moduleService.existsByName(csrfTutorial.getModuleName()).block()) {
+      csrfTutorial.getInit().block();
+    }
+
+    if (!moduleService.existsByName(flagTutorial.getModuleName()).block()) {
+      flagTutorial.getInit().block();
+    }
+
+    if (!moduleService.existsByName(xssTutorial.getModuleName()).block()) {
+      xssTutorial.getInit().block();
+    }
+
+    if (!moduleService.existsByName(sqlInjectionTutorial.getModuleName()).block()) {
+      sqlInjectionTutorial.getInit().block();
+    }
   }
 }
