@@ -45,6 +45,7 @@ import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.user.UserService;
 
+import io.github.bucket4j.Bucket;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -225,6 +226,10 @@ class FlagHandlerTest {
 
     when(userService.findKeyById(mockUserId)).thenReturn(Mono.just(mockedUserKey));
 
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, correctFlag))
         .expectNext(true)
         .expectComplete()
@@ -253,6 +258,10 @@ class FlagHandlerTest {
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
 
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, validStaticFlag))
         .expectNext(true)
         .expectComplete()
@@ -278,6 +287,10 @@ class FlagHandlerTest {
 
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
+
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
 
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, validStaticFlag.toLowerCase()))
@@ -305,6 +318,10 @@ class FlagHandlerTest {
 
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
+
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
 
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, validStaticFlag.toUpperCase()))
@@ -352,6 +369,11 @@ class FlagHandlerTest {
 
     when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
 
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+
     when(configurationService.getServerKey()).thenReturn(Mono.just(mockedServerKey));
 
     when(cryptoService.hmac(mockedServerKey, mockedTotalKey)).thenReturn(mockedHmacOutput);
@@ -386,6 +408,11 @@ class FlagHandlerTest {
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
 
     when(userService.findDisplayNameById(mockUserId)).thenReturn(Mono.just("MockUser"));
+
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
 
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, ""))
         .expectNext(false)
@@ -457,6 +484,11 @@ class FlagHandlerTest {
 
     when(userService.findKeyById(mockUserId)).thenReturn(Mono.just(mockedUserKey));
 
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, "invalidFlag"))
         //
         .expectNext(false)
@@ -487,6 +519,11 @@ class FlagHandlerTest {
 
     when(userService.findDisplayNameById(mockUserId)).thenReturn(Mono.just("MockUser"));
 
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, "invalidFlag"))
         .expectNext(false)
         .expectComplete()
@@ -514,6 +551,10 @@ class FlagHandlerTest {
 
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
+
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
 
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, validStaticFlagWithSpaces))
@@ -543,6 +584,11 @@ class FlagHandlerTest {
 
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
+
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
 
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, validStaticFlagWithWhiteSpace))
@@ -598,6 +644,10 @@ class FlagHandlerTest {
     when(cryptoService.hmac(mockedServerKey, mockedTotalKey)).thenReturn(mockedHmacOutput);
 
     when(userService.findKeyById(mockUserId)).thenReturn(Mono.just(mockedUserKey));
+
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
 
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, correctFlagWithSpaces))
         .expectNext(true)
@@ -655,6 +705,11 @@ class FlagHandlerTest {
 
     when(userService.findKeyById(mockUserId)).thenReturn(Mono.just(mockedUserKey));
 
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, correctFlagWithWhiteSpace))
         .expectNext(false)
@@ -709,6 +764,10 @@ class FlagHandlerTest {
     when(cryptoService.hmac(mockedServerKey, mockedTotalKey)).thenReturn(mockedHmacOutput);
 
     when(userService.findKeyById(mockUserId)).thenReturn(Mono.just(mockedUserKey));
+
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
 
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, correctFlag.toUpperCase()))
@@ -765,6 +824,11 @@ class FlagHandlerTest {
 
     when(userService.findKeyById(mockUserId)).thenReturn(Mono.just(mockedUserKey));
 
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, correctFlagWithSpacesInside))
         .expectNext(false)
@@ -795,6 +859,11 @@ class FlagHandlerTest {
 
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
+
+    final Bucket mockBucket = mock(Bucket.class);
+    when(flagSubmissionRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(mockUserId)).thenReturn(mockBucket);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
 
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, validStaticFlagWithSpaces))

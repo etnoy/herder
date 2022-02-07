@@ -31,6 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -63,6 +64,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -141,16 +143,20 @@ class UserServiceTest {
     final Long mockedUserId = 614L;
     final String mockedLoginName = "MockUser";
     final String mockedPassword = "MockPassword";
+    final String mockedDisplayName = "Mocked user";
     final String mockedPasswordHash = encoder.encode(mockedPassword);
     final PasswordAuth mockedPasswordAuth = mock(PasswordAuth.class);
     final UserAuth mockedUserAuth = mock(UserAuth.class);
+    final User mockedUser = mock(User.class);
 
+    when(userRepository.findById(mockedUserId)).thenReturn(Mono.just(mockedUser));
     when(passwordAuthRepository.findByLoginName(mockedLoginName))
         .thenReturn(Mono.just(mockedPasswordAuth));
     when(mockedPasswordAuth.getHashedPassword()).thenReturn(mockedPasswordHash);
     when(mockedPasswordAuth.getUserId()).thenReturn(mockedUserId);
     when(userAuthRepository.findByUserId(mockedUserId)).thenReturn(Mono.just(mockedUserAuth));
     when(mockedUserAuth.isEnabled()).thenReturn(true);
+    when(mockedUser.getDisplayName()).thenReturn(mockedDisplayName);
 
     when(mockedUserAuth.getSuspendedUntil()).thenReturn(null);
 
@@ -173,6 +179,7 @@ class UserServiceTest {
     final String mockedPasswordHash = encoder.encode(mockedPassword);
     final PasswordAuth mockedPasswordAuth = mock(PasswordAuth.class);
     final UserAuth mockedUserAuth = mock(UserAuth.class);
+    final User mockedUser = mock(User.class);
 
     when(passwordAuthRepository.findByLoginName(mockedLoginName))
         .thenReturn(Mono.just(mockedPasswordAuth));
@@ -183,6 +190,7 @@ class UserServiceTest {
 
     LocalDateTime longAgo = LocalDateTime.MIN;
     when(mockedUserAuth.getSuspendedUntil()).thenReturn(longAgo);
+    when(userRepository.findById(mockedUserId)).thenReturn(Mono.just(mockedUser));
 
     StepVerifier.create(userService.authenticate(mockedLoginName, mockedPassword))
         .expectErrorMatches(
@@ -203,6 +211,7 @@ class UserServiceTest {
     final String mockedPasswordHash = encoder.encode(mockedPassword);
     final PasswordAuth mockedPasswordAuth = mock(PasswordAuth.class);
     final UserAuth mockedUserAuth = mock(UserAuth.class);
+    final User mockedUser = mock(User.class);
 
     when(passwordAuthRepository.findByLoginName(mockedLoginName))
         .thenReturn(Mono.just(mockedPasswordAuth));
@@ -213,6 +222,8 @@ class UserServiceTest {
 
     LocalDateTime futureDate = LocalDateTime.MAX;
     when(mockedUserAuth.getSuspendedUntil()).thenReturn(futureDate);
+
+    when(userRepository.findById(mockedUserId)).thenReturn(Mono.just(mockedUser));
 
     StepVerifier.create(userService.authenticate(mockedLoginName, mockedPassword))
         .expectErrorMatches(

@@ -300,6 +300,9 @@ class SqlInjectionTutorialTest {
 
     when(flagHandler.getDynamicFlag(mockUserId, MODULE_NAME)).thenReturn(Mono.just(mockFlag));
 
+    when(scoreService.setModuleScore(any(String.class), any(Long.class), any(Long.class)))
+        .thenReturn(Mono.empty());
+
     sqlInjectionTutorial =
         new SqlInjectionTutorial(
             moduleService,

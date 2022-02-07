@@ -71,7 +71,7 @@ class StartupRunnerTest {
   @Mock private FlagHandler flagHandler;
 
   @Test
-  void run_MockedServices_CallsMocks() {
+  void run_NoArguments_Success() {
     final long mockUserId = 602L;
     when(userService.createPasswordUser(
             "Admin", "admin", "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G"))

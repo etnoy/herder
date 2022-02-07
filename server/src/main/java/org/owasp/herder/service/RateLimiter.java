@@ -30,7 +30,6 @@ import io.github.bucket4j.local.LocalBucketBuilder;
 
 @Service
 abstract class RateLimiter {
-
   private HashMap<Long, Bucket> buckets = new HashMap<Long, Bucket>();
 
   abstract LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder);
