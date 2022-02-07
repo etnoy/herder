@@ -23,18 +23,20 @@ package org.owasp.herder.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 
 import dev.miku.r2dbc.mysql.MySqlConnectionConfiguration;
 import dev.miku.r2dbc.mysql.MySqlConnectionFactory;
-import lombok.Generated;
+import lombok.extern.slf4j.Slf4j;
 
-@Generated
 @Configuration
+@Slf4j
+// Don't use this database configuration when testing
+@Profile("!test")
 public class R2dbcMysqlConfiguration {
   @Bean
-  @Primary
   public MySqlConnectionFactory mySqlConnectionFactory() {
+    log.debug("Using default mysql configuration");
     return MySqlConnectionFactory.from(
         MySqlConnectionConfiguration.builder()
             .host("localhost")
