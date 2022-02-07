@@ -31,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.flag.FlagHandler;
+import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.csrf.CsrfAttackRepository;
@@ -56,7 +57,7 @@ import reactor.test.StepVerifier;
 @AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("CsrfTutorial integration tests")
-class CsrfTutorialIT {
+class CsrfTutorialIT extends BaseIT {
 
   CsrfTutorial csrfTutorial;
 

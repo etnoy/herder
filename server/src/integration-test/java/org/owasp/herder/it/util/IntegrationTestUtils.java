@@ -21,12 +21,11 @@
  */
 package org.owasp.herder.it.util;
 
-import com.jayway.jsonpath.JsonPath;
-import lombok.RequiredArgsConstructor;
 import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.authentication.UserAuthRepository;
 import org.owasp.herder.configuration.ConfigurationRepository;
 import org.owasp.herder.crypto.WebTokenService;
+import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.module.ModulePointRepository;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
@@ -47,12 +46,16 @@ import org.springframework.test.web.reactive.server.WebTestClient.RequestBodySpe
 import org.springframework.test.web.reactive.server.WebTestClient.ResponseSpec;
 import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
+
+import com.jayway.jsonpath.JsonPath;
+
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
-public final class IntegrationTestUtils {
+public final class IntegrationTestUtils extends BaseIT {
   @Autowired UserService userService;
 
   @Autowired ModuleService moduleService;

@@ -32,6 +32,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.owasp.herder.flag.FlagHandler;
+import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleController;
 import org.owasp.herder.module.ModuleService;
@@ -58,7 +59,7 @@ import reactor.test.StepVerifier;
 @AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("Dynamic flag submission API integration tests")
-class DynamicFlagSubmissionApiIT {
+class DynamicFlagSubmissionApiIT extends BaseIT {
   @Nested
   @DisplayName("A valid dynamic flag")
   class ValidDynamicFlag {

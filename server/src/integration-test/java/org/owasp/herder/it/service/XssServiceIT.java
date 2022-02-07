@@ -25,11 +25,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.module.xss.XssService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
@@ -44,7 +46,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("XssService integration tests")
-class XssServiceIT {
+class XssServiceIT extends BaseIT {
 
   @Autowired private XssService xssService;
 

@@ -30,6 +30,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.flag.FlagHandler;
+import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
@@ -43,12 +44,7 @@ import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import reactor.core.publisher.Hooks;
@@ -60,10 +56,9 @@ import reactor.test.StepVerifier;
 @SpringBootTest(
     webEnvironment = WebEnvironment.RANDOM_PORT,
     properties = {"application.runner.enabled=false"})
-@ActiveProfiles("test")
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("Flag submission integration tests")
-class FlagSubmissionIT {
+class FlagSubmissionIT extends BaseIT {
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages
@@ -89,18 +84,6 @@ class FlagSubmissionIT {
   @Autowired IntegrationTestUtils integrationTestUtils;
 
   private Mono<Long> userIdMono;
-
-  @Container
-  public static MySQLContainer mySQLContainer =
-      (MySQLContainer)
-          new MySQLContainer("mysql:8").withInitScript("schema-mysql.sql").withUsername("root");
-
-  @DynamicPropertySource
-  static void datasourceConfig(DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
-    registry.add("spring.datasource.password", mySQLContainer::getPassword);
-    registry.add("spring.datasource.username", mySQLContainer::getUsername);
-  }
 
   @BeforeEach
   private void clear() {

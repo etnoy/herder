@@ -23,8 +23,6 @@ package org.owasp.herder.it.authentication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.crypto.WebTokenKeyManager;
+import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserService;
@@ -42,6 +41,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import reactor.core.publisher.Hooks;
 
 @ExtendWith(SpringExtension.class)
@@ -51,7 +53,7 @@ import reactor.core.publisher.Hooks;
 @AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("Login API integration tests")
-class LoginApiIT {
+class LoginApiIT extends BaseIT {
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages

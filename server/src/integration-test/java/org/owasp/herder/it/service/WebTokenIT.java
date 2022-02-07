@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.Collection;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.crypto.WebTokenService;
+import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserService;
@@ -56,7 +58,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("Web Token integration tests")
-class WebTokenIT {
+class WebTokenIT extends BaseIT {
 
   @Autowired WebTokenService webTokenService;
 
