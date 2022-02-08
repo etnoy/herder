@@ -19,39 +19,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.it;
+package org.owasp.herder.exception;
 
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MySQLContainer;
+import lombok.NoArgsConstructor;
 
-public abstract class BaseIT {
-  static final MySQLContainer<?> mySQLContainer;
+@NoArgsConstructor
+public class IncompatibleDatabaseException extends RuntimeException {
 
-  static {
-    mySQLContainer =
-        (MySQLContainer<?>)
-            new MySQLContainer<>("mysql:8")
-                .withDatabaseName("herder")
-                .withInitScript("schema-mysql.sql")
-                .withUsername("root")
-                .withReuse(true);
+  private static final long serialVersionUID = -4610783131127415375L;
 
-    mySQLContainer.start();
-  }
-
-  @DynamicPropertySource
-  static void registerDynamicProperties(DynamicPropertyRegistry registry) {
-    registry.add(
-        "spring.r2dbc.url",
-        () ->
-            "r2dbc:mysql://"
-                + mySQLContainer.getHost()
-                + ":"
-                + mySQLContainer.getFirstMappedPort()
-                + "/"
-                + mySQLContainer.getDatabaseName());
-    registry.add("spring.r2dbc.username", () -> mySQLContainer.getUsername());
-    registry.add("spring.r2dbc.password", () -> mySQLContainer.getPassword());
+  public IncompatibleDatabaseException(final String message) {
+    super(message);
   }
 }

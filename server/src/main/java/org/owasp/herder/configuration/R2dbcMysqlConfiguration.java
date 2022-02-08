@@ -21,9 +21,9 @@
  */
 package org.owasp.herder.configuration;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 import dev.miku.r2dbc.mysql.MySqlConnectionConfiguration;
 import dev.miku.r2dbc.mysql.MySqlConnectionFactory;
@@ -32,7 +32,11 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @Slf4j
 // Don't use this database configuration when testing
-@Profile("!test")
+@ConditionalOnProperty(
+    prefix = "application.runner",
+    value = "enabled",
+    havingValue = "true",
+    matchIfMissing = true)
 public class R2dbcMysqlConfiguration {
   @Bean
   public MySqlConnectionFactory mySqlConnectionFactory() {

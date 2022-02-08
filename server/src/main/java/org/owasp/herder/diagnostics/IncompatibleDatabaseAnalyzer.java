@@ -19,39 +19,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.it;
+package org.owasp.herder.diagnostics;
 
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MySQLContainer;
+import org.owasp.herder.exception.IncompatibleDatabaseException;
+import org.springframework.boot.diagnostics.AbstractFailureAnalyzer;
+import org.springframework.boot.diagnostics.FailureAnalysis;
 
-public abstract class BaseIT {
-  static final MySQLContainer<?> mySQLContainer;
+public class IncompatibleDatabaseAnalyzer
+    extends AbstractFailureAnalyzer<IncompatibleDatabaseException> {
 
-  static {
-    mySQLContainer =
-        (MySQLContainer<?>)
-            new MySQLContainer<>("mysql:8")
-                .withDatabaseName("herder")
-                .withInitScript("schema-mysql.sql")
-                .withUsername("root")
-                .withReuse(true);
-
-    mySQLContainer.start();
-  }
-
-  @DynamicPropertySource
-  static void registerDynamicProperties(DynamicPropertyRegistry registry) {
-    registry.add(
-        "spring.r2dbc.url",
-        () ->
-            "r2dbc:mysql://"
-                + mySQLContainer.getHost()
-                + ":"
-                + mySQLContainer.getFirstMappedPort()
-                + "/"
-                + mySQLContainer.getDatabaseName());
-    registry.add("spring.r2dbc.username", () -> mySQLContainer.getUsername());
-    registry.add("spring.r2dbc.password", () -> mySQLContainer.getPassword());
+  @Override
+  protected FailureAnalysis analyze(Throwable rootFailure, IncompatibleDatabaseException cause) {
+    return new FailureAnalysis(
+        "Incompatible database found: " + cause.getMessage(),
+        "Make sure to use a compatible database.",
+        cause);
   }
 }

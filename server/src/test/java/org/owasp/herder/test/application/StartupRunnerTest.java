@@ -40,6 +40,7 @@ import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.user.UserService;
+import org.springframework.r2dbc.core.DatabaseClient;
 
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -69,6 +70,8 @@ class StartupRunnerTest {
   @Mock private FlagTutorial flagTutorial;
 
   @Mock private FlagHandler flagHandler;
+
+  @Mock private DatabaseClient databaseClient;
 
   @Test
   void run_NoArguments_Success() {
@@ -101,7 +104,7 @@ class StartupRunnerTest {
   }
 
   @BeforeEach
-  private void setUp() throws Exception {
+  private void setUp() {
     // Set up the system under test
     startupRunner =
         new StartupRunner(
@@ -110,6 +113,7 @@ class StartupRunnerTest {
             xssTutorial,
             sqlInjectionTutorial,
             csrfTutorial,
-            flagTutorial);
+            flagTutorial,
+            databaseClient);
   }
 }

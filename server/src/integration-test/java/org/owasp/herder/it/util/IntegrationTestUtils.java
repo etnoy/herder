@@ -188,8 +188,8 @@ public final class IntegrationTestUtils extends BaseIT {
     }
 
     return requestBodySpec
-        .accept(MediaType.APPLICATION_JSON_UTF8)
-        .contentType(MediaType.APPLICATION_JSON_UTF8)
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(submissionBody)
         .exchange();
   }
