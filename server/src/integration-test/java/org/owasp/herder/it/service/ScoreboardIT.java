@@ -21,6 +21,10 @@
  */
 package org.owasp.herder.it.service;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -53,13 +57,18 @@ import org.owasp.herder.scoring.ScoreboardEntry;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.service.ConfigurationService;
+import org.owasp.herder.service.FlagSubmissionRateLimiter;
+import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import io.github.bucket4j.Bucket;
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -105,6 +114,12 @@ class ScoreboardIT extends BaseIT {
 
   @Autowired IntegrationTestUtils integrationTestUtils;
 
+  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+
+  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+
+  @Autowired DatabaseClient databaseClient;
+
   @Test
   void computeScoreForModule_SubmittedScores_ReturnsCorrectScoresForUsers() throws Exception {
     // We'll use this exact flag
@@ -114,18 +129,25 @@ class ScoreboardIT extends BaseIT {
     final String wrongFlag = "itsanincorrectflag";
 
     // Create six users and store their ids
+    List<String> displayNames = new ArrayList<>();
+    displayNames.add("TestUser1");
+    displayNames.add("TestUser2");
+    displayNames.add("TestUser3");
+    displayNames.add("TestUser4");
+    displayNames.add("TestUser5");
+    displayNames.add("TestUser6");
+    displayNames.add("TestUser7");
+    displayNames.add("TestUser8");
+
+    Iterator<String> displayNameIterator = displayNames.iterator();
+
     List<Long> userIds = new ArrayList<>();
-    userIds.add(userService.create("TestUser1").block());
-    userIds.add(userService.create("TestUser2").block());
-    userIds.add(userService.create("TestUser3").block());
-    userIds.add(userService.create("TestUser4").block());
-    userIds.add(userService.create("TestUser5").block());
-    userIds.add(userService.create("TestUser6").block());
-    userIds.add(userService.create("TestUser7").block());
-    userIds.add(userService.create("TestUser8").block());
+    while (displayNameIterator.hasNext()) {
+      userIds.add(userService.create(displayNameIterator.next()).block());
+    }
 
     // Create a module to submit to
-    moduleService.create("id1").block().getId();
+    moduleService.create("id1").block();
 
     // Set that module to have an exact flag
     moduleService.setStaticFlag("id1", flag).block();
@@ -176,6 +198,12 @@ class ScoreboardIT extends BaseIT {
     Iterator<Clock> clockIterator = clocks.iterator();
     Iterator<String> flagIterator = flags.iterator();
 
+    final Bucket mockBucket = mock(Bucket.class);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+
+    when(flagSubmissionRateLimiter.resolveBucket(any(Long.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(Long.class))).thenReturn(mockBucket);
+
     while (userIdIterator.hasNext() && clockIterator.hasNext() && flagIterator.hasNext()) {
       // Recreate the submission service every time with a new clock
       submissionService.setClock(clockIterator.next());
@@ -196,11 +224,29 @@ class ScoreboardIT extends BaseIT {
     submissionService.setClock(Clock.offset(correctionClock, Duration.ofHours(10)));
     correctionService.submit(userIds.get(1), 100, "Thanks for the bribe").block();
 
+    System.out.println(userIds.toString());
+
+    databaseClient
+        .sql("Select * from ranked_submission")
+        .fetch()
+        .all()
+        .doOnNext(u -> System.out.println(u))
+        .blockLast();
+
+    System.out.println(userService.findAll().collectList().block().toString());
+    System.out.println(
+        scoreService
+            .getScoreboard()
+            .map(ScoreboardEntry::getUserId)
+            .collectList()
+            .block()
+            .toString());
+
     StepVerifier.create(scoreService.getScoreboard())
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(1L)
-                .displayName("0")
+                .displayName(displayNames.get(1))
                 .userId(userIds.get(1))
                 .score(251L)
                 .goldMedals(0L)
@@ -211,7 +257,7 @@ class ScoreboardIT extends BaseIT {
             ScoreboardEntry.builder()
                 .rank(2L)
                 .userId(userIds.get(6))
-                .displayName("0")
+                .displayName(displayNames.get(6))
                 .score(231L)
                 .goldMedals(3L)
                 .silverMedals(0L)
@@ -220,7 +266,7 @@ class ScoreboardIT extends BaseIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(3L)
-                .displayName("0")
+                .displayName(displayNames.get(5))
                 .userId(userIds.get(5))
                 .score(201L)
                 .goldMedals(0L)
@@ -230,7 +276,7 @@ class ScoreboardIT extends BaseIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(4L)
-                .displayName("0")
+                .displayName(displayNames.get(0))
                 .userId(userIds.get(0))
                 .score(171L)
                 .goldMedals(0L)
@@ -240,7 +286,7 @@ class ScoreboardIT extends BaseIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(4L)
-                .displayName("0")
+                .displayName(displayNames.get(4))
                 .userId(userIds.get(4))
                 .score(171L)
                 .goldMedals(0L)
@@ -250,7 +296,7 @@ class ScoreboardIT extends BaseIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(6L)
-                .displayName("TestUser4")
+                .displayName(displayNames.get(3))
                 .userId(userIds.get(3))
                 .score(0L)
                 .goldMedals(0L)
@@ -260,7 +306,7 @@ class ScoreboardIT extends BaseIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(6L)
-                .displayName("TestUser8")
+                .displayName(displayNames.get(7))
                 .userId(userIds.get(7))
                 .score(0L)
                 .goldMedals(0L)
@@ -270,7 +316,7 @@ class ScoreboardIT extends BaseIT {
         .expectNext(
             ScoreboardEntry.builder()
                 .rank(8L)
-                .displayName("0")
+                .displayName(displayNames.get(2))
                 .userId(userIds.get(2))
                 .score(-799L)
                 .goldMedals(0L)

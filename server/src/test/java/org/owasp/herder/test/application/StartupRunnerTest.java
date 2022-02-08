@@ -74,7 +74,9 @@ class StartupRunnerTest {
   void run_NoArguments_Success() {
     final long mockUserId = 602L;
     when(userService.createPasswordUser(
-            "Admin", "admin", "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G"))
+            "Administrator",
+            "admin",
+            "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G"))
         .thenReturn(Mono.just(mockUserId));
 
     when(userService.create(any(String.class))).thenReturn(Mono.empty());
@@ -84,7 +86,16 @@ class StartupRunnerTest {
     when(flagTutorial.getInit()).thenReturn(Mono.empty());
     when(sqlInjectionTutorial.getInit()).thenReturn(Mono.empty());
 
+    when(csrfTutorial.getModuleName()).thenReturn("csrf-tutorial");
+    when(xssTutorial.getModuleName()).thenReturn("xss-tutorial");
+    when(flagTutorial.getModuleName()).thenReturn("flag-tutorial");
+    when(sqlInjectionTutorial.getModuleName()).thenReturn("sql-injection-tutorial");
+
     when(userService.promote(mockUserId)).thenReturn(Mono.empty());
+
+    when(userService.existsByLoginName(any(String.class))).thenReturn(Mono.just(false));
+    when(userService.existsByDisplayName(any(String.class))).thenReturn(Mono.just(false));
+    when(moduleService.existsByName(any(String.class))).thenReturn(Mono.just(false));
 
     assertDoesNotThrow(() -> startupRunner.run(null));
   }

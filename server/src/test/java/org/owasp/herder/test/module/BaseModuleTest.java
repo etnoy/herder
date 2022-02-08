@@ -59,10 +59,17 @@ class BaseModuleTest {
       super(moduleName, moduleService, scoreService, flagHandler, staticFlag);
     }
 
+    protected TestModule(
+        final String moduleName,
+        final ModuleService moduleService,
+        final ScoreService scoreService,
+        final FlagHandler flagHandler) {
+      super(moduleName, moduleService, scoreService, flagHandler);
+    }
+
     @Override
     public Mono<Void> initialize() {
-      // TODO Auto-generated method stub
-      return null;
+      return Mono.empty();
     }
   }
 
@@ -86,8 +93,7 @@ class BaseModuleTest {
     when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
     TestModule dynamicFlagModule =
-        new TestModule(
-            TestConstants.TEST_MODULE_NAME, moduleService, scoreService, flagHandler, null);
+        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, scoreService, flagHandler);
 
     StepVerifier.create(dynamicFlagModule.getInit()).expectComplete().verify();
 
@@ -123,17 +129,11 @@ class BaseModuleTest {
   @Test
   @DisplayName("getFlag on a dynamic module should return error when called without userid")
   void getFlag_DynamicFlagWithoutUserId_ReturnsError() {
-    final String testStaticFlag = null;
 
     when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
     TestModule dynamicFlagModule =
-        new TestModule(
-            TestConstants.TEST_MODULE_NAME,
-            moduleService,
-            scoreService,
-            flagHandler,
-            testStaticFlag);
+        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, scoreService, flagHandler);
 
     dynamicFlagModule.getInit().block();
 
@@ -147,18 +147,12 @@ class BaseModuleTest {
   @Test
   @DisplayName("getFlag on a dynamic module should return dynamic flag")
   void getFlag_DynamicFlagWithUserId_ReturnsFlag() {
-    final String testStaticFlag = null;
     final String testDynamicFlag = "flag{123abc}";
 
     when(moduleService.create(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
     TestModule dynamicFlagModule =
-        new TestModule(
-            TestConstants.TEST_MODULE_NAME,
-            moduleService,
-            scoreService,
-            flagHandler,
-            testStaticFlag);
+        new TestModule(TestConstants.TEST_MODULE_NAME, moduleService, scoreService, flagHandler);
 
     when(flagHandler.getDynamicFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_NAME))
         .thenReturn(Mono.just(testDynamicFlag));
