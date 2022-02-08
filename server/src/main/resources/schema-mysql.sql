@@ -260,7 +260,7 @@ CREATE
             FROM
                 correction) scores
                         JOIN 
-        user on user_id = user.id
+        user on user_id = user.id UNION ALL SELECT id, 0, 0, display_name from user
         ) AS all_scores
     GROUP BY
         user_id

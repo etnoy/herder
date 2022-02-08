@@ -21,6 +21,10 @@
  */
 package org.owasp.herder.it.module;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,18 +41,22 @@ import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleController;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.Submission;
+import org.owasp.herder.service.FlagSubmissionRateLimiter;
+import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.github.bucket4j.Bucket;
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -82,6 +90,10 @@ class StaticFlagSubmissionApiIT extends BaseIT {
 
   @Autowired IntegrationTestUtils integrationTestUtils;
 
+  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+
+  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+
   private String token;
 
   @Nested
@@ -96,24 +108,6 @@ class StaticFlagSubmissionApiIT extends BaseIT {
       StepVerifier.create(
               integrationTestUtils
                   .submitFlagAndReturnSubmission(TestConstants.TEST_MODULE_NAME, token, flagToTest)
-                  .map(Submission::isValid))
-          .expectNext(true)
-          .expectComplete()
-          .verify();
-    }
-
-    @ParameterizedTest
-    @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
-    @DisplayName("should be accepted when surrounded by spaces")
-    void canAcceptValidStaticFlagIfSurroundedBySpaces(final String flagToTest) {
-      moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
-
-      final String flagWithSpaces = "     " + flagToTest + "         ";
-
-      StepVerifier.create(
-              integrationTestUtils
-                  .submitFlagAndReturnSubmission(
-                      TestConstants.TEST_MODULE_NAME, token, flagWithSpaces)
                   .map(Submission::isValid))
           .expectNext(true)
           .expectComplete()
@@ -148,23 +142,6 @@ class StaticFlagSubmissionApiIT extends BaseIT {
                       TestConstants.TEST_MODULE_NAME, token, flagToTest.toUpperCase())
                   .map(Submission::isValid))
           .expectNext(true)
-          .expectComplete()
-          .verify();
-    }
-
-    @ParameterizedTest
-    @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
-    @DisplayName("should be rejected when surrounded by other whitespace")
-    void canRejectValidStaticFlagIfSurroundedByOtherWhitespace(final String flagToTest) {
-      final String flagWithOtherWhitespace = "\n" + flagToTest + "\t";
-      moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
-
-      StepVerifier.create(
-              integrationTestUtils
-                  .submitFlagAndReturnSubmission(
-                      TestConstants.TEST_MODULE_NAME, token, flagWithOtherWhitespace)
-                  .map(Submission::isValid))
-          .expectNext(false)
           .expectComplete()
           .verify();
     }
@@ -213,5 +190,11 @@ class StaticFlagSubmissionApiIT extends BaseIT {
             TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
 
     integrationTestUtils.createStaticTestModule();
+
+    // Bypass all rate limiters
+    final Bucket mockBucket = mock(Bucket.class);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+    when(flagSubmissionRateLimiter.resolveBucket(any(Long.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(Long.class))).thenReturn(mockBucket);
   }
 }

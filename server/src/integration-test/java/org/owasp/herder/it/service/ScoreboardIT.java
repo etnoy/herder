@@ -200,7 +200,6 @@ class ScoreboardIT extends BaseIT {
 
     final Bucket mockBucket = mock(Bucket.class);
     when(mockBucket.tryConsume(1)).thenReturn(true);
-
     when(flagSubmissionRateLimiter.resolveBucket(any(Long.class))).thenReturn(mockBucket);
     when(invalidFlagRateLimiter.resolveBucket(any(Long.class))).thenReturn(mockBucket);
 
@@ -223,24 +222,6 @@ class ScoreboardIT extends BaseIT {
     correctionService.submit(userIds.get(2), -1000, "Penalty for cheating").block();
     submissionService.setClock(Clock.offset(correctionClock, Duration.ofHours(10)));
     correctionService.submit(userIds.get(1), 100, "Thanks for the bribe").block();
-
-    System.out.println(userIds.toString());
-
-    databaseClient
-        .sql("Select * from ranked_submission")
-        .fetch()
-        .all()
-        .doOnNext(u -> System.out.println(u))
-        .blockLast();
-
-    System.out.println(userService.findAll().collectList().block().toString());
-    System.out.println(
-        scoreService
-            .getScoreboard()
-            .map(ScoreboardEntry::getUserId)
-            .collectList()
-            .block()
-            .toString());
 
     StepVerifier.create(scoreService.getScoreboard())
         .expectNext(
@@ -325,13 +306,6 @@ class ScoreboardIT extends BaseIT {
                 .build())
         .expectComplete()
         .verify();
-  }
-
-  @Test
-  void canListScoreboard() {
-    userService.create("User1").block();
-    userService.create("User2").block();
-    scoreService.getScoreboard().blockLast();
   }
 
   @BeforeEach

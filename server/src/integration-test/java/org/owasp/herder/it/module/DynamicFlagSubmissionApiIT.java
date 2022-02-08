@@ -77,21 +77,6 @@ class DynamicFlagSubmissionApiIT extends BaseIT {
     }
 
     @Test
-    @DisplayName("should be accepted when surrounded by spaces")
-    void canAcceptValidDynamicFlagIfSurroundedBySpaces() {
-      final String flagWithSpaces = "    " + dynamicFlag + "         ";
-
-      StepVerifier.create(
-              integrationTestUtils
-                  .submitFlagAndReturnSubmission(
-                      TestConstants.TEST_MODULE_NAME, token, flagWithSpaces)
-                  .map(Submission::isValid))
-          .expectNext(true)
-          .expectComplete()
-          .verify();
-    }
-
-    @Test
     @DisplayName("should be accepted when in lowercase")
     void canAcceptValidDynamicFlagInLowercase() {
       StepVerifier.create(
@@ -113,21 +98,6 @@ class DynamicFlagSubmissionApiIT extends BaseIT {
                       TestConstants.TEST_MODULE_NAME, token, dynamicFlag.toUpperCase())
                   .map(Submission::isValid))
           .expectNext(true)
-          .expectComplete()
-          .verify();
-    }
-
-    @Test
-    @DisplayName("should be rejected when surrounded by other whitespace")
-    void canRejectValidDynamicFlagIfSurroundedByOtherWhitespace() {
-      final String flagWithOtherWhitespace = "\n" + dynamicFlag + "\t";
-
-      StepVerifier.create(
-              integrationTestUtils
-                  .submitFlagAndReturnSubmission(
-                      TestConstants.TEST_MODULE_NAME, token, flagWithOtherWhitespace)
-                  .map(Submission::isValid))
-          .expectNext(false)
           .expectComplete()
           .verify();
     }

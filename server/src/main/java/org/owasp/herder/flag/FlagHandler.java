@@ -101,16 +101,6 @@ public final class FlagHandler {
         .map(BaseEncoding.base32().lowerCase().omitPadding()::encode);
   }
 
-  /**
-   * Strips leading and trailing spaces from a string. Does not strip other types of whitespace
-   *
-   * @param spacedString
-   * @return a string with leading and trailing spaces removed
-   */
-  private String stripSpaces(final String spacedString) {
-    return spacedString.replaceFirst("^[ ]+", "").replaceFirst("[ ]+$", "");
-  }
-
   public Mono<Boolean> verifyFlag(
       final long userId, final String moduleName, final String submittedFlag) {
     if (submittedFlag == null) {
@@ -145,13 +135,11 @@ public final class FlagHandler {
             .flatMap(
                 module -> {
                   if (module.isFlagStatic()) {
-                    // Verifying an exact flag
-                    return Mono.just(
-                        module.getStaticFlag().equalsIgnoreCase(stripSpaces(submittedFlag)));
+                    // Verifying a static flag
+                    return Mono.just(module.getStaticFlag().equalsIgnoreCase(submittedFlag));
                   } else {
                     // Verifying a dynamic flag
-                    return getDynamicFlag(userId, moduleName)
-                        .map(stripSpaces(submittedFlag)::equalsIgnoreCase);
+                    return getDynamicFlag(userId, moduleName).map(submittedFlag::equalsIgnoreCase);
                   }
                 })
             .flatMap(
