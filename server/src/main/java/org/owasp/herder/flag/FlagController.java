@@ -60,8 +60,6 @@ public class FlagController {
         .map(submission -> new ResponseEntity<>(submission, HttpStatus.OK))
         .onErrorResume(
             RateLimitException.class,
-            throwable -> {
-              return Mono.just(new ResponseEntity<>(null, HttpStatus.TOO_MANY_REQUESTS));
-            });
+            throwable -> Mono.just(new ResponseEntity<>(null, HttpStatus.TOO_MANY_REQUESTS)));
   }
 }
