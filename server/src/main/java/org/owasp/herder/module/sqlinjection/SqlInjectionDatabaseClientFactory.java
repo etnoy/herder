@@ -21,12 +21,12 @@
  */
 package org.owasp.herder.module.sqlinjection;
 
-import io.r2dbc.h2.H2ConnectionConfiguration;
-import io.r2dbc.h2.H2ConnectionFactory;
 import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 
-@SuppressWarnings("deprecation")
+import io.r2dbc.h2.H2ConnectionConfiguration;
+import io.r2dbc.h2.H2ConnectionFactory;
+
 @Component
 public class SqlInjectionDatabaseClientFactory {
   public DatabaseClient create(final String dbName) {

@@ -31,6 +31,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
+import org.owasp.herder.module.ModuleInitializer;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.scoring.ScoreService;
@@ -57,7 +58,7 @@ import reactor.test.StepVerifier;
     properties = {"application.runner.enabled=false"})
 @AutoConfigureWebTestClient
 @Execution(ExecutionMode.SAME_THREAD)
-@DisplayName("Flag Tutorial Module API integration tests")
+@DisplayName("Flag Tutorial API integration tests")
 class FlagTutorialApiIT extends BaseIT {
   @BeforeAll
   private static void reactorVerbose() {
@@ -81,13 +82,21 @@ class FlagTutorialApiIT extends BaseIT {
 
   @Autowired IntegrationTestUtils integrationTestUtils;
 
-  private final String moduleName = "flag-tutorial";
+  private ModuleInitializer moduleInitializer;
+
+  private String moduleName;
 
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
-    flagTutorial = new FlagTutorial(moduleService, scoreService, flagHandler);
-    flagTutorial.getInit().block();
+
+    moduleInitializer = new ModuleInitializer(null, moduleService, scoreService);
+
+    flagTutorial = new FlagTutorial(flagHandler);
+
+    moduleInitializer.initializeModule(flagTutorial).block();
+
+    moduleName = flagTutorial.getName();
   }
 
   @Test

@@ -177,6 +177,10 @@ public final class IntegrationTestUtils extends BaseIT {
   }
 
   public ResponseSpec submitFlag(final String moduleName, final String token, final String flag) {
+    if ((moduleName == null) || (token == null) || (flag == null)) {
+      throw new NullPointerException();
+    }
+
     final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
 
     final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
@@ -196,6 +200,10 @@ public final class IntegrationTestUtils extends BaseIT {
 
   public Flux<Submission> submitFlagAndReturnSubmission(
       final String moduleName, final String token, final String flag) {
+    if ((moduleName == null) || (token == null) || (flag == null)) {
+      throw new NullPointerException();
+    }
+
     return submitFlag(moduleName, token, flag)
         .expectStatus()
         .isOk()

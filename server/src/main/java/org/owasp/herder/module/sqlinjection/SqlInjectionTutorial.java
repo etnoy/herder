@@ -26,50 +26,27 @@ import java.util.Base64;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
-import org.owasp.herder.module.ModuleService;
-import org.owasp.herder.scoring.ScoreService;
+import org.owasp.herder.module.HerderModule;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.r2dbc.BadSqlGrammarException;
 import org.springframework.data.r2dbc.core.DatabaseClient;
-import org.springframework.stereotype.Component;
 
-import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 // Spring R2dbc 1.2 lacks features present in version 1.1, we have to use deprecated functions until
 // this is fixed
 /** Tutorial module for SQL injections */
-@SuppressWarnings("deprecation")
-@Component
-@EqualsAndHashCode(callSuper = true)
+@RequiredArgsConstructor
+@HerderModule(name = "sql-injection-tutorial", baseScore = 100)
 public class SqlInjectionTutorial extends BaseModule {
-
-  private static final String MODULE_NAME = "sql-injection-tutorial";
 
   private final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
 
   private final KeyService keyService;
 
-  public SqlInjectionTutorial(
-      final ModuleService moduleService,
-      final ScoreService scoreService,
-      final FlagHandler flagHandler,
-      final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory,
-      final KeyService keyService) {
-    super(MODULE_NAME, moduleService, scoreService, flagHandler);
-    this.sqlInjectionDatabaseClientFactory = sqlInjectionDatabaseClientFactory;
-    this.keyService = keyService;
-  }
-
-  @Override
-  public Mono<Void> initialize() {
-    return Mono.when(
-        getScoreService().setModuleScore(MODULE_NAME, 0, 100),
-        getScoreService().setModuleScore(MODULE_NAME, 1, 10),
-        getScoreService().setModuleScore(MODULE_NAME, 2, 5),
-        getScoreService().setModuleScore(MODULE_NAME, 3, 1));
-  }
+  private final FlagHandler flagHandler;
 
   /**
    * Execute a given SQL injection query
@@ -81,7 +58,7 @@ public class SqlInjectionTutorial extends BaseModule {
   public Flux<SqlInjectionTutorialRow> submitQuery(final long userId, final String injectionQuery) {
 
     // Each module and user has a unique in-memory database
-    final String dbName = String.format("%s-uid-%d", MODULE_NAME, userId);
+    final String dbName = String.format("%s-uid-%d", getName(), userId);
 
     final DatabaseClient databaseClient = sqlInjectionDatabaseClientFactory.create(dbName);
 
@@ -92,7 +69,8 @@ public class SqlInjectionTutorial extends BaseModule {
     // Create the SQL query used to populate the database
     final Mono<String> populationQuery =
         // Compute the flag to be hidden in the database
-        getFlag(userId)
+        flagHandler
+            .getDynamicFlag(userId, getName())
             .map(
                 flag ->
                     String.format(

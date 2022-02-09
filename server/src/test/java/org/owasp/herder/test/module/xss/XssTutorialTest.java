@@ -43,8 +43,6 @@ import org.owasp.herder.module.xss.XssService;
 import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.scoring.ScoreService;
 
-import lombok.NonNull;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -75,31 +73,7 @@ class XssTutorialTest {
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    when(moduleService.create(MODULE_NAME)).thenReturn(Mono.just(mockModule));
-
-    xssTutorial = new XssTutorial(xssService, moduleService, scoreService, flagHandler);
-  }
-
-  @Test
-  void equals_EqualsVerifier_AsExpected() {
-
-    class XssTutorialChild extends XssTutorial {
-      public XssTutorialChild(
-          XssService xssService, ModuleService moduleService, FlagHandler flagHandler) {
-        super(xssService, moduleService, scoreService, flagHandler);
-      }
-
-      @Override
-      public boolean canEqual(Object o) {
-        return false;
-      }
-    }
-
-    EqualsVerifier.forClass(XssTutorial.class)
-        .withRedefinedSuperclass()
-        .withRedefinedSubclass(XssTutorialChild.class)
-        .withIgnoredAnnotations(NonNull.class)
-        .verify();
+    xssTutorial = new XssTutorial(flagHandler, xssService);
   }
 
   @Test

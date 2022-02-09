@@ -23,7 +23,11 @@ package org.owasp.herder.test.application;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +35,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.application.StartupRunner;
 import org.owasp.herder.flag.FlagHandler;
@@ -84,21 +89,25 @@ class StartupRunnerTest {
 
     when(userService.create(any(String.class))).thenReturn(Mono.empty());
 
-    when(csrfTutorial.getInit()).thenReturn(Mono.empty());
-    when(xssTutorial.getInit()).thenReturn(Mono.empty());
-    when(flagTutorial.getInit()).thenReturn(Mono.empty());
-    when(sqlInjectionTutorial.getInit()).thenReturn(Mono.empty());
-
-    when(csrfTutorial.getModuleName()).thenReturn("csrf-tutorial");
-    when(xssTutorial.getModuleName()).thenReturn("xss-tutorial");
-    when(flagTutorial.getModuleName()).thenReturn("flag-tutorial");
-    when(sqlInjectionTutorial.getModuleName()).thenReturn("sql-injection-tutorial");
-
     when(userService.promote(mockUserId)).thenReturn(Mono.empty());
 
     when(userService.existsByLoginName(any(String.class))).thenReturn(Mono.just(false));
     when(userService.existsByDisplayName(any(String.class))).thenReturn(Mono.just(false));
-    when(moduleService.existsByName(any(String.class))).thenReturn(Mono.just(false));
+
+    databaseClient = mock(DatabaseClient.class, Mockito.RETURNS_DEEP_STUBS);
+
+    startupRunner = new StartupRunner(userService, databaseClient);
+
+    Map<String, Object> versionMap = new HashMap<>();
+    versionMap.put("version", "8.0.28");
+
+    when(databaseClient.sql("select @@version").fetch().first()).thenReturn(Mono.just(versionMap));
+
+    Map<String, Object> commentMap = new HashMap<>();
+    commentMap.put("comment", "MySQL");
+
+    when(databaseClient.sql("select @@version_comment").fetch().first())
+        .thenReturn(Mono.just(commentMap));
 
     assertDoesNotThrow(() -> startupRunner.run(null));
   }
@@ -106,14 +115,7 @@ class StartupRunnerTest {
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    startupRunner =
-        new StartupRunner(
-            userService,
-            moduleService,
-            xssTutorial,
-            sqlInjectionTutorial,
-            csrfTutorial,
-            flagTutorial,
-            databaseClient);
+
+    startupRunner = new StartupRunner(userService, databaseClient);
   }
 }

@@ -25,38 +25,18 @@ import java.util.List;
 
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
-import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.module.HerderModule;
 import org.owasp.herder.module.xss.XssTutorialResponse.XssTutorialResponseBuilder;
-import org.owasp.herder.scoring.ScoreService;
-import org.springframework.stereotype.Component;
 
-import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
-@Component
-@EqualsAndHashCode(callSuper = true)
+@RequiredArgsConstructor
+@HerderModule(name = "xss-tutorial", baseScore = 100)
 public class XssTutorial extends BaseModule {
-  private static final String MODULE_NAME = "xss-tutorial";
+  private final FlagHandler flagHandler;
 
   private final XssService xssService;
-
-  public XssTutorial(
-      final XssService xssService,
-      final ModuleService moduleService,
-      final ScoreService scoreService,
-      final FlagHandler flagHandler) {
-    super(MODULE_NAME, moduleService, scoreService, flagHandler);
-    this.xssService = xssService;
-  }
-
-  @Override
-  public Mono<Void> initialize() {
-    return Mono.when(
-        getScoreService().setModuleScore(MODULE_NAME, 0, 100),
-        getScoreService().setModuleScore(MODULE_NAME, 1, 10),
-        getScoreService().setModuleScore(MODULE_NAME, 2, 5),
-        getScoreService().setModuleScore(MODULE_NAME, 3, 1));
-  }
 
   public Mono<XssTutorialResponse> submitQuery(final long userId, final String query) {
 
@@ -74,7 +54,8 @@ public class XssTutorial extends BaseModule {
     } else {
       xssTutorialResponseBuilder.alert(alerts.get(0));
 
-      return getFlag(userId)
+      return flagHandler
+          .getDynamicFlag(userId, getName())
           .map(flag -> String.format("Congratulations, flag is %s", flag))
           .map(xssTutorialResponseBuilder::result)
           .map(XssTutorialResponseBuilder::build);

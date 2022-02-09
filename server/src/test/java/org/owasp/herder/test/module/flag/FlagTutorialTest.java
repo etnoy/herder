@@ -21,27 +21,18 @@
  */
 package org.owasp.herder.test.module.flag;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.scoring.ScoreService;
 
-import lombok.NonNull;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Hooks;
-import reactor.core.publisher.Mono;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlagTutorial unit tests")
@@ -52,7 +43,7 @@ class FlagTutorialTest {
     Hooks.onOperatorDebug();
   }
 
-  private static final String MODULE_NAME = "flag-tutorial";
+  private String moduleName;
 
   FlagTutorial flagTutorial;
 
@@ -62,33 +53,12 @@ class FlagTutorialTest {
 
   @Mock FlagHandler flagHandler;
 
-  final Module mockModule = mock(Module.class);
-
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    reset(mockModule);
-    when(moduleService.create(MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
-    flagTutorial = new FlagTutorial(moduleService, scoreService, flagHandler);
-  }
+    flagTutorial = new FlagTutorial(flagHandler);
 
-  @Test
-  void equals_EqualsVerifier_AsExpected() {
-    class FlagTutorialChild extends FlagTutorial {
-      public FlagTutorialChild(ModuleService moduleService, FlagHandler flagHandler) {
-        super(moduleService, scoreService, flagHandler);
-      }
-
-      @Override
-      public boolean canEqual(Object o) {
-        return false;
-      }
-    }
-
-    EqualsVerifier.forClass(FlagTutorial.class)
-        .withRedefinedSubclass(FlagTutorialChild.class)
-        .withIgnoredAnnotations(NonNull.class)
-        .verify();
+    moduleName = flagTutorial.getName();
   }
 }

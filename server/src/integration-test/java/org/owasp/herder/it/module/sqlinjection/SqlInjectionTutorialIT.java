@@ -32,6 +32,7 @@ import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
+import org.owasp.herder.module.ModuleInitializer;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.sqlinjection.SqlInjectionDatabaseClientFactory;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
@@ -83,17 +84,18 @@ class SqlInjectionTutorialIT extends BaseIT {
 
   @Autowired IntegrationTestUtils integrationTestUtils;
 
+  ModuleInitializer moduleInitializer;
+
   @BeforeEach
   private void clear() {
     integrationTestUtils.resetState();
+
+    moduleInitializer = new ModuleInitializer(null, moduleService, scoreService);
+
     sqlInjectionTutorial =
-        new SqlInjectionTutorial(
-            moduleService,
-            scoreService,
-            flagHandler,
-            sqlInjectionDatabaseClientFactory,
-            keyService);
-    sqlInjectionTutorial.getInit().block();
+        new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
+
+    moduleInitializer.initializeModule(sqlInjectionTutorial).block();
   }
 
   private String extractFlagFromRow(final SqlInjectionTutorialRow row) {
@@ -117,7 +119,7 @@ class SqlInjectionTutorialIT extends BaseIT {
                 .flatMap(
                     flag ->
                         submissionService.submit(
-                            userId, sqlInjectionTutorial.getModuleName(), flag + "wrong"))
+                            userId, sqlInjectionTutorial.getName(), flag + "wrong"))
                 .map(Submission::isValid))
         .expectNext(false)
         .expectComplete()
@@ -139,9 +141,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     StepVerifier.create(
             flagMono
                 .flatMap(
-                    flag ->
-                        submissionService.submit(
-                            userId, sqlInjectionTutorial.getModuleName(), flag))
+                    flag -> submissionService.submit(userId, sqlInjectionTutorial.getName(), flag))
                 .map(Submission::isValid))
         .expectNext(true)
         .expectComplete()

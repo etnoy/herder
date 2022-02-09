@@ -33,6 +33,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
+import org.owasp.herder.module.ModuleInitializer;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.csrf.CsrfAttackRepository;
 import org.owasp.herder.module.csrf.CsrfService;
@@ -77,6 +78,8 @@ class CsrfTutorialIT extends BaseIT {
 
   @Autowired IntegrationTestUtils integrationTestUtils;
 
+  ModuleInitializer moduleInitializer;
+
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages
@@ -117,10 +120,14 @@ class CsrfTutorialIT extends BaseIT {
   }
 
   @BeforeEach
-  private void clear() {
+  private void setUp() {
     integrationTestUtils.resetState();
-    csrfTutorial = new CsrfTutorial(csrfService, moduleService, scoreService, flagHandler);
-    csrfTutorial.getInit().block();
+
+    moduleInitializer = new ModuleInitializer(null, moduleService, scoreService);
+
+    csrfTutorial = new CsrfTutorial(csrfService, flagHandler);
+
+    moduleInitializer.initializeModule(csrfTutorial).block();
   }
 
   @Test

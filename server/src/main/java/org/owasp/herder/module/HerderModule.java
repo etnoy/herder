@@ -21,9 +21,24 @@
  */
 package org.owasp.herder.module;
 
-/** Base class for all CTF modules */
-public abstract class BaseModule {
-  public String getName() {
-    return this.getClass().getAnnotation(HerderModule.class).name();
-  }
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import org.springframework.stereotype.Component;
+
+@Component
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface HerderModule {
+  String name();
+
+  long baseScore() default 0;
+
+  long goldBonus() default 0;
+
+  long silverBonus() default 0;
+
+  long bronzeBonus() default 0;
 }

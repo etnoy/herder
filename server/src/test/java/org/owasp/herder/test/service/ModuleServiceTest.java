@@ -41,6 +41,7 @@ import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
+import org.springframework.context.ApplicationContext;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
@@ -62,6 +63,8 @@ class ModuleServiceTest {
   @Mock private ModuleRepository moduleRepository;
 
   @Mock private KeyService keyService;
+
+  @Mock private ApplicationContext applicationContext;
 
   @Test
   void count_NoArgument_ReturnsCount() {

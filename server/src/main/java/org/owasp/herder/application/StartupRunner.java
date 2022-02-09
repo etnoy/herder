@@ -22,11 +22,6 @@
 package org.owasp.herder.application;
 
 import org.owasp.herder.exception.IncompatibleDatabaseException;
-import org.owasp.herder.module.ModuleService;
-import org.owasp.herder.module.csrf.CsrfTutorial;
-import org.owasp.herder.module.flag.FlagTutorial;
-import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
-import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.user.UserService;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -48,21 +43,10 @@ import lombok.extern.slf4j.Slf4j;
 public class StartupRunner implements ApplicationRunner {
   private final UserService userService;
 
-  private final ModuleService moduleService;
-
-  private final XssTutorial xssTutorial;
-
-  private final SqlInjectionTutorial sqlInjectionTutorial;
-
-  private final CsrfTutorial csrfTutorial;
-
-  private final FlagTutorial flagTutorial;
-
   private final DatabaseClient databaseClient;
 
   @Override
   public void run(ApplicationArguments args) {
-
     final String mysqlVersion =
         databaseClient
             .sql("select @@version")
@@ -100,7 +84,8 @@ public class StartupRunner implements ApplicationRunner {
         throw new IncompatibleDatabaseException("MySQL must be at least major version 8");
       }
 
-    } else if (mysqlVersionComment.substring(0, 7).equals("mariadb")) {
+    } else if ((mysqlVersionComment.length() >= 7)
+        && (mysqlVersionComment.substring(0, 7).equals("mariadb"))) {
 
       final int dotPosition1 = mysqlVersion.indexOf('.');
 
@@ -158,22 +143,6 @@ public class StartupRunner implements ApplicationRunner {
 
     if (!userService.existsByDisplayName("Test user 3").block()) {
       userService.create("Test user 3").block();
-    }
-
-    if (!moduleService.existsByName(csrfTutorial.getModuleName()).block()) {
-      csrfTutorial.getInit().block();
-    }
-
-    if (!moduleService.existsByName(flagTutorial.getModuleName()).block()) {
-      flagTutorial.getInit().block();
-    }
-
-    if (!moduleService.existsByName(xssTutorial.getModuleName()).block()) {
-      xssTutorial.getInit().block();
-    }
-
-    if (!moduleService.existsByName(sqlInjectionTutorial.getModuleName()).block()) {
-      sqlInjectionTutorial.getInit().block();
     }
   }
 }

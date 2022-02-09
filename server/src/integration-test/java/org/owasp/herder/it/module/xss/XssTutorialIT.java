@@ -23,7 +23,6 @@ package org.owasp.herder.it.module.xss;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +33,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
+import org.owasp.herder.module.ModuleInitializer;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.xss.XssService;
 import org.owasp.herder.module.xss.XssTutorial;
@@ -82,16 +82,17 @@ class XssTutorialIT extends BaseIT {
 
   @Autowired IntegrationTestUtils integrationTestUtils;
 
+  ModuleInitializer moduleInitializer;
+
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
-    xssTutorial = new XssTutorial(xssService, moduleService, scoreService, flagHandler);
-    xssTutorial.getInit().block();
-  }
 
-  @AfterEach
-  private void clear() {
-    xssTutorial = null;
+    moduleInitializer = new ModuleInitializer(null, moduleService, scoreService);
+
+    xssTutorial = new XssTutorial(flagHandler, xssService);
+
+    moduleInitializer.initializeModule(xssTutorial).block();
   }
 
   private String extractFlagFromResponse(final XssTutorialResponse response) {
@@ -111,8 +112,7 @@ class XssTutorialIT extends BaseIT {
     // Submit the flag we got from the sql injection and make sure it validates
     StepVerifier.create(
             flagMono
-                .flatMap(
-                    flag -> submissionService.submit(userId, xssTutorial.getModuleName(), flag))
+                .flatMap(flag -> submissionService.submit(userId, xssTutorial.getName(), flag))
                 .map(Submission::isValid))
         .expectNext(true)
         .expectComplete()

@@ -35,13 +35,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.Module;
-import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.csrf.CsrfService;
 import org.owasp.herder.module.csrf.CsrfTutorial;
-import org.owasp.herder.scoring.ScoreService;
 
-import lombok.NonNull;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -55,15 +51,11 @@ class CsrfTutorialTest {
     Hooks.onOperatorDebug();
   }
 
-  private static final String MODULE_NAME = "csrf-tutorial";
+  private String moduleName;
 
   CsrfTutorial csrfTutorial;
 
-  @Mock ModuleService moduleService;
-
   @Mock CsrfService csrfService;
-
-  @Mock ScoreService scoreService;
 
   @Mock FlagHandler flagHandler;
 
@@ -73,32 +65,10 @@ class CsrfTutorialTest {
   private void setUp() {
     // Set up the system under test
     reset(mockModule);
-    when(moduleService.create(MODULE_NAME)).thenReturn(Mono.just(mockModule));
 
-    csrfTutorial = new CsrfTutorial(csrfService, moduleService, scoreService, flagHandler);
-  }
+    csrfTutorial = new CsrfTutorial(csrfService, flagHandler);
 
-  @Test
-  void equals_EqualsVerifier_AsExpected() {
-
-    class CsrfTutorialChild extends CsrfTutorial {
-
-      public CsrfTutorialChild(
-          CsrfService csrfService, ModuleService moduleService, FlagHandler flagHandler) {
-        super(csrfService, moduleService, scoreService, flagHandler);
-      }
-
-      @Override
-      public boolean canEqual(Object o) {
-        return false;
-      }
-    }
-
-    EqualsVerifier.forClass(CsrfTutorial.class)
-        .withRedefinedSuperclass()
-        .withRedefinedSubclass(CsrfTutorialChild.class)
-        .withIgnoredAnnotations(NonNull.class)
-        .verify();
+    moduleName = csrfTutorial.getName();
   }
 
   @Test
@@ -107,9 +77,9 @@ class CsrfTutorialTest {
 
     final String mockTarget = "abcd123";
 
-    when(csrfService.validatePseudonym(mockTarget, MODULE_NAME)).thenReturn(Mono.just(false));
+    when(csrfService.validatePseudonym(mockTarget, moduleName)).thenReturn(Mono.just(false));
     when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getName()).thenReturn(MODULE_NAME);
+    when(mockModule.getName()).thenReturn(moduleName);
 
     StepVerifier.create(csrfTutorial.attack(attackerUserId, mockTarget))
         .assertNext(
@@ -130,12 +100,12 @@ class CsrfTutorialTest {
     final String mockTarget = "abcd123";
     final String mockAttacker = "xyz789";
 
-    when(csrfService.getPseudonym(attackerUserId, MODULE_NAME)).thenReturn(Mono.just(mockAttacker));
+    when(csrfService.getPseudonym(attackerUserId, moduleName)).thenReturn(Mono.just(mockAttacker));
 
-    when(csrfService.validatePseudonym(mockTarget, MODULE_NAME)).thenReturn(Mono.just(true));
+    when(csrfService.validatePseudonym(mockTarget, moduleName)).thenReturn(Mono.just(true));
     when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getName()).thenReturn(MODULE_NAME);
-    when(csrfService.attack(mockTarget, MODULE_NAME)).thenReturn(Mono.empty());
+    when(mockModule.getName()).thenReturn(moduleName);
+    when(csrfService.attack(mockTarget, moduleName)).thenReturn(Mono.empty());
 
     StepVerifier.create(csrfTutorial.attack(attackerUserId, mockTarget))
         .assertNext(
@@ -155,11 +125,11 @@ class CsrfTutorialTest {
 
     final String pseudonym = "xyz789";
 
-    when(csrfService.getPseudonym(userId, MODULE_NAME)).thenReturn(Mono.just(pseudonym));
+    when(csrfService.getPseudonym(userId, moduleName)).thenReturn(Mono.just(pseudonym));
 
-    when(csrfService.validatePseudonym(pseudonym, MODULE_NAME)).thenReturn(Mono.just(true));
+    when(csrfService.validatePseudonym(pseudonym, moduleName)).thenReturn(Mono.just(true));
     when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getName()).thenReturn(MODULE_NAME);
+    when(mockModule.getName()).thenReturn(moduleName);
 
     StepVerifier.create(csrfTutorial.attack(userId, pseudonym))
         .assertNext(
@@ -179,13 +149,13 @@ class CsrfTutorialTest {
     final String mockPseudonym = "abcd123";
     final String flag = "flag";
 
-    when(csrfService.getPseudonym(mockUserId, MODULE_NAME)).thenReturn(Mono.just(mockPseudonym));
+    when(csrfService.getPseudonym(mockUserId, moduleName)).thenReturn(Mono.just(mockPseudonym));
 
     when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getName()).thenReturn(MODULE_NAME);
+    when(mockModule.getName()).thenReturn(moduleName);
 
-    when(flagHandler.getDynamicFlag(mockUserId, MODULE_NAME)).thenReturn(Mono.just(flag));
-    when(csrfService.validate(mockPseudonym, MODULE_NAME)).thenReturn(Mono.just(true));
+    when(flagHandler.getDynamicFlag(mockUserId, moduleName)).thenReturn(Mono.just(flag));
+    when(csrfService.validate(mockPseudonym, moduleName)).thenReturn(Mono.just(true));
 
     StepVerifier.create(csrfTutorial.getTutorial(mockUserId))
         .assertNext(
@@ -201,12 +171,15 @@ class CsrfTutorialTest {
   void getTutorial_NotActivated_ReturnsActivationLink() {
     final long mockUserId = 45L;
     final String mockPseudonym = "abcd123";
+    final Mono<String> flag = Mono.just("flag");
 
-    when(csrfService.getPseudonym(mockUserId, MODULE_NAME)).thenReturn(Mono.just(mockPseudonym));
+    when(csrfService.getPseudonym(mockUserId, moduleName)).thenReturn(Mono.just(mockPseudonym));
 
     when(mockModule.isFlagStatic()).thenReturn(false);
 
-    when(csrfService.validate(mockPseudonym, MODULE_NAME)).thenReturn(Mono.just(false));
+    when(csrfService.validate(mockPseudonym, moduleName)).thenReturn(Mono.just(false));
+
+    when(flagHandler.getDynamicFlag(mockUserId, moduleName)).thenReturn(flag);
 
     StepVerifier.create(csrfTutorial.getTutorial(mockUserId))
         .assertNext(

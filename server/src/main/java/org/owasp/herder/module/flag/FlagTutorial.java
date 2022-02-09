@@ -23,29 +23,17 @@ package org.owasp.herder.module.flag;
 
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
-import org.owasp.herder.module.ModuleService;
-import org.owasp.herder.scoring.ScoreService;
-import org.springframework.stereotype.Component;
+import org.owasp.herder.module.HerderModule;
 
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
-@Component
+@RequiredArgsConstructor
+@HerderModule(name = "flag-tutorial", baseScore = 100)
 public class FlagTutorial extends BaseModule {
-  private static final String MODULE_NAME = "flag-tutorial";
+  private final FlagHandler flagHandler;
 
-  public FlagTutorial(
-      final ModuleService moduleService,
-      final ScoreService scoreService,
-      final FlagHandler flagHandler) {
-    super("flag-tutorial", moduleService, scoreService, flagHandler);
-  }
-
-  @Override
-  public Mono<Void> initialize() {
-    return Mono.when(
-        getScoreService().setModuleScore(MODULE_NAME, 0, 100),
-        getScoreService().setModuleScore(MODULE_NAME, 1, 10),
-        getScoreService().setModuleScore(MODULE_NAME, 2, 5),
-        getScoreService().setModuleScore(MODULE_NAME, 3, 1));
+  public Mono<String> getFlag(final long userId) {
+    return flagHandler.getDynamicFlag(userId, getName());
   }
 }

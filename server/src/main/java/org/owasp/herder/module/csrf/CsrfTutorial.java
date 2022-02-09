@@ -23,44 +23,34 @@ package org.owasp.herder.module.csrf;
 
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
-import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.module.HerderModule;
 import org.owasp.herder.module.csrf.CsrfTutorialResult.CsrfTutorialResultBuilder;
-import org.owasp.herder.scoring.ScoreService;
-import org.springframework.stereotype.Component;
 
-import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
-@Component
 @Slf4j
-@EqualsAndHashCode(callSuper = true)
+@RequiredArgsConstructor
+@HerderModule(name = "csrf-tutorial", baseScore = 100)
 public class CsrfTutorial extends BaseModule {
   private final CsrfService csrfService;
 
-  private static final String MODULE_NAME = "csrf-tutorial";
-
-  public CsrfTutorial(
-      final CsrfService csrfService,
-      final ModuleService moduleService,
-      final ScoreService scoreService,
-      final FlagHandler flagHandler) {
-    super(MODULE_NAME, moduleService, scoreService, flagHandler);
-    this.csrfService = csrfService;
-  }
+  private final FlagHandler flagHandler;
 
   public Mono<CsrfTutorialResult> getTutorial(final long userId) {
-
-    final Mono<String> pseudonym = csrfService.getPseudonym(userId, MODULE_NAME);
+    final Mono<String> pseudonym = csrfService.getPseudonym(userId, getName());
 
     final Mono<CsrfTutorialResultBuilder> resultWithoutFlag =
         pseudonym.map(p -> CsrfTutorialResult.builder().pseudonym(p));
 
     final Mono<CsrfTutorialResultBuilder> resultWithFlag =
-        resultWithoutFlag.zipWith(getFlag(userId)).map(tuple -> tuple.getT1().flag(tuple.getT2()));
+        resultWithoutFlag
+            .zipWith(flagHandler.getDynamicFlag(userId, getName()))
+            .map(tuple -> tuple.getT1().flag(tuple.getT2()));
 
     return pseudonym
-        .flatMap(pseudo -> csrfService.validate(pseudo, MODULE_NAME))
+        .flatMap(pseudo -> csrfService.validate(pseudo, getName()))
         .filter(isActive -> isActive)
         .flatMap(isActive -> resultWithFlag)
         .switchIfEmpty(resultWithoutFlag)
@@ -74,12 +64,12 @@ public class CsrfTutorial extends BaseModule {
     log.debug(String.format("User %d is attacking csrf target %s", userId, target));
 
     return csrfService
-        .validatePseudonym(target, getModuleName())
+        .validatePseudonym(target, getName())
         .flatMap(
             valid -> {
               if (Boolean.TRUE.equals(valid)) {
                 return csrfService
-                    .getPseudonym(userId, getModuleName())
+                    .getPseudonym(userId, getName())
                     .flatMap(
                         pseudonym -> {
                           if (pseudonym.equals(target)) {
@@ -89,7 +79,7 @@ public class CsrfTutorial extends BaseModule {
                                     .build());
                           } else {
                             return csrfService
-                                .attack(target, getModuleName())
+                                .attack(target, getName())
                                 .then(
                                     Mono.just(
                                         csrfTutorialResultBuilder
@@ -102,14 +92,5 @@ public class CsrfTutorial extends BaseModule {
                 return Mono.just(csrfTutorialResultBuilder.error("Unknown target ID").build());
               }
             });
-  }
-
-  @Override
-  public Mono<Void> initialize() {
-    return Mono.when(
-        getScoreService().setModuleScore(MODULE_NAME, 0, 100),
-        getScoreService().setModuleScore(MODULE_NAME, 1, 10),
-        getScoreService().setModuleScore(MODULE_NAME, 2, 5),
-        getScoreService().setModuleScore(MODULE_NAME, 3, 1));
   }
 }

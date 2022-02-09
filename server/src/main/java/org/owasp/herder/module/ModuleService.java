@@ -54,7 +54,7 @@ public final class ModuleService {
       return Mono.error(new NullPointerException("Module name cannot be null"));
     }
 
-    log.info("Creating new module in database with name " + moduleName);
+    log.info("Creating new module " + moduleName);
 
     return Mono.just(moduleName)
         .filterWhen(this::doesNotExistByName)
@@ -63,12 +63,13 @@ public final class ModuleService {
                 new DuplicateModuleNameException(
                     String.format("Module name %s already exists", moduleName))))
         .map(
-            exists ->
-                Module.builder()
-                    .isOpen(true)
-                    .name(moduleName)
-                    .key(keyService.generateRandomBytes(16))
-                    .build())
+            exists -> {
+              return Module.builder()
+                  .isOpen(true)
+                  .name(moduleName)
+                  .key(keyService.generateRandomBytes(16))
+                  .build();
+            })
         .flatMap(moduleRepository::save)
         .doOnSuccess(created -> log.trace("Created module with name " + moduleName));
   }
