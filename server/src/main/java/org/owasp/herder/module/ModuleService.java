@@ -63,13 +63,12 @@ public final class ModuleService {
                 new DuplicateModuleNameException(
                     String.format("Module name %s already exists", moduleName))))
         .map(
-            exists -> {
-              return Module.builder()
-                  .isOpen(true)
-                  .name(moduleName)
-                  .key(keyService.generateRandomBytes(16))
-                  .build();
-            })
+            exists ->
+                Module.builder()
+                    .isOpen(true)
+                    .name(moduleName)
+                    .key(keyService.generateRandomBytes(16))
+                    .build())
         .flatMap(moduleRepository::save)
         .doOnSuccess(created -> log.trace("Created module with name " + moduleName));
   }
