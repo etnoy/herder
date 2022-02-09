@@ -177,7 +177,7 @@ public final class IntegrationTestUtils extends BaseIT {
   }
 
   public ResponseSpec submitFlag(final String moduleName, final String token, final String flag) {
-    if ((moduleName == null) || (token == null) || (flag == null)) {
+    if ((moduleName == null) || (flag == null)) {
       throw new NullPointerException();
     }
 
