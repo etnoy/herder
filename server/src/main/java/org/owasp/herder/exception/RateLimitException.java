@@ -25,7 +25,7 @@ public abstract class RateLimitException extends RuntimeException {
 
   private static final long serialVersionUID = 1912619103090478680L;
 
-  public RateLimitException() {
+  protected RateLimitException() {
     super();
   }
 }
