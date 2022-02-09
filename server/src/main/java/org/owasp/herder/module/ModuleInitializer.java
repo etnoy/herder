@@ -88,5 +88,7 @@ public final class ModuleInitializer implements ApplicationContextAware {
   }
 
   @Override
-  public void setApplicationContext(ApplicationContext applicationContext) {}
+  public void setApplicationContext(ApplicationContext applicationContext) {
+    throw new UnsupportedOperationException();
+  }
 }
