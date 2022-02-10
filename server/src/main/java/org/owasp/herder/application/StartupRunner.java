@@ -42,7 +42,7 @@ public class StartupRunner implements ApplicationRunner {
   @Override
   public void run(ApplicationArguments args) {
 
-    if (!userService.existsByLoginName("admin").block()) {
+    if (Boolean.FALSE.equals(userService.existsByLoginName("admin").block())) {
       final long adminId =
           userService
               .createPasswordUser(
@@ -53,15 +53,15 @@ public class StartupRunner implements ApplicationRunner {
       userService.promote(adminId).block();
     }
 
-    if (!userService.existsByDisplayName("Test user").block()) {
+    if (Boolean.FALSE.equals(userService.existsByDisplayName("Test user").block())) {
       userService.create("Test user").block();
     }
 
-    if (!userService.existsByDisplayName("Test user 2").block()) {
+    if (Boolean.FALSE.equals(userService.existsByDisplayName("Test user 2").block())) {
       userService.create("Test user 2").block();
     }
 
-    if (!userService.existsByDisplayName("Test user 3").block()) {
+    if (Boolean.FALSE.equals(userService.existsByDisplayName("Test user 3").block())) {
       userService.create("Test user 3").block();
     }
   }
