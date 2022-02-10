@@ -5,9 +5,7 @@
         <ng-container *ngFor="let submission of submissions">
           <li>
             <p>
-              Module {{ submission.moduleName }}: at {{submission.time.toLocaleString()}} with
-              valid flag {{ submission.flag }}, rank {{submission.rank}}, base
-              score {{submission.baseScore}}, bonus {{submission.bonusScore}}, total score {{submission.score}}.
+              {{submission.time.toLocaleString() | amTimeAgo }}: {{ submission.moduleName }} <app-rank [rank]=submission.rank></app-rank>{{submission.score}} points.
             </p>
           </li>
         </ng-container>

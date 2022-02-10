@@ -15,6 +15,7 @@ import { SqlInjectionTutorialComponent } from './components/sql-injection-tutori
 import { ModuleItemComponent } from './components/module-item/module-item.component';
 import { XssTutorialComponent } from './components/xss-tutorial/xss-tutorial.component';
 import { CsrfTutorialComponent } from './components/csrf-tutorial/csrf-tutorial.component';
+import { RankDisplayComponent } from './components/rank-display/rank-display.component';
 import { HomeComponent } from './components/home/home.component';
 import { AlertComponent } from './components/alert/alert.component';
 import { ErrorInterceptor } from './shared/error.interceptor';
@@ -23,6 +24,7 @@ import { UserListComponent } from './components/userlist/userlist.component';
 import { UserScoreComponent } from './components/user-score/user-score.component';
 import { FlagTutorialComponent } from './components/flag-tutorial/flag-tutorial.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { MomentModule } from 'ngx-moment';
 
 @NgModule({
   declarations: [
@@ -36,6 +38,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     ModuleItemComponent,
     XssTutorialComponent,
     CsrfTutorialComponent,
+    RankDisplayComponent,
     FlagTutorialComponent,
     ModuleDirective,
     ScoreboardComponent,
@@ -50,6 +53,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     FormsModule,
     SearchbarModule,
     NgbModule,
+    MomentModule,
   ],
   providers: [
     {

@@ -28,6 +28,8 @@
     "angular-eslint": "0.0.1-alpha.0",
     "bootstrap": "^4.6.1",
     "jquery": "^3.6.0",
+    "moment": "^2.29.1",
+    "ngx-moment": "^6.0.2",
     "postcss": "^8.4.5",
     "rxjs": "^7.5.2",
     "tslib": "^2.3.1",
