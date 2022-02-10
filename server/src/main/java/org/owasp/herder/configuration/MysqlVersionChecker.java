@@ -21,6 +21,8 @@
  */
 package org.owasp.herder.configuration;
 
+import java.util.Map;
+
 import org.owasp.herder.exception.IncompatibleDatabaseException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +31,7 @@ import org.springframework.r2dbc.core.DatabaseClient;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 @ConditionalOnProperty(
     prefix = "application.runner",
@@ -43,27 +46,23 @@ public class MysqlVersionChecker {
 
   @Bean
   public void mySqlVersionCheck() {
-    final String mysqlVersion =
-        databaseClient
-            .sql("select @@version")
-            .fetch()
-            .first()
-            .block()
-            .values()
-            .iterator()
-            .next()
-            .toString();
+    final Mono<Map<String, Object>> versionMono =
+        databaseClient.sql("select @@version").fetch().first();
 
-    final String mysqlVersionComment =
-        databaseClient
-            .sql("select @@version_comment")
-            .fetch()
-            .first()
-            .block()
-            .values()
-            .iterator()
-            .next()
-            .toString();
+    if (versionMono == null) {
+      throw new NullPointerException();
+    }
+
+    final String mysqlVersion = versionMono.block().values().iterator().next().toString();
+
+    final Mono<Map<String, Object>> commentMono =
+        databaseClient.sql("select @@version").fetch().first();
+
+    if (commentMono == null) {
+      throw new NullPointerException();
+    }
+
+    final String mysqlVersionComment = commentMono.block().values().iterator().next().toString();
 
     if ((mysqlVersionComment.length() >= 5)
         && (mysqlVersionComment.substring(0, 5).equalsIgnoreCase("MySQL"))) {
