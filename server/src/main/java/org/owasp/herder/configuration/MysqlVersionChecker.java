@@ -43,94 +43,49 @@ import lombok.extern.slf4j.Slf4j;
 public class MysqlVersionChecker {
   private final DatabaseClient databaseClient;
 
-  @Bean
-  public void mySqlVersionCheck() {
-    final Map<String, Object> versionResult =
-        databaseClient.sql("select @@version").fetch().first().block();
+  private String getResultsFromDatabase(final String query) {
+    final Map<String, Object> versionResult = databaseClient.sql(query).fetch().first().block();
 
     if (versionResult == null) {
       throw new NullPointerException();
     }
 
-    final String mysqlVersion = versionResult.values().iterator().next().toString();
+    return versionResult.values().iterator().next().toString();
+  }
 
-    final Map<String, Object> commentResult =
-        databaseClient.sql("select @@version_comment").fetch().first().block();
+  private void checkMySqlVersion(final String mySqlVersion) {
+    final int dotPosition = mySqlVersion.indexOf('.');
 
-    if (commentResult == null) {
-      throw new NullPointerException();
+    if (dotPosition < 1) {
+      throw new IncompatibleDatabaseException("Could not parse MySQL version " + mySqlVersion);
     }
+    final String majorVersionString = mySqlVersion.substring(0, dotPosition);
 
-    final String mysqlVersionComment = commentResult.values().iterator().next().toString();
+    final int majorVersion = Integer.parseInt(majorVersionString);
+
+    if (majorVersion < 8) {
+      throw new IncompatibleDatabaseException(
+          "MySQL must be at least major version 8, found " + mySqlVersion);
+    }
+  }
+
+  @Bean
+  public void mySqlVersionCheck() {
+
+    final String mysqlVersion = getResultsFromDatabase("select @@version");
+
+    final String mysqlVersionComment = getResultsFromDatabase("select @@version_comment");
 
     if ((mysqlVersionComment.length() >= 5)
         && (mysqlVersionComment.substring(0, 5).equalsIgnoreCase("MySQL"))) {
-
-      final int dotPosition = mysqlVersion.indexOf('.');
-
-      if (dotPosition < 1) {
-        throw new IncompatibleDatabaseException("Could not parse MySQL version " + mysqlVersion);
-      }
-      final String majorVersionString = mysqlVersion.substring(0, dotPosition);
-
-      final int majorVersion = Integer.parseInt(majorVersionString);
-
-      if (majorVersion < 8) {
-        throw new IncompatibleDatabaseException(
-            "MySQL must be at least major version 8, found " + mysqlVersion);
-      }
-
+      // MySQL detected
+      checkMySqlVersion(mysqlVersion);
     } else if ((mysqlVersionComment.length() >= 7)
         && (mysqlVersionComment.substring(0, 7).equalsIgnoreCase("mariadb"))) {
-
-      final int dotPosition1 = mysqlVersion.indexOf('.');
-
-      if (dotPosition1 < 1) {
-        throw new IncompatibleDatabaseException(
-            String.format("Could not parse MariaDB version %s", mysqlVersion));
-      }
-
-      final String majorVersionString = mysqlVersion.substring(0, dotPosition1);
-
-      final int majorVersion;
-
-      try {
-        majorVersion = Integer.parseInt(majorVersionString);
-      } catch (NumberFormatException e) {
-        throw new IncompatibleDatabaseException(
-            String.format("Could not parse MariaDB version %s", mysqlVersion));
-      }
-
-      final String restOfVersion = mysqlVersion.substring(dotPosition1 + 1);
-
-      final int dotPosition2 = restOfVersion.indexOf('.');
-
-      int minorVersion;
-
-      if (dotPosition2 < 1) {
-        try {
-          minorVersion = Integer.parseInt(restOfVersion);
-        } catch (NumberFormatException e) {
-          throw new IncompatibleDatabaseException(
-              String.format("Could not parse MariaDB version %s", mysqlVersion));
-        }
-      } else {
-        final String minorVersionString = restOfVersion.substring(0, dotPosition2);
-
-        try {
-          minorVersion = Integer.parseInt(minorVersionString);
-        } catch (NumberFormatException e) {
-          throw new IncompatibleDatabaseException(
-              String.format("Could not parse MariaDB version %s", mysqlVersion));
-        }
-      }
-      if ((majorVersion < 10) || (majorVersion == 10 && minorVersion < 2)) {
-        throw new IncompatibleDatabaseException(
-            "MariaDB must be at least version 10.2, found " + mysqlVersion);
-      }
-
+      // MariaDB detected
+      checkMariaDbVersion(mysqlVersion);
     } else {
-
+      // Something else detected, not supported
       throw new IncompatibleDatabaseException(
           String.format(
               "Only MySQL > 8 and MariaDB > 10.2 are supported, found %s version %s",
@@ -138,5 +93,53 @@ public class MysqlVersionChecker {
     }
 
     log.info("Found database " + mysqlVersionComment + " version " + mysqlVersion);
+  }
+
+  private void checkMariaDbVersion(final String mysqlVersion) {
+    final int dotPosition1 = mysqlVersion.indexOf('.');
+
+    if (dotPosition1 < 1) {
+      throw new IncompatibleDatabaseException(mariaDbParsingErrorMessage(mysqlVersion));
+    }
+
+    final String majorVersionString = mysqlVersion.substring(0, dotPosition1);
+
+    final int majorVersion;
+
+    try {
+      majorVersion = Integer.parseInt(majorVersionString);
+    } catch (NumberFormatException e) {
+      throw new IncompatibleDatabaseException(mariaDbParsingErrorMessage(mysqlVersion));
+    }
+
+    final String restOfVersion = mysqlVersion.substring(dotPosition1 + 1);
+
+    final int dotPosition2 = restOfVersion.indexOf('.');
+
+    int minorVersion;
+
+    if (dotPosition2 < 1) {
+      try {
+        minorVersion = Integer.parseInt(restOfVersion);
+      } catch (NumberFormatException e) {
+        throw new IncompatibleDatabaseException(mariaDbParsingErrorMessage(mysqlVersion));
+      }
+    } else {
+      final String minorVersionString = restOfVersion.substring(0, dotPosition2);
+
+      try {
+        minorVersion = Integer.parseInt(minorVersionString);
+      } catch (NumberFormatException e) {
+        throw new IncompatibleDatabaseException(mariaDbParsingErrorMessage(mysqlVersion));
+      }
+    }
+    if ((majorVersion < 10) || (majorVersion == 10 && minorVersion < 2)) {
+      throw new IncompatibleDatabaseException(
+          "MariaDB must be at least version 10.2, found " + mysqlVersion);
+    }
+  }
+
+  private String mariaDbParsingErrorMessage(final String mysqlVersion) {
+    return String.format("Could not parse MariaDB version %s", mysqlVersion);
   }
 }

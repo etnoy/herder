@@ -48,18 +48,17 @@ import reactor.core.publisher.Mono;
 @DisplayName("MysqlVersionChecker unit tests")
 class MysqlVersionCheckerTest {
 
+  private MysqlVersionChecker mysqlVersionChecker;
+
+  @Mock private DatabaseClient databaseClient;
+
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages
     Hooks.onOperatorDebug();
   }
 
-  private MysqlVersionChecker mysqlVersionChecker;
-
-  @Mock private DatabaseClient databaseClient;
-
   private void setVersions(final String comment, final String version) {
-
     Map<String, Object> versionMap = new HashMap<>();
     versionMap.put("version", version);
 
@@ -90,6 +89,22 @@ class MysqlVersionCheckerTest {
   @Test
   void mySqlVersionCheck_MariaDB10ADot_NotSupported() {
     setVersions("mariadb", "10.A.");
+
+    assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
+        .isInstanceOf(IncompatibleDatabaseException.class);
+  }
+
+  @Test
+  void mySqlVersionCheck_MySQLDotDot_NotSupported() {
+    setVersions("MySQL", "..");
+
+    assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
+        .isInstanceOf(IncompatibleDatabaseException.class);
+  }
+
+  @Test
+  void mySqlVersionCheck_MariaDBDotDot_NotSupported() {
+    setVersions("mariadb", "..");
 
     assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
         .isInstanceOf(IncompatibleDatabaseException.class);
