@@ -11,6 +11,7 @@ import { HomeComponent } from './components/home/home.component';
 import { ScoreboardComponent } from './components/scoreboard/scoreboard.component';
 import { UserScoreComponent } from './components/user-score/user-score.component';
 import { UserListComponent } from './components/userlist/userlist.component';
+import { ModuleSolvesComponent } from './components/module-solves/module-solves.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent, canActivate: [AuthGuard] },
@@ -38,8 +39,13 @@ const routes: Routes = [
     ],
   },
   {
-    path: 'scoreboard/:id',
+    path: 'scoreboard/user/:userId',
     component: UserScoreComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'scoreboard/module/:moduleName',
+    component: ModuleSolvesComponent,
     canActivate: [AuthGuard],
   },
   { path: '**', redirectTo: '' },

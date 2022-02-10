@@ -25,6 +25,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.owasp.herder.exception.EmptyModuleNameException;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.flag.FlagHandler;
@@ -64,6 +65,16 @@ public final class SubmissionService {
       return Flux.error(new InvalidUserIdException());
     }
     return submissionRepository.findAllValidByUserId(userId);
+  }
+
+  public Flux<RankedSubmission> findAllSubmissionsByModuleName(final String moduleName) {
+    if (moduleName == null) {
+      return Flux.error(new NullPointerException());
+    }
+    if (moduleName.isEmpty()) {
+      return Flux.error(new EmptyModuleNameException());
+    }
+    return rankedSubmissionRepository.findAllByModuleName(moduleName);
   }
 
   public Flux<RankedSubmission> findAllRankedByUserId(final long userId) {

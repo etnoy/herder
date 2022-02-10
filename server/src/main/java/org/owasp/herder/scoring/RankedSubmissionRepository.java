@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface RankedSubmissionRepository extends ReactiveCrudRepository<RankedSubmission, Long> {
-  public Flux<RankedSubmission> findAllByModuleName(@Param("module_name") final long moduleName);
+  public Flux<RankedSubmission> findAllByModuleName(@Param("module_name") final String moduleName);
 
   public Flux<RankedSubmission> findAllByUserId(@Param("user_id") final long userId);
 

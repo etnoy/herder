@@ -21,12 +21,13 @@
  */
 package org.owasp.herder.scoring;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 
 @RestController
@@ -43,9 +44,15 @@ public class ScoreboardController {
     return scoreService.getScoreboard();
   }
 
-  @GetMapping(path = "scoreboard/{userId}")
+  @GetMapping(path = "scoreboard/user/{userId}")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Flux<RankedSubmission> getScoreboardByUserId(@PathVariable final long userId) {
     return submissionService.findAllRankedByUserId(userId);
+  }
+
+  @GetMapping(path = "scoreboard/module/{moduleName}")
+  @PreAuthorize("hasRole('ROLE_USER')")
+  public Flux<RankedSubmission> getSubmissionsForModule(@PathVariable final String moduleName) {
+    return submissionService.findAllSubmissionsByModuleName(moduleName);
   }
 }

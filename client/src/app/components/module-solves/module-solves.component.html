@@ -1,0 +1,17 @@
+<div class="auth-wrapper">
+  <h1>Solutions for {{ moduleName }} </h1>
+  <div class="row">
+    <div class="inner-main">
+      <ul>
+        <ng-container *ngFor="let submission of submissions">
+          <li>
+            <p>
+              {{submission.time.toLocaleString() | amTimeAgo }}: {{ submission.userId }} <app-rank [rank]=submission.rank></app-rank>{{submission.score}} points.
+            </p>
+          </li>
+        </ng-container>
+      </ul>
+      <p *ngIf="submissions.length === 0">No submissions for {{ moduleName }}</p>
+    </div>
+  </div>
+</div>

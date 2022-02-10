@@ -121,7 +121,8 @@ class ScoreboardIT extends BaseIT {
   @Autowired DatabaseClient databaseClient;
 
   @Test
-  void computeScoreForModule_SubmittedScores_ReturnsCorrectScoresForUsers() throws Exception {
+  @DisplayName("Can display the scoreboard")
+  void getScoreboard_SubmittedScores_ReturnsCorrectScoresForUsers() {
     // We'll use this exact flag
     final String flag = "itsaflag";
 
@@ -197,11 +198,6 @@ class ScoreboardIT extends BaseIT {
     Iterator<Long> userIdIterator = userIds.iterator();
     Iterator<Clock> clockIterator = clocks.iterator();
     Iterator<String> flagIterator = flags.iterator();
-
-    final Bucket mockBucket = mock(Bucket.class);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(Long.class))).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(Long.class))).thenReturn(mockBucket);
 
     while (userIdIterator.hasNext() && clockIterator.hasNext() && flagIterator.hasNext()) {
       // Recreate the submission service every time with a new clock
@@ -304,12 +300,107 @@ class ScoreboardIT extends BaseIT {
                 .silverMedals(3L)
                 .bronzeMedals(0L)
                 .build())
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @BeforeEach
-  private void clear() {
+  private void setUp() {
     integrationTestUtils.resetState();
+
+    // Bypass the rate limiter
+    final Bucket mockBucket = mock(Bucket.class);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+    when(flagSubmissionRateLimiter.resolveBucket(any(Long.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(Long.class))).thenReturn(mockBucket);
+  }
+
+  @Test
+  @DisplayName("Can use medals as tiebreakers")
+  void getScoreboard_TiedUsers_MedalsAreTiebreakers() {
+    // We'll use this exact flag
+    final String flag = "itsaflag";
+
+    // Create six users and store their ids
+    List<String> displayNames = new ArrayList<>();
+    displayNames.add("ZTestUser1");
+    displayNames.add("ATestUser2");
+    displayNames.add("ATestUser3");
+
+    Iterator<String> displayNameIterator = displayNames.iterator();
+
+    List<Long> userIds = new ArrayList<>();
+    while (displayNameIterator.hasNext()) {
+      userIds.add(userService.create(displayNameIterator.next()).block());
+    }
+
+    // Create a module to submit to
+    moduleService.create("id1").block();
+
+    // Set that module to have an exact flag
+    moduleService.setStaticFlag("id1", flag).block();
+
+    // Set scoring levels for module1. No bonuses!
+    scoreService.setModuleScore("id1", 0, 100).block();
+
+    // Create a fixed clock from which we will base our offset submission times
+    final Clock startTime =
+        Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
+
+    // Create a list of times at which the above users will submit their solutions
+    List<Integer> timeOffsets = Arrays.asList(0, 1, 2);
+
+    // The duration between times should be 1 day
+    final List<Clock> clocks =
+        timeOffsets.stream()
+            .map(Duration::ofDays)
+            .map(duration -> Clock.offset(startTime, duration))
+            .collect(Collectors.toList());
+
+    // Iterate over the user ids and clocks at the same time
+    Iterator<Long> userIdIterator = userIds.iterator();
+    Iterator<Clock> clockIterator = clocks.iterator();
+
+    while (userIdIterator.hasNext() && clockIterator.hasNext()) {
+      // Recreate the submission service every time with a new clock
+      submissionService.setClock(clockIterator.next());
+
+      final Long currentUserId = userIdIterator.next();
+
+      // Submit a new flag
+      submissionService.submit(currentUserId, "id1", flag).block();
+    }
+
+    StepVerifier.create(scoreService.getScoreboard())
+        .expectNext(
+            ScoreboardEntry.builder()
+                .rank(1L)
+                .displayName(displayNames.get(0))
+                .userId(userIds.get(0))
+                .score(100L)
+                .goldMedals(1L)
+                .silverMedals(0L)
+                .bronzeMedals(0L)
+                .build())
+        .expectNext(
+            ScoreboardEntry.builder()
+                .rank(2L)
+                .userId(userIds.get(1))
+                .displayName(displayNames.get(1))
+                .score(100L)
+                .goldMedals(0L)
+                .silverMedals(1L)
+                .bronzeMedals(0L)
+                .build())
+        .expectNext(
+            ScoreboardEntry.builder()
+                .rank(3L)
+                .userId(userIds.get(2))
+                .displayName(displayNames.get(2))
+                .score(100L)
+                .goldMedals(0L)
+                .silverMedals(0L)
+                .bronzeMedals(1L)
+                .build())
+        .verifyComplete();
   }
 }

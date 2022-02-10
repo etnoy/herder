@@ -4,12 +4,12 @@ import { ApiService } from 'src/app/service/api.service';
 import { UserScore } from 'src/app/model/user-score';
 
 @Component({
-  selector: 'app-user-score',
-  templateUrl: './user-score.component.html',
+  selector: 'app-module-solves',
+  templateUrl: './module-solves.component.html',
 })
-export class UserScoreComponent implements OnInit {
+export class ModuleSolvesComponent implements OnInit {
   submissions: UserScore[];
-  userId: number;
+  moduleName: string;
 
   constructor(private route: ActivatedRoute, public apiService: ApiService) {
     this.submissions = [];
@@ -17,12 +17,12 @@ export class UserScoreComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
-      const userId: number = Number(params.get('userId'));
+      const moduleName: string = params.get('moduleName');
 
       this.apiService
-        .getScoresByUserId(userId)
+        .getSolvesByModuleName(moduleName)
         .subscribe((submissions: UserScore[]) => {
-          this.userId = userId;
+          this.moduleName = moduleName;
           this.submissions = submissions;
         });
     });

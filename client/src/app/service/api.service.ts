@@ -127,8 +127,18 @@ export class ApiService {
     );
   }
 
+  getSolvesByModuleName(moduleName: string): Observable<any> {
+    const api = `${this.endpoint}/scoreboard/module/${moduleName}`;
+    return this.http.get(api, { headers: this.headers }).pipe(
+      map((res: Response) => {
+        return res || {};
+      }),
+      catchError(this.handleError)
+    );
+  }
+
   getScoresByUserId(userId: number): Observable<any> {
-    const api = `${this.endpoint}/scoreboard/${userId}`;
+    const api = `${this.endpoint}/scoreboard/user/${userId}`;
     return this.http.get(api, { headers: this.headers }).pipe(
       map((res: Response) => {
         return res || {};

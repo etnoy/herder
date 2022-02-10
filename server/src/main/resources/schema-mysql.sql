@@ -234,7 +234,10 @@ CREATE
     VIEW scoreboard AS SELECT
         RANK() OVER(
         ORDER BY
-            SUM( score ) DESC
+            SUM( score ) DESC,
+            SUM( CASE WHEN `rank`= 1 THEN 1 ELSE 0 END ) DESC,
+            SUM( CASE WHEN `rank`= 2 THEN 1 ELSE 0 END ) DESC,
+            SUM( CASE WHEN `rank`= 3 THEN 1 ELSE 0 END ) DESC
         ) AS 'rank',
         user_id,
         display_name,

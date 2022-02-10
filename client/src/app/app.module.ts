@@ -25,6 +25,7 @@ import { UserScoreComponent } from './components/user-score/user-score.component
 import { FlagTutorialComponent } from './components/flag-tutorial/flag-tutorial.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { MomentModule } from 'ngx-moment';
+import { ModuleSolvesComponent } from './components/module-solves/module-solves.component';
 
 @NgModule({
   declarations: [
@@ -43,6 +44,7 @@ import { MomentModule } from 'ngx-moment';
     ModuleDirective,
     ScoreboardComponent,
     UserListComponent,
+    ModuleSolvesComponent,
     UserScoreComponent,
   ],
   imports: [
