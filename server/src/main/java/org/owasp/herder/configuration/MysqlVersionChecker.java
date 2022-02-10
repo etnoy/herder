@@ -56,7 +56,7 @@ public class MysqlVersionChecker {
     final String mysqlVersion = versionMono.block().values().iterator().next().toString();
 
     final Mono<Map<String, Object>> commentMono =
-        databaseClient.sql("select @@version").fetch().first();
+        databaseClient.sql("select @@version_comment").fetch().first();
 
     if (commentMono == null) {
       throw new NullPointerException();

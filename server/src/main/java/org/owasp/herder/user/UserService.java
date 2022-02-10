@@ -249,7 +249,7 @@ public final class UserService {
         .deleteByUserId(userId)
         .then(userAuthRepository.deleteByUserId(userId))
         .then(userRepository.deleteById(userId))
-        .doOnSuccess(__ -> kick(userId));
+        .doOnSuccess(u -> kick(userId));
   }
 
   public Mono<Void> demote(final long userId) {
@@ -262,7 +262,7 @@ public final class UserService {
     return findUserAuthByUserId(userId)
         .map(userAuth -> userAuth.withAdmin(false))
         .flatMap(userAuthRepository::save)
-        .doOnSuccess(__ -> kick(userId))
+        .doOnSuccess(u -> kick(userId))
         .then();
   }
 
@@ -276,7 +276,7 @@ public final class UserService {
     return findUserAuthByUserId(userId)
         .map(userAuth -> userAuth.withEnabled(false))
         .flatMap(userAuthRepository::save)
-        .doOnSuccess(__ -> kick(userId))
+        .doOnSuccess(u -> kick(userId))
         .then();
   }
 
@@ -311,7 +311,7 @@ public final class UserService {
     return findUserAuthByUserId(userId)
         .map(userAuth -> userAuth.withEnabled(true))
         .flatMap(userAuthRepository::save)
-        .doOnSuccess(__ -> kick(userId))
+        .doOnSuccess(u -> kick(userId))
         .then();
   }
 
@@ -417,7 +417,7 @@ public final class UserService {
     return findUserAuthByUserId(userId)
         .map(userAuth -> userAuth.withAdmin(true))
         .flatMap(userAuthRepository::save)
-        .doOnSuccess(__ -> kick(userId))
+        .doOnSuccess(u -> kick(userId))
         .then();
   }
 
@@ -444,7 +444,7 @@ public final class UserService {
         .zipWith(classIdMono)
         .map(tuple -> tuple.getT1().withClassId(tuple.getT2()))
         .flatMap(userRepository::save)
-        .doOnSuccess(__ -> kick(userId));
+        .doOnSuccess(u -> kick(userId));
   }
 
   public void setClock(Clock clock) {
@@ -512,7 +512,7 @@ public final class UserService {
                     .withSuspendedUntil(suspensionDate)
                     .withSuspensionMessage(suspensionMessage))
         .flatMap(userAuthRepository::save)
-        .doOnSuccess(__ -> kick(userId))
+        .doOnSuccess(u -> kick(userId))
         .then();
   }
 }

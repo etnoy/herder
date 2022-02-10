@@ -29,7 +29,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -39,10 +39,10 @@ import reactor.core.publisher.Mono;
     havingValue = "true",
     matchIfMissing = true)
 @Slf4j
-@RequiredArgsConstructor
+@AllArgsConstructor
 @Service
 public final class ModuleInitializer implements ApplicationContextAware {
-  private final ApplicationContext applicationContext;
+  private ApplicationContext applicationContext;
 
   private final ModuleService moduleService;
 
@@ -65,7 +65,7 @@ public final class ModuleInitializer implements ApplicationContextAware {
     final String moduleName = moduleAnnotations.name();
 
     log.debug("Initializing module " + moduleName);
-    if (moduleService.existsByName(moduleName).block()) {
+    if (Boolean.TRUE.equals(moduleService.existsByName(moduleName).block())) {
       return Mono.empty();
     } else {
       return moduleService
@@ -80,6 +80,6 @@ public final class ModuleInitializer implements ApplicationContextAware {
 
   @Override
   public void setApplicationContext(ApplicationContext applicationContext) {
-    return;
+    this.applicationContext = applicationContext;
   }
 }
