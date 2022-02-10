@@ -21,9 +21,12 @@
  */
 package org.owasp.herder.test.module.flag;
 
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,6 +36,8 @@ import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.scoring.ScoreService;
 
 import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlagTutorial unit tests")
@@ -60,5 +65,16 @@ class FlagTutorialTest {
     flagTutorial = new FlagTutorial(flagHandler);
 
     moduleName = flagTutorial.getName();
+  }
+
+  @Test
+  @DisplayName("getFlag can return flag")
+  void getFlag_ValidData_ReturnsFlag() {
+    final long testUserId = 318L;
+    final String flag = "flag";
+
+    when(flagHandler.getDynamicFlag(testUserId, moduleName)).thenReturn(Mono.just(flag));
+
+    StepVerifier.create(flagTutorial.getFlag(testUserId)).expectNext(flag).verifyComplete();
   }
 }
