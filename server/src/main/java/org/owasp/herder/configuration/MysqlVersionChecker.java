@@ -31,7 +31,6 @@ import org.springframework.r2dbc.core.DatabaseClient;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Mono;
 
 @ConditionalOnProperty(
     prefix = "application.runner",
@@ -46,23 +45,23 @@ public class MysqlVersionChecker {
 
   @Bean
   public void mySqlVersionCheck() {
-    final Mono<Map<String, Object>> versionMono =
-        databaseClient.sql("select @@version").fetch().first();
+    final Map<String, Object> versionResult =
+        databaseClient.sql("select @@version").fetch().first().block();
 
-    if (versionMono == null) {
+    if (versionResult == null) {
       throw new NullPointerException();
     }
 
-    final String mysqlVersion = versionMono.block().values().iterator().next().toString();
+    final String mysqlVersion = versionResult.values().iterator().next().toString();
 
-    final Mono<Map<String, Object>> commentMono =
-        databaseClient.sql("select @@version_comment").fetch().first();
+    final Map<String, Object> commentResult =
+        databaseClient.sql("select @@version_comment").fetch().first().block();
 
-    if (commentMono == null) {
+    if (commentResult == null) {
       throw new NullPointerException();
     }
 
-    final String mysqlVersionComment = commentMono.block().values().iterator().next().toString();
+    final String mysqlVersionComment = commentResult.values().iterator().next().toString();
 
     if ((mysqlVersionComment.length() >= 5)
         && (mysqlVersionComment.substring(0, 5).equalsIgnoreCase("MySQL"))) {

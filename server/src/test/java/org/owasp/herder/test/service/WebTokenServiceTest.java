@@ -119,7 +119,7 @@ class WebTokenServiceTest {
             .setClock(TestConstants.year2000WebTokenClock)
             .build();
 
-    assertThat(jwtParser.parseClaimsJws(token).getBody()).containsEntry("role", "user");
+    assertThat(jwtParser.parseClaimsJws(token).getBody().get("role")).isEqualTo("user");
   }
 
   @Test
@@ -263,8 +263,10 @@ class WebTokenServiceTest {
     assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
     assertThat(authentication.getPrincipal()).isEqualTo(testUserId);
     assertThat(authentication.getCredentials()).isEqualTo(testToken);
-    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_USER")));
-    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")));
+    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_USER")))
+        .isTrue();
+    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")))
+        .isTrue();
   }
 
   @Test
@@ -287,7 +289,8 @@ class WebTokenServiceTest {
     assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
     assertThat(authentication.getPrincipal()).isEqualTo(testUserId);
     assertThat(authentication.getCredentials()).isEqualTo(testToken);
-    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_USER")));
+    assertThat(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_USER")))
+        .isTrue();
   }
 
   private void setClock(final Clock clock) {
