@@ -30,6 +30,7 @@ import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.r2dbc.BadSqlGrammarException;
+import org.springframework.r2dbc.UncategorizedR2dbcException;
 import org.springframework.r2dbc.core.DatabaseClient;
 
 import io.r2dbc.spi.Row;
@@ -50,13 +51,11 @@ public class SqlInjectionTutorial extends BaseModule {
   private final FlagHandler flagHandler;
 
   public static final BiFunction<Row, RowMetadata, SqlInjectionTutorialRow> MAPPING_FUNCTION =
-      (row, rowMetaData) -> {
-        return SqlInjectionTutorialRow.builder()
-            .name(row.get("name", String.class))
-            .comment(row.get("comment", String.class))
-            .error(row.get("error", String.class))
-            .build();
-      };
+      (row, rowMetaData) ->
+          SqlInjectionTutorialRow.builder()
+              .name(row.get("name", String.class))
+              .comment(row.get("comment", String.class))
+              .build();
 
   /**
    * Execute a given SQL injection query
@@ -115,7 +114,8 @@ public class SqlInjectionTutorial extends BaseModule {
               // We want to forward database syntax errors and integrity violation errors to the
               // user
               if ((exception instanceof BadSqlGrammarException)
-                  || (exception instanceof DataIntegrityViolationException)) {
+                  || (exception instanceof DataIntegrityViolationException)
+                  || (exception instanceof UncategorizedR2dbcException)) {
                 return Flux.just(
                     // Build a row with only the error field filled in
                     SqlInjectionTutorialRow.builder()
