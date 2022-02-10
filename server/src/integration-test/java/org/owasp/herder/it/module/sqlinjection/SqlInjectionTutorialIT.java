@@ -163,7 +163,6 @@ class SqlInjectionTutorialIT extends BaseIT {
     final Long userId = userService.create("TestUser1").block();
 
     sqlInjectionTutorial.submitQuery(userId, "1'; DROP ALL OBJECTS; --").blockLast();
-    System.out.println(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1").blockLast());
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(5)

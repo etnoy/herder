@@ -134,9 +134,7 @@ class WebTokenIT extends BaseIT {
         integrationTestUtils.performAPILoginWithToken(
             TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
     Authentication authentication = webTokenService.parseToken(accessToken);
-    System.out.println(userService.findUserAuthByUserId(userId).block());
 
-    System.out.println(authentication.toString());
     assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
     assertThat(authentication.getPrincipal()).isEqualTo(userId);
     assertThat(authentication.getCredentials()).isEqualTo(accessToken);
