@@ -58,44 +58,110 @@ class MysqlVersionCheckerTest {
 
   @Mock private DatabaseClient databaseClient;
 
-  @Test
-  void mySqlVersionCheck_Mysql8028_Supported() {
-    databaseClient = mock(DatabaseClient.class, Mockito.RETURNS_DEEP_STUBS);
+  private void setVersions(final String comment, final String version) {
 
     Map<String, Object> versionMap = new HashMap<>();
-    versionMap.put("version", "8.0.28");
+    versionMap.put("version", version);
 
     when(databaseClient.sql("select @@version").fetch().first()).thenReturn(Mono.just(versionMap));
 
     Map<String, Object> commentMap = new HashMap<>();
-    commentMap.put("comment", "MySQL");
+    commentMap.put("comment", comment);
 
     when(databaseClient.sql("select @@version_comment").fetch().first())
         .thenReturn(Mono.just(commentMap));
 
     // Supply the new deep stubs
     mysqlVersionChecker = new MysqlVersionChecker(databaseClient);
+  }
 
+  @Test
+  void mySqlVersionCheck_Mysql8028_Supported() {
+    setVersions("MySQL", "8.0.28");
     assertDoesNotThrow(() -> mysqlVersionChecker.mySqlVersionCheck());
   }
 
   @Test
+  void mySqlVersionCheck_MariaDB106_Supported() {
+    setVersions("MariaDB", "10.6");
+    assertDoesNotThrow(() -> mysqlVersionChecker.mySqlVersionCheck());
+  }
+
+  @Test
+  void mySqlVersionCheck_MariaDB10ADot_NotSupported() {
+    setVersions("mariadb", "10.A.");
+
+    assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
+        .isInstanceOf(IncompatibleDatabaseException.class);
+  }
+
+  @Test
+  void mySqlVersionCheck_MariaDBA1_NotSupported() {
+    setVersions("mariadb", "A.1");
+
+    assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
+        .isInstanceOf(IncompatibleDatabaseException.class);
+  }
+
+  @Test
+  void mySqlVersionCheck_MariaDB10A_NotSupported() {
+    setVersions("mariadb", "10.A");
+
+    assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
+        .isInstanceOf(IncompatibleDatabaseException.class);
+  }
+
+  @Test
+  void mySqlVersionCheck_MariaDBEmptyVersion_NotSupported() {
+    setVersions("mariadb", "");
+
+    assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
+        .isInstanceOf(IncompatibleDatabaseException.class);
+  }
+
+  @Test
+  void mySqlVersionCheck_MysqlEmptyVersion_NotSupported() {
+    setVersions("MySql", "");
+
+    assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
+        .isInstanceOf(IncompatibleDatabaseException.class);
+  }
+
+  @Test
+  void mySqlVersionCheck_EmptyComment_NotSupported() {
+    setVersions("", "12345");
+
+    assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
+        .isInstanceOf(IncompatibleDatabaseException.class);
+  }
+
+  @Test
+  void mySqlVersionCheck_Oracle_NotSupported() {
+    setVersions("Oracle", "12345");
+
+    assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
+        .isInstanceOf(IncompatibleDatabaseException.class);
+  }
+
+  @Test
+  void mySqlVersionCheck_MariaDB55_NotSupported() {
+    setVersions("MariaDB", "5.5");
+
+    assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
+        .isInstanceOf(IncompatibleDatabaseException.class);
+  }
+
+  @Test
+  void mySqlVersionCheck_MariaDB101_NotSupported() {
+    setVersions("MariaDB", "10.1");
+
+    assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
+        .isInstanceOf(IncompatibleDatabaseException.class);
+  }
+
+  @Test
   void mySqlVersionCheck_Mysql5735_NotSupported() {
-    databaseClient = mock(DatabaseClient.class, Mockito.RETURNS_DEEP_STUBS);
-
-    Map<String, Object> versionMap = new HashMap<>();
-    versionMap.put("version", "5.7.35");
-
-    when(databaseClient.sql("select @@version").fetch().first()).thenReturn(Mono.just(versionMap));
-
-    Map<String, Object> commentMap = new HashMap<>();
-    commentMap.put("comment", "MySQL");
-
-    when(databaseClient.sql("select @@version_comment").fetch().first())
-        .thenReturn(Mono.just(commentMap));
-
-    // Supply the new deep stubs
-    mysqlVersionChecker = new MysqlVersionChecker(databaseClient);
+    setVersions("MySQL", "5.7.35");
 
     assertThatThrownBy(() -> mysqlVersionChecker.mySqlVersionCheck())
         .isInstanceOf(IncompatibleDatabaseException.class);
@@ -104,6 +170,8 @@ class MysqlVersionCheckerTest {
   @BeforeEach
   private void setUp() {
     // Set up the system under test
+    databaseClient = mock(DatabaseClient.class, Mockito.RETURNS_DEEP_STUBS);
+
     mysqlVersionChecker = new MysqlVersionChecker(databaseClient);
   }
 }

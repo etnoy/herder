@@ -73,6 +73,8 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
 	testImplementation group: 'org.testcontainers', name: 'mysql', version: '1.16.3'
+	testImplementation group: 'org.testcontainers', name: 'mariadb', version: '1.16.3'
+	
     testImplementation "org.testcontainers:junit-jupiter:1.16.3"
     
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
