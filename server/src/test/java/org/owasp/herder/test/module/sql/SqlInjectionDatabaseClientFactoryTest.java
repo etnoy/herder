@@ -29,10 +29,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.module.sqlinjection.SqlInjectionDatabaseClientFactory;
-import org.springframework.data.r2dbc.core.DatabaseClient;
+import org.springframework.r2dbc.core.DatabaseClient;
+
 import reactor.core.publisher.Hooks;
 
-@SuppressWarnings("deprecation")
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SqlInjectionDatabaseClientFactory unit tests")
 class SqlInjectionDatabaseClientFactoryTest {

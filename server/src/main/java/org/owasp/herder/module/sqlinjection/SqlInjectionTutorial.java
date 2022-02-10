@@ -22,22 +22,25 @@
 package org.owasp.herder.module.sqlinjection;
 
 import java.util.Base64;
+import java.util.function.BiFunction;
 
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.r2dbc.BadSqlGrammarException;
-import org.springframework.data.r2dbc.core.DatabaseClient;
+import org.springframework.r2dbc.BadSqlGrammarException;
+import org.springframework.r2dbc.core.DatabaseClient;
 
+import io.r2dbc.spi.Row;
+import io.r2dbc.spi.RowMetadata;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-// Spring R2dbc 1.2 lacks features present in version 1.1, we have to use deprecated functions until
-// this is fixed
 /** Tutorial module for SQL injections */
+@Slf4j
 @RequiredArgsConstructor
 @HerderModule(name = "sql-injection-tutorial", baseScore = 100)
 public class SqlInjectionTutorial extends BaseModule {
@@ -47,6 +50,17 @@ public class SqlInjectionTutorial extends BaseModule {
   private final KeyService keyService;
 
   private final FlagHandler flagHandler;
+
+  public static final BiFunction<Row, RowMetadata, SqlInjectionTutorialRow> MAPPING_FUNCTION =
+      (row, rowMetaData) -> {
+        log.debug(row.toString());
+        log.debug(rowMetaData.toString());
+        return SqlInjectionTutorialRow.builder()
+            .name(row.get("name", String.class))
+            .comment(row.get("comment", String.class))
+            .error(row.get("error", String.class))
+            .build();
+      };
 
   /**
    * Execute a given SQL injection query
@@ -96,10 +110,17 @@ public class SqlInjectionTutorial extends BaseModule {
     // Take the SQL query for initial population
     populationQuery
         // Execute it on the in-memory database
-        .flatMap(query -> databaseClient.execute(query).then())
+        .flatMap(query -> databaseClient.sql(query).then())
         // Then execute the SQL injection and fetch the results
         .thenMany(
-            databaseClient.execute(vulnerableQuery).as(SqlInjectionTutorialRow.class).fetch().all())
+            databaseClient
+                .sql(vulnerableQuery)
+                //
+                //
+                .map(MAPPING_FUNCTION)
+                //
+                //
+                .all())
         // Some errors are to be shown to the end user, while all the rest are handled as usual
         .onErrorResume(
             exception -> {

@@ -26,6 +26,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.function.BiFunction;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,16 +37,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.module.Module;
 import org.owasp.herder.module.sqlinjection.SqlInjectionDatabaseClientFactory;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.r2dbc.BadSqlGrammarException;
-import org.springframework.data.r2dbc.core.DatabaseClient;
-import org.springframework.data.r2dbc.core.DatabaseClient.GenericExecuteSpec;
-import org.springframework.data.r2dbc.core.DatabaseClient.TypedExecuteSpec;
-import org.springframework.data.r2dbc.core.FetchSpec;
+import org.springframework.r2dbc.BadSqlGrammarException;
+import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec;
+import org.springframework.r2dbc.core.FetchSpec;
 
 import io.r2dbc.spi.R2dbcBadGrammarException;
 import reactor.core.publisher.Flux;
@@ -52,9 +52,6 @@ import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-// Spring R2dbc 1.2 lacks features present in version 1.1, we have to use deprecated functions until
-// this is fixed
-@SuppressWarnings("deprecation")
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SqlInjectionTutorial unit tests")
 class SqlInjectionTutorialTest {
@@ -75,6 +72,7 @@ class SqlInjectionTutorialTest {
 
   @Mock KeyService keyService;
 
+  @SuppressWarnings("unchecked")
   @Test
   void submitQuery_BadSqlGrammarException_ReturnsErrorToUser() {
     final long mockUserId = 318L;
@@ -95,19 +93,13 @@ class SqlInjectionTutorialTest {
 
     final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
-    when(mockDatabaseClient.execute(any(String.class))).thenReturn(mockExecuteSpec);
+    when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
 
     when(mockExecuteSpec.then()).thenReturn(Mono.empty());
 
-    @SuppressWarnings("unchecked")
-    final TypedExecuteSpec<SqlInjectionTutorialRow> typedExecuteSpec = mock(TypedExecuteSpec.class);
-
-    when(mockExecuteSpec.as(SqlInjectionTutorialRow.class)).thenReturn(typedExecuteSpec);
-
-    @SuppressWarnings("unchecked")
     final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
 
-    when(typedExecuteSpec.fetch()).thenReturn(fetchSpec);
+    when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
 
     when(fetchSpec.all())
         .thenReturn(
@@ -139,10 +131,10 @@ class SqlInjectionTutorialTest {
     moduleName = sqlInjectionTutorial.getName();
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   void submitQuery_DataIntegrityViolationException_ReturnsErrorToUser() {
     final long mockUserId = 318L;
-    final Module mockModule = mock(Module.class);
     final String mockFlag = "mockedflag";
     final String query = "username";
 
@@ -160,19 +152,13 @@ class SqlInjectionTutorialTest {
 
     final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
-    when(mockDatabaseClient.execute(any(String.class))).thenReturn(mockExecuteSpec);
+    when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
+
+    final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
 
     when(mockExecuteSpec.then()).thenReturn(Mono.empty());
 
-    @SuppressWarnings("unchecked")
-    final TypedExecuteSpec<SqlInjectionTutorialRow> typedExecuteSpec = mock(TypedExecuteSpec.class);
-
-    when(mockExecuteSpec.as(SqlInjectionTutorialRow.class)).thenReturn(typedExecuteSpec);
-
-    @SuppressWarnings("unchecked")
-    final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
-
-    when(typedExecuteSpec.fetch()).thenReturn(fetchSpec);
+    when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
 
     when(fetchSpec.all())
         .thenReturn(
@@ -196,10 +182,10 @@ class SqlInjectionTutorialTest {
         .verifyComplete();
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   void submitQuery_RuntimeException_ThrowsException() {
     final long mockUserId = 810L;
-    final Module mockModule = mock(Module.class);
     final String mockFlag = "mockedflag";
     final String query = "username";
 
@@ -217,19 +203,13 @@ class SqlInjectionTutorialTest {
 
     final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
-    when(mockDatabaseClient.execute(any(String.class))).thenReturn(mockExecuteSpec);
+    when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
 
     when(mockExecuteSpec.then()).thenReturn(Mono.empty());
 
-    @SuppressWarnings("unchecked")
-    final TypedExecuteSpec<SqlInjectionTutorialRow> typedExecuteSpec = mock(TypedExecuteSpec.class);
-
-    when(mockExecuteSpec.as(SqlInjectionTutorialRow.class)).thenReturn(typedExecuteSpec);
-
-    @SuppressWarnings("unchecked")
     final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
 
-    when(typedExecuteSpec.fetch()).thenReturn(fetchSpec);
+    when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
 
     when(fetchSpec.all()).thenReturn(Flux.error(new IllegalArgumentException()));
 
@@ -238,10 +218,10 @@ class SqlInjectionTutorialTest {
         .verify();
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   void submitQuery_ValidQuery_ReturnsSqlInjectionTutorialRow() {
     final long mockUserId = 606L;
-    final Module mockModule = mock(Module.class);
     final String mockFlag = "mockedflag";
     final String query = "username";
 
@@ -259,24 +239,18 @@ class SqlInjectionTutorialTest {
 
     final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
-    when(mockDatabaseClient.execute(any(String.class))).thenReturn(mockExecuteSpec);
+    when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
 
     when(mockExecuteSpec.then()).thenReturn(Mono.empty());
 
-    @SuppressWarnings("unchecked")
-    final TypedExecuteSpec<SqlInjectionTutorialRow> typedExecuteSpec = mock(TypedExecuteSpec.class);
-
-    when(mockExecuteSpec.as(SqlInjectionTutorialRow.class)).thenReturn(typedExecuteSpec);
-
-    @SuppressWarnings("unchecked")
     final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
-
-    when(typedExecuteSpec.fetch()).thenReturn(fetchSpec);
 
     final SqlInjectionTutorialRow mockSqlInjectionTutorialRow1 =
         mock(SqlInjectionTutorialRow.class);
     final SqlInjectionTutorialRow mockSqlInjectionTutorialRow2 =
         mock(SqlInjectionTutorialRow.class);
+
+    when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
 
     when(fetchSpec.all())
         .thenReturn(Flux.just(mockSqlInjectionTutorialRow1, mockSqlInjectionTutorialRow2));

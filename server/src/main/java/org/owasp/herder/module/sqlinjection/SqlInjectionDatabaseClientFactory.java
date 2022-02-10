@@ -21,7 +21,7 @@
  */
 package org.owasp.herder.module.sqlinjection;
 
-import org.springframework.data.r2dbc.core.DatabaseClient;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 
 import io.r2dbc.h2.H2ConnectionConfiguration;
