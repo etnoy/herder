@@ -61,7 +61,6 @@ public final class ModuleInitializer implements ApplicationContextAware {
   }
 
   public Mono<Void> initializeModule(final BaseModule module) {
-
     final HerderModule moduleAnnotations = module.getClass().getAnnotation(HerderModule.class);
     final String moduleName = moduleAnnotations.name();
 
@@ -81,6 +80,6 @@ public final class ModuleInitializer implements ApplicationContextAware {
 
   @Override
   public void setApplicationContext(ApplicationContext applicationContext) {
-    throw new UnsupportedOperationException();
+    return;
   }
 }

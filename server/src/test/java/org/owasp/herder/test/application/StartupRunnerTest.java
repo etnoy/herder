@@ -96,8 +96,6 @@ class StartupRunnerTest {
 
     databaseClient = mock(DatabaseClient.class, Mockito.RETURNS_DEEP_STUBS);
 
-    startupRunner = new StartupRunner(userService, databaseClient);
-
     Map<String, Object> versionMap = new HashMap<>();
     versionMap.put("version", "8.0.28");
 
@@ -116,6 +114,6 @@ class StartupRunnerTest {
   private void setUp() {
     // Set up the system under test
 
-    startupRunner = new StartupRunner(userService, databaseClient);
+    startupRunner = new StartupRunner(userService);
   }
 }

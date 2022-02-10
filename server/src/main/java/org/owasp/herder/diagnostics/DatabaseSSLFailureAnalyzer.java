@@ -19,35 +19,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.configuration;
+package org.owasp.herder.diagnostics;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import javax.net.ssl.SSLHandshakeException;
 
-import dev.miku.r2dbc.mysql.MySqlConnectionConfiguration;
-import dev.miku.r2dbc.mysql.MySqlConnectionFactory;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.diagnostics.AbstractFailureAnalyzer;
+import org.springframework.boot.diagnostics.FailureAnalysis;
 
-@Configuration
-@Slf4j
-// Don't use this database configuration when testing
-@ConditionalOnProperty(
-    prefix = "application.runner",
-    value = "enabled",
-    havingValue = "true",
-    matchIfMissing = true)
-public class R2dbcMysqlConfiguration {
-  @Bean
-  public MySqlConnectionFactory mySqlConnectionFactory() {
-    log.debug("Using default mysql configuration");
-    return MySqlConnectionFactory.from(
-        MySqlConnectionConfiguration.builder()
-            .host("localhost")
-            .username("root")
-            .password("")
-            .database("herder")
-            .tlsVersion("TLSv1.2")
-            .build());
+public class DatabaseSSLFailureAnalyzer extends AbstractFailureAnalyzer<SSLHandshakeException> {
+
+  @Override
+  protected FailureAnalysis analyze(Throwable rootFailure, SSLHandshakeException cause) {
+    return new FailureAnalysis(
+        "SSL error while connecting to database: " + cause.getMessage(),
+        "Ensure that the database server is compatible and is using the correct SSL/TLS version.",
+        cause);
   }
 }

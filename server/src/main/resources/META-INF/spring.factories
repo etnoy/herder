@@ -1,1 +1,1 @@
-org.springframework.boot.diagnostics.FailureAnalyzer=org.owasp.herder.diagnostics.DatabaseFailureAnalyzer,org.owasp.herder.diagnostics.DatabaseConnectionAnalyzer,org.owasp.herder.diagnostics.IncompatibleDatabaseAnalyzer
+org.springframework.boot.diagnostics.FailureAnalyzer=org.owasp.herder.diagnostics.DatabaseFailureAnalyzer,org.owasp.herder.diagnostics.DatabaseConnectionAnalyzer,org.owasp.herder.diagnostics.IncompatibleDatabaseAnalyzer,org.owasp.herder.diagnostics.DatabaseSSLFailureAnalyzer
