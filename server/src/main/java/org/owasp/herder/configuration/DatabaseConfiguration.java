@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
     value = "enabled",
     havingValue = "true",
     matchIfMissing = true)
-public class R2dbcMysqlConfiguration {
+public class DatabaseConfiguration {
   @Bean
   public MySqlConnectionFactory mySqlConnectionFactory() {
     log.debug("Using default mysql configuration");
@@ -47,7 +47,6 @@ public class R2dbcMysqlConfiguration {
             .username("root")
             .password("")
             .database("herder")
-            .tlsVersion("TLSv1.2")
             .build());
   }
 }

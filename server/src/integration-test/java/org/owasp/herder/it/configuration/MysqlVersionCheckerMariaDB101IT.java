@@ -71,7 +71,7 @@ class MysqlVersionCheckerMariaDB101IT {
 
   @SuppressWarnings("rawtypes")
   @Container
-  private static final MySQLContainer mySQLContainer =
+  private static final MySQLContainer mariaDb101Container =
       (MySQLContainer<?>)
           new MySQLContainer<>(
                   DockerImageName.parse("mariadb:10.1").asCompatibleSubstituteFor("mysql"))
@@ -84,13 +84,13 @@ class MysqlVersionCheckerMariaDB101IT {
         "spring.r2dbc.url",
         () ->
             "r2dbc:mysql://"
-                + mySQLContainer.getHost()
+                + mariaDb101Container.getHost()
                 + ":"
-                + mySQLContainer.getFirstMappedPort()
+                + mariaDb101Container.getFirstMappedPort()
                 + "/"
-                + mySQLContainer.getDatabaseName());
-    registry.add("spring.r2dbc.username", () -> mySQLContainer.getUsername());
-    registry.add("spring.r2dbc.password", () -> mySQLContainer.getPassword());
+                + mariaDb101Container.getDatabaseName());
+    registry.add("spring.r2dbc.username", () -> mariaDb101Container.getUsername());
+    registry.add("spring.r2dbc.password", () -> mariaDb101Container.getPassword());
   }
 
   @Test

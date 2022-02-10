@@ -70,7 +70,7 @@ class MysqlVersionCheckerMysql57IT {
 
   @SuppressWarnings("rawtypes")
   @Container
-  private static final MySQLContainer mySQLContainer =
+  private static final MySQLContainer mySql57Container =
       (MySQLContainer<?>) new MySQLContainer<>("mysql:5.7").withUsername("root").withReuse(true);
 
   @DynamicPropertySource
@@ -79,14 +79,14 @@ class MysqlVersionCheckerMysql57IT {
         "spring.r2dbc.url",
         () ->
             "r2dbc:mysql://"
-                + mySQLContainer.getHost()
+                + mySql57Container.getHost()
                 + ":"
-                + mySQLContainer.getFirstMappedPort()
+                + mySql57Container.getFirstMappedPort()
                 + "/"
-                + mySQLContainer.getDatabaseName()
+                + mySql57Container.getDatabaseName()
                 + "?tlsVersion=TLSv1.2");
-    registry.add("spring.r2dbc.username", () -> mySQLContainer.getUsername());
-    registry.add("spring.r2dbc.password", () -> mySQLContainer.getPassword());
+    registry.add("spring.r2dbc.username", () -> mySql57Container.getUsername());
+    registry.add("spring.r2dbc.password", () -> mySql57Container.getPassword());
   }
 
   @Test

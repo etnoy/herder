@@ -26,10 +26,10 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
 
 public abstract class BaseIT {
-  static final MySQLContainer<?> mySQLContainer;
+  static final MySQLContainer<?> mySql8Container;
 
   static {
-    mySQLContainer =
+    mySql8Container =
         (MySQLContainer<?>)
             new MySQLContainer<>("mysql:8")
                 .withDatabaseName("herder")
@@ -37,7 +37,7 @@ public abstract class BaseIT {
                 .withUsername("root")
                 .withReuse(true);
 
-    mySQLContainer.start();
+    mySql8Container.start();
   }
 
   @DynamicPropertySource
@@ -46,12 +46,12 @@ public abstract class BaseIT {
         "spring.r2dbc.url",
         () ->
             "r2dbc:mysql://"
-                + mySQLContainer.getHost()
+                + mySql8Container.getHost()
                 + ":"
-                + mySQLContainer.getFirstMappedPort()
+                + mySql8Container.getFirstMappedPort()
                 + "/"
-                + mySQLContainer.getDatabaseName());
-    registry.add("spring.r2dbc.username", () -> mySQLContainer.getUsername());
-    registry.add("spring.r2dbc.password", () -> mySQLContainer.getPassword());
+                + mySql8Container.getDatabaseName());
+    registry.add("spring.r2dbc.username", () -> mySql8Container.getUsername());
+    registry.add("spring.r2dbc.password", () -> mySql8Container.getPassword());
   }
 }
