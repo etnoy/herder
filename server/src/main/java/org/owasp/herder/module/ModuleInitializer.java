@@ -66,25 +66,17 @@ public final class ModuleInitializer implements ApplicationContextAware {
     final String moduleName = moduleAnnotations.name();
 
     log.debug("Initializing module " + moduleName);
-    return moduleService
-        .existsByName(moduleName)
-        .flatMap(
-            exists -> {
-              if (exists) {
-                return Mono.empty();
-              } else {
-                return moduleService
-                    .create(moduleName)
-                    .then(scoreService.setModuleScore(moduleName, 0, moduleAnnotations.baseScore()))
-                    .then(scoreService.setModuleScore(moduleName, 1, moduleAnnotations.goldBonus()))
-                    .then(
-                        scoreService.setModuleScore(moduleName, 2, moduleAnnotations.silverBonus()))
-                    .then(
-                        scoreService.setModuleScore(
-                            moduleName, 3, moduleAnnotations.bronzeBonus()));
-              }
-            })
-        .then();
+    if (moduleService.existsByName(moduleName).block()) {
+      return Mono.empty();
+    } else {
+      return moduleService
+          .create(moduleName)
+          .then(scoreService.setModuleScore(moduleName, 0, moduleAnnotations.baseScore()))
+          .then(scoreService.setModuleScore(moduleName, 1, moduleAnnotations.goldBonus()))
+          .then(scoreService.setModuleScore(moduleName, 2, moduleAnnotations.silverBonus()))
+          .then(scoreService.setModuleScore(moduleName, 3, moduleAnnotations.bronzeBonus()))
+          .then();
+    }
   }
 
   @Override

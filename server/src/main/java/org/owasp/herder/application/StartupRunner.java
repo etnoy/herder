@@ -47,6 +47,7 @@ public class StartupRunner implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
+
     final String mysqlVersion =
         databaseClient
             .sql("select @@version")
