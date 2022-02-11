@@ -29,9 +29,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface ModuleRepository extends ReactiveCrudRepository<Module, String> {
+public interface ModuleRepository extends ReactiveCrudRepository<ModuleEntity, String> {
   @Query("select * from module where is_open = true")
-  public Flux<Module> findAllOpen();
+  public Flux<ModuleEntity> findAllOpen();
 
-  public Mono<Module> findByName(String moduleName);
+  public Mono<ModuleEntity> findByName(String moduleName);
 }

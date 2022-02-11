@@ -44,7 +44,7 @@ public final class ModuleService {
     return moduleRepository.count();
   }
 
-  public Mono<Module> create(final String moduleName) {
+  public Mono<ModuleEntity> create(final String moduleName) {
     if (moduleName == null) {
       return Mono.error(new NullPointerException("Module name cannot be null"));
     }
@@ -59,7 +59,7 @@ public final class ModuleService {
                     String.format("Module name %s already exists", moduleName))))
         .map(
             exists ->
-                Module.builder()
+                ModuleEntity.builder()
                     .isOpen(true)
                     .name(moduleName)
                     .key(keyService.generateRandomBytes(16))
@@ -68,15 +68,15 @@ public final class ModuleService {
         .doOnSuccess(created -> log.trace("Created module with name " + moduleName));
   }
 
-  public Flux<Module> findAll() {
+  public Flux<ModuleEntity> findAll() {
     return moduleRepository.findAll();
   }
 
-  public Flux<Module> findAllOpen() {
+  public Flux<ModuleEntity> findAllOpen() {
     return moduleRepository.findAllOpen();
   }
 
-  public Mono<Module> findByName(final String moduleName) {
+  public Mono<ModuleEntity> findByName(final String moduleName) {
     log.trace("Find module with name " + moduleName);
     return moduleRepository.findByName(moduleName);
   }
@@ -89,14 +89,14 @@ public final class ModuleService {
     return findByName(moduleName).map(u -> false).defaultIfEmpty(true);
   }
 
-  public Mono<Module> setDynamicFlag(final String moduleName) {
+  public Mono<ModuleEntity> setDynamicFlag(final String moduleName) {
     return findByName(moduleName)
         .switchIfEmpty(Mono.error(new ModuleNameNotFoundException()))
         .map(module -> module.withFlagStatic(false))
         .flatMap(moduleRepository::save);
   }
 
-  public Mono<Module> setStaticFlag(final String moduleName, final String staticFlag) {
+  public Mono<ModuleEntity> setStaticFlag(final String moduleName, final String staticFlag) {
 
     if (staticFlag == null) {
       return Mono.error(new NullPointerException("Flag cannot be null"));

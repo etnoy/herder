@@ -23,7 +23,7 @@ package org.owasp.herder.flag;
 
 import org.owasp.herder.authentication.ControllerAuthentication;
 import org.owasp.herder.exception.RateLimitException;
-import org.owasp.herder.module.Module;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
@@ -55,7 +55,7 @@ public class FlagController {
       @PathVariable("moduleName") final String moduleName, @RequestBody final String flag) {
     return controllerAuthentication
         .getUserId()
-        .zipWith(moduleService.findByName(moduleName).map(Module::getName))
+        .zipWith(moduleService.findByName(moduleName).map(ModuleEntity::getName))
         .flatMap(tuple -> submissionService.submit(tuple.getT1(), tuple.getT2(), flag))
         .map(submission -> new ResponseEntity<>(submission, HttpStatus.OK))
         .onErrorResume(

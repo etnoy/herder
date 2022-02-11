@@ -39,7 +39,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.authentication.ControllerAuthentication;
 import org.owasp.herder.exception.NotAuthenticatedException;
 import org.owasp.herder.flag.FlagController;
-import org.owasp.herder.module.Module;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
@@ -78,7 +78,7 @@ class FlagControllerTest {
   void submitFlag_UserNotAuthenticated_ReturnsException() throws Exception {
     final String mockModuleName = "test-module";
     final String flag = "validflag";
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(controllerAuthentication.getUserId())
         .thenReturn(Mono.error(new NotAuthenticatedException()));
@@ -96,7 +96,7 @@ class FlagControllerTest {
   void submitFlag_UserAuthenticatedAndValidFlagSubmitted_ReturnsValidSubmission() throws Exception {
     final long mockUserId = 417L;
     final String moduleName = "test-module";
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final String flag = "validflag";
 

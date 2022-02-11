@@ -39,7 +39,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.InvalidFlagException;
-import org.owasp.herder.module.Module;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
 import org.springframework.context.ApplicationContext;
@@ -94,23 +94,23 @@ class ModuleServiceTest {
 
     when(moduleRepository.findByName(moduleName)).thenReturn(Mono.empty());
 
-    when(moduleRepository.save(any(Module.class)))
-        .thenAnswer(user -> Mono.just(user.getArgument(0, Module.class)));
+    when(moduleRepository.save(any(ModuleEntity.class)))
+        .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
 
     StepVerifier.create(moduleService.create(moduleName))
         .assertNext(module -> assertThat(module.getName()).hasToString("test-module"))
         .verifyComplete();
-    ArgumentCaptor<Module> argument = ArgumentCaptor.forClass(Module.class);
+    ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
 
     verify(moduleRepository).save(argument.capture());
-    verify(moduleRepository).save(any(Module.class));
+    verify(moduleRepository).save(any(ModuleEntity.class));
     assertThat(argument.getValue().getName()).isEqualTo(moduleName);
   }
 
   @Test
   void create_ModuleNameExists_ReturnsException() {
     final String moduleName = "test-module";
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(moduleRepository.findByName(moduleName)).thenReturn(Mono.just(mockModule));
 
@@ -121,9 +121,9 @@ class ModuleServiceTest {
 
   @Test
   void findAll_ModulesExist_ReturnsModules() {
-    final Module mockModule1 = mock(Module.class);
-    final Module mockModule2 = mock(Module.class);
-    final Module mockModule3 = mock(Module.class);
+    final ModuleEntity mockModule1 = mock(ModuleEntity.class);
+    final ModuleEntity mockModule2 = mock(ModuleEntity.class);
+    final ModuleEntity mockModule3 = mock(ModuleEntity.class);
 
     when(moduleRepository.findAll()).thenReturn(Flux.just(mockModule1, mockModule2, mockModule3));
 
@@ -151,9 +151,9 @@ class ModuleServiceTest {
 
   @Test
   void findAllOpen_OpenModulesExist_ReturnsOpenModules() {
-    final Module mockModule1 = mock(Module.class);
-    final Module mockModule2 = mock(Module.class);
-    final Module mockModule3 = mock(Module.class);
+    final ModuleEntity mockModule1 = mock(ModuleEntity.class);
+    final ModuleEntity mockModule2 = mock(ModuleEntity.class);
+    final ModuleEntity mockModule3 = mock(ModuleEntity.class);
 
     when(moduleRepository.findAllOpen())
         .thenReturn(Flux.just(mockModule1, mockModule2, mockModule3));
@@ -168,7 +168,7 @@ class ModuleServiceTest {
 
   @Test
   void findByName_ModuleNameExists_ReturnsInvalidModuleNameException() {
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
     final String mockModuleName = "mock-module";
 
     when(moduleRepository.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
@@ -190,8 +190,8 @@ class ModuleServiceTest {
   void setDynamicFlag_FlagPreviouslySet_ReturnPreviousFlag() {
     final byte[] newFlag = {-118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29};
 
-    final Module mockModuleWithStaticFlag = mock(Module.class);
-    final Module mockModuleWithDynamicFlag = mock(Module.class);
+    final ModuleEntity mockModuleWithStaticFlag = mock(ModuleEntity.class);
+    final ModuleEntity mockModuleWithDynamicFlag = mock(ModuleEntity.class);
 
     final String mockModuleName = "id";
 
@@ -211,18 +211,18 @@ class ModuleServiceTest {
               assertThat(module.getKey()).isEqualTo(newFlag);
             })
         .verifyComplete();
-    verify(moduleRepository).save(any(Module.class));
+    verify(moduleRepository).save(any(ModuleEntity.class));
     verify(keyService, never()).generateRandomString(any(Integer.class));
 
-    ArgumentCaptor<Module> argument = ArgumentCaptor.forClass(Module.class);
+    ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
     verify(moduleRepository).save(argument.capture());
     assertThat(argument.getValue().getKey()).isEqualTo(newFlag);
   }
 
   @Test
   void setDynamicFlag_StaticFlagIsSet_SetsDynamicFlag() {
-    final Module mockModuleWithStaticFlag = mock(Module.class);
-    final Module mockModuleWithDynamicFlag = mock(Module.class);
+    final ModuleEntity mockModuleWithStaticFlag = mock(ModuleEntity.class);
+    final ModuleEntity mockModuleWithDynamicFlag = mock(ModuleEntity.class);
 
     final String mockModuleName = "id";
 
@@ -243,7 +243,7 @@ class ModuleServiceTest {
             })
         .verifyComplete();
     verify(mockModuleWithStaticFlag).withFlagStatic(false);
-    verify(moduleRepository).save(any(Module.class));
+    verify(moduleRepository).save(any(ModuleEntity.class));
   }
 
   @Test
@@ -267,9 +267,9 @@ class ModuleServiceTest {
   void setStaticFlag_ValidStaticFlag_SetsFlagToStatic() {
     final String staticFlag = "setStaticFlag_ValidStaticFlag_SetsFlagToStatic";
 
-    final Module mockModule = mock(Module.class);
-    final Module mockModuleWithStaticFlag = mock(Module.class);
-    final Module mockModuleWithStaticFlagEnabled = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final ModuleEntity mockModuleWithStaticFlag = mock(ModuleEntity.class);
+    final ModuleEntity mockModuleWithStaticFlagEnabled = mock(ModuleEntity.class);
 
     final String mockModuleName = "id";
 
@@ -296,7 +296,7 @@ class ModuleServiceTest {
     verify(moduleRepository).findByName(findArgument.capture());
     assertThat(findArgument.getValue()).isEqualTo(mockModuleName);
 
-    ArgumentCaptor<Module> saveArgument = ArgumentCaptor.forClass(Module.class);
+    ArgumentCaptor<ModuleEntity> saveArgument = ArgumentCaptor.forClass(ModuleEntity.class);
     verify(moduleRepository).save(saveArgument.capture());
     assertThat(saveArgument.getValue().getStaticFlag()).isEqualTo(staticFlag);
   }

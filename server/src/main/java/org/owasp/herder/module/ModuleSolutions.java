@@ -78,17 +78,17 @@ public final class ModuleSolutions {
 
     final ModuleListItemBuilder moduleListItemBuilder = ModuleListItem.builder();
 
-    final Mono<Module> moduleMono = moduleService.findByName(moduleName).filter(Module::isOpen);
+    final Mono<ModuleEntity> moduleMono = moduleService.findByName(moduleName).filter(ModuleEntity::isOpen);
 
     return moduleMono
-        .map(Module::getName)
+        .map(ModuleEntity::getName)
         // Find all valid submissions by this user
         .flatMap(openModuleName -> userHasSolvedThisModule(userId, openModuleName))
         .defaultIfEmpty(false)
         .zipWith(moduleMono)
         .map(
             tuple -> {
-              final Module module = tuple.getT2();
+              final ModuleEntity module = tuple.getT2();
               // For each module, construct a module list item
               moduleListItemBuilder.name(module.getName());
               moduleListItemBuilder.isSolved(tuple.getT1());
@@ -115,7 +115,7 @@ public final class ModuleSolutions {
     if (moduleName.isEmpty()) {
       return Mono.error(new EmptyModuleNameException());
     }
-    final Mono<Module> moduleMono = moduleService.findByName(moduleName);
+    final Mono<ModuleEntity> moduleMono = moduleService.findByName(moduleName);
 
     final ModuleListItemBuilder moduleListItemBuilder = ModuleListItem.builder();
     return moduleMono

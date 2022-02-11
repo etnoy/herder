@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.module.Module;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.xss.XssService;
 import org.owasp.herder.module.xss.XssTutorial;
@@ -68,7 +68,7 @@ class XssTutorialTest {
 
   @Mock FlagHandler flagHandler;
 
-  final Module mockModule = mock(Module.class);
+  final ModuleEntity mockModule = mock(ModuleEntity.class);
 
   @BeforeEach
   private void setUp() {

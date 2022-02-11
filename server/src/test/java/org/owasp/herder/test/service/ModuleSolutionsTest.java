@@ -39,7 +39,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.exception.EmptyModuleNameException;
 import org.owasp.herder.exception.InvalidUserIdException;
-import org.owasp.herder.module.Module;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleListItem;
 import org.owasp.herder.module.ModuleListItem.ModuleListItemBuilder;
 import org.owasp.herder.module.ModuleService;
@@ -109,7 +109,7 @@ class ModuleSolutionsTest {
     final String mockModuleName = "moduleName";
     final long mockUserId = 1000L;
 
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
     when(mockModule.getName()).thenReturn(mockModuleName);
     when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
     when(submissionService.findAllValidModuleNamesByUserId(mockUserId))
@@ -134,7 +134,7 @@ class ModuleSolutionsTest {
     final String mockModuleName = "moduleName";
     final long mockUserId = 1000L;
 
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
     when(mockModule.getName()).thenReturn(mockModuleName);
     when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
     when(submissionService.findAllValidModuleNamesByUserId(mockUserId))
@@ -186,7 +186,7 @@ class ModuleSolutionsTest {
     final String mockModuleName = "moduleName";
 
     final long mockUserId = 1000L;
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(mockModule.isOpen()).thenReturn(false);
 
@@ -210,7 +210,7 @@ class ModuleSolutionsTest {
     final String mockModuleName = "moduleName";
 
     final long mockUserId = 1000L;
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(mockModule.getName()).thenReturn(mockModuleName);
     when(mockModule.isOpen()).thenReturn(true);
@@ -244,7 +244,7 @@ class ModuleSolutionsTest {
     final String mockModuleName = "moduleName";
 
     final long mockUserId = 1000L;
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(mockModule.getName()).thenReturn(mockModuleName);
     when(mockModule.isOpen()).thenReturn(true);
@@ -314,10 +314,10 @@ class ModuleSolutionsTest {
     final String mockModule3Id = "id3";
 
     final long mockUserId = 1000L;
-    final Module mockModule1 = mock(Module.class);
-    final Module mockModule2 = mock(Module.class);
-    final Module mockModule3 = mock(Module.class);
-    final Module mockModule4 = mock(Module.class);
+    final ModuleEntity mockModule1 = mock(ModuleEntity.class);
+    final ModuleEntity mockModule2 = mock(ModuleEntity.class);
+    final ModuleEntity mockModule3 = mock(ModuleEntity.class);
+    final ModuleEntity mockModule4 = mock(ModuleEntity.class);
 
     when(mockModule1.getName()).thenReturn(mockModule1Name);
     when(mockModule2.getName()).thenReturn(mockModule2Name);

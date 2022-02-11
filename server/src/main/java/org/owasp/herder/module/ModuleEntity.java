@@ -39,8 +39,8 @@ import lombok.With;
 @AllArgsConstructor
 @Builder
 @With
-@Table
-public class Module implements Serializable {
+@Table("module")
+public class ModuleEntity implements Serializable {
   private static final long serialVersionUID = 6391362512222766270L;
 
   @Id private Long id;

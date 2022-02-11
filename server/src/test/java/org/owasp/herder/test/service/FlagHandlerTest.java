@@ -38,7 +38,7 @@ import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.InvalidFlagStateException;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.module.Module;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.service.ConfigurationService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
@@ -76,7 +76,7 @@ class FlagHandlerTest {
 
   @Test
   void getDynamicFlag_FlagIsStatic_ReturnsInvalidFlagStateException() {
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final String mockModuleName = "module-id";
     final long mockUserId = 7;
@@ -103,7 +103,7 @@ class FlagHandlerTest {
 
   @Test
   void getDynamicFlag_DynamicFlag_ReturnsFlag() {
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final String mockModuleName = "module-id";
     final long mockUserId = 785;
@@ -187,7 +187,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_CorrectDynamicFlag_ReturnsTrue() {
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final long mockUserId = 158;
     final String mockModuleName = "module-id";
@@ -249,7 +249,7 @@ class FlagHandlerTest {
     final String mockModuleName = "module-id";
     final String validStaticFlag = "validFlag";
 
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
 
@@ -279,7 +279,7 @@ class FlagHandlerTest {
     final String mockModuleName = "module-id";
     final String validStaticFlag = "validFlagWithUPPERCASEandlowercase";
 
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
 
@@ -310,7 +310,7 @@ class FlagHandlerTest {
     final String mockModuleName = "module-id";
     final String validStaticFlag = "validFlagWithUPPERCASEandlowercase";
 
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
 
@@ -337,7 +337,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_EmptyDynamicFlag_ReturnsFalse() {
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final long mockUserId = 193;
     final String mockModuleName = "module-id";
@@ -400,7 +400,7 @@ class FlagHandlerTest {
     final String mockModuleName = "module-id";
     final String validStaticFlag = "validFlag";
 
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
 
@@ -447,7 +447,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_WrongDynamicFlag_ReturnsFalse() {
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final long mockUserId = 193;
     final String mockModuleName = "module-id";
@@ -510,7 +510,7 @@ class FlagHandlerTest {
     final String mockModuleName = "module-id";
     final String validStaticFlag = "validFlag";
 
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
 
@@ -537,7 +537,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_CorrectUpperCaseDynamicFlag_ReturnsTrue() {
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final long mockUserId = 158;
     final String mockModuleName = "module-id";
@@ -596,7 +596,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_CorrectDynamicFlagWithSpacesInTheMiddle_ReturnsFalse() {
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final long mockUserId = 73;
     final String mockModuleName = "module-id";
@@ -662,7 +662,7 @@ class FlagHandlerTest {
 
     final String validStaticFlagWithSpaces = "valid   Flag";
 
-    final Module mockModule = mock(Module.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
 

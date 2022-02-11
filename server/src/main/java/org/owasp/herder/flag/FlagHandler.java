@@ -27,7 +27,7 @@ import org.owasp.herder.exception.InvalidFlagStateException;
 import org.owasp.herder.exception.InvalidFlagSubmissionRateLimitException;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.ModuleNameNotFoundException;
-import org.owasp.herder.module.Module;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.service.ConfigurationService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
@@ -87,7 +87,7 @@ public final class FlagHandler {
                 Mono.error(
                     new InvalidFlagStateException("Cannot get dynamic flag if flag is static")))
             // Get module key and convert to bytes
-            .map(Module::getKey);
+            .map(ModuleEntity::getKey);
 
     final Mono<byte[]> userKey = userService.findKeyById(userId);
 
@@ -123,7 +123,7 @@ public final class FlagHandler {
     }
 
     // Get the module from the repository
-    final Mono<Module> currentModule = moduleService.findByName(moduleName);
+    final Mono<ModuleEntity> currentModule = moduleService.findByName(moduleName);
 
     final Mono<Boolean> isValid =
         currentModule
@@ -162,7 +162,7 @@ public final class FlagHandler {
             .onErrorReturn(false)
             .map(validFlag -> Boolean.TRUE.equals(validFlag) ? "valid" : "invalid");
 
-    Mono.zip(userService.findDisplayNameById(userId), validText, currentModule.map(Module::getId))
+    Mono.zip(userService.findDisplayNameById(userId), validText, currentModule.map(ModuleEntity::getId))
         .map(
             tuple ->
                 "User "

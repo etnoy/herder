@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.module.Module;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.csrf.CsrfService;
 import org.owasp.herder.module.csrf.CsrfTutorial;
 
@@ -59,7 +59,7 @@ class CsrfTutorialTest {
 
   @Mock FlagHandler flagHandler;
 
-  final Module mockModule = mock(Module.class);
+  final ModuleEntity mockModule = mock(ModuleEntity.class);
 
   @BeforeEach
   private void setUp() {
