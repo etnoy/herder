@@ -116,8 +116,7 @@ class SqlInjectionTutorialTest {
             row -> {
               assertThat(row.getName()).isNull();
               assertThat(row.getComment()).isNull();
-              assertThat(row.getError())
-                  .isEqualTo("io.r2dbc.spi.R2dbcBadGrammarException: Syntax error, yo");
+              assertThat(row.getError()).isEqualTo("Syntax error, yo");
             })
         .verifyComplete();
   }
@@ -177,7 +176,7 @@ class SqlInjectionTutorialTest {
               assertThat(row.getComment()).isNull();
               assertThat(row.getError())
                   .isEqualTo(
-                      "org.springframework.dao.DataIntegrityViolationException: Data integrity violation, yo; nested exception is java.lang.RuntimeException");
+                      "Data integrity violation, yo; nested exception is java.lang.RuntimeException");
             })
         .verifyComplete();
   }
