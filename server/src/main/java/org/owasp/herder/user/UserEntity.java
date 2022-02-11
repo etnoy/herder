@@ -40,8 +40,8 @@ import lombok.With;
 @AllArgsConstructor
 @Builder
 @With
-@Table
-public final class User implements Serializable {
+@Table("user")
+public final class UserEntity implements Serializable {
   private static final long serialVersionUID = 3097353498257801154L;
 
   @Id private Long id;

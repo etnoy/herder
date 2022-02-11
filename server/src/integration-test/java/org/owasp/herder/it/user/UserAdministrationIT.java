@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.User;
+import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -77,7 +77,7 @@ class UserAdministrationIT extends BaseIT {
                 userService
                     .create(displayName)
                     .flatMap(userService::findById)
-                    .map(User::getDisplayName))
+                    .map(UserEntity::getDisplayName))
             .expectNext(displayName)
             .expectComplete()
             .verify();

@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.owasp.herder.authentication.PasswordRegistrationDto;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
-import org.owasp.herder.user.User;
+import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -260,9 +260,9 @@ class UserControllerApiIT extends BaseIT {
                 .isOk()
                 .expectHeader()
                 .contentType(MediaType.APPLICATION_JSON)
-                .returnResult(User.class)
+                .returnResult(UserEntity.class)
                 .getResponseBody()
-                .map(User::getId))
+                .map(UserEntity::getId))
         .recordWith(HashSet::new)
         .thenConsumeWhile(__ -> true)
         .expectRecordedMatches(x -> x.equals(userIdSet))
@@ -323,7 +323,7 @@ class UserControllerApiIT extends BaseIT {
                         .getResponseBody()))
             .read("$.accessToken");
 
-    FluxExchangeResult<User> getResult =
+    FluxExchangeResult<UserEntity> getResult =
         webTestClient
             .get()
             .uri("/api/v1/user/" + Long.toString(userId))
@@ -334,7 +334,7 @@ class UserControllerApiIT extends BaseIT {
             .isOk()
             .expectHeader()
             .contentType(MediaType.APPLICATION_JSON)
-            .returnResult(User.class);
+            .returnResult(UserEntity.class);
 
     StepVerifier.create(getResult.getResponseBody())
         .assertNext(

@@ -56,7 +56,7 @@ import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.UserIdNotFoundException;
 import org.owasp.herder.service.ClassService;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.User;
+import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -147,7 +147,7 @@ class UserServiceTest {
     final String mockedPasswordHash = encoder.encode(mockedPassword);
     final PasswordAuth mockedPasswordAuth = mock(PasswordAuth.class);
     final UserAuth mockedUserAuth = mock(UserAuth.class);
-    final User mockedUser = mock(User.class);
+    final UserEntity mockedUser = mock(UserEntity.class);
 
     when(userRepository.findById(mockedUserId)).thenReturn(Mono.just(mockedUser));
     when(passwordAuthRepository.findByLoginName(mockedLoginName))
@@ -179,7 +179,7 @@ class UserServiceTest {
     final String mockedPasswordHash = encoder.encode(mockedPassword);
     final PasswordAuth mockedPasswordAuth = mock(PasswordAuth.class);
     final UserAuth mockedUserAuth = mock(UserAuth.class);
-    final User mockedUser = mock(User.class);
+    final UserEntity mockedUser = mock(UserEntity.class);
 
     when(passwordAuthRepository.findByLoginName(mockedLoginName))
         .thenReturn(Mono.just(mockedPasswordAuth));
@@ -211,7 +211,7 @@ class UserServiceTest {
     final String mockedPasswordHash = encoder.encode(mockedPassword);
     final PasswordAuth mockedPasswordAuth = mock(PasswordAuth.class);
     final UserAuth mockedUserAuth = mock(UserAuth.class);
-    final User mockedUser = mock(User.class);
+    final UserEntity mockedUser = mock(UserEntity.class);
 
     when(passwordAuthRepository.findByLoginName(mockedLoginName))
         .thenReturn(Mono.just(mockedPasswordAuth));
@@ -277,7 +277,7 @@ class UserServiceTest {
   void create_DisplayNameAlreadyExists_ReturnsDuplicateUserDisplayNameException() {
     final String displayName = "createPasswordUser_DuplicateDisplayName";
 
-    final User mockUser = mock(User.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     when(userRepository.findByDisplayName(displayName)).thenReturn(Mono.just(mockUser));
 
@@ -314,8 +314,8 @@ class UserServiceTest {
 
     when(keyService.generateRandomBytes(16)).thenReturn(testRandomBytes);
 
-    when(userRepository.save(any(User.class)))
-        .thenAnswer(user -> Mono.just(user.getArgument(0, User.class).withId(mockUserId)));
+    when(userRepository.save(any(UserEntity.class)))
+        .thenAnswer(user -> Mono.just(user.getArgument(0, UserEntity.class).withId(mockUserId)));
 
     StepVerifier.create(userService.create(displayName))
         .expectNext(mockUserId)
@@ -323,9 +323,9 @@ class UserServiceTest {
         .verify();
 
     verify(userRepository, times(1)).findByDisplayName(displayName);
-    verify(userRepository, times(1)).save(any(User.class));
+    verify(userRepository, times(1)).save(any(UserEntity.class));
 
-    ArgumentCaptor<User> argument = ArgumentCaptor.forClass(User.class);
+    ArgumentCaptor<UserEntity> argument = ArgumentCaptor.forClass(UserEntity.class);
     verify(userRepository, times(1)).save(argument.capture());
     assertThat(argument.getValue().getDisplayName()).isEqualTo(displayName);
   }
@@ -337,7 +337,7 @@ class UserServiceTest {
 
     final String hashedPassword = "aPasswordHash";
 
-    final User mockUser = mock(User.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     when(userRepository.findByDisplayName(displayName)).thenReturn(Mono.just(mockUser));
 
@@ -427,8 +427,8 @@ class UserServiceTest {
     when(passwordAuthRepository.findByLoginName(loginName)).thenReturn(Mono.empty());
     when(userRepository.findByDisplayName(displayName)).thenReturn(Mono.empty());
 
-    when(userRepository.save(any(User.class)))
-        .thenAnswer(user -> Mono.just(user.getArgument(0, User.class).withId(mockUserId)));
+    when(userRepository.save(any(UserEntity.class)))
+        .thenAnswer(user -> Mono.just(user.getArgument(0, UserEntity.class).withId(mockUserId)));
 
     when(userAuthRepository.save(any(UserAuth.class)))
         .thenAnswer(user -> Mono.just(user.getArgument(0, UserAuth.class).withId(mockUserId)));
@@ -444,11 +444,11 @@ class UserServiceTest {
     verify(passwordAuthRepository, times(1)).findByLoginName(loginName);
     verify(userRepository, times(1)).findByDisplayName(displayName);
 
-    verify(userRepository, times(1)).save(any(User.class));
+    verify(userRepository, times(1)).save(any(UserEntity.class));
     verify(userAuthRepository, times(1)).save(any(UserAuth.class));
     verify(passwordAuthRepository, times(1)).save(any(PasswordAuth.class));
 
-    ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
+    ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(UserEntity.class);
     verify(userRepository, times(1)).save(userArgumentCaptor.capture());
     assertThat(userArgumentCaptor.getValue().getId()).isNull();
     assertThat(userArgumentCaptor.getValue().getDisplayName()).isEqualTo(displayName);
@@ -529,7 +529,7 @@ class UserServiceTest {
     StepVerifier.create(userService.demote(mockUserId)).expectComplete().verify();
 
     verify(userRepository, never()).findById(any(Long.class));
-    verify(userRepository, never()).save(any(User.class));
+    verify(userRepository, never()).save(any(UserEntity.class));
     verify(passwordAuthRepository, never()).findByUserId(any(Long.class));
 
     verify(userAuthRepository, times(1)).findByUserId(mockUserId);
@@ -566,7 +566,7 @@ class UserServiceTest {
     StepVerifier.create(userService.demote(mockUserId)).expectComplete().verify();
 
     verify(userRepository, never()).findById(any(Long.class));
-    verify(userRepository, never()).save(any(User.class));
+    verify(userRepository, never()).save(any(UserEntity.class));
     verify(passwordAuthRepository, never()).findByUserId(any(Integer.class));
     verify(passwordAuthRepository, never()).save(any(PasswordAuth.class));
 
@@ -587,9 +587,9 @@ class UserServiceTest {
 
   @Test
   void findAll_UsersExist_ReturnsUsers() {
-    final User mockUser1 = mock(User.class);
-    final User mockUser2 = mock(User.class);
-    final User mockUser3 = mock(User.class);
+    final UserEntity mockUser1 = mock(UserEntity.class);
+    final UserEntity mockUser2 = mock(UserEntity.class);
+    final UserEntity mockUser3 = mock(UserEntity.class);
 
     when(userRepository.findAll()).thenReturn(Flux.just(mockUser1, mockUser2, mockUser3));
 
@@ -605,7 +605,7 @@ class UserServiceTest {
 
   @Test
   void findById_ExistingUserId_ReturnsUserEntity() {
-    final User mockUser = mock(User.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     final long mockUserId = 910;
 
@@ -695,7 +695,7 @@ class UserServiceTest {
 
   @Test
   void findDisplayNameById_UserExists_ReturnsDisplayName() {
-    final User mockUser = mock(User.class);
+    final UserEntity mockUser = mock(UserEntity.class);
     final long mockUserId = 490;
     final String mockDisplayName = "mockDisplayName";
 
@@ -841,7 +841,7 @@ class UserServiceTest {
     final long mockUserId = 17;
 
     // Mock a test user that has a key
-    final User mockUserWithKey = mock(User.class);
+    final UserEntity mockUserWithKey = mock(UserEntity.class);
     when(mockUserWithKey.getKey()).thenReturn(testRandomBytes);
 
     when(userRepository.existsById(mockUserId)).thenReturn(Mono.just(true));
@@ -868,11 +868,11 @@ class UserServiceTest {
     final long mockUserId = 19;
 
     // This user does not have a key
-    final User mockUserWithoutKey = mock(User.class);
+    final UserEntity mockUserWithoutKey = mock(UserEntity.class);
     when(mockUserWithoutKey.getKey()).thenReturn(null);
 
     // When that user is given a key, return an entity that has the key
-    final User mockUserWithKey = mock(User.class);
+    final UserEntity mockUserWithKey = mock(UserEntity.class);
     when(userRepository.findById(mockUserId)).thenReturn(Mono.just(mockUserWithoutKey));
     when(mockUserWithoutKey.getKey()).thenReturn(null);
 
@@ -898,7 +898,7 @@ class UserServiceTest {
     verify(mockUserWithoutKey, times(1)).withKey(testRandomBytes);
     verify(mockUserWithKey, times(1)).getKey();
 
-    ArgumentCaptor<User> argument = ArgumentCaptor.forClass(User.class);
+    ArgumentCaptor<UserEntity> argument = ArgumentCaptor.forClass(UserEntity.class);
 
     verify(userRepository, times(1)).save(argument.capture());
 
@@ -941,7 +941,7 @@ class UserServiceTest {
     StepVerifier.create(userService.promote(mockUserId)).expectComplete().verify();
 
     verify(userRepository, never()).findById(any(Long.class));
-    verify(userRepository, never()).save(any(User.class));
+    verify(userRepository, never()).save(any(UserEntity.class));
     verify(passwordAuthRepository, never()).findByUserId(any(Integer.class));
 
     verify(userAuthRepository, times(1)).findByUserId(mockUserId);
@@ -973,7 +973,7 @@ class UserServiceTest {
     final long mockUserId = 16;
     final long mockClassId = 638;
 
-    User mockUser = mock(User.class);
+    UserEntity mockUser = mock(UserEntity.class);
 
     when(userRepository.findById(mockUserId)).thenReturn(Mono.just(mockUser));
     when(classService.existsById(mockClassId)).thenReturn(Mono.just(false));
@@ -991,8 +991,8 @@ class UserServiceTest {
     final long mockUserId = 875;
     final long mockClassId = 213;
 
-    final User mockUser = mock(User.class);
-    final User mockUserWithClass = mock(User.class);
+    final UserEntity mockUser = mock(UserEntity.class);
+    final UserEntity mockUserWithClass = mock(UserEntity.class);
 
     when(userRepository.findById(mockUserId)).thenReturn(Mono.just(mockUser));
     when(classService.existsById(mockClassId)).thenReturn(Mono.just(true));
@@ -1053,7 +1053,7 @@ class UserServiceTest {
 
   @Test
   void setDisplayName_ValidArguments_DisplayNameIsSet() {
-    User mockUser = mock(User.class);
+    UserEntity mockUser = mock(UserEntity.class);
     String newDisplayName = "newDisplayName";
 
     final long mockUserId = 652;
@@ -1063,7 +1063,7 @@ class UserServiceTest {
     when(userRepository.findByDisplayName(newDisplayName)).thenReturn(Mono.empty());
 
     when(mockUser.withDisplayName(newDisplayName)).thenReturn(mockUser);
-    when(userRepository.save(any(User.class))).thenReturn(Mono.just(mockUser));
+    when(userRepository.save(any(UserEntity.class))).thenReturn(Mono.just(mockUser));
     when(mockUser.getDisplayName()).thenReturn(newDisplayName);
 
     StepVerifier.create(userService.setDisplayName(mockUserId, newDisplayName))
@@ -1077,7 +1077,7 @@ class UserServiceTest {
     verify(userRepository, times(1)).findByDisplayName(newDisplayName);
 
     verify(mockUser, times(1)).withDisplayName(newDisplayName);
-    verify(userRepository, times(1)).save(any(User.class));
+    verify(userRepository, times(1)).save(any(UserEntity.class));
     verify(mockUser, times(1)).getDisplayName();
   }
 

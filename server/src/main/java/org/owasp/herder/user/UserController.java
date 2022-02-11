@@ -50,14 +50,14 @@ public class UserController {
 
   @GetMapping(path = "users")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
-  public Flux<User> findAll() {
+  public Flux<UserEntity> findAll() {
     return userService.findAll();
   }
 
   @GetMapping(path = "user/{id}")
   @PreAuthorize(
       "(hasRole('ROLE_USER') and #id == authentication.principal) or hasRole('ROLE_ADMIN')")
-  public Mono<User> findById(@PathVariable final long id) {
+  public Mono<UserEntity> findById(@PathVariable final long id) {
     return userService.findById(id);
   }
 }

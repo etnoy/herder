@@ -28,6 +28,6 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface UserRepository extends ReactiveCrudRepository<User, Long> {
-  public Mono<User> findByDisplayName(@Param("display_name") final String displayName);
+public interface UserRepository extends ReactiveCrudRepository<UserEntity, Long> {
+  public Mono<UserEntity> findByDisplayName(@Param("display_name") final String displayName);
 }

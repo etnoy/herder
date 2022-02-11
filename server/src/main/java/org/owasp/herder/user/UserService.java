@@ -42,7 +42,7 @@ import org.owasp.herder.exception.InvalidClassIdException;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.UserIdNotFoundException;
 import org.owasp.herder.service.ClassService;
-import org.owasp.herder.user.User.UserBuilder;
+import org.owasp.herder.user.UserEntity.UserEntityBuilder;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -109,7 +109,7 @@ public final class UserService {
 
     final Mono<UserAuth> userAuthMono = userIdMono.flatMap(this::findUserAuthByUserId);
 
-    final Mono<User> userMono = userIdMono.flatMap(this::findById);
+    final Mono<UserEntity> userMono = userIdMono.flatMap(this::findById);
 
     final AuthResponseBuilder authResponseBuilder = AuthResponse.builder();
 
@@ -169,12 +169,12 @@ public final class UserService {
         .flatMap(
             name ->
                 userRepository.save(
-                    User.builder()
+                    UserEntity.builder()
                         .displayName(name)
                         .key(keyService.generateRandomBytes(16))
                         .accountCreated(LocalDateTime.now())
                         .build()))
-        .map(User::getId);
+        .map(UserEntity::getId);
   }
 
   public Mono<Long> createPasswordUser(
@@ -214,14 +214,14 @@ public final class UserService {
     return Mono.zip(displayNameMono, loginNameMono)
         .flatMap(
             tuple -> {
-              final UserBuilder userBuilder = User.builder();
+              final UserEntityBuilder userBuilder = UserEntity.builder();
               userBuilder
                   .displayName(tuple.getT1())
                   .key(keyService.generateRandomBytes(16))
                   .accountCreated(LocalDateTime.now());
 
               final Mono<Long> userIdMono =
-                  userRepository.save(userBuilder.build()).map(User::getId);
+                  userRepository.save(userBuilder.build()).map(UserEntity::getId);
 
               final PasswordAuthBuilder passwordAuthBuilder = PasswordAuth.builder();
               passwordAuthBuilder.loginName(tuple.getT2());
@@ -315,11 +315,11 @@ public final class UserService {
         .then();
   }
 
-  public Flux<User> findAll() {
+  public Flux<UserEntity> findAll() {
     return userRepository.findAll();
   }
 
-  public Mono<User> findById(final long userId) {
+  public Mono<UserEntity> findById(final long userId) {
     if (userId <= 0) {
       return Mono.error(new InvalidUserIdException());
     }
@@ -331,7 +331,7 @@ public final class UserService {
     if (userId <= 0) {
       return Mono.error(new InvalidUserIdException());
     }
-    return userRepository.findById(userId).map(User::getDisplayName);
+    return userRepository.findById(userId).map(UserEntity::getDisplayName);
   }
 
   public Mono<byte[]> findKeyById(final long userId) {
@@ -349,7 +349,7 @@ public final class UserService {
               if (key == null) {
                 return userRepository
                     .save(user.withKey(keyService.generateRandomBytes(16)))
-                    .map(User::getKey);
+                    .map(UserEntity::getKey);
               }
               return Mono.just(key);
             });
@@ -425,7 +425,7 @@ public final class UserService {
     this.clock = Clock.systemDefaultZone();
   }
 
-  public Mono<User> setClassId(final long userId, final long classId) {
+  public Mono<UserEntity> setClassId(final long userId, final long classId) {
     if (userId <= 0) {
       return Mono.error(new InvalidUserIdException());
     }
@@ -451,7 +451,7 @@ public final class UserService {
     this.clock = clock;
   }
 
-  public Mono<User> setDisplayName(final long userId, final String displayName) {
+  public Mono<UserEntity> setDisplayName(final long userId, final String displayName) {
     if (userId <= 0) {
       return Mono.error(new InvalidUserIdException());
     }

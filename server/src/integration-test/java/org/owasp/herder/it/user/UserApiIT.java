@@ -31,7 +31,7 @@ import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.User;
+import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -118,7 +118,7 @@ class UserApiIT extends BaseIT {
                 .exchange()
                 .expectStatus()
                 .isOk()
-                .returnResult(User.class)
+                .returnResult(UserEntity.class)
                 .getResponseBody())
         .assertNext(
             user -> {
@@ -145,7 +145,7 @@ class UserApiIT extends BaseIT {
                 .exchange()
                 .expectStatus()
                 .isOk()
-                .returnResult(User.class)
+                .returnResult(UserEntity.class)
                 .getResponseBody())
         .assertNext(
             user -> {
@@ -175,7 +175,7 @@ class UserApiIT extends BaseIT {
                 .exchange()
                 .expectStatus()
                 .isOk()
-                .returnResult(User.class)
+                .returnResult(UserEntity.class)
                 .getResponseBody())
         .expectNextCount(4)
         .verifyComplete();

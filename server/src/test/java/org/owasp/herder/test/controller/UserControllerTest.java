@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.user.User;
+import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserController;
 import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Flux;
@@ -81,7 +81,7 @@ class UserControllerTest {
   @Test
   void findById_UserIdExists_ReturnsUser() {
     final long mockUserId = 380L;
-    final User user = mock(User.class);
+    final UserEntity user = mock(UserEntity.class);
 
     when(userService.findById(mockUserId)).thenReturn(Mono.just(user));
     StepVerifier.create(userController.findById(mockUserId))
@@ -93,10 +93,10 @@ class UserControllerTest {
 
   @Test
   void findAll_UsersExist_ReturnsUsers() {
-    final User user1 = mock(User.class);
-    final User user2 = mock(User.class);
-    final User user3 = mock(User.class);
-    final User user4 = mock(User.class);
+    final UserEntity user1 = mock(UserEntity.class);
+    final UserEntity user2 = mock(UserEntity.class);
+    final UserEntity user3 = mock(UserEntity.class);
+    final UserEntity user4 = mock(UserEntity.class);
 
     when(userService.findAll()).thenReturn(Flux.just(user1, user2, user3, user4));
     StepVerifier.create(userController.findAll())
