@@ -26,7 +26,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.stream.Stream;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
 
@@ -110,6 +109,19 @@ public final class TestConstants {
     "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ، "
   };
 
+  public static final String[] VALID_MODULE_NAMES = {
+    "flag",
+    "åäöÅÄÖ",
+    "me@example.com",
+    "module-name-without-whitespace",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "%",
+    "𝕋𝕙𝕖 𝕢𝕦𝕚𝕔𝕜 𝕓𝕣𝕠𝕨𝕟 𝕗𝕠𝕩 𝕛𝕦𝕞𝕡𝕤 𝕠𝕧𝕖𝕣 𝕥𝕙𝕖 𝕝𝕒𝕫𝕪 𝕕𝕠𝕘",
+    "❤️ 💔 💌 💕 💞 💓 💗 💖 💘 💝 💟 💜 💛 💚 💙",
+    " ﷽ ",
+    "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ، "
+  };
+
   public static final String INITIAL_NAME = "id";
 
   public static final String[] NAMES = {INITIAL_NAME, "id-with-hyphen", "abc123"};
@@ -145,5 +157,9 @@ public final class TestConstants {
 
   public static Stream<String> validStaticFlagProvider() {
     return Stream.of(VALID_STATIC_FLAGS);
+  }
+
+  public static Stream<String> validModuleNameProvider() {
+    return Stream.of(VALID_MODULE_NAMES);
   }
 }

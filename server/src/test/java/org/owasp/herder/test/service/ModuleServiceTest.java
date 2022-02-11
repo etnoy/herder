@@ -37,12 +37,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.KeyService;
+import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.module.Module;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
 import org.springframework.context.ApplicationContext;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -72,24 +72,17 @@ class ModuleServiceTest {
 
     when(moduleRepository.count()).thenReturn(Mono.just(mockedModuleCount));
 
-    StepVerifier.create(moduleService.count())
-        .expectNext(mockedModuleCount)
-        .expectComplete()
-        .verify();
+    StepVerifier.create(moduleService.count()).expectNext(mockedModuleCount).verifyComplete();
     verify(moduleRepository).count();
   }
 
   @Test
   void create_NullModuleName_ThrowsException() {
-    final String moduleName = null;
-
-    when(moduleRepository.findByName(moduleName)).thenReturn(Mono.empty());
-
-    StepVerifier.create(moduleService.create(moduleName))
+    StepVerifier.create(moduleService.create(null))
         .expectError(NullPointerException.class)
         .verify();
 
-    verify(moduleRepository).findByName(null);
+    verify(moduleRepository, never()).findByName(any());
   }
 
   @Test
@@ -106,9 +99,7 @@ class ModuleServiceTest {
 
     StepVerifier.create(moduleService.create(moduleName))
         .assertNext(module -> assertThat(module.getName()).hasToString("test-module"))
-        .expectComplete()
-        .verify();
-
+        .verifyComplete();
     ArgumentCaptor<Module> argument = ArgumentCaptor.forClass(Module.class);
 
     verify(moduleRepository).save(argument.capture());
@@ -117,15 +108,14 @@ class ModuleServiceTest {
   }
 
   @Test
-  void create_ModuleNameExists_ReturnsExistingModule() {
+  void create_ModuleNameExists_ReturnsException() {
     final String moduleName = "test-module";
     final Module mockModule = mock(Module.class);
 
     when(moduleRepository.findByName(moduleName)).thenReturn(Mono.just(mockModule));
 
     StepVerifier.create(moduleService.create(moduleName))
-        .assertNext(module -> assertThat(module).isEqualTo(mockModule))
-        .expectComplete()
+        .expectError(DuplicateModuleNameException.class)
         .verify();
   }
 
@@ -141,9 +131,7 @@ class ModuleServiceTest {
         .expectNext(mockModule1)
         .expectNext(mockModule2)
         .expectNext(mockModule3)
-        .expectComplete()
-        .verify();
-
+        .verifyComplete();
     verify(moduleRepository).findAll();
   }
 
@@ -174,9 +162,7 @@ class ModuleServiceTest {
         .expectNext(mockModule1)
         .expectNext(mockModule2)
         .expectNext(mockModule3)
-        .expectComplete()
-        .verify();
-
+        .verifyComplete();
     verify(moduleRepository).findAllOpen();
   }
 
@@ -188,8 +174,7 @@ class ModuleServiceTest {
     when(moduleRepository.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
     StepVerifier.create(moduleService.findByName(mockModuleName))
         .expectNext(mockModule)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
     verify(moduleRepository).findByName(mockModuleName);
   }
 
@@ -225,9 +210,7 @@ class ModuleServiceTest {
             module -> {
               assertThat(module.getKey()).isEqualTo(newFlag);
             })
-        .expectComplete()
-        .verify();
-
+        .verifyComplete();
     verify(moduleRepository).save(any(Module.class));
     verify(keyService, never()).generateRandomString(any(Integer.class));
 
@@ -258,9 +241,7 @@ class ModuleServiceTest {
             module -> {
               assertThat(module.isFlagStatic()).isFalse();
             })
-        .expectComplete()
-        .verify();
-
+        .verifyComplete();
     verify(mockModuleWithStaticFlag).withFlagStatic(false);
     verify(moduleRepository).save(any(Module.class));
   }
@@ -309,8 +290,7 @@ class ModuleServiceTest {
               assertThat(module.isFlagStatic()).isTrue();
               assertThat(module.getStaticFlag()).isEqualTo(staticFlag);
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     ArgumentCaptor<String> findArgument = ArgumentCaptor.forClass(String.class);
     verify(moduleRepository).findByName(findArgument.capture());

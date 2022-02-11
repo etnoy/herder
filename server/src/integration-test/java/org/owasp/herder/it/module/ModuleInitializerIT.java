@@ -24,7 +24,7 @@ package org.owasp.herder.it.module;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
-
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,8 +47,6 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import lombok.RequiredArgsConstructor;
 import reactor.test.StepVerifier;
 
 @ExtendWith(SpringExtension.class)
