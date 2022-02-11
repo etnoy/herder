@@ -24,7 +24,6 @@ package org.owasp.herder.it.module;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -127,12 +126,9 @@ class ModuleInitializerIT extends BaseIT {
   private void setUp() {
     integrationTestUtils.resetState();
 
-    beans = applicationContext.getBeansWithAnnotation(HerderModule.class);
-
-    final Set<String> moduleNames = beans.keySet();
-
     // Remove all other herder modules
-    for (String beanName : moduleNames) {
+    for (final String beanName :
+        applicationContext.getBeansWithAnnotation(HerderModule.class).keySet()) {
       applicationContext.removeBeanDefinition(beanName);
     }
 
