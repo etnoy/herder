@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -66,6 +67,8 @@ class FlagTutorialApiIT extends BaseIT {
     Hooks.onOperatorDebug();
   }
 
+  @Autowired ApplicationContext applicationContext;
+
   FlagTutorial flagTutorial;
 
   @Autowired UserService userService;
@@ -82,7 +85,7 @@ class FlagTutorialApiIT extends BaseIT {
 
   @Autowired IntegrationTestUtils integrationTestUtils;
 
-  private ModuleInitializer moduleInitializer;
+  ModuleInitializer moduleInitializer;
 
   private String moduleName;
 
@@ -90,7 +93,7 @@ class FlagTutorialApiIT extends BaseIT {
   private void setUp() {
     integrationTestUtils.resetState();
 
-    moduleInitializer = new ModuleInitializer(null, moduleService, scoreService);
+    moduleInitializer = new ModuleInitializer(applicationContext, moduleService, scoreService);
 
     flagTutorial = new FlagTutorial(flagHandler);
 
@@ -101,7 +104,7 @@ class FlagTutorialApiIT extends BaseIT {
 
   @Test
   @DisplayName("The flag returned by the tutorial should be valid")
-  void canAcceptTheCorrectFlag() throws Exception {
+  void canAcceptTheCorrectFlag() {
     integrationTestUtils.createTestUser();
 
     final String accessToken =

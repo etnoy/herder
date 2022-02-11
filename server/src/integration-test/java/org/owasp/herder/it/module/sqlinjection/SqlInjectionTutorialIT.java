@@ -87,7 +87,7 @@ class SqlInjectionTutorialIT extends BaseIT {
   ModuleInitializer moduleInitializer;
 
   @BeforeEach
-  private void clear() {
+  private void setUp() {
     integrationTestUtils.resetState();
 
     moduleInitializer = new ModuleInitializer(null, moduleService, scoreService);

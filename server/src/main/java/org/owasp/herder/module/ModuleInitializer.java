@@ -21,8 +21,15 @@
  */
 package org.owasp.herder.module;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import javax.annotation.PostConstruct;
 
+import org.owasp.herder.exception.DuplicateModuleNameException;
+import org.owasp.herder.exception.InvalidHerderModuleTypeException;
 import org.owasp.herder.scoring.ScoreService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
@@ -49,14 +56,35 @@ public final class ModuleInitializer implements ApplicationContextAware {
   private final ScoreService scoreService;
 
   @PostConstruct
-  private void initializeModules() {
+  public void initializeModules() {
     log.debug("Initializing modules");
-    for (final Object module :
-        applicationContext.getBeansWithAnnotation(HerderModule.class).values()) {
-      // TODO: Classcastexception handling
-      BaseModule baseModule = (BaseModule) module;
 
-      initializeModule(baseModule).block();
+    List<BaseModule> modules = new ArrayList<>();
+    Set<String> uniqueNames = new HashSet<>();
+    List<BaseModule> duplicateModules = new ArrayList<>();
+
+    for (final Object moduleCandidate :
+        applicationContext.getBeansWithAnnotation(HerderModule.class).values()) {
+      if (moduleCandidate instanceof BaseModule) {
+        final BaseModule baseModule = (BaseModule) moduleCandidate;
+        final String moduleName = baseModule.getName();
+        modules.add(baseModule);
+        if (!uniqueNames.add(moduleName)) {
+          duplicateModules.add(baseModule);
+        }
+      } else {
+        throw new InvalidHerderModuleTypeException(
+            "Module " + moduleCandidate.toString() + " does not extend BaseModule");
+      }
+    }
+
+    if (!duplicateModules.isEmpty()) {
+      throw new DuplicateModuleNameException(
+          "The following modules have colliding module names: " + duplicateModules.toString());
+    }
+
+    for (final BaseModule module : modules) {
+      initializeModule(module).block();
     }
   }
 

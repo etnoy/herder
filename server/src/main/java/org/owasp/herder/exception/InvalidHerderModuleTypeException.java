@@ -21,11 +21,10 @@
  */
 package org.owasp.herder.exception;
 
-public class DuplicateModuleNameException extends RuntimeException {
+public class InvalidHerderModuleTypeException extends RuntimeException {
+  private static final long serialVersionUID = -3877302037908349146L;
 
-  private static final long serialVersionUID = 3953456107426522726L;
-
-  public DuplicateModuleNameException(final String message) {
+  public InvalidHerderModuleTypeException(String message) {
     super(message);
   }
 }
