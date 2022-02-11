@@ -42,7 +42,6 @@ import org.owasp.herder.exception.InvalidClassIdException;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.UserIdNotFoundException;
 import org.owasp.herder.service.ClassService;
-import org.owasp.herder.user.UserEntity.UserEntityBuilder;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -214,14 +213,14 @@ public final class UserService {
     return Mono.zip(displayNameMono, loginNameMono)
         .flatMap(
             tuple -> {
-              final UserEntityBuilder userBuilder = UserEntity.builder();
-              userBuilder
-                  .displayName(tuple.getT1())
-                  .key(keyService.generateRandomBytes(16))
-                  .accountCreated(LocalDateTime.now());
+              final UserEntity newUser =
+                  UserEntity.builder()
+                      .displayName(tuple.getT1())
+                      .key(keyService.generateRandomBytes(16))
+                      .accountCreated(LocalDateTime.now())
+                      .build();
 
-              final Mono<Long> userIdMono =
-                  userRepository.save(userBuilder.build()).map(UserEntity::getId);
+              final Mono<Long> userIdMono = userRepository.save(newUser).map(UserEntity::getId);
 
               final PasswordAuthBuilder passwordAuthBuilder = PasswordAuth.builder();
               passwordAuthBuilder.loginName(tuple.getT2());
