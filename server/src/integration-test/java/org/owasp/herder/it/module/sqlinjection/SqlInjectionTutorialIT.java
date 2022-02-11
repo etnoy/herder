@@ -205,8 +205,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     final Long userId = userService.create("TestUser1").block();
 
     final String errorMessage =
-        "org.h2.jdbc.JdbcSQLSyntaxErrorException: "
-            + "Syntax error in SQL statement \"SELECT * FROM sqlinjection.users "
+        "Syntax error in SQL statement \"SELECT * FROM sqlinjection.users "
             + "WHERE name = ''[*]'\"; SQL statement:\n"
             + "SELECT * FROM sqlinjection.users WHERE name = ''' [42000-200]";
 
@@ -222,7 +221,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     final Long userId = userService.create("TestUser1").block();
 
     final String errorMessage =
-        "org.h2.jdbc.JdbcSQLDataException: Data conversion error converting \"1=1\"; SQL statement:\n"
+        "Data conversion error converting \"1=1\"; SQL statement:\n"
             + "SELECT * FROM sqlinjection.users WHERE name = '' OR '1=1' [22018-200]";
 
     StepVerifier.create(

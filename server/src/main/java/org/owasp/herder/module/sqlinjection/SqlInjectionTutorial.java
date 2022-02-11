@@ -119,7 +119,7 @@ public class SqlInjectionTutorial extends BaseModule {
                 return Flux.just(
                     // Build a row with only the error field filled in
                     SqlInjectionTutorialRow.builder()
-                        .error(exception.getCause().getCause().toString())
+                        .error(exception.getCause().getCause().getMessage())
                         .build());
               } else {
                 // All other errors are handled in the usual way
