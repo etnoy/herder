@@ -22,7 +22,6 @@
 package org.owasp.herder.it.util;
 
 import org.owasp.herder.authentication.PasswordAuthRepository;
-import org.owasp.herder.authentication.UserAuthRepository;
 import org.owasp.herder.configuration.ConfigurationRepository;
 import org.owasp.herder.crypto.WebTokenService;
 import org.owasp.herder.module.ModulePointRepository;
@@ -78,8 +77,6 @@ public final class IntegrationTestUtils {
   @Autowired CorrectionRepository correctionRepository;
 
   @Autowired ModulePointRepository modulePointRepository;
-
-  @Autowired UserAuthRepository userAuthRepository;
 
   @Autowired WebTokenService webTokenService;
 
@@ -168,8 +165,6 @@ public final class IntegrationTestUtils {
         .then(configurationRepository.deleteAll())
         // Delete all password auth data
         .then(passwordAuthRepository.deleteAll())
-        // Delete all user auth data
-        .then(userAuthRepository.deleteAll())
         // Delete all users
         .then(userRepository.deleteAll())
         .block();

@@ -14,9 +14,11 @@ CREATE
             id BIGINT AUTO_INCREMENT,
             display_name VARCHAR(191) NOT NULL UNIQUE,
             class_id INT NULL,
-            email VARCHAR(128) NULL,
-            is_not_banned BOOLEAN DEFAULT FALSE,
             account_created DATETIME NOT NULL,
+			is_enabled BOOLEAN DEFAULT FALSE,
+            is_admin BOOLEAN DEFAULT FALSE NOT NULL,
+            suspended_until DATETIME NULL DEFAULT NULL,
+            suspension_message VARCHAR(191),
             user_key BINARY(16) NOT NULL,
             PRIMARY KEY(id),
             INDEX class_id(
@@ -94,24 +96,6 @@ CREATE
             FOREIGN KEY(
                 module_name
             ) REFERENCES module(name)
-        ) ENGINE = InnoDB DEFAULT CHARACTER
-    SET
-        = utf8mb4;
-
-CREATE
-    TABLE
-        user_auth(
-            id BIGINT AUTO_INCREMENT,
-            user_id BIGINT UNIQUE NOT NULL,
-            is_enabled BOOLEAN DEFAULT FALSE,
-            bad_login_count INT DEFAULT 0,
-            is_admin BOOLEAN DEFAULT FALSE NOT NULL,
-            suspension_message VARCHAR(191),
-            suspended_until DATETIME NULL DEFAULT NULL,
-            last_login DATETIME NULL DEFAULT NULL,
-            last_login_method VARCHAR(10) DEFAULT NULL,
-            PRIMARY KEY(id),
-            FOREIGN KEY(user_id) REFERENCES user(id)
         ) ENGINE = InnoDB DEFAULT CHARACTER
     SET
         = utf8mb4;

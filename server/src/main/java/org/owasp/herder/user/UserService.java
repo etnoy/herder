@@ -31,8 +31,6 @@ import org.owasp.herder.authentication.AuthResponse.AuthResponseBuilder;
 import org.owasp.herder.authentication.PasswordAuth;
 import org.owasp.herder.authentication.PasswordAuth.PasswordAuthBuilder;
 import org.owasp.herder.authentication.PasswordAuthRepository;
-import org.owasp.herder.authentication.UserAuth;
-import org.owasp.herder.authentication.UserAuthRepository;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.exception.ClassIdNotFoundException;
@@ -58,8 +56,6 @@ public final class UserService {
 
   private final UserRepository userRepository;
 
-  private final UserAuthRepository userAuthRepository;
-
   private final PasswordAuthRepository passwordAuthRepository;
 
   private final ClassService classService;
@@ -72,13 +68,11 @@ public final class UserService {
 
   public UserService(
       UserRepository userRepository,
-      UserAuthRepository userAuthRepository,
       PasswordAuthRepository passwordAuthRepository,
       ClassService classService,
       KeyService keyService,
       WebTokenKeyManager webTokenKeyManager) {
     this.userRepository = userRepository;
-    this.userAuthRepository = userAuthRepository;
     this.passwordAuthRepository = passwordAuthRepository;
     this.classService = classService;
     this.keyService = keyService;
@@ -106,13 +100,11 @@ public final class UserService {
 
     final Mono<Long> userIdMono = passwordAuthMono.map(PasswordAuth::getUserId);
 
-    final Mono<UserAuth> userAuthMono = userIdMono.flatMap(this::findUserAuthByUserId);
-
     final Mono<UserEntity> userMono = userIdMono.flatMap(this::findById);
 
     final AuthResponseBuilder authResponseBuilder = AuthResponse.builder();
 
-    return Mono.zip(passwordAuthMono, userAuthMono, userMono)
+    return Mono.zip(passwordAuthMono, userMono)
         .map(
             tuple -> {
               final LocalDateTime suspendedUntil = tuple.getT2().getSuspendedUntil();
@@ -139,7 +131,7 @@ public final class UserService {
                         "Account suspended until %s",
                         tuple.getT2().getSuspendedUntil().format(formatter)));
               } else {
-                authResponseBuilder.displayName(tuple.getT3().getDisplayName());
+                authResponseBuilder.displayName(tuple.getT2().getDisplayName());
                 authResponseBuilder.userId(tuple.getT1().getUserId());
                 authResponseBuilder.isAdmin(tuple.getT2().isAdmin());
               }
@@ -217,6 +209,7 @@ public final class UserService {
                   UserEntity.builder()
                       .displayName(tuple.getT1())
                       .key(keyService.generateRandomBytes(16))
+                      .isEnabled(true)
                       .accountCreated(LocalDateTime.now())
                       .build();
 
@@ -227,16 +220,8 @@ public final class UserService {
               passwordAuthBuilder.hashedPassword(passwordHash);
 
               return userIdMono.delayUntil(
-                  userId -> {
-                    Mono<UserAuth> userAuthMono =
-                        userAuthRepository.save(
-                            UserAuth.builder().userId(userId).isEnabled(true).build());
-
-                    Mono<PasswordAuth> passwordAuthMono =
-                        passwordAuthRepository.save(passwordAuthBuilder.userId(userId).build());
-
-                    return Mono.when(userAuthMono, passwordAuthMono);
-                  });
+                  userId ->
+                      passwordAuthRepository.save(passwordAuthBuilder.userId(userId).build()));
             });
   }
 
@@ -246,7 +231,6 @@ public final class UserService {
     }
     return passwordAuthRepository
         .deleteByUserId(userId)
-        .then(userAuthRepository.deleteByUserId(userId))
         .then(userRepository.deleteById(userId))
         .doOnSuccess(u -> kick(userId));
   }
@@ -258,9 +242,9 @@ public final class UserService {
 
     log.info("Demoting user with id " + userId + " to user");
 
-    return findUserAuthByUserId(userId)
-        .map(userAuth -> userAuth.withAdmin(false))
-        .flatMap(userAuthRepository::save)
+    return findById(userId)
+        .map(user -> user.withAdmin(false))
+        .flatMap(userRepository::save)
         .doOnSuccess(u -> kick(userId))
         .then();
   }
@@ -272,9 +256,9 @@ public final class UserService {
 
     log.info("Disabling user with id " + userId);
 
-    return findUserAuthByUserId(userId)
-        .map(userAuth -> userAuth.withEnabled(false))
-        .flatMap(userAuthRepository::save)
+    return findById(userId)
+        .map(user -> user.withEnabled(false))
+        .flatMap(userRepository::save)
         .doOnSuccess(u -> kick(userId))
         .then();
   }
@@ -307,9 +291,9 @@ public final class UserService {
 
     log.info("Enabling user with id " + userId);
 
-    return findUserAuthByUserId(userId)
-        .map(userAuth -> userAuth.withEnabled(true))
-        .flatMap(userAuthRepository::save)
+    return findById(userId)
+        .map(user -> user.withEnabled(true))
+        .flatMap(userRepository::save)
         .doOnSuccess(u -> kick(userId))
         .then();
   }
@@ -372,14 +356,6 @@ public final class UserService {
     return passwordAuthRepository.findByUserId(userId);
   }
 
-  public Mono<UserAuth> findUserAuthByUserId(final long userId) {
-    if (userId <= 0) {
-      return Mono.error(new InvalidUserIdException());
-    }
-
-    return userAuthRepository.findByUserId(userId);
-  }
-
   public Mono<Long> findUserIdByLoginName(final String loginName) {
     if (loginName == null) {
       return Mono.error(new NullPointerException());
@@ -413,9 +389,9 @@ public final class UserService {
 
     log.info("Promoting user with id " + userId + " to admin");
 
-    return findUserAuthByUserId(userId)
-        .map(userAuth -> userAuth.withAdmin(true))
-        .flatMap(userAuthRepository::save)
+    return findById(userId)
+        .map(user -> user.withAdmin(true))
+        .flatMap(userRepository::save)
         .doOnSuccess(u -> kick(userId))
         .then();
   }
@@ -504,13 +480,11 @@ public final class UserService {
 
     log.info("Suspending user with id " + userId + " until " + suspensionDate.toString());
 
-    return findUserAuthByUserId(userId)
+    return findById(userId)
         .map(
-            userAuth ->
-                userAuth
-                    .withSuspendedUntil(suspensionDate)
-                    .withSuspensionMessage(suspensionMessage))
-        .flatMap(userAuthRepository::save)
+            user ->
+                user.withSuspendedUntil(suspensionDate).withSuspensionMessage(suspensionMessage))
+        .flatMap(userRepository::save)
         .doOnSuccess(u -> kick(userId))
         .then();
   }

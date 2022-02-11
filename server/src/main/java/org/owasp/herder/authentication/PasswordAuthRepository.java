@@ -35,5 +35,5 @@ public interface PasswordAuthRepository extends ReactiveCrudRepository<PasswordA
   public Mono<PasswordAuth> findByUserId(@Param("user_id") final long userId);
 
   @Modifying
-  public Mono<UserAuth> deleteByUserId(@Param("user_id") final long userId);
+  public Mono<PasswordAuth> deleteByUserId(@Param("user_id") final long userId);
 }

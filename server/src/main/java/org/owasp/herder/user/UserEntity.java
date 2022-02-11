@@ -50,12 +50,17 @@ public final class UserEntity implements Serializable {
 
   private Long classId;
 
-  private String email;
-
-  @JsonProperty("isNotBanned")
-  private boolean isNotBanned;
-
   private LocalDateTime accountCreated;
+
+  @JsonProperty("isEnabled")
+  private boolean isEnabled;
+
+  @JsonProperty("isAdmin")
+  private boolean isAdmin;
+
+  private LocalDateTime suspendedUntil;
+
+  private String suspensionMessage;
 
   @Column("user_key")
   @NonNull
