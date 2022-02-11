@@ -27,9 +27,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
@@ -37,22 +34,12 @@ import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.User;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(
-    webEnvironment = WebEnvironment.RANDOM_PORT,
-    properties = {"application.runner.enabled=false"})
-@AutoConfigureWebTestClient
-@Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("User API integration tests")
 class UserApiIT extends BaseIT {
   @BeforeAll

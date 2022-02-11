@@ -39,9 +39,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.flag.FlagHandler;
@@ -61,23 +58,13 @@ import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.r2dbc.core.DatabaseClient;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import io.github.bucket4j.Bucket;
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(
-    webEnvironment = WebEnvironment.RANDOM_PORT,
-    properties = {"application.runner.enabled=false"})
-@AutoConfigureWebTestClient
-@Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("ScoringService integration tests")
 class ScoreboardIT extends BaseIT {
   @BeforeAll

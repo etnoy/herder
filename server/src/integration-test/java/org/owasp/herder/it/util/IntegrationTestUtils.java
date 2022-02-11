@@ -25,7 +25,6 @@ import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.authentication.UserAuthRepository;
 import org.owasp.herder.configuration.ConfigurationRepository;
 import org.owasp.herder.crypto.WebTokenService;
-import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.module.ModulePointRepository;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
@@ -55,7 +54,7 @@ import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
-public final class IntegrationTestUtils extends BaseIT {
+public final class IntegrationTestUtils {
   @Autowired UserService userService;
 
   @Autowired ModuleService moduleService;

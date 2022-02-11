@@ -28,13 +28,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.configuration.MysqlVersionChecker;
 import org.owasp.herder.exception.IncompatibleDatabaseException;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -51,9 +48,7 @@ import reactor.core.publisher.Hooks;
 @SpringBootTest(
     webEnvironment = WebEnvironment.RANDOM_PORT,
     properties = {"application.runner.enabled=false"})
-@AutoConfigureWebTestClient
 @Testcontainers
-@Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("MysqlVersionChecker integration tests for MySQL 5.7")
 class MysqlVersionCheckerMysql57IT {
   @Autowired IntegrationTestUtils integrationTestUtils;

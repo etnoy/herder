@@ -41,6 +41,7 @@ CREATE
         module(
             id BIGINT AUTO_INCREMENT,
             name VARCHAR(191) NOT NULL UNIQUE,
+            display_name VARCHAR(191) NULL,
             is_flag_static BOOLEAN DEFAULT FALSE,
             static_flag VARCHAR(128) NULL,
             module_key BINARY(64) NOT NULL,

@@ -21,13 +21,15 @@
  */
 package org.owasp.herder.module;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.DuplicateModuleNameException;
+import org.owasp.herder.exception.EmptyModuleNameException;
 import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.exception.ModuleNameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -47,6 +49,9 @@ public final class ModuleService {
   public Mono<ModuleEntity> create(final String moduleName) {
     if (moduleName == null) {
       return Mono.error(new NullPointerException("Module name cannot be null"));
+    }
+    if (moduleName.isEmpty()) {
+      return Mono.error(new EmptyModuleNameException());
     }
 
     log.info("Creating new module " + moduleName);

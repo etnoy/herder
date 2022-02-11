@@ -32,9 +32,6 @@ import java.util.Collection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.crypto.WebTokenService;
 import org.owasp.herder.it.BaseIT;
@@ -42,21 +39,11 @@ import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(
-    webEnvironment = WebEnvironment.RANDOM_PORT,
-    properties = {"application.runner.enabled=false"})
-@AutoConfigureWebTestClient
-@Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("Web Token integration tests")
 class WebTokenIT extends BaseIT {
 

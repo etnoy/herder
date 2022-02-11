@@ -47,6 +47,8 @@ public class ModuleEntity implements Serializable {
 
   @NonNull private String name;
 
+  private String displayName;
+
   @JsonProperty("hasStaticFlag")
   private boolean isFlagStatic;
 

@@ -25,9 +25,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
@@ -42,21 +39,11 @@ import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@ExtendWith(SpringExtension.class)
-@Testcontainers
-@SpringBootTest(
-    webEnvironment = WebEnvironment.RANDOM_PORT,
-    properties = {"application.runner.enabled=false"})
-@Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("Flag submission integration tests")
 class FlagSubmissionIT extends BaseIT {
   @BeforeAll

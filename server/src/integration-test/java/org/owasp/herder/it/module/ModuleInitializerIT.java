@@ -24,13 +24,10 @@ package org.owasp.herder.it.module;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.InvalidHerderModuleTypeException;
 import org.owasp.herder.it.BaseIT;
@@ -41,21 +38,13 @@ import org.owasp.herder.module.ModuleInitializer;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.ScoreService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import lombok.RequiredArgsConstructor;
 import reactor.test.StepVerifier;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(
-    webEnvironment = WebEnvironment.RANDOM_PORT,
-    properties = {"application.runner.enabled=false"})
-@AutoConfigureWebTestClient
 @DirtiesContext
-@Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("ModuleInitializer integration tests")
 class ModuleInitializerIT extends BaseIT {
   @Autowired GenericApplicationContext applicationContext;
