@@ -98,9 +98,8 @@ public final class UserService {
             .filter(passwordAuth -> encoder.matches(password, passwordAuth.getHashedPassword()))
             .switchIfEmpty(Mono.error(new BadCredentialsException("Invalid username or password")));
 
-    final Mono<Long> userIdMono = passwordAuthMono.map(PasswordAuth::getUserId);
-
-    final Mono<UserEntity> userMono = userIdMono.flatMap(this::findById);
+    final Mono<UserEntity> userMono =
+        passwordAuthMono.map(PasswordAuth::getUserId).flatMap(this::findById);
 
     final AuthResponseBuilder authResponseBuilder = AuthResponse.builder();
 
