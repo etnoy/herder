@@ -112,7 +112,7 @@ public final class UserService {
               if (suspendedUntil == null) {
                 isSuspended = false;
               } else {
-                isSuspended = tuple.getT2().getSuspendedUntil().isAfter(LocalDateTime.now());
+                isSuspended = tuple.getT2().getSuspendedUntil().isAfter(LocalDateTime.now(clock));
               }
 
               if (!tuple.getT2().isEnabled()) {
@@ -121,9 +121,6 @@ public final class UserService {
 
               } else if (isSuspended) {
                 // Account is suspended until a given date
-
-                // TODO: make this testable by introducing testclock
-
                 final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
                 throw new LockedException(
