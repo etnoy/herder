@@ -22,9 +22,9 @@
 package org.owasp.herder.module;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -32,11 +32,12 @@ import lombok.Value;
 
 @Value
 @Builder
-@Table
 public class ModuleListItem implements Serializable {
   private static final long serialVersionUID = -5011105798343266330L;
 
-  @Id @NonNull private String name;
+  @Id @NonNull String name;
 
-  private Boolean isSolved;
+  List<NameValueTag> tags;
+
+  Boolean isSolved;
 }

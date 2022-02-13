@@ -19,23 +19,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.module.flag;
+package org.owasp.herder.scoring;
 
-import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.module.BaseModule;
-import org.owasp.herder.module.HerderModule;
-import org.owasp.herder.module.Tag;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.stereotype.Repository;
 
-import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
-@RequiredArgsConstructor
-@HerderModule(name = "flag-tutorial", baseScore = 100)
-@Tag(name = "type", value = "tutorial")
-public class FlagTutorial extends BaseModule {
-  private final FlagHandler flagHandler;
-
-  public Mono<String> getFlag(final long userId) {
-    return flagHandler.getDynamicFlag(userId, getName());
-  }
+@Repository
+public interface ModulePointRepository extends ReactiveCrudRepository<ModulePoint, Long> {
+  public Flux<ModulePoint> findAllByModuleName(@Param("moduleName") final String moduleName);
 }

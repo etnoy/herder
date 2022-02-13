@@ -24,6 +24,7 @@ package org.owasp.herder.module.csrf;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
+import org.owasp.herder.module.Tag;
 import org.owasp.herder.module.csrf.CsrfTutorialResult.CsrfTutorialResultBuilder;
 
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @RequiredArgsConstructor
 @HerderModule(name = "csrf-tutorial", baseScore = 100)
+@Tag(name = "topic", value = "csrf")
 public class CsrfTutorial extends BaseModule {
   private final CsrfService csrfService;
 

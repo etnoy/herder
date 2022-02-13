@@ -19,23 +19,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.module.flag;
+package org.owasp.herder.module;
 
-import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.module.BaseModule;
-import org.owasp.herder.module.HerderModule;
-import org.owasp.herder.module.Tag;
+import java.io.Serializable;
 
-import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Mono;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-@RequiredArgsConstructor
-@HerderModule(name = "flag-tutorial", baseScore = 100)
-@Tag(name = "type", value = "tutorial")
-public class FlagTutorial extends BaseModule {
-  private final FlagHandler flagHandler;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Value;
+import lombok.With;
 
-  public Mono<String> getFlag(final long userId) {
-    return flagHandler.getDynamicFlag(userId, getName());
-  }
+@Value
+@Builder
+@With
+@Table
+public class ModuleTag implements Serializable {
+  private static final long serialVersionUID = -1467010304152602335L;
+
+  @Id private Long id;
+
+  @NonNull private String moduleName;
+
+  @Column("tag_name")
+  @NonNull
+  private String name;
+
+  @Column("tag_value")
+  @NonNull
+  private String value;
 }

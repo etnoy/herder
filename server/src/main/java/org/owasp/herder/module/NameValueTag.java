@@ -21,14 +21,18 @@
  */
 package org.owasp.herder.module;
 
-import org.owasp.herder.scoring.ModulePoint;
-import org.springframework.data.repository.query.Param;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import org.springframework.stereotype.Repository;
+import java.io.Serializable;
 
-import reactor.core.publisher.Flux;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Value;
 
-@Repository
-public interface ModulePointRepository extends ReactiveCrudRepository<ModulePoint, Long> {
-  public Flux<ModulePoint> findAllByModuleName(@Param("moduleName") final int moduleName);
+@Value
+@Builder
+public class NameValueTag implements Serializable {
+  private static final long serialVersionUID = -2028498831072391318L;
+
+  @NonNull String name;
+
+  @NonNull String value;
 }

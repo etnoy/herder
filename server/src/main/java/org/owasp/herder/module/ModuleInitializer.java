@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
@@ -90,18 +92,43 @@ public final class ModuleInitializer implements ApplicationContextAware {
 
   public Mono<Void> initializeModule(final BaseModule module) {
     final HerderModule moduleAnnotations = module.getClass().getAnnotation(HerderModule.class);
+
+    // Find the module name declared in the annotation
     final String moduleName = moduleAnnotations.name();
 
+    // TODO: Do sanity checks on the module name
+
     log.debug("Initializing module " + moduleName);
+
+    // Find all tag annotations
+    final List<ModuleTag> tags =
+        Stream.of(module.getClass().getAnnotationsByType(Tag.class))
+            // Create a ModuleTag entity for each tag
+            .map(
+                tag ->
+                    ModuleTag.builder()
+                        .moduleName(moduleName)
+                        .name(tag.name())
+                        .value(tag.value())
+                        .build())
+            .collect(Collectors.toUnmodifiableList());
+
     if (Boolean.TRUE.equals(moduleService.existsByName(moduleName).block())) {
+      // If the module already exists in the database, do nothing.
+      // This case can happen on, for instance, application restart
       return Mono.empty();
     } else {
       return moduleService
+          // Persist the module
           .create(moduleName)
+          // Persist the default scores (if any)
           .then(scoreService.setModuleScore(moduleName, 0, moduleAnnotations.baseScore()))
           .then(scoreService.setModuleScore(moduleName, 1, moduleAnnotations.goldBonus()))
           .then(scoreService.setModuleScore(moduleName, 2, moduleAnnotations.silverBonus()))
           .then(scoreService.setModuleScore(moduleName, 3, moduleAnnotations.bronzeBonus()))
+          // Persist the default tags (if any)
+          .thenMany(moduleService.saveTags(tags))
+          // Return a Mono<Void>
           .then();
     }
   }

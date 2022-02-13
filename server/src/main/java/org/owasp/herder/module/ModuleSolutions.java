@@ -21,12 +21,13 @@
  */
 package org.owasp.herder.module;
 
-import lombok.RequiredArgsConstructor;
 import org.owasp.herder.exception.EmptyModuleNameException;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.module.ModuleListItem.ModuleListItemBuilder;
 import org.owasp.herder.scoring.SubmissionService;
 import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -52,14 +53,30 @@ public final class ModuleSolutions {
                 // Get all modules
                 moduleService
                     .findAllOpen()
+                    .map(ModuleEntity::getName)
+                    .flatMap(
+                        moduleName ->
+                            Mono.just(moduleName)
+                                .zipWith(
+                                    // Find all tags for the given module
+                                    moduleService
+                                        .findAllTagsByModuleName(moduleName)
+                                        .map(
+                                            tag ->
+                                                NameValueTag.builder()
+                                                    .name(tag.getName())
+                                                    .value(tag.getValue())
+                                                    .build())
+                                        .collectList()))
                     .map(
-                        module -> {
-                          final String moduleName = module.getName();
+                        tuple -> {
                           // For each module, construct a module list item
-                          moduleListItemBuilder.name(moduleName);
+                          moduleListItemBuilder.name(tuple.getT1());
                           // Check if this module id is finished
-                          moduleListItemBuilder.isSolved(finishedModules.contains(moduleName));
-                          // Build the module list item and return
+                          moduleListItemBuilder.isSolved(finishedModules.contains(tuple.getT1()));
+                          // Supply the list of tags (if any)
+                          moduleListItemBuilder.tags(tuple.getT2());
+                          // Build the list item
                           return moduleListItemBuilder.build();
                         }));
   }
@@ -78,7 +95,8 @@ public final class ModuleSolutions {
 
     final ModuleListItemBuilder moduleListItemBuilder = ModuleListItem.builder();
 
-    final Mono<ModuleEntity> moduleMono = moduleService.findByName(moduleName).filter(ModuleEntity::isOpen);
+    final Mono<ModuleEntity> moduleMono =
+        moduleService.findByName(moduleName).filter(ModuleEntity::isOpen);
 
     return moduleMono
         .map(ModuleEntity::getName)

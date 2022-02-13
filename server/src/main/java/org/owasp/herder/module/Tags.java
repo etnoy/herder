@@ -19,23 +19,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.module.flag;
+package org.owasp.herder.module;
 
-import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.module.BaseModule;
-import org.owasp.herder.module.HerderModule;
-import org.owasp.herder.module.Tag;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Mono;
+import org.springframework.stereotype.Component;
 
-@RequiredArgsConstructor
-@HerderModule(name = "flag-tutorial", baseScore = 100)
-@Tag(name = "type", value = "tutorial")
-public class FlagTutorial extends BaseModule {
-  private final FlagHandler flagHandler;
-
-  public Mono<String> getFlag(final long userId) {
-    return flagHandler.getDynamicFlag(userId, getName());
-  }
+@Component
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface Tags {
+  Tag[] value();
 }

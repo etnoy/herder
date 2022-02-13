@@ -23,6 +23,8 @@ package org.owasp.herder.it.module;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -36,12 +38,13 @@ import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
 import org.owasp.herder.module.ModuleInitializer;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.module.ModuleTag;
+import org.owasp.herder.module.Tag;
 import org.owasp.herder.scoring.ScoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 
-import lombok.RequiredArgsConstructor;
 import reactor.test.StepVerifier;
 
 @DirtiesContext
@@ -59,21 +62,12 @@ class ModuleInitializerIT extends BaseIT {
 
   Map<String, Object> beans;
 
-  @RequiredArgsConstructor
-  @HerderModule(name = "test-module")
-  public class TestModule extends BaseModule {}
-
-  @RequiredArgsConstructor
-  @HerderModule(name = "test-module")
-  public class TestModuleNameCollision extends BaseModule {}
-
-  @RequiredArgsConstructor
-  @HerderModule(name = "wrong-base")
-  public class TestModuleWrongBase {}
-
   @Test
   @DisplayName("Can throw error if module does not extend BaseModule")
-  void initializeModules_WrongType_ReturnsError() {
+  void canThrowErrorIfHerderModuleIsOfWrongType() {
+    @HerderModule(name = "wrong-base")
+    class TestModuleWrongBase {}
+
     applicationContext.registerBean(TestModuleWrongBase.class, () -> new TestModuleWrongBase());
     assertThatThrownBy(() -> moduleInitializer.initializeModules())
         .isInstanceOf(InvalidHerderModuleTypeException.class);
@@ -81,8 +75,11 @@ class ModuleInitializerIT extends BaseIT {
 
   @Test
   @DisplayName("Can register a Herder module")
-  void initializeModules_OneModule_ModuleInitialized() {
+  void canRegisterHerderModule() {
     final String moduleName = "test-module";
+
+    @HerderModule(name = moduleName)
+    class TestModule extends BaseModule {}
 
     applicationContext.registerBean(TestModule.class, () -> new TestModule());
     moduleInitializer.initializeModules();
@@ -94,12 +91,98 @@ class ModuleInitializerIT extends BaseIT {
   @Test
   @DisplayName("Can throw error if module names collide")
   void initializeModules_NameCollision_ReturnsError() {
+    final String moduleName = "test-module";
+
+    @HerderModule(name = moduleName)
+    class TestModule extends BaseModule {}
+
+    @HerderModule(name = moduleName)
+    class TestModuleNameCollision extends BaseModule {}
+
     applicationContext.registerBean(TestModule.class, () -> new TestModule());
     applicationContext.registerBean(
         TestModuleNameCollision.class, () -> new TestModuleNameCollision());
 
     assertThatThrownBy(() -> moduleInitializer.initializeModules())
         .isInstanceOf(DuplicateModuleNameException.class);
+  }
+
+  @Test
+  @DisplayName("Can initialize a module with tags of same name")
+  void canInitializeModuleWithTagsOfSameName() {
+    final String moduleName = "tags-with-same-name";
+
+    @HerderModule(name = moduleName)
+    @Tag(name = "topic", value = "testing")
+    @Tag(name = "topic", value = "production")
+    class MultipleTagsWithSameName extends BaseModule {}
+
+    final List<ModuleTag> expectedTags = new ArrayList<>();
+    expectedTags.add(
+        ModuleTag.builder().moduleName(moduleName).name("topic").value("testing").build());
+    expectedTags.add(
+        ModuleTag.builder().moduleName(moduleName).name("topic").value("production").build());
+
+    applicationContext.registerBean(
+        MultipleTagsWithSameName.class, () -> new MultipleTagsWithSameName());
+    moduleInitializer.initializeModules();
+    StepVerifier.create(
+            moduleService
+                .findAllTagsByModuleName(moduleName)
+                .map(moduleTag -> moduleTag.withId(null)))
+        .expectNextMatches(expectedTag -> expectedTags.contains(expectedTag))
+        .expectNextMatches(expectedTag -> expectedTags.contains(expectedTag))
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can initialize a module with multiple tags")
+  void canInitializeModuleWithMultipleTags() {
+    final String moduleName = "multiple-tags";
+
+    @HerderModule(name = moduleName)
+    @Tag(name = "topic", value = "testing")
+    @Tag(name = "difficulty", value = "beginner")
+    class MultipleTagsModule extends BaseModule {}
+
+    final List<ModuleTag> expectedTags = new ArrayList<>();
+    expectedTags.add(
+        ModuleTag.builder().moduleName(moduleName).name("topic").value("testing").build());
+    expectedTags.add(
+        ModuleTag.builder().moduleName(moduleName).name("difficulty").value("beginner").build());
+
+    applicationContext.registerBean(MultipleTagsModule.class, () -> new MultipleTagsModule());
+    moduleInitializer.initializeModules();
+    StepVerifier.create(
+            moduleService
+                .findAllTagsByModuleName(moduleName)
+                .map(moduleTag -> moduleTag.withId(null)))
+        .expectNextMatches(expectedTag -> expectedTags.contains(expectedTag))
+        .expectNextMatches(expectedTag -> expectedTags.contains(expectedTag))
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can initialize a module with tag")
+  void canInitializeModuleWithTag() {
+    final String moduleName = "single-tag";
+
+    @HerderModule(name = moduleName)
+    @Tag(name = "topic", value = "testing")
+    class SingleTagModule extends BaseModule {}
+
+    final List<ModuleTag> expectedTags = new ArrayList<>();
+    expectedTags.add(
+        ModuleTag.builder().moduleName(moduleName).name("topic").value("testing").build());
+
+    applicationContext.registerBean(SingleTagModule.class, () -> new SingleTagModule());
+    moduleInitializer.initializeModules();
+    StepVerifier.create(
+            moduleService
+                .findAllTagsByModuleName(moduleName)
+                .map(moduleTag -> moduleTag.withId(null)))
+        .expectNextMatches(expectedTag -> expectedTags.contains(expectedTag))
+        .verifyComplete();
   }
 
   @Test

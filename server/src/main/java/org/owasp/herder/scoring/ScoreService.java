@@ -22,7 +22,6 @@
 package org.owasp.herder.scoring;
 
 import org.owasp.herder.exception.InvalidRankException;
-import org.owasp.herder.module.ModulePointRepository;
 import org.owasp.herder.scoring.ModulePoint.ModulePointBuilder;
 import org.springframework.stereotype.Service;
 

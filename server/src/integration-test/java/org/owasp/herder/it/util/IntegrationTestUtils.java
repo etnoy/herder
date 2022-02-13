@@ -24,11 +24,12 @@ package org.owasp.herder.it.util;
 import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.configuration.ConfigurationRepository;
 import org.owasp.herder.crypto.WebTokenService;
-import org.owasp.herder.module.ModulePointRepository;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.module.ModuleTagRepository;
 import org.owasp.herder.module.csrf.CsrfAttackRepository;
 import org.owasp.herder.scoring.CorrectionRepository;
+import org.owasp.herder.scoring.ModulePointRepository;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.test.util.TestConstants;
@@ -77,6 +78,8 @@ public final class IntegrationTestUtils {
   @Autowired CorrectionRepository correctionRepository;
 
   @Autowired ModulePointRepository modulePointRepository;
+
+  @Autowired ModuleTagRepository moduleTagRepository;
 
   @Autowired WebTokenService webTokenService;
 
@@ -151,17 +154,19 @@ public final class IntegrationTestUtils {
     // Delete all score corrections
     correctionRepository
         .deleteAll()
-        // Delete all module scoring rules
+        // Delete all csrf attacks
         .then(csrfAttackRepository.deleteAll())
         // Delete all module scoring rules
         .then(modulePointRepository.deleteAll())
+        // Delete all module tags
+        .then(moduleTagRepository.deleteAll())
         // Delete all submissions
         .then(submissionRepository.deleteAll())
         // Delete all classes
         .then(classRepository.deleteAll())
         // Delete all modules
         .then(moduleRepository.deleteAll())
-        // Delete all configuration
+        // Delete all configurations
         .then(configurationRepository.deleteAll())
         // Delete all password auth data
         .then(passwordAuthRepository.deleteAll())

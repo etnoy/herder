@@ -83,6 +83,21 @@ CREATE
 
 CREATE
     TABLE
+        module_tag(
+            id BIGINT AUTO_INCREMENT,
+            module_name VARCHAR(191) NOT NULL,
+            tag_name VARCHAR(64) NOT NULL,
+            tag_value VARCHAR(64) NOT NULL,
+            PRIMARY KEY(id),
+            FOREIGN KEY(
+                module_name
+            ) REFERENCES module(name)
+        ) ENGINE = InnoDB DEFAULT CHARACTER
+    SET
+        = utf8mb4;
+
+CREATE
+    TABLE
         module_point(
             id BIGINT AUTO_INCREMENT,
             module_name VARCHAR(191) NOT NULL,

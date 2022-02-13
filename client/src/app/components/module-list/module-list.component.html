@@ -8,6 +8,7 @@
               <a href="module/{{ module.name }}">{{ module.name }}</a
               >&nbsp;
               <span *ngIf="module.isSolved">✅</span>
+              <span *ngFor="let tag of module.tags">{{tag.name}}:{{tag.value}}</span>
             </p>
           </li>
         </ng-container>
