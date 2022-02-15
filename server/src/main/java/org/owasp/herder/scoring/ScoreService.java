@@ -32,10 +32,9 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Service
 public final class ScoreService {
-
   private final ModulePointRepository modulePointRepository;
 
-  private final ScoreboardRepository scoreboardRepository;
+  private final SubmissionRepository submissionRepository;
 
   public Mono<ModulePoint> setModuleScore(
       final String moduleName, final long rank, final long points) {
@@ -51,6 +50,6 @@ public final class ScoreService {
   }
 
   public Flux<ScoreboardEntry> getScoreboard() {
-    return scoreboardRepository.findAll();
+    return submissionRepository.getScoreboard();
   }
 }

@@ -139,7 +139,7 @@ public final class UserService {
     return userRepository.count();
   }
 
-  public Mono<Long> create(final String displayName) {
+  public Mono<String> create(final String displayName) {
     if (displayName == null) {
       return Mono.error(new NullPointerException());
     }
@@ -164,7 +164,7 @@ public final class UserService {
         .map(UserEntity::getId);
   }
 
-  public Mono<Long> createPasswordUser(
+  public Mono<String> createPasswordUser(
       final String displayName, final String loginName, final String passwordHash) {
     if (displayName == null) {
       return Mono.error(new NullPointerException("Display name cannot be null"));
@@ -209,7 +209,7 @@ public final class UserService {
                       .accountCreated(LocalDateTime.now())
                       .build();
 
-              final Mono<Long> userIdMono = userRepository.save(newUser).map(UserEntity::getId);
+              final Mono<String> userIdMono = userRepository.save(newUser).map(UserEntity::getId);
 
               final PasswordAuthBuilder passwordAuthBuilder = PasswordAuth.builder();
               passwordAuthBuilder.loginName(tuple.getT2());
@@ -221,8 +221,11 @@ public final class UserService {
             });
   }
 
-  public Mono<Void> deleteById(final long userId) {
-    if (userId <= 0) {
+  public Mono<Void> deleteById(final String userId) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
     return passwordAuthRepository
@@ -231,11 +234,13 @@ public final class UserService {
         .doOnSuccess(u -> kick(userId));
   }
 
-  public Mono<Void> demote(final long userId) {
-    if (userId <= 0) {
+  public Mono<Void> demote(final String userId) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
-
     log.info("Demoting user with id " + userId + " to user");
 
     return findById(userId)
@@ -245,11 +250,7 @@ public final class UserService {
         .then();
   }
 
-  public Mono<Void> disable(final long userId) {
-    if (userId <= 0) {
-      return Mono.error(new InvalidUserIdException());
-    }
-
+  public Mono<Void> disable(final String userId) {
     log.info("Disabling user with id " + userId);
 
     return findById(userId)
@@ -280,11 +281,7 @@ public final class UserService {
     return passwordAuthRepository.findByLoginName(loginName).map(u -> false).defaultIfEmpty(true);
   }
 
-  public Mono<Void> enable(final long userId) {
-    if (userId <= 0) {
-      return Mono.error(new InvalidUserIdException());
-    }
-
+  public Mono<Void> enable(final String userId) {
     log.info("Enabling user with id " + userId);
 
     return findById(userId)
@@ -298,26 +295,33 @@ public final class UserService {
     return userRepository.findAll();
   }
 
-  public Mono<UserEntity> findById(final long userId) {
-    if (userId <= 0) {
+  public Mono<UserEntity> findById(final String userId) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
-
     return userRepository.findById(userId);
   }
 
-  public Mono<String> findDisplayNameById(final long userId) {
-    if (userId <= 0) {
+  public Mono<String> findDisplayNameById(final String userId) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
     return userRepository.findById(userId).map(UserEntity::getDisplayName);
   }
 
-  public Mono<byte[]> findKeyById(final long userId) {
-    if (userId <= 0) {
+  public Mono<byte[]> findKeyById(final String userId) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
-
     return Mono.just(userId)
         .filterWhen(userRepository::existsById)
         .switchIfEmpty(Mono.error(new UserIdNotFoundException()))
@@ -344,15 +348,17 @@ public final class UserService {
     return passwordAuthRepository.findByLoginName(loginName);
   }
 
-  public Mono<PasswordAuth> findPasswordAuthByUserId(final long userId) {
-    if (userId <= 0) {
+  public Mono<PasswordAuth> findPasswordAuthByUserId(final String userId) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
-
     return passwordAuthRepository.findByUserId(userId);
   }
 
-  public Mono<Long> findUserIdByLoginName(final String loginName) {
+  public Mono<String> findUserIdByLoginName(final String loginName) {
     if (loginName == null) {
       return Mono.error(new NullPointerException());
     }
@@ -363,10 +369,7 @@ public final class UserService {
     return passwordAuthRepository.findByLoginName(loginName).map(PasswordAuth::getUserId);
   }
 
-  public void kick(final long userId) {
-    if (userId <= 0) {
-      throw new InvalidUserIdException();
-    }
+  public void kick(final String userId) {
 
     log.info("Revoking all tokens for user with id " + userId);
 
@@ -378,8 +381,11 @@ public final class UserService {
         new DuplicateUserLoginNameException("Login name " + loginName + " already exists"));
   }
 
-  public Mono<Void> promote(final long userId) {
-    if (userId <= 0) {
+  public Mono<Void> promote(final String userId) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
 
@@ -396,16 +402,20 @@ public final class UserService {
     this.clock = Clock.systemDefaultZone();
   }
 
-  public Mono<UserEntity> setClassId(final long userId, final long classId) {
-    if (userId <= 0) {
+  public Mono<UserEntity> setClassId(final String userId, final String classId) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
-
-    if (classId <= 0) {
+    if (classId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (classId.isEmpty()) {
       return Mono.error(new InvalidClassIdException());
     }
-
-    final Mono<Long> classIdMono =
+    final Mono<String> classIdMono =
         Mono.just(classId)
             .filterWhen(classService::existsById)
             .switchIfEmpty(Mono.error(new ClassIdNotFoundException()));
@@ -422,15 +432,16 @@ public final class UserService {
     this.clock = clock;
   }
 
-  public Mono<UserEntity> setDisplayName(final long userId, final String displayName) {
-    if (userId <= 0) {
+  public Mono<UserEntity> setDisplayName(final String userId, final String displayName) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
-
     if (displayName == null) {
       return Mono.error(new NullPointerException());
     }
-
     if (displayName.isEmpty()) {
       return Mono.error(new IllegalArgumentException());
     }
@@ -451,25 +462,21 @@ public final class UserService {
         .flatMap(userRepository::save);
   }
 
-  public Mono<Void> suspendUntil(final long userId, final Duration duration) {
+  public Mono<Void> suspendUntil(final String userId, final Duration duration) {
     return suspendUntil(userId, LocalDateTime.now().plus(duration), null);
   }
 
   public Mono<Void> suspendUntil(
-      final long userId, final Duration duration, final String suspensionMessage) {
+      final String userId, final Duration duration, final String suspensionMessage) {
     return suspendUntil(userId, LocalDateTime.now().plus(duration), suspensionMessage);
   }
 
-  public Mono<Void> suspendUntil(final long userId, final LocalDateTime suspensionDate) {
+  public Mono<Void> suspendUntil(final String userId, final LocalDateTime suspensionDate) {
     return suspendUntil(userId, suspensionDate, null);
   }
 
   public Mono<Void> suspendUntil(
-      final long userId, final LocalDateTime suspensionDate, final String suspensionMessage) {
-    if (userId <= 0) {
-      return Mono.error(new InvalidUserIdException());
-    }
-
+      final String userId, final LocalDateTime suspensionDate, final String suspensionMessage) {
     if (suspensionDate.isBefore(LocalDateTime.now(clock))) {
       return Mono.error(new IllegalArgumentException("Suspension date must be in the future"));
     }

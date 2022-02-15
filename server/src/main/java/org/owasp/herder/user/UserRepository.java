@@ -21,13 +21,13 @@
  */
 package org.owasp.herder.user;
 
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface UserRepository extends ReactiveCrudRepository<UserEntity, Long> {
+public interface UserRepository extends ReactiveMongoRepository<UserEntity, String> {
   public Mono<UserEntity> findByDisplayName(@Param("display_name") final String displayName);
 }

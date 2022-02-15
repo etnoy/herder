@@ -89,7 +89,7 @@ class XssTutorialIT extends BaseIT {
 
   @Test
   void submitQuery_XssQuery_ShowsAlert() {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
 
     final Mono<String> flagMono =
         xssTutorial
@@ -108,7 +108,7 @@ class XssTutorialIT extends BaseIT {
 
   @Test
   void submitQuery_CorrectAttackQuery_ModifiedFlagIsWrong() {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
 
     final Mono<String> flagMono =
         xssTutorial
@@ -127,7 +127,7 @@ class XssTutorialIT extends BaseIT {
 
   @Test
   void submitQuery_QueryWithoutXss_NoResults() {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
 
     StepVerifier.create(xssTutorial.submitQuery(userId, "test"))
         .assertNext(

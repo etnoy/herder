@@ -75,7 +75,7 @@ class SqlInjectionTutorialTest {
   @SuppressWarnings("unchecked")
   @Test
   void submitQuery_BadSqlGrammarException_ReturnsErrorToUser() {
-    final long mockUserId = 318L;
+    final String mockUserId = "id";
     final String mockFlag = "mockedflag";
     final String query = "username";
 
@@ -133,7 +133,7 @@ class SqlInjectionTutorialTest {
   @SuppressWarnings("unchecked")
   @Test
   void submitQuery_DataIntegrityViolationException_ReturnsErrorToUser() {
-    final long mockUserId = 318L;
+    final String mockUserId = "id";
     final String mockFlag = "mockedflag";
     final String query = "username";
 
@@ -184,7 +184,7 @@ class SqlInjectionTutorialTest {
   @SuppressWarnings("unchecked")
   @Test
   void submitQuery_RuntimeException_ThrowsException() {
-    final long mockUserId = 810L;
+    final String mockUserId = "id";
     final String mockFlag = "mockedflag";
     final String query = "username";
 
@@ -220,7 +220,7 @@ class SqlInjectionTutorialTest {
   @SuppressWarnings("unchecked")
   @Test
   void submitQuery_ValidQuery_ReturnsSqlInjectionTutorialRow() {
-    final long mockUserId = 606L;
+    final String mockUserId = "id";
     final String mockFlag = "mockedflag";
     final String query = "username";
 

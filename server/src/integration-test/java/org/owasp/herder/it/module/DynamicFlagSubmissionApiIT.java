@@ -111,7 +111,7 @@ class DynamicFlagSubmissionApiIT extends BaseIT {
   @Autowired PasswordEncoder passwordEncoder;
 
   @Autowired IntegrationTestUtils integrationTestUtils;
-  private long userId;
+  private String userId;
   private String token;
 
   private String dynamicFlag;

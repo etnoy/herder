@@ -59,7 +59,7 @@ public class CsrfService {
         .then(Mono.empty());
   }
 
-  public Mono<String> getPseudonym(final long userId, final String moduleName) {
+  public Mono<String> getPseudonym(final String userId, final String moduleName) {
     return flagHandler.getSaltedHmac(userId, moduleName, "csrfPseudonym");
   }
 

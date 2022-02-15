@@ -40,7 +40,7 @@ public class CsrfTutorial extends BaseModule {
 
   private final FlagHandler flagHandler;
 
-  public Mono<CsrfTutorialResult> getTutorial(final long userId) {
+  public Mono<CsrfTutorialResult> getTutorial(final String userId) {
     final Mono<String> pseudonym = csrfService.getPseudonym(userId, getName());
 
     final Mono<CsrfTutorialResultBuilder> resultWithoutFlag =
@@ -59,11 +59,11 @@ public class CsrfTutorial extends BaseModule {
         .map(CsrfTutorialResultBuilder::build);
   }
 
-  public Mono<CsrfTutorialResult> attack(final long userId, final String target) {
+  public Mono<CsrfTutorialResult> attack(final String userId, final String target) {
 
     CsrfTutorialResultBuilder csrfTutorialResultBuilder = CsrfTutorialResult.builder();
 
-    log.debug(String.format("User %d is attacking csrf target %s", userId, target));
+    log.debug(String.format("User %s is attacking csrf target %s", userId, target));
 
     return csrfService
         .validatePseudonym(target, getName())

@@ -78,7 +78,7 @@ class FlagTutorialControllerTest {
 
   @Test
   void submitFlag_UserAuthenticated_ReturnsFlag() {
-    final long mockUserId = 417L;
+    final String mockUserId = "id";
     final String flag = "validflag";
 
     when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));

@@ -21,14 +21,14 @@
  */
 package org.owasp.herder.module;
 
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 
 import reactor.core.publisher.Flux;
 
 @Repository
-public interface ModuleTagRepository extends ReactiveCrudRepository<ModuleTag, Long> {
+public interface ModuleTagRepository extends ReactiveMongoRepository<ModuleTag, String> {
   public Flux<ModuleTag> findAllByModuleName(@Param("moduleName") final String moduleName);
 
   public Flux<ModuleTag> findAllByModuleNameAndName(

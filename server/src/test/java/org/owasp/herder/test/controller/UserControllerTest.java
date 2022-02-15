@@ -33,9 +33,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserController;
+import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -57,7 +58,7 @@ class UserControllerTest {
 
   @Test
   void deleteById_ValidId_CallsUserService() {
-    final long mockUserId = 317L;
+    final String mockUserId = "id";
     when(userService.deleteById(mockUserId)).thenReturn(Mono.empty());
     StepVerifier.create(userController.deleteById(mockUserId)).expectComplete().verify();
     verify(userService, times(1)).deleteById(mockUserId);
@@ -72,7 +73,7 @@ class UserControllerTest {
 
   @Test
   void findById_UserIdDoesNotExist_ReturnsUser() {
-    final long mockUserId = 559L;
+    final String mockUserId = "id";
     when(userService.findById(mockUserId)).thenReturn(Mono.empty());
     StepVerifier.create(userController.findById(mockUserId)).expectComplete().verify();
     verify(userService, times(1)).findById(mockUserId);
@@ -80,7 +81,7 @@ class UserControllerTest {
 
   @Test
   void findById_UserIdExists_ReturnsUser() {
-    final long mockUserId = 380L;
+    final String mockUserId = "id";
     final UserEntity user = mock(UserEntity.class);
 
     when(userService.findById(mockUserId)).thenReturn(Mono.just(user));

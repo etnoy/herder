@@ -36,7 +36,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.InvalidFlagStateException;
-import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
@@ -79,7 +78,7 @@ class FlagHandlerTest {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final String mockModuleName = "module-id";
-    final long mockUserId = 7;
+    final String mockUserId = "id";
 
     final byte[] mockedUserKey = {
       -108, 101, -7, -35, 17, -16, -94, 0, -32, -117, 65, -127, 22, 62, 9, 19
@@ -106,7 +105,7 @@ class FlagHandlerTest {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final String mockModuleName = "module-id";
-    final long mockUserId = 785;
+    final String mockUserId = "id";
 
     final byte[] mockedServerKey = {
       -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29
@@ -155,23 +154,6 @@ class FlagHandlerTest {
     verify(cryptoService, times(1)).hmac(mockedServerKey, mockedTotalKey);
   }
 
-  @Test
-  void getDynamicFlag_NegativeUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(flagHandler.getDynamicFlag(-1, "id"))
-        .expectError(InvalidUserIdException.class)
-        .verify();
-    StepVerifier.create(flagHandler.getDynamicFlag(-1000, "id"))
-        .expectError(InvalidUserIdException.class)
-        .verify();
-  }
-
-  @Test
-  void getDynamicFlag_ZeroUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(flagHandler.getDynamicFlag(0, "id"))
-        .expectError(InvalidUserIdException.class)
-        .verify();
-  }
-
   @BeforeEach
   private void setUp() {
     // Set up the system under test
@@ -189,7 +171,7 @@ class FlagHandlerTest {
   void verifyFlag_CorrectDynamicFlag_ReturnsTrue() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    final long mockUserId = 158;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
     final byte[] mockedServerKey = {
       -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29
@@ -245,7 +227,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_CorrectStaticFlag_ReturnsTrue() {
-    final long mockUserId = 225;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
     final String validStaticFlag = "validFlag";
 
@@ -275,7 +257,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_CorrectLowerCaseStaticFlag_ReturnsTrue() {
-    final long mockUserId = 594;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
     final String validStaticFlag = "validFlagWithUPPERCASEandlowercase";
 
@@ -306,7 +288,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_CorrectUpperCaseStaticFlag_ReturnsTrue() {
-    final long mockUserId = 594;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
     final String validStaticFlag = "validFlagWithUPPERCASEandlowercase";
 
@@ -339,7 +321,7 @@ class FlagHandlerTest {
   void verifyFlag_EmptyDynamicFlag_ReturnsFalse() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    final long mockUserId = 193;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
     final byte[] mockedServerKey = {
       -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29
@@ -396,7 +378,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_EmptyStaticFlag_ReturnsFalse() {
-    final long mockUserId = 709;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
     final String validStaticFlag = "validFlag";
 
@@ -427,7 +409,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_NullDynamicFlag_ReturnsFalse() {
-    final long mockUserId = 756;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
 
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, null))
@@ -437,7 +419,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_NullStaticFlag_ReturnsFalse() {
-    final long mockUserId = 487;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
 
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, null))
@@ -449,7 +431,7 @@ class FlagHandlerTest {
   void verifyFlag_WrongDynamicFlag_ReturnsFalse() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    final long mockUserId = 193;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
     final byte[] mockedServerKey = {
       -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29
@@ -506,7 +488,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_WrongStaticFlag_ReturnsFalse() {
-    final long mockUserId = 709;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
     final String validStaticFlag = "validFlag";
 
@@ -539,7 +521,7 @@ class FlagHandlerTest {
   void verifyFlag_CorrectUpperCaseDynamicFlag_ReturnsTrue() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    final long mockUserId = 158;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
     final byte[] mockedServerKey = {
       -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29
@@ -598,7 +580,7 @@ class FlagHandlerTest {
   void verifyFlag_CorrectDynamicFlagWithSpacesInTheMiddle_ReturnsFalse() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    final long mockUserId = 73;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
     final byte[] mockedServerKey = {
       -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29
@@ -656,7 +638,7 @@ class FlagHandlerTest {
 
   @Test
   void verifyFlag_CorrectStaticFlagWithSpacesInTheMiddle_ReturnsFalse() {
-    final long mockUserId = 255;
+    final String mockUserId = "id";
     final String mockModuleName = "module-id";
     final String validStaticFlag = "validFlag";
 

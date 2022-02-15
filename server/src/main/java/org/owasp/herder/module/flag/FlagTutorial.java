@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono;
 public class FlagTutorial extends BaseModule {
   private final FlagHandler flagHandler;
 
-  public Mono<String> getFlag(final long userId) {
+  public Mono<String> getFlag(final String userId) {
     return flagHandler.getDynamicFlag(userId, getName());
   }
 }

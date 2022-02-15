@@ -40,18 +40,12 @@ public final class SubmissionService {
 
   private final SubmissionRepository submissionRepository;
 
-  private final RankedSubmissionRepository rankedSubmissionRepository;
-
   private final FlagHandler flagHandler;
 
   private Clock clock;
 
-  public SubmissionService(
-      SubmissionRepository submissionRepository,
-      RankedSubmissionRepository rankedSubmissionRepository,
-      FlagHandler flagHandler) {
+  public SubmissionService(SubmissionRepository submissionRepository, FlagHandler flagHandler) {
     this.submissionRepository = submissionRepository;
-    this.rankedSubmissionRepository = rankedSubmissionRepository;
     this.flagHandler = flagHandler;
     resetClock();
   }
@@ -60,8 +54,11 @@ public final class SubmissionService {
     return submissionRepository.findAllByModuleName(moduleName);
   }
 
-  public Flux<Submission> findAllValidByUserId(final long userId) {
-    if (userId <= 0) {
+  public Flux<Submission> findAllValidByUserId(final String userId) {
+    if (userId == null) {
+      return Flux.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Flux.error(new InvalidUserIdException());
     }
     return submissionRepository.findAllValidByUserId(userId);
@@ -74,26 +71,39 @@ public final class SubmissionService {
     if (moduleName.isEmpty()) {
       return Flux.error(new EmptyModuleNameException());
     }
-    return rankedSubmissionRepository.findAllByModuleName(moduleName);
+    return submissionRepository.findAllRankedByModuleName(moduleName);
   }
 
-  public Flux<RankedSubmission> findAllRankedByUserId(final long userId) {
-    if (userId <= 0) {
+  public Flux<RankedSubmission> findAllRankedByUserId(final String userId) {
+    if (userId == null) {
+      return Flux.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Flux.error(new InvalidUserIdException());
     }
-    return rankedSubmissionRepository.findAllByUserId(userId);
+
+    return submissionRepository.findAllRankedByUserId(userId);
   }
 
   public Mono<Submission> findAllValidByUserIdAndModuleName(
-      final long userId, final String moduleName) {
-    if (userId <= 0) {
+      final String userId, final String moduleName) {
+    if (moduleName == null || userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
-    return submissionRepository.findAllValidByUserIdAndModuleName(userId, moduleName);
+    if (moduleName.isEmpty()) {
+      return Mono.error(new EmptyModuleNameException());
+    }
+    return submissionRepository.findAllByUserIdAndModuleNameAndIsValidTrue(userId, moduleName);
   }
 
-  public Mono<List<String>> findAllValidModuleNamesByUserId(final long userId) {
-    if (userId <= 0) {
+  public Mono<List<String>> findAllValidModuleNamesByUserId(final String userId) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
     return submissionRepository
@@ -110,10 +120,14 @@ public final class SubmissionService {
     this.clock = clock;
   }
 
-  public Mono<Submission> submit(final Long userId, final String moduleName, final String flag) {
-    if (userId <= 0) {
+  public Mono<Submission> submit(final String userId, final String moduleName, final String flag) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
+
     SubmissionBuilder submissionBuilder = Submission.builder();
     submissionBuilder.userId(userId);
     submissionBuilder.moduleName(moduleName);
@@ -130,15 +144,21 @@ public final class SubmissionService {
         .switchIfEmpty(
             Mono.error(
                 new ModuleAlreadySolvedException(
-                    String.format("User %d has already finished module %s", userId, moduleName))))
+                    String.format("User %s has already finished module %s", userId, moduleName))))
         // Otherwise, build a submission and save it in db
         .map(SubmissionBuilder::build)
         .flatMap(submissionRepository::save);
   }
 
-  public Mono<Submission> submitValid(final Long userId, final String moduleName) {
-    if (userId <= 0) {
+  public Mono<Submission> submitValid(final String userId, final String moduleName) {
+    if (moduleName == null || userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
+    }
+    if (moduleName.isEmpty()) {
+      return Mono.error(new EmptyModuleNameException());
     }
 
     SubmissionBuilder submissionBuilder = Submission.builder();
@@ -153,17 +173,16 @@ public final class SubmissionService {
         .switchIfEmpty(
             Mono.error(
                 new ModuleAlreadySolvedException(
-                    String.format("User %d has already finished module %s", userId, moduleName))))
+                    String.format("User %s has already finished module %s", userId, moduleName))))
         // Otherwise, build a submission and save it in db
         .map(SubmissionBuilder::build)
         .flatMap(submissionRepository::save);
   }
 
   private Mono<Boolean> validSubmissionDoesNotExistByUserIdAndModuleName(
-      final long userId, final String moduleName) {
+      final String userId, final String moduleName) {
     return submissionRepository
-        .findAllValidByUserIdAndModuleName(userId, moduleName)
-        .map(u -> false)
-        .defaultIfEmpty(true);
+        .existsByUserIdAndModuleNameAndIsValidTrue(userId, moduleName)
+        .map(exists -> !exists);
   }
 }

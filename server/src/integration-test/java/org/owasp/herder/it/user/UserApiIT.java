@@ -83,7 +83,7 @@ class UserApiIT extends BaseIT {
   void canDenyOtherUsersInformation() {
     integrationTestUtils.createTestUser();
 
-    final long userId = userService.create("User2").block();
+    final String userId = userService.create("User2").block();
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
@@ -91,7 +91,7 @@ class UserApiIT extends BaseIT {
 
     webTestClient
         .get()
-        .uri(String.format("/api/v1/user/%d", userId))
+        .uri(String.format("/api/v1/user/%s", userId))
         .header("Authorization", "Bearer " + token)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
@@ -103,7 +103,7 @@ class UserApiIT extends BaseIT {
   @DisplayName("An admin can get any user's information")
   void canGetOtherUsersInformationIfAdmin() {
     integrationTestUtils.createTestAdmin();
-    final long userId = userService.create("User2").block();
+    final String userId = userService.create("User2").block();
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
@@ -112,7 +112,7 @@ class UserApiIT extends BaseIT {
     StepVerifier.create(
             webTestClient
                 .get()
-                .uri(String.format("/api/v1/user/%d", userId))
+                .uri(String.format("/api/v1/user/%s", userId))
                 .header("Authorization", "Bearer " + token)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
@@ -130,7 +130,7 @@ class UserApiIT extends BaseIT {
   @Test
   @DisplayName("A regular user can get their own user information")
   void canGetOwnUserInformation() {
-    final long userId = integrationTestUtils.createTestUser();
+    final String userId = integrationTestUtils.createTestUser();
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
@@ -139,7 +139,7 @@ class UserApiIT extends BaseIT {
     StepVerifier.create(
             webTestClient
                 .get()
-                .uri(String.format("/api/v1/user/%d", userId))
+                .uri(String.format("/api/v1/user/%s", userId))
                 .header("Authorization", "Bearer " + token)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()

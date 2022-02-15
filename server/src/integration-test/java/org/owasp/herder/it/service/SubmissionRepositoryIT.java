@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.crypto.CryptoService;
@@ -51,7 +50,7 @@ import org.owasp.herder.scoring.CorrectionRepository;
 import org.owasp.herder.scoring.CorrectionService;
 import org.owasp.herder.scoring.ModulePointRepository;
 import org.owasp.herder.scoring.ScoreService;
-import org.owasp.herder.scoring.ScoreboardEntry;
+import org.owasp.herder.scoring.ScoreboardController;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.service.ConfigurationService;
@@ -65,14 +64,8 @@ import io.github.bucket4j.Bucket;
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
-@DisplayName("ScoringService integration tests")
-class ScoreboardIT extends BaseIT {
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
-
+@DisplayName("SubmissionRepository integration tests")
+class SubmissionRepositoryIT extends BaseIT {
   @Autowired ModuleService moduleService;
 
   @Autowired UserService userService;
@@ -82,6 +75,8 @@ class ScoreboardIT extends BaseIT {
   @Autowired CorrectionService correctionService;
 
   @Autowired ScoreService scoreService;
+
+  @Autowired ScoreboardController scoreboardController;
 
   @Autowired CorrectionRepository correctionRepository;
 
@@ -106,8 +101,8 @@ class ScoreboardIT extends BaseIT {
   @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
 
   @Test
-  @DisplayName("Can display the scoreboard")
-  void getScoreboard_SubmittedScores_ReturnsCorrectScoresForUsers() {
+  @DisplayName("Can get ranked submissions")
+  void canGetRankedSubmissions() {
     // We'll use this exact flag
     final String flag = "itsaflag";
 
@@ -162,8 +157,6 @@ class ScoreboardIT extends BaseIT {
     // You only get 1 point for this module
     scoreService.setModuleScore("id3", 0, 1).block();
 
-    moduleRepository.findAll().doOnNext(System.out::println).blockLast();
-
     // Create a fixed clock from which we will base our offset submission times
     final Clock startTime =
         Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
@@ -199,94 +192,48 @@ class ScoreboardIT extends BaseIT {
       submissionService.submit(currentUserId, "id3", currentFlag).block();
     }
 
-    final Clock correctionClock =
-        Clock.fixed(Instant.parse("2000-01-04T10:00:00.00Z"), ZoneId.of("Z"));
-    submissionService.setClock(correctionClock);
-    correctionService.submit(userIds.get(2), -1000, "Penalty for cheating").block();
-    submissionService.setClock(Clock.offset(correctionClock, Duration.ofHours(10)));
-    correctionService.submit(userIds.get(1), 100, "Thanks for the bribe").block();
+    // Now we verify
 
-    StepVerifier.create(scoreService.getScoreboard())
-        .expectNext(
-            ScoreboardEntry.builder()
-                .rank(1L)
-                .displayName(displayNames.get(1))
-                .userId(userIds.get(1))
-                .score(251L)
-                .goldMedals(0L)
-                .silverMedals(0L)
-                .bronzeMedals(0L)
-                .build())
-        .expectNext(
-            ScoreboardEntry.builder()
-                .rank(2L)
-                .userId(userIds.get(6))
-                .displayName(displayNames.get(6))
-                .score(231L)
-                .goldMedals(3L)
-                .silverMedals(0L)
-                .bronzeMedals(0L)
-                .build())
-        .expectNext(
-            ScoreboardEntry.builder()
-                .rank(3L)
-                .displayName(displayNames.get(5))
-                .userId(userIds.get(5))
-                .score(201L)
-                .goldMedals(0L)
-                .silverMedals(3L)
-                .bronzeMedals(0L)
-                .build())
-        .expectNext(
-            ScoreboardEntry.builder()
-                .rank(4L)
-                .displayName(displayNames.get(0))
-                .userId(userIds.get(0))
-                .score(171L)
-                .goldMedals(0L)
-                .silverMedals(0L)
-                .bronzeMedals(0L)
-                .build())
-        .expectNext(
-            ScoreboardEntry.builder()
-                .rank(4L)
-                .displayName(displayNames.get(4))
-                .userId(userIds.get(4))
-                .score(171L)
-                .goldMedals(0L)
-                .silverMedals(0L)
-                .bronzeMedals(0L)
-                .build())
-        .expectNext(
-            ScoreboardEntry.builder()
-                .rank(6L)
-                .displayName(displayNames.get(3))
-                .userId(userIds.get(3))
-                .score(0L)
-                .goldMedals(0L)
-                .silverMedals(0L)
-                .bronzeMedals(0L)
-                .build())
-        .expectNext(
-            ScoreboardEntry.builder()
-                .rank(6L)
-                .displayName(displayNames.get(7))
-                .userId(userIds.get(7))
-                .score(0L)
-                .goldMedals(0L)
-                .silverMedals(0L)
-                .bronzeMedals(0L)
-                .build())
-        .expectNext(
-            ScoreboardEntry.builder()
-                .rank(8L)
-                .displayName(displayNames.get(2))
-                .userId(userIds.get(2))
-                .score(-799L)
-                .goldMedals(0L)
-                .silverMedals(3L)
-                .bronzeMedals(0L)
-                .build())
+    StepVerifier.create(submissionRepository.findAllRankedByUserId(userIds.get(0)))
+        .expectNextMatches(submission -> submission.getRank() == 4)
+        .expectNextMatches(submission -> submission.getRank() == 4)
+        .expectNextMatches(submission -> submission.getRank() == 4)
+        .verifyComplete();
+
+    StepVerifier.create(submissionRepository.findAllRankedByUserId(userIds.get(1)))
+        .expectNextMatches(submission -> submission.getRank() == 6)
+        .expectNextMatches(submission -> submission.getRank() == 6)
+        .expectNextMatches(submission -> submission.getRank() == 6)
+        .verifyComplete();
+
+    StepVerifier.create(submissionRepository.findAllRankedByUserId(userIds.get(2)))
+        .expectNextMatches(submission -> submission.getRank() == 2)
+        .expectNextMatches(submission -> submission.getRank() == 2)
+        .expectNextMatches(submission -> submission.getRank() == 2)
+        .verifyComplete();
+
+    StepVerifier.create(submissionRepository.findAllRankedByUserId(userIds.get(3)))
+        .verifyComplete();
+
+    StepVerifier.create(submissionRepository.findAllRankedByUserId(userIds.get(4)))
+        .expectNextMatches(submission -> submission.getRank() == 4)
+        .expectNextMatches(submission -> submission.getRank() == 4)
+        .expectNextMatches(submission -> submission.getRank() == 4)
+        .verifyComplete();
+
+    StepVerifier.create(submissionRepository.findAllRankedByUserId(userIds.get(5)))
+        .expectNextMatches(submission -> submission.getRank() == 2)
+        .expectNextMatches(submission -> submission.getRank() == 2)
+        .expectNextMatches(submission -> submission.getRank() == 2)
+        .verifyComplete();
+
+    StepVerifier.create(submissionRepository.findAllRankedByUserId(userIds.get(6)))
+        .expectNextMatches(submission -> submission.getRank() == 1)
+        .expectNextMatches(submission -> submission.getRank() == 1)
+        .expectNextMatches(submission -> submission.getRank() == 1)
+        .verifyComplete();
+
+    StepVerifier.create(submissionRepository.findAllRankedByUserId(userIds.get(7)))
         .verifyComplete();
   }
 
@@ -301,95 +248,9 @@ class ScoreboardIT extends BaseIT {
     when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
   }
 
-  @Test
-  // Mongodb can't do this at the moment
-  @Disabled
-  @DisplayName("Can use medals as tiebreakers")
-  void getScoreboard_TiedUsers_MedalsAreTiebreakers() {
-    // We'll use this exact flag
-    final String flag = "itsaflag";
-
-    // Create six users and store their ids
-    List<String> displayNames = new ArrayList<>();
-    displayNames.add("ZTestUser1");
-    displayNames.add("ATestUser2");
-    displayNames.add("ATestUser3");
-
-    Iterator<String> displayNameIterator = displayNames.iterator();
-
-    List<String> userIds = new ArrayList<>();
-    while (displayNameIterator.hasNext()) {
-      userIds.add(userService.create(displayNameIterator.next()).block());
-    }
-
-    // Create a module to submit to
-    moduleService.create("id1").block();
-
-    // Set that module to have an exact flag
-    moduleService.setStaticFlag("id1", flag).block();
-
-    // Set scoring levels for module1. No bonuses!
-    scoreService.setModuleScore("id1", 0, 100).block();
-
-    // Create a fixed clock from which we will base our offset submission times
-    final Clock startTime =
-        Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
-
-    // Create a list of times at which the above users will submit their solutions
-    List<Integer> timeOffsets = Arrays.asList(0, 1, 2);
-
-    // The duration between times should be 1 day
-    final List<Clock> clocks =
-        timeOffsets.stream()
-            .map(Duration::ofDays)
-            .map(duration -> Clock.offset(startTime, duration))
-            .collect(Collectors.toList());
-
-    // Iterate over the user ids and clocks at the same time
-    Iterator<String> userIdIterator = userIds.iterator();
-    Iterator<Clock> clockIterator = clocks.iterator();
-
-    while (userIdIterator.hasNext() && clockIterator.hasNext()) {
-      // Recreate the submission service every time with a new clock
-      submissionService.setClock(clockIterator.next());
-
-      final String currentUserId = userIdIterator.next();
-
-      // Submit a new flag
-      submissionService.submit(currentUserId, "id1", flag).block();
-    }
-
-    StepVerifier.create(scoreService.getScoreboard())
-        .expectNext(
-            ScoreboardEntry.builder()
-                .rank(1L)
-                .displayName(displayNames.get(0))
-                .userId(userIds.get(0))
-                .score(100L)
-                .goldMedals(1L)
-                .silverMedals(0L)
-                .bronzeMedals(0L)
-                .build())
-        .expectNext(
-            ScoreboardEntry.builder()
-                .rank(2L)
-                .userId(userIds.get(1))
-                .displayName(displayNames.get(1))
-                .score(100L)
-                .goldMedals(0L)
-                .silverMedals(1L)
-                .bronzeMedals(0L)
-                .build())
-        .expectNext(
-            ScoreboardEntry.builder()
-                .rank(3L)
-                .userId(userIds.get(2))
-                .displayName(displayNames.get(2))
-                .score(100L)
-                .goldMedals(0L)
-                .silverMedals(0L)
-                .bronzeMedals(1L)
-                .build())
-        .verifyComplete();
+  @BeforeAll
+  private static void reactorVerbose() {
+    // Tell Reactor to print verbose error messages
+    Hooks.onOperatorDebug();
   }
 }

@@ -22,22 +22,23 @@
 package org.owasp.herder.module;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.data.annotation.Id;
-
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
 @Value
 @Builder
+@AllArgsConstructor
 public class ModuleListItem implements Serializable {
   private static final long serialVersionUID = -5011105798343266330L;
 
-  @Id @NonNull String name;
+  @NonNull String name;
 
-  List<NameValueTag> tags;
+  @Builder.Default List<NameValueTag> tags = new ArrayList<>();
 
   Boolean isSolved;
 }

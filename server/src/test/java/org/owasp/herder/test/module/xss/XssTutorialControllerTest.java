@@ -38,6 +38,7 @@ import org.owasp.herder.exception.NotAuthenticatedException;
 import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.module.xss.XssTutorialController;
 import org.owasp.herder.module.xss.XssTutorialResponse;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -59,7 +60,7 @@ class XssTutorialControllerTest {
 
   @Test
   void search_Autenticated_CallsModule() {
-    final long mockUserId = 527L;
+    final String mockUserId = "id";
 
     final XssTutorialResponse xssTutorialRow = mock(XssTutorialResponse.class);
 

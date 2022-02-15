@@ -55,7 +55,7 @@ class UserAdministrationIT extends BaseIT {
     final String displayName = "Test user";
     final String loginName = "testUser";
     final String passwordHash = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
-    final long userId =
+    final String userId =
         userService.createPasswordUser(displayName, loginName, passwordHash).block();
 
     StepVerifier.create(userService.findById(userId))

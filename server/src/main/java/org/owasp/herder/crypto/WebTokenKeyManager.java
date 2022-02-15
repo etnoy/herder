@@ -39,36 +39,24 @@ public class WebTokenKeyManager {
 
   private static final Map<String, Key> userToKeyMap = new HashMap<>();
 
-  public Key getOrGenerateKeyForUser(final Long userId) {
-    final String userIdString = Long.toString(userId);
-
-    if (!userToKeyMap.containsKey(userIdString)) {
+  public Key getOrGenerateKeyForUser(final String userId) {
+    if (!userToKeyMap.containsKey(userId)) {
       // No key found, generate new key for user and store it
       return generateUserKey(userId);
     } else {
-      return userToKeyMap.get(userIdString);
+      return userToKeyMap.get(userId);
     }
   }
 
-  public Key getKeyForUser(final Long userId) {
-    if (userId == null) {
-      throw new NullPointerException();
-    }
-    if (userId <= 0) {
-      throw new InvalidUserIdException();
-    }
-    return getKeyForUser(userId.toString());
-  }
+  public Key getKeyForUser(final String userId) {
 
-  public Key getKeyForUser(final String userIdString) {
+    if (userId == null || userId.isEmpty()) throw new InvalidUserIdException();
 
-    if (userIdString == null || userIdString.isEmpty()) throw new InvalidUserIdException();
-
-    if (!userToKeyMap.containsKey(userIdString)) {
+    if (!userToKeyMap.containsKey(userId)) {
       // No key found, generate new key for user and store it
       throw new SignatureException("Signing key is not registred for the subject");
     } else {
-      return userToKeyMap.get(userIdString);
+      return userToKeyMap.get(userId);
     }
   }
 
@@ -76,12 +64,9 @@ public class WebTokenKeyManager {
     userToKeyMap.clear();
   }
 
-  public Key generateUserKey(final Long userId) {
+  public Key generateUserKey(final String userId) {
     if (userId == null) {
       throw new NullPointerException();
-    }
-    if (userId <= 0) {
-      throw new InvalidUserIdException();
     }
 
     log.debug("Generating new web token key for user with id " + userId.toString());
@@ -91,15 +76,13 @@ public class WebTokenKeyManager {
     return userKey;
   }
 
-  public void invalidateAccessToken(final Long userId) {
+  public void invalidateAccessToken(final String userId) {
     if (userId == null) {
       throw new NullPointerException();
     }
-    if (userId <= 0) {
-      throw new InvalidUserIdException();
-    }
-    log.debug("Invalidating web token for user with id " + userId.toString());
 
-    userToKeyMap.remove(userId.toString());
+    log.debug("Invalidating web token for user with id " + userId);
+
+    userToKeyMap.remove(userId);
   }
 }

@@ -25,8 +25,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -40,15 +39,15 @@ import lombok.With;
 @AllArgsConstructor
 @Builder
 @With
-@Table("user")
+@Document("user")
 public final class UserEntity implements Serializable {
   private static final long serialVersionUID = 3097353498257801154L;
 
-  @Id private Long id;
+  @Id private String id;
 
   @NonNull private String displayName;
 
-  private Long classId;
+  private String classId;
 
   private LocalDateTime accountCreated;
 
@@ -62,7 +61,5 @@ public final class UserEntity implements Serializable {
 
   private String suspensionMessage;
 
-  @Column("user_key")
-  @NonNull
-  private byte[] key;
+  @NonNull private byte[] key;
 }

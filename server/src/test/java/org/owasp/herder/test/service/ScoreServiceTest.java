@@ -38,7 +38,8 @@ import org.owasp.herder.scoring.ModulePoint;
 import org.owasp.herder.scoring.ModulePointRepository;
 import org.owasp.herder.scoring.ScoreService;
 import org.owasp.herder.scoring.ScoreboardEntry;
-import org.owasp.herder.scoring.ScoreboardRepository;
+import org.owasp.herder.scoring.SubmissionRepository;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -58,12 +59,12 @@ class ScoreServiceTest {
 
   @Mock ModulePointRepository modulePointRepository;
 
-  @Mock ScoreboardRepository scoreboardRepository;
+  @Mock SubmissionRepository submissionRepository;
 
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    scoreService = new ScoreService(modulePointRepository, scoreboardRepository);
+    scoreService = new ScoreService(modulePointRepository, submissionRepository);
   }
 
   @Test
@@ -101,7 +102,7 @@ class ScoreServiceTest {
     final ScoreboardEntry mockScoreboardEntry2 = mock(ScoreboardEntry.class);
     final ScoreboardEntry mockScoreboardEntry3 = mock(ScoreboardEntry.class);
 
-    when(scoreboardRepository.findAll())
+    when(submissionRepository.getScoreboard())
         .thenReturn(Flux.just(mockScoreboardEntry1, mockScoreboardEntry2, mockScoreboardEntry3));
 
     StepVerifier.create(scoreService.getScoreboard())

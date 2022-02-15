@@ -99,8 +99,8 @@ public final class IntegrationTestUtils {
         .block();
   }
 
-  public Long createTestAdmin() {
-    final long userId =
+  public String createTestAdmin() {
+    final String userId =
         userService
             .createPasswordUser(
                 TestConstants.TEST_DISPLAY_NAME,
@@ -112,7 +112,7 @@ public final class IntegrationTestUtils {
     return userId;
   }
 
-  public Long createTestUser() {
+  public String createTestUser() {
     return userService
         .createPasswordUser(
             TestConstants.TEST_DISPLAY_NAME,

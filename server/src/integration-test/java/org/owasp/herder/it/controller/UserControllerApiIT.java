@@ -104,7 +104,7 @@ class UserControllerApiIT extends BaseIT {
     final String loginName = "test";
     final String hashedPassword = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
 
-    final long userId =
+    final String userId =
         userService.createPasswordUser("Test User", loginName, hashedPassword).block();
 
     final String token =
@@ -179,7 +179,7 @@ class UserControllerApiIT extends BaseIT {
     final String loginName = "test";
     final String password = "paLswOrdha17£@£sh";
 
-    HashSet<Long> userIdSet = new HashSet<>();
+    HashSet<String> userIdSet = new HashSet<>();
 
     webTestClient
         .post()
@@ -192,7 +192,7 @@ class UserControllerApiIT extends BaseIT {
         .expectStatus()
         .isCreated();
 
-    final long userId = userService.findUserIdByLoginName(loginName).block();
+    final String userId = userService.findUserIdByLoginName(loginName).block();
 
     // Promote this user to admin
     userService.promote(userId).block();
@@ -294,7 +294,7 @@ class UserControllerApiIT extends BaseIT {
         .expectStatus()
         .isCreated();
 
-    final long userId = userService.findUserIdByLoginName("test").block();
+    final String userId = userService.findUserIdByLoginName("test").block();
 
     // Promote this user to admin
     userService.promote(userId).block();
@@ -326,7 +326,7 @@ class UserControllerApiIT extends BaseIT {
     FluxExchangeResult<UserEntity> getResult =
         webTestClient
             .get()
-            .uri("/api/v1/user/" + Long.toString(userId))
+            .uri("/api/v1/user/" + userId)
             .header("Authorization", "Bearer " + token)
             .accept(MediaType.APPLICATION_JSON)
             .exchange()

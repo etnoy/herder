@@ -26,13 +26,11 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.stream.Stream;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
 
 public final class TestConstants {
-
-  public static final long[] INVALID_IDS = {-1L, -1000L, 0L, -1234567L, -500L};
-
   public static final boolean INITIAL_BOOLEAN = false;
 
   public static final boolean[] BOOLEANS = {false, true};

@@ -66,10 +66,11 @@ public class SqlInjectionTutorial extends BaseModule {
    * @param injectionQuery the query to be executed
    * @return the result of the query
    */
-  public Flux<SqlInjectionTutorialRow> submitQuery(final long userId, final String injectionQuery) {
+  public Flux<SqlInjectionTutorialRow> submitQuery(
+      final String userId, final String injectionQuery) {
 
     // Each module and user has a unique in-memory database
-    final String dbName = String.format("%s-uid-%d", getName(), userId);
+    final String dbName = String.format("%s-uid-%s", getName(), userId);
 
     final DatabaseClient databaseClient = sqlInjectionDatabaseClientFactory.create(dbName);
 

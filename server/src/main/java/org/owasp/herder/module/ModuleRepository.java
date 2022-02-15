@@ -21,17 +21,46 @@
  */
 package org.owasp.herder.module;
 
-import org.springframework.data.r2dbc.repository.Query;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface ModuleRepository extends ReactiveCrudRepository<ModuleEntity, String> {
-  @Query("select * from module where is_open = true")
+public interface ModuleRepository extends ReactiveMongoRepository<ModuleEntity, String> {
+  @Query("{ 'isOpen' : true }")
   public Flux<ModuleEntity> findAllOpen();
+
+  @Aggregation({
+    // Only show open modules
+    "{$match:{'isOpen': true, 'name': ?1 }}",
+    // Include all submissions per module
+    "{$lookup:{from:'submission',localField:'name',foreignField:'moduleName',as:'submissions'}}",
+    // Include all tabs per module
+    "{$lookup:{from:'moduleTag',localField:'name',foreignField:'moduleName',as:'tags'}}",
+    // Check if current user has solved the module
+    "{$addFields:{isSolved: {$and: [{$in: [true, '$submissions.isValid']}, {$in: [ ?0 , '$submissions.userId']}]}}}",
+    // Project only the required values
+    "{$project:{_id: 0, name:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
+  })
+  public Mono<ModuleListItem> findByNameWithSolutionStatus(String userId, String moduleName);
+
+  @Aggregation({
+    // Only show open modules
+    "{$match:{'isOpen': true }}",
+    // Include all submissions per module
+    "{$lookup:{from:'submission',localField:'name',foreignField:'moduleName',as:'submissions'}}",
+    // Include all tabs per module
+    "{$lookup:{from:'moduleTag',localField:'name',foreignField:'moduleName',as:'tags'}}",
+    // Check if current user has solved the module
+    "{$addFields:{isSolved: {$and: [{$in: [true, '$submissions.isValid']}, {$in: [ ?0 , '$submissions.userId']}]}}}",
+    // Project only the required values
+    "{$project:{_id: 0, name:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
+  })
+  public Flux<ModuleListItem> findAllOpenWithSolutionStatus(String userId);
 
   public Mono<ModuleEntity> findByName(String moduleName);
 }

@@ -21,14 +21,15 @@
  */
 package org.owasp.herder.user;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -42,7 +43,7 @@ public class UserController {
 
   @PostMapping(path = "user/delete/{id}")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
-  public Mono<Void> deleteById(@PathVariable final long id) {
+  public Mono<Void> deleteById(@PathVariable final String id) {
     log.debug("Deleting user with id " + id);
 
     return userService.deleteById(id);
@@ -57,7 +58,7 @@ public class UserController {
   @GetMapping(path = "user/{id}")
   @PreAuthorize(
       "(hasRole('ROLE_USER') and #id == authentication.principal) or hasRole('ROLE_ADMIN')")
-  public Mono<UserEntity> findById(@PathVariable final long id) {
+  public Mono<UserEntity> findById(@PathVariable final String id) {
     return userService.findById(id);
   }
 }

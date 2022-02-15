@@ -35,6 +35,7 @@ import org.owasp.herder.authentication.ControllerAuthentication;
 import org.owasp.herder.module.csrf.CsrfTutorial;
 import org.owasp.herder.module.csrf.CsrfTutorialController;
 import org.owasp.herder.module.csrf.CsrfTutorialResult;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -62,7 +63,7 @@ class CsrfTutorialControllerTest {
 
   @Test
   void tutorial_TutorialCreated_ReturnsTutorial() {
-    final Long mockUserId = 85L;
+    final String mockUserId = "id";
 
     when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
 
@@ -78,7 +79,7 @@ class CsrfTutorialControllerTest {
 
   @Test
   void activate_TutorialCreated_ReturnsTutorial() {
-    final Long mockUserId = 85L;
+    final String mockUserId = "id";
     final String mockPseudonym = "abcd123";
 
     when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));

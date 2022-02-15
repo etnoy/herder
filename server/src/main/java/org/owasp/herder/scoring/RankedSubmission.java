@@ -24,9 +24,6 @@ package org.owasp.herder.scoring;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
@@ -37,13 +34,12 @@ import lombok.With;
 @Builder
 @AllArgsConstructor
 @With
-@Table
 public class RankedSubmission implements Serializable {
   static final long serialVersionUID = -5485881248601955741L;
 
-  @Id Long submissionId;
+  @NonNull String userId;
 
-  @NonNull Long userId;
+  @NonNull String displayName;
 
   Long rank;
 

@@ -38,6 +38,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.TestSecurityContextHolder;
 import org.springframework.security.test.context.support.ReactorContextTestExecutionListener;
 import org.springframework.test.context.TestExecutionListener;
+
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -69,7 +70,7 @@ class ControllerAuthenticationTest {
 
   @Test
   void getUserId_UserAuthenticated_ReturnsUserId() throws Exception {
-    final long mockUserId = 633L;
+    final String mockUserId = "id";
     when(authentication.getPrincipal()).thenReturn(mockUserId);
     StepVerifier.create(controllerAuthentication.getUserId())
         .expectNext(mockUserId)

@@ -25,5 +25,9 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public class InvalidClassIdException extends RuntimeException {
+  public InvalidClassIdException(String message) {
+    super(message);
+  }
+
   private static final long serialVersionUID = -5350036580936173008L;
 }

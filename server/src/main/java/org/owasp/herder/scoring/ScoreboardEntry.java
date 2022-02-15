@@ -22,22 +22,21 @@
 package org.owasp.herder.scoring;
 
 import java.io.Serializable;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
-import org.springframework.data.relational.core.mapping.Table;
 
 @Value
 @Builder
 @With
-@Table("scoreboard")
 public class ScoreboardEntry implements Serializable {
   private static final long serialVersionUID = 902640084501001329L;
 
   @NonNull private Long rank;
 
-  @NonNull private Long userId;
+  @NonNull private String userId;
 
   @NonNull private String displayName;
 

@@ -24,7 +24,7 @@ package org.owasp.herder.module.csrf;
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,9 +36,9 @@ import lombok.With;
 @AllArgsConstructor
 @Builder
 @With
-@Table
+@Document
 public final class CsrfAttack {
-  @Id private Long id;
+  @Id private String id;
   @NonNull private String pseudonym;
   @NonNull private LocalDateTime started;
   @NonNull private String moduleName;

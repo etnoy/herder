@@ -21,7 +21,6 @@
  */
 package org.owasp.herder.it;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -31,49 +30,28 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.MongoDBContainer;
 
-import reactor.core.publisher.Hooks;
+import lombok.extern.slf4j.Slf4j;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
     webEnvironment = WebEnvironment.RANDOM_PORT,
     properties = {"application.runner.enabled=false"})
 @AutoConfigureWebTestClient
+@Slf4j
 @Execution(ExecutionMode.SAME_THREAD)
 public abstract class BaseIT {
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
-
-  static final MySQLContainer<?> mySql8Container;
+  static final MongoDBContainer mongoDBContainer;
 
   static {
-    mySql8Container =
-        (MySQLContainer<?>)
-            new MySQLContainer<>("mysql:8")
-                .withDatabaseName("herder")
-                .withInitScript("schema-mysql.sql")
-                .withUsername("root")
-                .withReuse(true);
-
-    mySql8Container.start();
+    mongoDBContainer = new MongoDBContainer("mongo");
+    mongoDBContainer.start();
   }
 
   @DynamicPropertySource
-  static void registerDynamicProperties(DynamicPropertyRegistry registry) {
-    registry.add(
-        "spring.r2dbc.url",
-        () ->
-            "r2dbc:mysql://"
-                + mySql8Container.getHost()
-                + ":"
-                + mySql8Container.getFirstMappedPort()
-                + "/"
-                + mySql8Container.getDatabaseName());
-    registry.add("spring.r2dbc.username", () -> mySql8Container.getUsername());
-    registry.add("spring.r2dbc.password", () -> mySql8Container.getPassword());
+  static void mongoDbProperties(DynamicPropertyRegistry registry) {
+    log.info("Loading testcontainer database for MongoDB");
+    registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
   }
 }

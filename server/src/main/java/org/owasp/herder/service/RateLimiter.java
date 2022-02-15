@@ -30,11 +30,11 @@ import io.github.bucket4j.local.LocalBucketBuilder;
 
 @Service
 abstract class RateLimiter {
-  private HashMap<Long, Bucket> buckets = new HashMap<>();
+  private HashMap<String, Bucket> buckets = new HashMap<>();
 
   abstract LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder);
 
-  public Bucket resolveBucket(final long userId) {
+  public Bucket resolveBucket(final String userId) {
     if (buckets.containsKey(userId)) {
       return buckets.get(userId);
     } else {

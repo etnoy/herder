@@ -23,9 +23,11 @@ package org.owasp.herder.scoring;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.scoring.Correction.CorrectionBuilder;
 import org.springframework.stereotype.Service;
+
 import reactor.core.publisher.Mono;
 
 @Service
@@ -47,11 +49,13 @@ public final class CorrectionService {
     this.clock = clock;
   }
 
-  public Mono<Correction> submit(final Long userId, final long amount, final String description) {
-    if (userId <= 0) {
+  public Mono<Correction> submit(final String userId, final long amount, final String description) {
+    if (userId == null) {
+      return Mono.error(new NullPointerException());
+    }
+    if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
-
     final CorrectionBuilder correctionBuilder = Correction.builder();
 
     correctionBuilder.userId(userId);

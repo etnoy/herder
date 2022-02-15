@@ -24,29 +24,37 @@ package org.owasp.herder.configuration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 
-import dev.miku.r2dbc.mysql.MySqlConnectionConfiguration;
-import dev.miku.r2dbc.mysql.MySqlConnectionFactory;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @Slf4j
-// Don't use this database configuration when testing
+@EnableReactiveMongoRepositories(basePackages = {"org.owasp.herder"})
 @ConditionalOnProperty(
     prefix = "application.runner",
     value = "enabled",
     havingValue = "true",
     matchIfMissing = true)
-public class DatabaseConfiguration {
+public class MongoConfig extends AbstractReactiveMongoConfiguration {
   @Bean
-  public MySqlConnectionFactory mySqlConnectionFactory() {
-    log.debug("Using default mysql configuration");
-    return MySqlConnectionFactory.from(
-        MySqlConnectionConfiguration.builder()
-            .host("localhost")
-            .username("root")
-            .password("")
-            .database("herder")
-            .build());
+  public MongoClient mongoClient() {
+    return MongoClients.create();
+  }
+
+  @Bean
+  public ReactiveMongoTemplate reactiveMongoTemplate() {
+    return new ReactiveMongoTemplate(mongoClient(), getDatabaseName());
+  }
+
+  @Override
+  protected String getDatabaseName() {
+    log.debug("Using default mongo db configuration");
+    return "herder";
   }
 }

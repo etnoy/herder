@@ -25,7 +25,6 @@ import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.FlagSubmissionRateLimitException;
 import org.owasp.herder.exception.InvalidFlagStateException;
 import org.owasp.herder.exception.InvalidFlagSubmissionRateLimitException;
-import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.ModuleNameNotFoundException;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
@@ -62,17 +61,13 @@ public final class FlagHandler {
 
   private final InvalidFlagRateLimiter invalidFlagRateLimiter;
 
-  public Mono<String> getDynamicFlag(final long userId, final String moduleName) {
+  public Mono<String> getDynamicFlag(final String userId, final String moduleName) {
     return getSaltedHmac(userId, moduleName, "flag")
         .map(flag -> String.format(DYNAMIC_FLAG_FORMAT, flag));
   }
 
   public Mono<String> getSaltedHmac(
-      final long userId, final String moduleName, final String prefix) {
-    if (userId <= 0) {
-      return Mono.error(new InvalidUserIdException());
-    }
-
+      final String userId, final String moduleName, final String prefix) {
     final Mono<byte[]> moduleKey =
         // Find the module in the repo
         moduleService
@@ -102,7 +97,7 @@ public final class FlagHandler {
   }
 
   public Mono<Boolean> verifyFlag(
-      final long userId, final String moduleName, final String submittedFlag) {
+      final String userId, final String moduleName, final String submittedFlag) {
     if (submittedFlag == null) {
       return Mono.error(new NullPointerException("Submitted flag cannot be null"));
     }
@@ -162,7 +157,10 @@ public final class FlagHandler {
             .onErrorReturn(false)
             .map(validFlag -> Boolean.TRUE.equals(validFlag) ? "valid" : "invalid");
 
-    Mono.zip(userService.findDisplayNameById(userId), validText, currentModule.map(ModuleEntity::getId))
+    Mono.zip(
+            userService.findDisplayNameById(userId),
+            validText,
+            currentModule.map(ModuleEntity::getId))
         .map(
             tuple ->
                 "User "

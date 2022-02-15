@@ -33,6 +33,5 @@ public class NameValueTag implements Serializable {
   private static final long serialVersionUID = -2028498831072391318L;
 
   @NonNull String name;
-
   @NonNull String value;
 }

@@ -55,7 +55,7 @@ import io.jsonwebtoken.security.SignatureException;
 @DisplayName("WebTokenService unit tests")
 class WebTokenServiceTest {
 
-  final Long testUserId = 843L;
+  final String testUserId = "id";
 
   final Key testKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
@@ -330,13 +330,13 @@ class WebTokenServiceTest {
     when(webTokenKeyManager.getKeyForUser(testUserId.toString())).thenReturn(testKey);
 
     final String testToken =
-        Jwts.builder() //
-            .claim("role", "user") //
-            .setIssuer("wolf") //
-            .setSubject(testUserId.toString()) //
-            .setIssuedAt(TestConstants.year2000WebTokenClock.now()) //
-            .setExpiration(new Date(Long.MAX_VALUE)) //
-            .signWith(testKey) //
+        Jwts.builder()
+            .claim("role", "user")
+            .setIssuer("wolf")
+            .setSubject(testUserId.toString())
+            .setIssuedAt(TestConstants.year2000WebTokenClock.now())
+            .setExpiration(new Date(Long.MAX_VALUE))
+            .signWith(testKey)
             .compact();
 
     assertThatThrownBy(

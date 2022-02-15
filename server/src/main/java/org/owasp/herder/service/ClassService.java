@@ -21,14 +21,15 @@
  */
 package org.owasp.herder.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateClassNameException;
 import org.owasp.herder.exception.InvalidClassIdException;
 import org.owasp.herder.model.ClassEntity;
 import org.owasp.herder.user.ClassRepository;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -63,28 +64,26 @@ public final class ClassService {
     return classRepository.findByName(name).map(u -> false).defaultIfEmpty(true);
   }
 
-  public Mono<Boolean> existsById(final long classIdd) {
-    return classRepository.existsById(classIdd);
+  public Mono<Boolean> existsById(final String classId) {
+    return classRepository.existsById(classId);
   }
 
-  public Mono<ClassEntity> getById(final long classId) {
-    if (classId <= 0) {
-      return Mono.error(new InvalidClassIdException());
+  public Mono<ClassEntity> getById(final String classId) {
+    if (classId == null) {
+      return Mono.error(new InvalidClassIdException("Class id can't be null"));
     }
-
+    if (classId.isEmpty()) {
+      return Mono.error(new InvalidClassIdException("Class id can't be empty"));
+    }
     return Mono.just(classId)
         .filterWhen(classRepository::existsById)
         .switchIfEmpty(Mono.error(new ClassIdNotFoundException()))
         .flatMap(classRepository::findById);
   }
 
-  public Mono<ClassEntity> setName(final long classId, final String name) {
+  public Mono<ClassEntity> setName(final String classId, final String name) {
     if (name == null) {
       return Mono.error(new IllegalArgumentException("Class name can't be null"));
-    }
-
-    if (classId <= 0) {
-      return Mono.error(new InvalidClassIdException());
     }
 
     Mono<String> nameMono =

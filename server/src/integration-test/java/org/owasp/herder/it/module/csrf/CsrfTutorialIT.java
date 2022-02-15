@@ -75,7 +75,7 @@ class CsrfTutorialIT extends BaseIT {
 
   @Test
   void activate_NonExistentPseudonym_ReturnsError() {
-    final Long userId = userService.create("Attacker").block();
+    final String userId = userService.create("Attacker").block();
 
     StepVerifier.create(csrfTutorial.attack(userId, "Unknown target ID"))
         .assertNext(
@@ -89,8 +89,8 @@ class CsrfTutorialIT extends BaseIT {
 
   @Test
   void getTutorial_CorrectAttack_Success() {
-    final Long userId1 = userService.create("TestUser1").block();
-    final Long userId2 = userService.create("TestUser2").block();
+    final String userId1 = userService.create("TestUser1").block();
+    final String userId2 = userService.create("TestUser2").block();
 
     final CsrfTutorialResult tutorialResult = csrfTutorial.getTutorial(userId1).block();
 
@@ -119,7 +119,7 @@ class CsrfTutorialIT extends BaseIT {
 
   @Test
   void getTutorial_SelfActivation_NotAllowed() {
-    final Long userId = userService.create("TestUser").block();
+    final String userId = userService.create("TestUser").block();
 
     final CsrfTutorialResult tutorialResult = csrfTutorial.getTutorial(userId).block();
 

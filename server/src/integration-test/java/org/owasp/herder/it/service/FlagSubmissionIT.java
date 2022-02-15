@@ -41,7 +41,6 @@ import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import reactor.core.publisher.Hooks;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @DisplayName("Flag submission integration tests")
@@ -70,13 +69,13 @@ class FlagSubmissionIT extends BaseIT {
 
   @Autowired IntegrationTestUtils integrationTestUtils;
 
-  private Mono<Long> userIdMono;
+  private String userId;
 
   @BeforeEach
-  private void clear() {
+  private void setUp() {
     integrationTestUtils.resetState();
 
-    userIdMono = Mono.just(integrationTestUtils.createTestUser());
+    userId = integrationTestUtils.createTestUser();
     integrationTestUtils.createStaticTestModule();
   }
 
@@ -84,13 +83,10 @@ class FlagSubmissionIT extends BaseIT {
   @DisplayName("Duplicate submission of a static flag should throw an exception")
   void canRejectDuplicateSubmissionsOfValidStaticFlags() {
     StepVerifier.create(
-            userIdMono.flatMapMany(
-                userId ->
-                    submissionService
-                        .submit(
-                            userId, TestConstants.TEST_MODULE_NAME, TestConstants.TEST_STATIC_FLAG)
-                        .repeat(2)
-                        .map(Submission::isValid)))
+            submissionService
+                .submit(userId, TestConstants.TEST_MODULE_NAME, TestConstants.TEST_STATIC_FLAG)
+                .repeat(1)
+                .map(Submission::isValid))
         .expectNext(true)
         .expectError(ModuleAlreadySolvedException.class)
         .verify();
@@ -100,12 +96,9 @@ class FlagSubmissionIT extends BaseIT {
   @DisplayName("Valid submission of a static flag should be accepted")
   void canAcceptValidStaticFlagSubmission() {
     StepVerifier.create(
-            userIdMono.flatMap(
-                userId ->
-                    submissionService
-                        .submit(
-                            userId, TestConstants.TEST_MODULE_NAME, TestConstants.TEST_STATIC_FLAG)
-                        .map(Submission::isValid)))
+            submissionService
+                .submit(userId, TestConstants.TEST_MODULE_NAME, TestConstants.TEST_STATIC_FLAG)
+                .map(Submission::isValid))
         .expectNext(true)
         .expectComplete()
         .verify();

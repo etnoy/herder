@@ -36,8 +36,7 @@ import io.jsonwebtoken.security.Keys;
 
 @DisplayName("WebTokenKeyManager unit tests")
 class WebTokenKeyManagerTest {
-
-  final Long testUserId = 182L;
+  final String testUserId = "id";
 
   final Key testKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
@@ -52,8 +51,7 @@ class WebTokenKeyManagerTest {
 
   @Test
   void invalidateAccessToken_ValidUserId_Succeeds() {
-
-    assertDoesNotThrow(() -> webTokenKeyManager.invalidateAccessToken(123L));
+    assertDoesNotThrow(() -> webTokenKeyManager.invalidateAccessToken("id"));
   }
 
   @BeforeEach

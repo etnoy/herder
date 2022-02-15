@@ -26,11 +26,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Component;
+
 import reactor.core.publisher.Mono;
 
 @Component
 public class ControllerAuthentication {
-  public Mono<Long> getUserId() {
+  public Mono<String> getUserId() {
     return
     // Get the security context
     ReactiveSecurityContextHolder.getContext()
@@ -41,6 +42,6 @@ public class ControllerAuthentication {
         .switchIfEmpty(Mono.error(new NotAuthenticatedException()))
         // If the principal isn't null, cast it to Long
         .map(Authentication::getPrincipal)
-        .cast(Long.class);
+        .cast(String.class);
   }
 }

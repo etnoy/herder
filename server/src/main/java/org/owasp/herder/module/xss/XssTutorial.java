@@ -40,7 +40,7 @@ public class XssTutorial extends BaseModule {
 
   private final XssService xssService;
 
-  public Mono<XssTutorialResponse> submitQuery(final long userId, final String query) {
+  public Mono<XssTutorialResponse> submitQuery(final String userId, final String query) {
 
     final String htmlTarget =
         String.format(

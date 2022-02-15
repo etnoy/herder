@@ -46,7 +46,7 @@ public class ScoreboardController {
 
   @GetMapping(path = "scoreboard/user/{userId}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<RankedSubmission> getScoreboardByUserId(@PathVariable final long userId) {
+  public Flux<RankedSubmission> getScoreboardByUserId(@PathVariable final String userId) {
     return submissionService.findAllRankedByUserId(userId);
   }
 

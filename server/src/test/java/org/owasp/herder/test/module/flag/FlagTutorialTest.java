@@ -70,7 +70,7 @@ class FlagTutorialTest {
   @Test
   @DisplayName("getFlag can return flag")
   void getFlag_ValidData_ReturnsFlag() {
-    final long testUserId = 318L;
+    final String testUserId = "id";
     final String flag = "flag";
 
     when(flagHandler.getDynamicFlag(testUserId, moduleName)).thenReturn(Mono.just(flag));

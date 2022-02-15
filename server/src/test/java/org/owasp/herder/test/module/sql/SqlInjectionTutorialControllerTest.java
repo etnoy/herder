@@ -38,6 +38,7 @@ import org.owasp.herder.exception.NotAuthenticatedException;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialController;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -61,7 +62,7 @@ class SqlInjectionTutorialControllerTest {
 
   @Test
   void search_Autenticated_CallsModule() {
-    final long mockUserId = 709L;
+    final String mockUserId = "id";
 
     final SqlInjectionTutorialRow sqlInjectionTutorialRow1 = mock(SqlInjectionTutorialRow.class);
     final SqlInjectionTutorialRow sqlInjectionTutorialRow2 = mock(SqlInjectionTutorialRow.class);

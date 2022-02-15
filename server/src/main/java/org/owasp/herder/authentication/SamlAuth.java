@@ -24,7 +24,7 @@ package org.owasp.herder.authentication;
 import java.io.Serializable;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -34,7 +34,7 @@ import lombok.With;
 @Value
 @Builder
 @With
-@Table
+@Document
 public class SamlAuth implements Serializable {
   private static final long serialVersionUID = 211951930649985921L;
 

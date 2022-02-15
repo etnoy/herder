@@ -78,7 +78,7 @@ class XssTutorialTest {
 
   @Test
   void submitQuery_MakesAlert_ReturnsFlag() {
-    final long mockUserId = 606L;
+    final String mockUserId = "id";
     final String mockFlag = "mockedflag";
     final String query = "username";
 
@@ -105,7 +105,7 @@ class XssTutorialTest {
 
   @Test
   void submitQuery_NoAlert_ReturnsQuery() {
-    final long mockUserId = 606L;
+    final String mockUserId = "id";
     final String query = "username";
 
     final String mockTarget =

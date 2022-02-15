@@ -22,15 +22,17 @@
 package org.owasp.herder.model;
 
 import java.io.Serializable;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
 
 @Value
-@Table("class")
+@Document("class")
 @Builder(builderClassName = "ClassBuilder")
 @With
 public class ClassEntity implements Serializable {

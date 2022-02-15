@@ -41,6 +41,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -90,7 +91,7 @@ class LoginControllerTest {
     final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(userName, password);
     final String mockJwt = "token";
     final Boolean mockUserIsAdmin = false;
-    final long mockUserId = 122L;
+    final String mockUserId = "id";
     final AuthResponse mockAuthResponse =
         AuthResponse.builder()
             .isAdmin(mockUserIsAdmin)
@@ -118,7 +119,7 @@ class LoginControllerTest {
     final String encodedPassword = "encoded";
     final PasswordRegistrationDto passwordRegistrationDto =
         new PasswordRegistrationDto(displayName, userName, password);
-    final long mockUserId = 255L;
+    final String mockUserId = "id";
     when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
     when(userService.createPasswordUser(displayName, userName, encodedPassword))
         .thenReturn(Mono.just(mockUserId));

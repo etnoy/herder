@@ -23,11 +23,7 @@ package org.owasp.herder.test.application;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +31,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.application.StartupRunner;
 import org.owasp.herder.flag.FlagHandler;
@@ -45,7 +40,6 @@ import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.user.UserService;
-import org.springframework.r2dbc.core.DatabaseClient;
 
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -76,11 +70,9 @@ class StartupRunnerTest {
 
   @Mock private FlagHandler flagHandler;
 
-  @Mock private DatabaseClient databaseClient;
-
   @Test
   void run_NoArguments_Success() {
-    final long mockUserId = 602L;
+    final String mockUserId = "id";
     when(userService.createPasswordUser(
             "Administrator",
             "admin",
@@ -93,19 +85,6 @@ class StartupRunnerTest {
 
     when(userService.existsByLoginName(any(String.class))).thenReturn(Mono.just(false));
     when(userService.existsByDisplayName(any(String.class))).thenReturn(Mono.just(false));
-
-    databaseClient = mock(DatabaseClient.class, Mockito.RETURNS_DEEP_STUBS);
-
-    Map<String, Object> versionMap = new HashMap<>();
-    versionMap.put("version", "8.0.28");
-
-    when(databaseClient.sql("select @@version").fetch().first()).thenReturn(Mono.just(versionMap));
-
-    Map<String, Object> commentMap = new HashMap<>();
-    commentMap.put("comment", "MySQL");
-
-    when(databaseClient.sql("select @@version_comment").fetch().first())
-        .thenReturn(Mono.just(commentMap));
 
     assertDoesNotThrow(() -> startupRunner.run(null));
   }

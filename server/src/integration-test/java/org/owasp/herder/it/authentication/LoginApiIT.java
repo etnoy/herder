@@ -55,7 +55,7 @@ class LoginApiIT extends BaseIT {
 
   @Autowired IntegrationTestUtils integrationTestUtils;
 
-  private long userId;
+  private String userId;
 
   @Test
   @DisplayName("Logging in with correct credentials should return a valid token")
@@ -71,8 +71,7 @@ class LoginApiIT extends BaseIT {
             .parseClaimsJws(token)
             .getBody();
 
-    final String userIdString = Long.toString(userId);
-    assertThat(claims.getSubject()).isEqualTo(userIdString);
+    assertThat(claims.getSubject()).isEqualTo(userId);
   }
 
   @Test

@@ -9,7 +9,7 @@ import { UserScore } from 'src/app/model/user-score';
 })
 export class UserScoreComponent implements OnInit {
   submissions: UserScore[];
-  userId: number;
+  userId: string;
 
   constructor(private route: ActivatedRoute, public apiService: ApiService) {
     this.submissions = [];
@@ -17,7 +17,7 @@ export class UserScoreComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
-      const userId: number = Number(params.get('userId'));
+      const userId: string = params.get('userId');
 
       this.apiService
         .getScoresByUserId(userId)

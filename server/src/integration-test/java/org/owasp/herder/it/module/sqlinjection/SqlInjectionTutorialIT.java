@@ -91,7 +91,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
   @Test
   void submitQuery_CorrectAttackQuery_ModifiedFlagIsWrong() {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
 
     final Mono<String> flagVerificationMono =
         sqlInjectionTutorial
@@ -115,7 +115,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
   @Test
   void submitQuery_CorrectAttackQuery_ReturnedFlagIsCorrect() {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
 
     final Mono<String> flagMono =
         sqlInjectionTutorial
@@ -137,7 +137,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
   @Test
   void submitQuery_CorrectAttackQuery_ReturnsWholeDatabase() {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(5)
@@ -147,7 +147,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
   @Test
   void submitQuery_InjectionDeletesAll_DoesNotImpactDatabase() throws InterruptedException {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
 
     sqlInjectionTutorial.submitQuery(userId, "1'; DROP ALL OBJECTS; --").blockLast();
 
@@ -159,13 +159,13 @@ class SqlInjectionTutorialIT extends BaseIT {
 
   @Test
   void submitQuery_QueryWithNoMatches_EmptyResultSet() {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "test")).expectComplete().verify();
   }
 
   @Test
   void submitQuery_QueryWithOneMatch_OneItemInResultSet() {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "Jonathan Jogenfors"))
         .expectNextCount(1)
         .expectComplete()
@@ -174,7 +174,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
   @Test
   void submitQuery_RepeatedCorrectAttackQuery_ReturnsWholeDatabaseFromCache() {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(5)
@@ -189,7 +189,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
   @Test
   void submitQuery_InvalidQueryWithOneApostrophe_ReturnsError() {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
 
     final String errorMessage =
         "Syntax error in SQL statement \"SELECT * FROM sqlinjection.users "
@@ -205,7 +205,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
   @Test
   void submitQuery_InvalidQueryOneEqualsOne_NumberFormatException() {
-    final Long userId = userService.create("TestUser1").block();
+    final String userId = userService.create("TestUser1").block();
 
     final String errorMessage =
         "Data conversion error converting \"1=1\"; SQL statement:\n"

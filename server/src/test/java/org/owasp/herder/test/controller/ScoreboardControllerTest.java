@@ -68,7 +68,7 @@ class ScoreboardControllerTest {
     final ScoreboardEntry scoreboardEntry1 =
         scoreboardEntryBuilder
             .rank(1L)
-            .userId(1L)
+            .userId("asdf")
             .score(1337L)
             .displayName("User1")
             .goldMedals(420L)
@@ -78,7 +78,7 @@ class ScoreboardControllerTest {
     final ScoreboardEntry scoreboardEntry2 =
         scoreboardEntryBuilder
             .rank(1L)
-            .userId(3L)
+            .userId("qwert")
             .score(13399L)
             .displayName("User2")
             .goldMedals(69L)
@@ -100,17 +100,19 @@ class ScoreboardControllerTest {
 
   @Test
   void getScoreboardByUserId_ValidUserId_ReturnsScoreboardForUser() {
-    final long mockUserId = 6331L;
+    final String mockUserId = "id";
     final RankedSubmissionBuilder rankedSubmissionBuilder = RankedSubmission.builder();
     final RankedSubmission rankedSubmission1 =
         rankedSubmissionBuilder
-            .userId(2L)
+            .userId("uwu")
+            .displayName("User 1")
             .moduleName("test-module")
             .time(LocalDateTime.MIN)
             .build();
     final RankedSubmission rankedSubmission2 =
         rankedSubmissionBuilder
-            .userId(2342L)
+            .userId("user2")
+            .displayName("User 2")
             .moduleName("test-module")
             .time(LocalDateTime.MAX)
             .build();

@@ -29,6 +29,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +41,7 @@ import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.scoring.Correction;
 import org.owasp.herder.scoring.CorrectionRepository;
 import org.owasp.herder.scoring.CorrectionService;
-import org.owasp.herder.test.util.TestConstants;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -73,16 +74,14 @@ class CorrectionServiceTest {
 
   @Test
   void submit_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestConstants.INVALID_IDS) {
-      StepVerifier.create(correctionService.submit(userId, 500, ""))
-          .expectError(InvalidUserIdException.class)
-          .verify();
-    }
+    StepVerifier.create(correctionService.submit("", 500, ""))
+        .expectError(InvalidUserIdException.class)
+        .verify();
   }
 
   @Test
   void submit_ValidUserId_ReturnsCorrection() throws Exception {
-    final long mockUserId = 609L;
+    final String mockUserId = "id";
     final int amount = 1000;
     final String description = "Bonus";
 

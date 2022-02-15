@@ -24,8 +24,7 @@ package org.owasp.herder.module;
 import java.io.Serializable;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -39,11 +38,11 @@ import lombok.With;
 @AllArgsConstructor
 @Builder
 @With
-@Table("module")
+@Document("module")
 public class ModuleEntity implements Serializable {
   private static final long serialVersionUID = 6391362512222766270L;
 
-  @Id private Long id;
+  @Id private String id;
 
   @NonNull private String name;
 
@@ -54,9 +53,7 @@ public class ModuleEntity implements Serializable {
 
   private String staticFlag;
 
-  @Column("module_key")
-  @NonNull
-  private byte[] key;
+  @NonNull private byte[] key;
 
   @JsonProperty("isOpen")
   private boolean isOpen;

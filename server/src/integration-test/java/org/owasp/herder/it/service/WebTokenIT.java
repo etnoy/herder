@@ -86,7 +86,7 @@ class WebTokenIT extends BaseIT {
   @Test
   @DisplayName("It should be possible to generate a new token after an old one was invalidated")
   void canGenerateNewAccessTokenAfterOldTokenIsInvalidated() {
-    final long userId = integrationTestUtils.createTestUser();
+    final String userId = integrationTestUtils.createTestUser();
 
     // Create a token (we don't save it)
     integrationTestUtils.performAPILoginWithToken(
@@ -115,7 +115,7 @@ class WebTokenIT extends BaseIT {
   @Test
   @DisplayName("A generated admin access token should be valid")
   void canGenerateValidAdminAccessTokens() {
-    final long userId = integrationTestUtils.createTestAdmin();
+    final String userId = integrationTestUtils.createTestAdmin();
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
@@ -138,7 +138,7 @@ class WebTokenIT extends BaseIT {
   @Test
   @DisplayName("A generated user access token should be valid")
   void canGenerateValidUserAccessTokens() {
-    final long userId = integrationTestUtils.createTestUser();
+    final String userId = integrationTestUtils.createTestUser();
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
@@ -159,7 +159,7 @@ class WebTokenIT extends BaseIT {
   @Test
   @DisplayName("An invalidated token should be rejected")
   void canInvalidateAccessTokens() {
-    final long userId = integrationTestUtils.createTestUser();
+    final String userId = integrationTestUtils.createTestUser();
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(

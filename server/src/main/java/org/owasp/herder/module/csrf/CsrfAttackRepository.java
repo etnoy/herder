@@ -21,12 +21,13 @@
  */
 package org.owasp.herder.module.csrf;
 
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
+
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface CsrfAttackRepository extends ReactiveCrudRepository<CsrfAttack, Long> {
+public interface CsrfAttackRepository extends ReactiveMongoRepository<CsrfAttack, Long> {
   public Mono<CsrfAttack> findByPseudonymAndModuleName(String pseudonym, String moduleName);
 
   public Mono<Long> countByPseudonymAndModuleName(String pseudonym, String moduleName);

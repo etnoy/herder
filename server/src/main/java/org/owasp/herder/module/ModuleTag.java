@@ -24,8 +24,7 @@ package org.owasp.herder.module;
 import java.io.Serializable;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -35,19 +34,15 @@ import lombok.With;
 @Value
 @Builder
 @With
-@Table
+@Document
 public class ModuleTag implements Serializable {
   private static final long serialVersionUID = -1467010304152602335L;
 
-  @Id private Long id;
+  @Id private String id;
 
   @NonNull private String moduleName;
 
-  @Column("tag_name")
-  @NonNull
-  private String name;
+  @NonNull private String name;
 
-  @Column("tag_value")
-  @NonNull
-  private String value;
+  @NonNull private String value;
 }

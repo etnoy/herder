@@ -21,25 +21,26 @@
  */
 package org.owasp.herder.crypto;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwsHeader;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MissingClaimException;
-import io.jsonwebtoken.SigningKeyResolverAdapter;
 import java.security.Key;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Date;
-import lombok.extern.slf4j.Slf4j;
+
 import org.owasp.herder.authentication.Role;
-import org.owasp.herder.exception.InvalidUserIdException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwsHeader;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MissingClaimException;
+import io.jsonwebtoken.SigningKeyResolverAdapter;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -61,16 +62,13 @@ public class WebTokenService {
     return 1000 * EXPIRATION_TIME;
   }
 
-  public String generateToken(final Long userId) {
+  public String generateToken(final String userId) {
     return generateToken(userId, false);
   }
 
-  public String generateToken(final Long userId, final boolean isAdmin) {
+  public String generateToken(final String userId, final boolean isAdmin) {
     if (userId == null) {
       throw new NullPointerException();
-    }
-    if (userId <= 0) {
-      throw new InvalidUserIdException();
     }
 
     final Date creationTime = clock.now();
@@ -132,15 +130,15 @@ public class WebTokenService {
     final String userIdErrorMessage =
         "Invalid userid " + parsedClaims.getSubject() + " found in token";
 
-    long userId;
+    String userId;
     try {
-      userId = Long.parseLong(parsedClaims.getSubject());
+      userId = parsedClaims.getSubject();
     } catch (NumberFormatException e) {
       log.debug(userIdErrorMessage);
       throw new BadCredentialsException(userIdErrorMessage, e);
     }
 
-    if (userId <= 0) {
+    if (userId.isEmpty()) {
       log.debug(userIdErrorMessage);
       throw new BadCredentialsException(userIdErrorMessage);
     }

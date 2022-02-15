@@ -24,8 +24,7 @@ package org.owasp.herder.scoring;
 import java.io.Serializable;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -35,17 +34,15 @@ import lombok.With;
 @Value
 @Builder
 @With
-@Table
+@Document
 public class ModulePoint implements Serializable {
   private static final long serialVersionUID = 4548877736126023113L;
 
-  @Id private Long id;
+  @Id private String id;
 
   @NonNull private String moduleName;
 
-  @Column("submission_rank")
-  @NonNull
-  private Long rank;
+  @NonNull private Long rank;
 
   @NonNull private Long points;
 }

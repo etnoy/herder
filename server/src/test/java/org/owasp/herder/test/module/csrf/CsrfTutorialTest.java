@@ -73,7 +73,7 @@ class CsrfTutorialTest {
 
   @Test
   void attack_InvalidTarget_ReturnsError() {
-    final long attackerUserId = 90L;
+    final String attackerUserId = "id";
 
     final String mockTarget = "abcd123";
 
@@ -95,7 +95,7 @@ class CsrfTutorialTest {
 
   @Test
   void attack_ValidTarget_Activates() {
-    final long attackerUserId = 90L;
+    final String attackerUserId = "id";
 
     final String mockTarget = "abcd123";
     final String mockAttacker = "xyz789";
@@ -121,7 +121,7 @@ class CsrfTutorialTest {
 
   @Test
   void attack_TargetsSelf_DoesNotActivate() {
-    final long userId = 90L;
+    final String userId = "id";
 
     final String pseudonym = "xyz789";
 
@@ -145,7 +145,7 @@ class CsrfTutorialTest {
 
   @Test
   void getTutorial_Activated_ReturnsFlag() {
-    final long mockUserId = 45L;
+    final String mockUserId = "id";
     final String mockPseudonym = "abcd123";
     final String flag = "flag";
 
@@ -169,7 +169,7 @@ class CsrfTutorialTest {
 
   @Test
   void getTutorial_NotActivated_ReturnsActivationLink() {
-    final long mockUserId = 45L;
+    final String mockUserId = "id";
     final String mockPseudonym = "abcd123";
     final Mono<String> flag = Mono.just("flag");
 

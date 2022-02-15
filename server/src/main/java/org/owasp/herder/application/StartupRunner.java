@@ -43,7 +43,7 @@ public class StartupRunner implements ApplicationRunner {
   public void run(ApplicationArguments args) {
 
     if (Boolean.FALSE.equals(userService.existsByLoginName("admin").block())) {
-      final long adminId =
+      final String adminId =
           userService
               .createPasswordUser(
                   "Administrator",

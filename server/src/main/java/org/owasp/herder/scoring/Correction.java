@@ -25,7 +25,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -35,14 +35,14 @@ import lombok.With;
 @Value
 @Builder
 @With
-@Table
+@Document
 public class Correction implements Serializable {
 
   private static final long serialVersionUID = -3672798577756177047L;
 
-  @Id private Long id;
+  @Id private String id;
 
-  @NonNull private Long userId;
+  @NonNull private String userId;
 
   @NonNull private Long amount;
 

@@ -35,6 +35,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,11 +48,10 @@ import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.scoring.CorrectionRepository;
 import org.owasp.herder.scoring.RankedSubmission;
-import org.owasp.herder.scoring.RankedSubmissionRepository;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
-import org.owasp.herder.test.util.TestConstants;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -69,8 +69,6 @@ class SubmissonServiceTest {
   private SubmissionService submissionService;
 
   @Mock private SubmissionRepository submissionRepository;
-
-  @Mock private RankedSubmissionRepository rankedSubmissionRepository;
 
   @Mock private CorrectionRepository correctionRepository;
 
@@ -108,33 +106,31 @@ class SubmissonServiceTest {
   }
 
   @Test
-  void findAllRankedByUserId_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestConstants.INVALID_IDS) {
-      StepVerifier.create(submissionService.findAllRankedByUserId(userId))
-          .expectError(InvalidUserIdException.class)
-          .verify();
-    }
+  void findAllRankedByUserId_EmptyUserId_ReturnsInvalidUserIdException() {
+    StepVerifier.create(submissionService.findAllRankedByUserId(""))
+        .expectError(InvalidUserIdException.class)
+        .verify();
   }
 
   @Test
   void findAllRankedByUserId_NoRankedSubmissionsExist_ReturnsEmpty() {
-    final long mockUserId = 279L;
-    when(rankedSubmissionRepository.findAllByUserId(mockUserId)).thenReturn(Flux.empty());
+    final String mockUserId = "id";
+    when(submissionRepository.findAllRankedByUserId(mockUserId)).thenReturn(Flux.empty());
     StepVerifier.create(submissionService.findAllRankedByUserId(mockUserId))
         .expectComplete()
         .verify();
-    verify(rankedSubmissionRepository, times(1)).findAllByUserId(mockUserId);
+    verify(submissionRepository, times(1)).findAllRankedByUserId(mockUserId);
   }
 
   @Test
   void findAllRankedByUserId_RankedSubmissionsExist_ReturnsRankedSubmissions() {
-    final long mockUserId = 809L;
+    final String mockUserId = "id";
     final RankedSubmission mockRankedSubmission1 = mock(RankedSubmission.class);
     final RankedSubmission mockRankedSubmission2 = mock(RankedSubmission.class);
     final RankedSubmission mockRankedSubmission3 = mock(RankedSubmission.class);
     final RankedSubmission mockRankedSubmission4 = mock(RankedSubmission.class);
 
-    when(rankedSubmissionRepository.findAllByUserId(mockUserId))
+    when(submissionRepository.findAllRankedByUserId(mockUserId))
         .thenReturn(
             Flux.just(
                 mockRankedSubmission1,
@@ -148,22 +144,18 @@ class SubmissonServiceTest {
         .expectNext(mockRankedSubmission4)
         .expectComplete()
         .verify();
-
-    verify(rankedSubmissionRepository, times(1)).findAllByUserId(mockUserId);
   }
 
   @Test
-  void findAllValidByUserId_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestConstants.INVALID_IDS) {
-      StepVerifier.create(submissionService.findAllValidByUserId(userId))
-          .expectError(InvalidUserIdException.class)
-          .verify();
-    }
+  void findAllValidByUserId_EmptyUserId_ReturnsInvalidUserIdException() {
+    StepVerifier.create(submissionService.findAllValidByUserId(""))
+        .expectError(InvalidUserIdException.class)
+        .verify();
   }
 
   @Test
   void findAllValidByUserId_NoSubmissionsExist_ReturnsEmpty() {
-    final long mockUserId = 26L;
+    final String mockUserId = "id";
     when(submissionRepository.findAllValidByUserId(mockUserId)).thenReturn(Flux.empty());
     StepVerifier.create(submissionService.findAllValidByUserId(mockUserId))
         .expectComplete()
@@ -173,7 +165,7 @@ class SubmissonServiceTest {
 
   @Test
   void findAllValidByUserId_SubmissionsExist_ReturnsSubmissions() {
-    final long mockUserId = 809L;
+    final String mockUserId = "id";
     final Submission mockSubmission1 = mock(Submission.class);
     final Submission mockSubmission2 = mock(Submission.class);
     final Submission mockSubmission3 = mock(Submission.class);
@@ -194,36 +186,34 @@ class SubmissonServiceTest {
 
   @Test
   void findAllValidByUserIdAndModuleName_InvalidUserId_ReturnsInvalidUserIdException() {
-    final String mockModuleName = "id";
-    for (final long userId : TestConstants.INVALID_IDS) {
-      StepVerifier.create(
-              submissionService.findAllValidByUserIdAndModuleName(userId, mockModuleName))
-          .expectError(InvalidUserIdException.class)
-          .verify();
-    }
+    StepVerifier.create(submissionService.findAllValidByUserIdAndModuleName("", "id"))
+        .expectError(InvalidUserIdException.class)
+        .verify();
   }
 
   @Test
   void findAllValidByUserIdAndModuleName_NoSubmissionsExist_ReturnsEmpty() {
-    final long mockUserId = 648L;
+    final String mockUserId = "id";
     final String mockModuleName = "id";
-    when(submissionRepository.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
+    when(submissionRepository.findAllByUserIdAndModuleNameAndIsValidTrue(
+            mockUserId, mockModuleName))
         .thenReturn(Mono.empty());
     StepVerifier.create(
             submissionService.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
         .expectComplete()
         .verify();
     verify(submissionRepository, times(1))
-        .findAllValidByUserIdAndModuleName(mockUserId, mockModuleName);
+        .findAllByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName);
   }
 
   @Test
   void findAllValidByUserIdAndModuleName_SubmissionsExist_ReturnsSubmissions() {
-    final long mockUserId = 864L;
+    final String mockUserId = "id";
     final String mockModuleName = "id";
     final Submission mockSubmission = mock(Submission.class);
 
-    when(submissionRepository.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
+    when(submissionRepository.findAllByUserIdAndModuleNameAndIsValidTrue(
+            mockUserId, mockModuleName))
         .thenReturn(Mono.just(mockSubmission));
     StepVerifier.create(
             submissionService.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
@@ -232,21 +222,19 @@ class SubmissonServiceTest {
         .verify();
 
     verify(submissionRepository, times(1))
-        .findAllValidByUserIdAndModuleName(mockUserId, mockModuleName);
+        .findAllByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName);
   }
 
   @Test
   void findAllValidIdsByUserId_InvalidUserId_ReturnsInvalidUserIdException() {
-    for (final long userId : TestConstants.INVALID_IDS) {
-      StepVerifier.create(submissionService.findAllValidModuleNamesByUserId(userId))
-          .expectError(InvalidUserIdException.class)
-          .verify();
-    }
+    StepVerifier.create(submissionService.findAllValidModuleNamesByUserId(""))
+        .expectError(InvalidUserIdException.class)
+        .verify();
   }
 
   @Test
   void findAllValidIdsByUserId_NoSubmissionsExist_ReturnsEmpty() {
-    final long mockUserId = 508L;
+    final String mockUserId = "id";
     when(submissionRepository.findAllValidByUserId(mockUserId)).thenReturn(Flux.empty());
     StepVerifier.create(submissionService.findAllValidModuleNamesByUserId(mockUserId))
         .expectNext(new ArrayList<String>())
@@ -257,7 +245,7 @@ class SubmissonServiceTest {
 
   @Test
   void findAllValidIdsByUserId_SubmissionsExist_ReturnsSubmissions() {
-    final long mockUserId = 237L;
+    final String mockUserId = "id";
     final Submission mockSubmission1 = mock(Submission.class);
     final Submission mockSubmission2 = mock(Submission.class);
     final Submission mockSubmission3 = mock(Submission.class);
@@ -295,15 +283,14 @@ class SubmissonServiceTest {
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    submissionService =
-        new SubmissionService(submissionRepository, rankedSubmissionRepository, flagHandler);
+    submissionService = new SubmissionService(submissionRepository, flagHandler);
   }
 
   @Test
   void submit_InvalidFlag_ReturnsInvalidSubmission() {
-    final long mockUserId = 293L;
-    final String mockModuleName = "id";
-    final long mockSubmissionId = 353L;
+    final String mockUserId = "userId";
+    final String mockModuleName = "moduleName";
+    final String mockSubmissionId = "submissionId";
 
     final String flag = "invalidFlag";
 
@@ -314,8 +301,8 @@ class SubmissonServiceTest {
 
     when(flagHandler.verifyFlag(mockUserId, mockModuleName, flag)).thenReturn(Mono.just(false));
 
-    when(submissionRepository.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
-        .thenReturn(Mono.empty());
+    when(submissionRepository.existsByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName))
+        .thenReturn(Mono.just(false));
 
     when(submissionRepository.save(any(Submission.class)))
         .thenAnswer(
@@ -336,23 +323,20 @@ class SubmissonServiceTest {
 
     verify(flagHandler, times(1)).verifyFlag(mockUserId, mockModuleName, flag);
     verify(submissionRepository, times(1))
-        .findAllValidByUserIdAndModuleName(mockUserId, mockModuleName);
+        .existsByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName);
     verify(submissionRepository, times(1)).save(any(Submission.class));
   }
 
   @Test
   void submit_InvalidUserId_ReturnsInvalidUserIdException() {
-    final String mockModuleName = "id";
-    for (final long userId : TestConstants.INVALID_IDS) {
-      StepVerifier.create(submissionService.submit(userId, mockModuleName, "flag"))
-          .expectError(InvalidUserIdException.class)
-          .verify();
-    }
+    StepVerifier.create(submissionService.submit("", "module", "flag"))
+        .expectError(InvalidUserIdException.class)
+        .verify();
   }
 
   @Test
   void submit_ModuleAlreadySolvedByUser_ReturnsModuleAlreadySolvedException() {
-    final long mockUserId = 293L;
+    final String mockUserId = "id";
     final String mockModuleName = "id";
     final String flag = "validFlag";
 
@@ -363,8 +347,8 @@ class SubmissonServiceTest {
 
     when(flagHandler.verifyFlag(mockUserId, mockModuleName, flag)).thenReturn(Mono.just(true));
 
-    when(submissionRepository.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
-        .thenReturn(Mono.just(mock(Submission.class)));
+    when(submissionRepository.existsByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName))
+        .thenReturn(Mono.just(true));
 
     StepVerifier.create(submissionService.submit(mockUserId, mockModuleName, flag))
         .expectError(ModuleAlreadySolvedException.class)
@@ -372,14 +356,14 @@ class SubmissonServiceTest {
 
     verify(flagHandler, times(1)).verifyFlag(mockUserId, mockModuleName, flag);
     verify(submissionRepository, times(1))
-        .findAllValidByUserIdAndModuleName(mockUserId, mockModuleName);
+        .existsByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName);
   }
 
   @Test
   void submit_ValidFlag_ReturnsValidSubmission() {
-    final long mockUserId = 293L;
-    final String mockModuleName = "id";
-    final long mockSubmissionId = 353L;
+    final String mockUserId = "user-id";
+    final String mockModuleName = "module-name";
+    final String mockSubmissionId = "sub-id";
 
     final String flag = "validFlag";
 
@@ -389,8 +373,8 @@ class SubmissonServiceTest {
 
     when(flagHandler.verifyFlag(mockUserId, mockModuleName, flag)).thenReturn(Mono.just(true));
 
-    when(submissionRepository.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
-        .thenReturn(Mono.empty());
+    when(submissionRepository.existsByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName))
+        .thenReturn(Mono.just(false));
 
     when(submissionRepository.save(any(Submission.class)))
         .thenAnswer(
@@ -411,52 +395,49 @@ class SubmissonServiceTest {
 
     verify(flagHandler, times(1)).verifyFlag(mockUserId, mockModuleName, flag);
     verify(submissionRepository, times(1))
-        .findAllValidByUserIdAndModuleName(mockUserId, mockModuleName);
+        .existsByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName);
     verify(submissionRepository, times(1)).save(any(Submission.class));
   }
 
   @Test
-  void submitValid_InvalidUserId_ReturnsInvalidUserIdException() {
-    final String mockModuleName = "id";
-    for (final long userId : TestConstants.INVALID_IDS) {
-      StepVerifier.create(submissionService.submitValid(userId, mockModuleName))
-          .expectError(InvalidUserIdException.class)
-          .verify();
-    }
+  void submitValid_EmptyUserId_ReturnsInvalidUserIdException() {
+    StepVerifier.create(submissionService.submitValid("", "id"))
+        .expectError(InvalidUserIdException.class)
+        .verify();
   }
 
   @Test
   void submitValid_ModuleAlreadySolvedByUser_ReturnsModuleAlreadySolvedException() {
-    final long mockUserId = 743L;
+    final String mockUserId = "id";
     final String mockModuleName = "id";
 
     final Clock fixedClock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
 
     setClock(fixedClock);
 
-    when(submissionRepository.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
-        .thenReturn(Mono.just(mock(Submission.class)));
+    when(submissionRepository.existsByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName))
+        .thenReturn(Mono.just(true));
 
     StepVerifier.create(submissionService.submitValid(mockUserId, mockModuleName))
         .expectError(ModuleAlreadySolvedException.class)
         .verify();
 
     verify(submissionRepository, times(1))
-        .findAllValidByUserIdAndModuleName(mockUserId, mockModuleName);
+        .existsByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName);
   }
 
   @Test
   void submitValid_ModuleNotAlreadySolved_ReturnsValidSubmission() {
-    final long mockUserId = 293L;
+    final String mockUserId = "id";
     final String mockModuleName = "id";
-    final long mockSubmissionId = 353L;
+    final String mockSubmissionId = "submissionId";
 
     final Clock fixedClock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
 
     setClock(fixedClock);
 
-    when(submissionRepository.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
-        .thenReturn(Mono.empty());
+    when(submissionRepository.existsByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName))
+        .thenReturn(Mono.just(false));
 
     when(submissionRepository.save(any(Submission.class)))
         .thenAnswer(
@@ -476,7 +457,7 @@ class SubmissonServiceTest {
         .verify();
 
     verify(submissionRepository, times(1))
-        .findAllValidByUserIdAndModuleName(mockUserId, mockModuleName);
+        .existsByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName);
     verify(submissionRepository, times(1)).save(any(Submission.class));
   }
 }

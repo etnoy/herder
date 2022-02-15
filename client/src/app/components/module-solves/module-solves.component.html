@@ -6,7 +6,7 @@
         <ng-container *ngFor="let submission of submissions">
           <li>
             <p>
-              {{submission.time.toLocaleString() | amTimeAgo }}: {{ submission.userId }} <app-rank [rank]=submission.rank></app-rank>{{submission.score}} points.
+              {{submission.time.toLocaleString() | amTimeAgo }}: <a href="/scoreboard/user/{{submission.userId}}">{{submission.displayName}}</a> <app-rank [rank]=submission.rank></app-rank>{{submission.score}} points.
             </p>
           </li>
         </ng-container>

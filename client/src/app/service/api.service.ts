@@ -137,7 +137,7 @@ export class ApiService {
     );
   }
 
-  getScoresByUserId(userId: number): Observable<any> {
+  getScoresByUserId(userId: string): Observable<any> {
     const api = `${this.endpoint}/scoreboard/user/${userId}`;
     return this.http.get(api, { headers: this.headers }).pipe(
       map((res: Response) => {

@@ -94,7 +94,7 @@ class FlagControllerTest {
 
   @Test
   void submitFlag_UserAuthenticatedAndValidFlagSubmitted_ReturnsValidSubmission() throws Exception {
-    final long mockUserId = 417L;
+    final String mockUserId = "id";
     final String moduleName = "test-module";
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 

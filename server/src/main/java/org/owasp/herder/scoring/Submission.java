@@ -25,7 +25,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -39,13 +39,13 @@ import lombok.With;
 @Builder
 @AllArgsConstructor
 @With
-@Table
+@Document
 public class Submission implements Serializable {
   private static final long serialVersionUID = -5485881248601955741L;
 
-  @Id private Long id;
+  @Id private String id;
 
-  @NonNull private Long userId;
+  @NonNull private String userId;
 
   @NonNull private String moduleName;
 
