@@ -56,7 +56,7 @@ public interface SubmissionRepository extends ReactiveMongoRepository<Submission
     "{$group:{_id:'$_id',displayName:{$max:'$displayName'},score:{$sum:'$score'},goldMedals:{$sum:'$goldMedals'},silverMedals:{$sum:'$silverMedals'},bronzeMedals:{$sum:'$bronzeMedals'}}}",
     "{$setWindowFields:{sortBy:{score:-1},output:{rank:{$rank:{}}}}}",
     "{$project:{_id:0,userId:'$_id',rank:1,score:1,goldMedals:1,silverMedals:1,bronzeMedals:1,displayName:1}}",
-    "{$sort: {rank: 1, goldMedals:-1, silverMedals:-1, bronzeMedals:-1}}"
+    "{$sort: {rank: 1, goldMedals:-1, silverMedals:-1, bronzeMedals:-1, displayName: 1}}"
   })
   public Flux<ScoreboardEntry> getScoreboard();
 

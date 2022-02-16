@@ -42,11 +42,6 @@ jobs:
         run: ./gradlew spotlessCheck build jacocoTestReport sonarqube --info
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      - name: Prepare mysql database for integration tests
-        run: |
-          sudo systemctl start mysql.service
-          mysql -u root -proot -e "CREATE DATABASE core;"
-          mysql -u root -proot -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"     
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   
       - name: Integration tests
         run: ./gradlew integrationTest jacocoTestReport --info

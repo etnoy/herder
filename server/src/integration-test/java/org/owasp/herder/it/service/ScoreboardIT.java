@@ -65,7 +65,7 @@ import io.github.bucket4j.Bucket;
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
-@DisplayName("ScoringService integration tests")
+@DisplayName("Scoreboard integration tests")
 class ScoreboardIT extends BaseIT {
   @BeforeAll
   private static void reactorVerbose() {
@@ -302,8 +302,7 @@ class ScoreboardIT extends BaseIT {
   }
 
   @Test
-  // Mongodb can't do this at the moment
-  @Disabled
+  @Disabled("Currently not possible with MongoDB")
   @DisplayName("Can use medals as tiebreakers")
   void getScoreboard_TiedUsers_MedalsAreTiebreakers() {
     // We'll use this exact flag
