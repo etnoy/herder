@@ -21,15 +21,14 @@
  */
 package org.owasp.herder.module;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.EmptyModuleNameException;
 import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.exception.ModuleNameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -46,31 +45,6 @@ public final class ModuleService {
 
   public Mono<Long> count() {
     return moduleRepository.count();
-  }
-
-  public Flux<ModuleTag> saveTags(final Iterable<ModuleTag> tags) {
-    return moduleTagRepository.saveAll(tags);
-  }
-
-  public Flux<ModuleTag> findAllTagsByModuleName(final String moduleName) {
-    if (moduleName == null) {
-      return Flux.error(new NullPointerException("Module name cannot be null"));
-    }
-    if (moduleName.isEmpty()) {
-      return Flux.error(new EmptyModuleNameException());
-    }
-    return moduleTagRepository.findAllByModuleName(moduleName);
-  }
-
-  public Flux<ModuleTag> findAllTagsByModuleNameAndTagName(
-      final String moduleName, final String tagName) {
-    if (moduleName == null) {
-      return Flux.error(new NullPointerException("Module name cannot be null"));
-    }
-    if (moduleName.isEmpty()) {
-      return Flux.error(new EmptyModuleNameException());
-    }
-    return moduleTagRepository.findAllByModuleNameAndName(moduleName, tagName);
   }
 
   public Mono<ModuleEntity> create(final String moduleName) {
@@ -99,12 +73,64 @@ public final class ModuleService {
         .doOnSuccess(created -> log.trace("Created module with name " + moduleName));
   }
 
+  private Mono<Boolean> doesNotExistByName(final String moduleName) {
+    if (moduleName == null) {
+      return Mono.error(new NullPointerException("Module name cannot be null"));
+    }
+    if (moduleName.isEmpty()) {
+      return Mono.error(new EmptyModuleNameException());
+    }
+    return findByName(moduleName).map(u -> false).defaultIfEmpty(true);
+  }
+
+  public Mono<Boolean> existsByName(final String moduleName) {
+    if (moduleName == null) {
+      return Mono.error(new NullPointerException("Module name cannot be null"));
+    }
+    if (moduleName.isEmpty()) {
+      return Mono.error(new EmptyModuleNameException());
+    }
+    return findByName(moduleName).map(u -> true).defaultIfEmpty(false);
+  }
+
+  private ModuleListItem filterEmptyTags(final ModuleListItem item) {
+    if (item.getTags().length == 0) {
+      return item.withTags(null);
+    }
+    return item;
+  }
+
   public Flux<ModuleEntity> findAll() {
     return moduleRepository.findAll();
   }
 
   public Flux<ModuleEntity> findAllOpen() {
     return moduleRepository.findAllOpen();
+  }
+
+  public Flux<ModuleListItem> findAllOpenWithSolutionStatus(final String userId) {
+    return moduleRepository.findAllOpenWithSolutionStatus(userId).map(this::filterEmptyTags);
+  }
+
+  public Flux<ModuleTag> findAllTagsByModuleName(final String moduleName) {
+    if (moduleName == null) {
+      return Flux.error(new NullPointerException("Module name cannot be null"));
+    }
+    if (moduleName.isEmpty()) {
+      return Flux.error(new EmptyModuleNameException());
+    }
+    return moduleTagRepository.findAllByModuleName(moduleName);
+  }
+
+  public Flux<ModuleTag> findAllTagsByModuleNameAndTagName(
+      final String moduleName, final String tagName) {
+    if (moduleName == null) {
+      return Flux.error(new NullPointerException("Module name cannot be null"));
+    }
+    if (moduleName.isEmpty()) {
+      return Flux.error(new EmptyModuleNameException());
+    }
+    return moduleTagRepository.findAllByModuleNameAndName(moduleName, tagName);
   }
 
   public Mono<ModuleEntity> findByName(final String moduleName) {
@@ -118,24 +144,15 @@ public final class ModuleService {
     return moduleRepository.findByName(moduleName);
   }
 
-  public Mono<Boolean> existsByName(final String moduleName) {
-    if (moduleName == null) {
-      return Mono.error(new NullPointerException("Module name cannot be null"));
-    }
-    if (moduleName.isEmpty()) {
-      return Mono.error(new EmptyModuleNameException());
-    }
-    return findByName(moduleName).map(u -> true).defaultIfEmpty(false);
+  public Mono<ModuleListItem> findByNameWithSolutionStatus(
+      final String userId, final String moduleName) {
+    return moduleRepository
+        .findByNameWithSolutionStatus(userId, moduleName)
+        .map(this::filterEmptyTags);
   }
 
-  private Mono<Boolean> doesNotExistByName(final String moduleName) {
-    if (moduleName == null) {
-      return Mono.error(new NullPointerException("Module name cannot be null"));
-    }
-    if (moduleName.isEmpty()) {
-      return Mono.error(new EmptyModuleNameException());
-    }
-    return findByName(moduleName).map(u -> false).defaultIfEmpty(true);
+  public Flux<ModuleTag> saveTags(final Iterable<ModuleTag> tags) {
+    return moduleTagRepository.saveAll(tags);
   }
 
   public Mono<ModuleEntity> setDynamicFlag(final String moduleName) {

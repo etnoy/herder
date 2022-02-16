@@ -21,23 +21,147 @@
  */
 package org.owasp.herder.it.module;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import io.github.bucket4j.Bucket;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
+import org.owasp.herder.module.ModuleListItem;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.module.ModuleTag;
+import org.owasp.herder.module.NameValueTag;
+import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.service.FlagSubmissionRateLimiter;
+import org.owasp.herder.service.InvalidFlagRateLimiter;
+import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.boot.test.mock.mockito.MockBean;
 import reactor.test.StepVerifier;
 
 @DisplayName("ModuleService integration tests")
 class ModuleServiceIT extends BaseIT {
+  @Nested
+  @DisplayName("Can list modules")
+  class canListModules {
+    String userId;
+    ModuleListItem item = ModuleListItem.builder().name("id1").build();
+
+    @Test
+    @DisplayName("with no solutions or tags")
+    void canListModule() {
+      StepVerifier.create(moduleService.findAllOpenWithSolutionStatus(userId))
+          .expectNext(item)
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("with invalid submissions")
+    void canListModuleWithInvalidSubmissions() {
+      // Set that module to have an exact flag
+      submissionService.submit(userId, "id1", "invalidflag").block();
+      submissionService.submit(userId, "id1", "invalidflag2").block();
+
+      StepVerifier.create(moduleService.findAllOpenWithSolutionStatus(userId))
+          .expectNext(item)
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("with tags")
+    void canListModuleWithTags() {
+      final ModuleTag[] moduleTags = {
+        ModuleTag.builder().moduleName("id1").name("key").value("value").build(),
+        ModuleTag.builder().moduleName("id1").name("usage").value("test").build(),
+        ModuleTag.builder().moduleName("id1").name("cow").value("moo").build()
+      };
+
+      final NameValueTag[] tags = {
+        NameValueTag.builder().name("key").value("value").build(),
+        NameValueTag.builder().name("usage").value("test").build(),
+        NameValueTag.builder().name("cow").value("moo").build()
+      };
+
+      moduleService.saveTags(Arrays.asList(moduleTags)).blockLast();
+
+      StepVerifier.create(moduleService.findAllOpenWithSolutionStatus(userId))
+          .expectNext(item.withTags(tags))
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("with solution")
+    void canListSolvedModule() {
+      submissionService.submit(userId, "id1", "flag").block();
+
+      StepVerifier.create(moduleService.findAllOpenWithSolutionStatus(userId))
+          .expectNext(item.withIsSolved(true))
+          .verifyComplete();
+    }
+
+    @BeforeEach
+    private void setUp() {
+      userId = userService.create("Test user").block();
+      // Create a module to submit to
+      moduleService.create("id1").block();
+      moduleService.setStaticFlag("id1", "flag").block();
+    }
+  }
+
   @Autowired IntegrationTestUtils integrationTestUtils;
 
   @Autowired ModuleService moduleService;
+
+  @Autowired UserService userService;
+
+  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+
+  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+
+  @Autowired SubmissionService submissionService;
+
+  @Test
+  @DisplayName("Can get module information")
+  void canGetModuleInformation() {
+    final String userId = userService.create("Test user").block();
+
+    // Create a module to submit to
+    moduleService.create("id1").block();
+
+    // Set that module to have an exact flag
+    moduleService.setStaticFlag("id1", "flag").block();
+
+    final ModuleTag moduleTag =
+        ModuleTag.builder().moduleName("id1").name("usage").value("test").build();
+
+    moduleService.saveTags(List.of(moduleTag)).blockLast();
+
+    submissionService.submit(userId, "id1", "flag").block();
+
+    final NameValueTag[] tags = {NameValueTag.builder().name("usage").value("test").build()};
+
+    StepVerifier.create(moduleService.findByNameWithSolutionStatus(userId, "id1"))
+        .expectNext(ModuleListItem.builder().name("id1").isSolved(true).tags(tags).build())
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can show empty module list")
+  void canReturnEmptyModuleList() {
+    final String userId = userService.create("Test user").block();
+
+    StepVerifier.create(moduleService.findAllOpenWithSolutionStatus(userId)).verifyComplete();
+  }
 
   @ParameterizedTest
   @MethodSource("org.owasp.herder.test.util.TestConstants#validModuleNameProvider")
@@ -61,5 +185,11 @@ class ModuleServiceIT extends BaseIT {
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
+
+    // Bypass the rate limiter
+    final Bucket mockBucket = mock(Bucket.class);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
   }
 }

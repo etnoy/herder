@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.module;
 
+import lombok.RequiredArgsConstructor;
 import org.owasp.herder.authentication.ControllerAuthentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -28,8 +29,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -38,24 +37,16 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/")
 public class ModuleController {
-  private final ModuleRepository moduleRepository;
+  private final ModuleService moduleService;
 
   private final ControllerAuthentication controllerAuthentication;
-
-  private ModuleListItem filterEmptyTags(final ModuleListItem item) {
-    if (item.getTags().length == 0) {
-      return item.withTags(null);
-    }
-    return item;
-  }
 
   @GetMapping(path = "modules")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Flux<ModuleListItem> findAllByUserId() {
     return controllerAuthentication
         .getUserId()
-        .flatMapMany(moduleRepository::findAllOpenWithSolutionStatus)
-        .map(this::filterEmptyTags);
+        .flatMapMany(moduleService::findAllOpenWithSolutionStatus);
   }
 
   @GetMapping(path = "module/{moduleName}")
@@ -63,6 +54,6 @@ public class ModuleController {
   public Mono<ModuleListItem> findByName(@PathVariable final String moduleName) {
     return controllerAuthentication
         .getUserId()
-        .flatMap(userId -> moduleRepository.findByNameWithSolutionStatus(userId, moduleName));
+        .flatMap(userId -> moduleService.findByNameWithSolutionStatus(userId, moduleName));
   }
 }

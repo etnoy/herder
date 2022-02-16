@@ -21,18 +21,16 @@
  */
 package org.owasp.herder.module;
 
-import java.io.Serializable;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
 @AllArgsConstructor
@@ -44,9 +42,9 @@ public class ModuleEntity implements Serializable {
 
   @Id private String id;
 
-  @NonNull private String name;
+  @Indexed @NonNull private String name;
 
-  private String displayName;
+  @Indexed private String displayName;
 
   @JsonProperty("hasStaticFlag")
   private boolean isFlagStatic;

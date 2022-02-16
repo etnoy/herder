@@ -22,14 +22,13 @@
 package org.owasp.herder.module;
 
 import java.io.Serializable;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
 @Builder
@@ -40,7 +39,7 @@ public class ModuleTag implements Serializable {
 
   @Id private String id;
 
-  @NonNull private String moduleName;
+  @Indexed @NonNull private String moduleName;
 
   @NonNull private String name;
 

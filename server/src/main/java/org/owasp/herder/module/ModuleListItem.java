@@ -22,7 +22,6 @@
 package org.owasp.herder.module;
 
 import java.io.Serializable;
-
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -38,5 +37,5 @@ public class ModuleListItem implements Serializable {
 
   NameValueTag[] tags;
 
-  Boolean isSolved;
+  @Builder.Default Boolean isSolved = false;
 }
