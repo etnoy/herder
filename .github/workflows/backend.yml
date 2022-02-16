@@ -39,9 +39,9 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
       - name: Build and test
-        run: ./gradlew spotlessCheck build jacocoTestReport sonarqube --info
+        run: ./gradlew spotlessCheck build jacocoTestReport sonarqube
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   
       - name: Integration tests
-        run: ./gradlew integrationTest jacocoTestReport --info
+        run: ./gradlew integrationTest jacocoTestReport

@@ -32,7 +32,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @HerderModule(name = "flag-tutorial", baseScore = 100)
 @Tag(name = "type", value = "tutorial")
-public class FlagTutorial extends BaseModule {
+public class FlagTutorial implements BaseModule {
   private final FlagHandler flagHandler;
 
   public Mono<String> getFlag(final String userId) {

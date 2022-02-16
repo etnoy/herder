@@ -79,7 +79,7 @@ class ModuleInitializerIT extends BaseIT {
     final String moduleName = "test-module";
 
     @HerderModule(name = moduleName)
-    class TestModule extends BaseModule {}
+    class TestModule implements BaseModule {}
 
     applicationContext.registerBean(TestModule.class, () -> new TestModule());
     moduleInitializer.initializeModules();
@@ -94,10 +94,10 @@ class ModuleInitializerIT extends BaseIT {
     final String moduleName = "test-module";
 
     @HerderModule(name = moduleName)
-    class TestModule extends BaseModule {}
+    class TestModule implements BaseModule {}
 
     @HerderModule(name = moduleName)
-    class TestModuleNameCollision extends BaseModule {}
+    class TestModuleNameCollision implements BaseModule {}
 
     applicationContext.registerBean(TestModule.class, () -> new TestModule());
     applicationContext.registerBean(
@@ -115,7 +115,7 @@ class ModuleInitializerIT extends BaseIT {
     @HerderModule(name = moduleName)
     @Tag(name = "topic", value = "testing")
     @Tag(name = "topic", value = "production")
-    class MultipleTagsWithSameName extends BaseModule {}
+    class MultipleTagsWithSameName implements BaseModule {}
 
     final List<ModuleTag> expectedTags = new ArrayList<>();
     expectedTags.add(
@@ -143,7 +143,7 @@ class ModuleInitializerIT extends BaseIT {
     @HerderModule(name = moduleName)
     @Tag(name = "topic", value = "testing")
     @Tag(name = "difficulty", value = "beginner")
-    class MultipleTagsModule extends BaseModule {}
+    class MultipleTagsModule implements BaseModule {}
 
     final List<ModuleTag> expectedTags = new ArrayList<>();
     expectedTags.add(
@@ -169,7 +169,7 @@ class ModuleInitializerIT extends BaseIT {
 
     @HerderModule(name = moduleName)
     @Tag(name = "topic", value = "testing")
-    class SingleTagModule extends BaseModule {}
+    class SingleTagModule implements BaseModule {}
 
     final List<ModuleTag> expectedTags = new ArrayList<>();
     expectedTags.add(

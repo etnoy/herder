@@ -54,7 +54,6 @@ import reactor.test.StepVerifier;
 @DirtiesContext
 @DisplayName("ModuleController integration tests")
 class ModuleControllerIT extends BaseIT {
-
   @Autowired ModuleService moduleService;
 
   @Autowired UserService userService;
@@ -100,13 +99,10 @@ class ModuleControllerIT extends BaseIT {
 
     submissionService.submit(userId, "id1", "flag").block();
 
+    final NameValueTag[] tags = {NameValueTag.builder().name("usage").value("test").build()};
+
     StepVerifier.create(moduleController.findAllByUserId())
-        .expectNext(
-            ModuleListItem.builder()
-                .name("id1")
-                .isSolved(true)
-                .tags(List.of(NameValueTag.builder().name("usage").value("test").build()))
-                .build())
+        .expectNext(ModuleListItem.builder().name("id1").isSolved(true).tags(tags).build())
         .expectNext(ModuleListItem.builder().name("id2").isSolved(false).build())
         .verifyComplete();
   }
@@ -145,13 +141,10 @@ class ModuleControllerIT extends BaseIT {
 
     submissionService.submit(userId, "id1", "flag").block();
 
+    final NameValueTag[] tags = {NameValueTag.builder().name("usage").value("test").build()};
+
     StepVerifier.create(moduleController.findByName("id1"))
-        .expectNext(
-            ModuleListItem.builder()
-                .name("id1")
-                .isSolved(true)
-                .tags(List.of(NameValueTag.builder().name("usage").value("test").build()))
-                .build())
+        .expectNext(ModuleListItem.builder().name("id1").isSolved(true).tags(tags).build())
         .verifyComplete();
   }
 }

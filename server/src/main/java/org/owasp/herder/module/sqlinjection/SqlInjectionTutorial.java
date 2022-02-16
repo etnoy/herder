@@ -44,7 +44,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @HerderModule(name = "sql-injection-tutorial", baseScore = 100)
 @Tag(name = "topic", value = "sql-injection")
-public class SqlInjectionTutorial extends BaseModule {
+public class SqlInjectionTutorial implements BaseModule {
 
   private final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
 

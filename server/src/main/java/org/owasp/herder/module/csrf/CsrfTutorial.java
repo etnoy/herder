@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @HerderModule(name = "csrf-tutorial", baseScore = 100)
 @Tag(name = "topic", value = "csrf")
-public class CsrfTutorial extends BaseModule {
+public class CsrfTutorial implements BaseModule {
   private final CsrfService csrfService;
 
   private final FlagHandler flagHandler;

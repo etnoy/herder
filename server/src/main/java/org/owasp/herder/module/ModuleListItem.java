@@ -22,8 +22,6 @@
 package org.owasp.herder.module;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,7 +36,8 @@ public class ModuleListItem implements Serializable {
 
   @NonNull String name;
 
-  @Builder.Default List<NameValueTag> tags = new ArrayList<>();
+  @Builder.Default
+  NameValueTag[] tags = {};
 
   Boolean isSolved;
 }

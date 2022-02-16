@@ -36,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class WebTokenKeyManager {
-
   private static final Map<String, Key> userToKeyMap = new HashMap<>();
 
   public Key getOrGenerateKeyForUser(final String userId) {
@@ -69,10 +68,10 @@ public class WebTokenKeyManager {
       throw new NullPointerException();
     }
 
-    log.debug("Generating new web token key for user with id " + userId.toString());
+    log.debug("Generating new web token key for user with id " + userId);
 
     final Key userKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
-    userToKeyMap.put(userId.toString(), userKey);
+    userToKeyMap.put(userId, userKey);
     return userKey;
   }
 

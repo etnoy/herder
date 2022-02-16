@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @HerderModule(name = "xss-tutorial", baseScore = 100)
 @Tag(name = "topic", value = "xss")
-public class XssTutorial extends BaseModule {
+public class XssTutorial implements BaseModule {
   private final FlagHandler flagHandler;
 
   private final XssService xssService;

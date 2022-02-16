@@ -47,7 +47,7 @@ public class ModuleController {
   public Flux<ModuleListItem> findAllByUserId() {
     return controllerAuthentication
         .getUserId()
-        .flatMapMany(userId -> moduleRepository.findAllOpenWithSolutionStatus(userId));
+        .flatMapMany(moduleRepository::findAllOpenWithSolutionStatus);
   }
 
   @GetMapping(path = "module/{moduleName}")

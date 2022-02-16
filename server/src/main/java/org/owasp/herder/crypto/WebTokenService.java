@@ -45,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class WebTokenService {
-
   private final WebTokenKeyManager webTokenKeyManager;
 
   // How many seconds a JWT token should last before expiring
@@ -72,9 +71,7 @@ public class WebTokenService {
     }
 
     final Date creationTime = clock.now();
-
     final Date expirationTime = new Date(clock.now().getTime() + getExpirationTime());
-
     final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(userId);
 
     String role;
@@ -88,7 +85,7 @@ public class WebTokenService {
     return Jwts.builder()
         .claim("role", role)
         .setIssuer("herder")
-        .setSubject(userId.toString())
+        .setSubject(userId)
         .setIssuedAt(creationTime)
         .setExpiration(expirationTime)
         .signWith(userKey)
