@@ -23,21 +23,20 @@ package org.owasp.herder.module;
 
 import java.io.Serializable;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.With;
 
 @Value
 @Builder
-@AllArgsConstructor
+@With
 public class ModuleListItem implements Serializable {
   private static final long serialVersionUID = -5011105798343266330L;
 
   @NonNull String name;
 
-  @Builder.Default
-  NameValueTag[] tags = {};
+  NameValueTag[] tags;
 
   Boolean isSolved;
 }

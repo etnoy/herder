@@ -42,12 +42,20 @@ public class ModuleController {
 
   private final ControllerAuthentication controllerAuthentication;
 
+  private ModuleListItem filterEmptyTags(final ModuleListItem item) {
+    if (item.getTags().length == 0) {
+      return item.withTags(null);
+    }
+    return item;
+  }
+
   @GetMapping(path = "modules")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Flux<ModuleListItem> findAllByUserId() {
     return controllerAuthentication
         .getUserId()
-        .flatMapMany(moduleRepository::findAllOpenWithSolutionStatus);
+        .flatMapMany(moduleRepository::findAllOpenWithSolutionStatus)
+        .map(this::filterEmptyTags);
   }
 
   @GetMapping(path = "module/{moduleName}")
