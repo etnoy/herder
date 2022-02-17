@@ -71,8 +71,8 @@ class XssTutorialControllerTest {
 
     StepVerifier.create(xssTutorialController.search(query))
         .expectNext(xssTutorialRow)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
+
     verify(controllerAuthentication, times(1)).getUserId();
     verify(xssTutorial, times(1)).submitQuery(mockUserId, query);
   }

@@ -101,7 +101,6 @@ class CorrectionServiceTest {
               assertThat(correction.getDescription()).isEqualTo(description);
               assertThat(correction.getTime()).isEqualTo(LocalDateTime.now(fixedClock));
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }

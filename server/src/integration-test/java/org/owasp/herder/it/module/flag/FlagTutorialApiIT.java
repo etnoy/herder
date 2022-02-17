@@ -121,7 +121,6 @@ class FlagTutorialApiIT extends BaseIT {
                 .submitFlagAndReturnSubmission(moduleName, accessToken, flag)
                 .map(Submission::isValid))
         .expectNext(true)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }

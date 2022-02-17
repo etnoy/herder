@@ -5,7 +5,7 @@
         <ng-container *ngFor="let module of modules">
           <li *ngIf="module.name">
             <p>
-              <a href="module/{{ module.name }}">{{ module.name }}</a
+              <a href="module/{{ module.name }}">{{ module.displayName }}</a
               >&nbsp;
               <span *ngIf="module.isSolved">✅</span>
               <span *ngFor="let tag of module.tags">{{tag.name}}:{{tag.value}}</span>

@@ -28,6 +28,7 @@ import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
+import org.owasp.herder.module.Locator;
 import org.owasp.herder.module.Tag;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.r2dbc.BadSqlGrammarException;
@@ -42,7 +43,8 @@ import reactor.core.publisher.Mono;
 
 /** Tutorial module for SQL injections */
 @RequiredArgsConstructor
-@HerderModule(name = "sql-injection-tutorial", baseScore = 100)
+@HerderModule("SQL Injection Tutorial")
+@Locator("sql-injection-tutorial")
 @Tag(name = "topic", value = "sql-injection")
 public class SqlInjectionTutorial implements BaseModule {
 

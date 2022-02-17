@@ -92,8 +92,7 @@ class ScoreboardControllerTest {
     StepVerifier.create(scoreboardController.getScoreboard())
         .expectNext(scoreboardEntry1)
         .expectNext(scoreboardEntry2)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(scoreService, times(1)).getScoreboard();
   }
@@ -124,8 +123,8 @@ class ScoreboardControllerTest {
     StepVerifier.create(scoreboardController.getScoreboardByUserId(mockUserId))
         .expectNext(rankedSubmission1)
         .expectNext(rankedSubmission2)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
+
     verify(submissionService, times(1)).findAllRankedByUserId(mockUserId);
   }
 

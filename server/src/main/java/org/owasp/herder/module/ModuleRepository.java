@@ -44,7 +44,7 @@ public interface ModuleRepository extends ReactiveMongoRepository<ModuleEntity, 
     // Check if current user has solved the module
     "{$addFields:{isSolved: {$and: [{$in: [true, '$submissions.isValid']}, {$in: [ ?0 , '$submissions.userId']}]}}}",
     // Project only the required values
-    "{$project:{_id: 0, name:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
+    "{$project:{_id: 0, name:1, displayName:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
   })
   public Mono<ModuleListItem> findByNameWithSolutionStatus(String userId, String moduleName);
 
@@ -58,7 +58,7 @@ public interface ModuleRepository extends ReactiveMongoRepository<ModuleEntity, 
     // Check if current user has solved the module
     "{$addFields:{isSolved: {$and: [{$in: [true, '$submissions.isValid']}, {$in: [ ?0 , '$submissions.userId']}]}}}",
     // Project only the required values
-    "{$project:{_id: 0, name:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
+    "{$project:{_id: 0, name:1, displayName:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
   })
   public Flux<ModuleListItem> findAllOpenWithSolutionStatus(String userId);
 

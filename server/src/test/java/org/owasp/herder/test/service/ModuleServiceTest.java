@@ -43,6 +43,7 @@ import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.ModuleTagRepository;
+import org.owasp.herder.test.util.TestConstants;
 import org.springframework.context.ApplicationContext;
 
 import reactor.core.publisher.Flux;
@@ -82,7 +83,7 @@ class ModuleServiceTest {
 
   @Test
   void create_NullModuleName_ThrowsException() {
-    StepVerifier.create(moduleService.create(null))
+    StepVerifier.create(moduleService.create(TestConstants.TEST_MODULE_NAME, null))
         .expectError(NullPointerException.class)
         .verify();
 
@@ -91,34 +92,31 @@ class ModuleServiceTest {
 
   @Test
   void create_NewModuleName_Succeeds() {
-    final String moduleName = "test-module";
-
+    final String mockModuleId = "id1";
     final byte[] randomBytes = {120, 56, 111};
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
 
-    when(moduleRepository.findByName(moduleName)).thenReturn(Mono.empty());
+    when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.empty());
 
     when(moduleRepository.save(any(ModuleEntity.class)))
-        .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
+        .thenAnswer(
+            user -> Mono.just(user.getArgument(0, ModuleEntity.class).withId(mockModuleId)));
 
-    StepVerifier.create(moduleService.create(moduleName))
-        .assertNext(module -> assertThat(module.getName()).hasToString("test-module"))
+    StepVerifier.create(
+            moduleService.create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR))
+        .expectNext(mockModuleId)
         .verifyComplete();
-    ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
-
-    verify(moduleRepository).save(argument.capture());
-    verify(moduleRepository).save(any(ModuleEntity.class));
-    assertThat(argument.getValue().getName()).isEqualTo(moduleName);
   }
 
   @Test
   void create_ModuleNameExists_ReturnsException() {
-    final String moduleName = "test-module";
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    when(moduleRepository.findByName(moduleName)).thenReturn(Mono.just(mockModule));
+    when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME))
+        .thenReturn(Mono.just(mockModule));
 
-    StepVerifier.create(moduleService.create(moduleName))
+    StepVerifier.create(
+            moduleService.create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR))
         .expectError(DuplicateModuleNameException.class)
         .verify();
   }
@@ -142,14 +140,14 @@ class ModuleServiceTest {
   @Test
   void findAll_NoModulesExist_ReturnsEmpty() {
     when(moduleRepository.findAll()).thenReturn(Flux.empty());
-    StepVerifier.create(moduleService.findAll()).expectComplete().verify();
+    StepVerifier.create(moduleService.findAll()).verifyComplete();
     verify(moduleRepository).findAll();
   }
 
   @Test
   void findAllOpen_NoModulesExist_ReturnsEmpty() {
     when(moduleRepository.findAllOpen()).thenReturn(Flux.empty());
-    StepVerifier.create(moduleService.findAllOpen()).expectComplete().verify();
+    StepVerifier.create(moduleService.findAllOpen()).verifyComplete();
     verify(moduleRepository).findAllOpen();
   }
 
@@ -186,7 +184,7 @@ class ModuleServiceTest {
   void findById_NonExistentModuleName_ReturnsEmpty() {
     final String mockModuleName = "mock-module";
     when(moduleRepository.findByName(mockModuleName)).thenReturn(Mono.empty());
-    StepVerifier.create(moduleService.findByName(mockModuleName)).expectComplete().verify();
+    StepVerifier.create(moduleService.findByName(mockModuleName)).verifyComplete();
     verify(moduleRepository).findByName(mockModuleName);
   }
 

@@ -80,8 +80,7 @@ class LoginControllerTest {
         .thenReturn(Mono.error(new BadCredentialsException(badCredentials)));
     StepVerifier.create(loginController.login(passwordLoginDto))
         .expectNext(badCredentialsResponse)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -107,8 +106,7 @@ class LoginControllerTest {
     when(webTokenService.generateToken(mockUserId, mockUserIsAdmin)).thenReturn(mockJwt);
     StepVerifier.create(loginController.login(passwordLoginDto))
         .expectNext(tokenResponse)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -123,9 +121,7 @@ class LoginControllerTest {
     when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
     when(userService.createPasswordUser(displayName, userName, encodedPassword))
         .thenReturn(Mono.just(mockUserId));
-    StepVerifier.create(loginController.register(passwordRegistrationDto))
-        .expectComplete()
-        .verify();
+    StepVerifier.create(loginController.register(passwordRegistrationDto)).verifyComplete();
   }
 
   @BeforeEach

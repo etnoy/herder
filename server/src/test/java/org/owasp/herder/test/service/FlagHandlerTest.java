@@ -140,8 +140,7 @@ class FlagHandlerTest {
 
     StepVerifier.create(flagHandler.getDynamicFlag(mockUserId, mockModuleName))
         .expectNext(correctFlag)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, times(1)).findByName(mockModuleName);
 
@@ -214,8 +213,7 @@ class FlagHandlerTest {
 
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, correctFlag))
         .expectNext(true)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, atLeast(1)).findByName(mockModuleName);
     verify(mockModule, atLeast(1)).isFlagStatic();
@@ -246,8 +244,7 @@ class FlagHandlerTest {
 
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, validStaticFlag))
         .expectNext(true)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, times(1)).findByName(mockModuleName);
 
@@ -277,8 +274,7 @@ class FlagHandlerTest {
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, validStaticFlag.toLowerCase()))
         .expectNext(true)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, times(1)).findByName(mockModuleName);
 
@@ -308,8 +304,7 @@ class FlagHandlerTest {
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, validStaticFlag.toUpperCase()))
         .expectNext(true)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, times(1)).findByName(mockModuleName);
 
@@ -363,8 +358,7 @@ class FlagHandlerTest {
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, ""))
         // We expect this to return false
         .expectNext(false)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, atLeast(1)).findByName(mockModuleName);
 
@@ -398,8 +392,7 @@ class FlagHandlerTest {
 
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, ""))
         .expectNext(false)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, times(1)).findByName(mockModuleName);
 
@@ -472,11 +465,8 @@ class FlagHandlerTest {
     when(mockBucket.tryConsume(1)).thenReturn(true);
 
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, "invalidFlag"))
-        //
         .expectNext(false)
-        //
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, atLeast(1)).findByName(mockModuleName);
     verify(mockModule, atLeast(1)).isFlagStatic();
@@ -508,8 +498,7 @@ class FlagHandlerTest {
 
     StepVerifier.create(flagHandler.verifyFlag(mockUserId, mockModuleName, "invalidFlag"))
         .expectNext(false)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, times(1)).findByName(mockModuleName);
 
@@ -565,8 +554,7 @@ class FlagHandlerTest {
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, correctFlag.toUpperCase()))
         .expectNext(true)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, atLeast(1)).findByName(mockModuleName);
     verify(mockModule, atLeast(1)).isFlagStatic();
@@ -625,8 +613,7 @@ class FlagHandlerTest {
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, correctFlagWithSpacesInside))
         .expectNext(false)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, atLeast(1)).findByName(mockModuleName);
     verify(mockModule, atLeast(1)).isFlagStatic();
@@ -661,8 +648,7 @@ class FlagHandlerTest {
     StepVerifier.create(
             flagHandler.verifyFlag(mockUserId, mockModuleName, validStaticFlagWithSpaces))
         .expectNext(false)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(moduleService, times(1)).findByName(mockModuleName);
 

@@ -151,7 +151,6 @@ class UserServiceTest {
     when(userRepository.findById(mockedUserId)).thenReturn(Mono.just(mockedUser));
     when(mockedUser.isEnabled()).thenReturn(true);
     when(mockedUser.getDisplayName()).thenReturn(mockedDisplayName);
-
     when(mockedUser.getSuspendedUntil()).thenReturn(null);
 
     StepVerifier.create(userService.authenticate(mockedLoginName, mockedPassword))
@@ -159,8 +158,8 @@ class UserServiceTest {
             authResponse -> {
               assertThat(authResponse.getUserId()).isEqualTo(mockedUserId);
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
+
     verify(passwordAuthRepository, times(1)).findByLoginName(mockedLoginName);
   }
 
@@ -259,7 +258,9 @@ class UserServiceTest {
   void count_NoArgument_ReturnsCount() {
     final long mockedUserCount = 11L;
     when(userRepository.count()).thenReturn(Mono.just(mockedUserCount));
-    StepVerifier.create(userService.count()).expectNext(mockedUserCount).expectComplete().verify();
+
+    StepVerifier.create(userService.count()).expectNext(mockedUserCount).verifyComplete();
+
     verify(userRepository, times(1)).count();
   }
 
@@ -308,10 +309,7 @@ class UserServiceTest {
     when(userRepository.save(any(UserEntity.class)))
         .thenAnswer(user -> Mono.just(user.getArgument(0, UserEntity.class).withId(mockUserId)));
 
-    StepVerifier.create(userService.create(displayName))
-        .expectNext(mockUserId)
-        .expectComplete()
-        .verify();
+    StepVerifier.create(userService.create(displayName)).expectNext(mockUserId).verifyComplete();
 
     verify(userRepository, times(1)).findByDisplayName(displayName);
     verify(userRepository, times(1)).save(any(UserEntity.class));
@@ -414,24 +412,19 @@ class UserServiceTest {
       -108, 101, -7, -36, 17, -26, -24, 0, -32, -117, 75, -127, 22, 62, 9, 19
     };
     when(keyService.generateRandomBytes(16)).thenReturn(testRandomBytes);
-
     when(passwordAuthRepository.findByLoginName(loginName)).thenReturn(Mono.empty());
     when(userRepository.findByDisplayName(displayName)).thenReturn(Mono.empty());
-
     when(userRepository.save(any(UserEntity.class)))
         .thenAnswer(user -> Mono.just(user.getArgument(0, UserEntity.class).withId(mockUserId)));
-
     when(passwordAuthRepository.save(any(PasswordAuth.class)))
         .thenAnswer(user -> Mono.just(user.getArgument(0, PasswordAuth.class).withId(mockUserId)));
 
     StepVerifier.create(userService.createPasswordUser(displayName, loginName, hashedPassword))
         .expectNext(mockUserId)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(passwordAuthRepository, times(1)).findByLoginName(loginName);
     verify(userRepository, times(1)).findByDisplayName(displayName);
-
     verify(userRepository, times(1)).save(any(UserEntity.class));
     verify(userRepository, times(1)).save(any(UserEntity.class));
     verify(passwordAuthRepository, times(1)).save(any(PasswordAuth.class));
@@ -462,12 +455,7 @@ class UserServiceTest {
     when(passwordAuthRepository.deleteByUserId(mockUserId)).thenReturn(Mono.empty());
     when(userRepository.deleteById(mockUserId)).thenReturn(Mono.empty());
 
-    StepVerifier.create(userService.deleteById(mockUserId)).expectComplete().verify();
-
-    // Order of deletion is important due to RDBMS constraints
-    final InOrder deletionOrder = inOrder(passwordAuthRepository, userRepository, userRepository);
-    deletionOrder.verify(passwordAuthRepository, times(1)).deleteByUserId(mockUserId);
-    deletionOrder.verify(userRepository, times(1)).deleteById(mockUserId);
+    StepVerifier.create(userService.deleteById(mockUserId)).verifyComplete();
   }
 
   @Test
@@ -501,7 +489,7 @@ class UserServiceTest {
 
     Mockito.doNothing().when(webTokenKeyManager).invalidateAccessToken(mockUserId);
 
-    StepVerifier.create(userService.demote(mockUserId)).expectComplete().verify();
+    StepVerifier.create(userService.demote(mockUserId)).verifyComplete();
 
     verify(passwordAuthRepository, never()).findByUserId(any(String.class));
 
@@ -532,25 +520,21 @@ class UserServiceTest {
             });
 
     when(userRepository.findById(mockUserId)).thenReturn(Mono.just(mockUser));
-
     when(mockUser.withAdmin(false)).thenReturn(mockUser);
 
     StepVerifier.create(userService.demote(mockUserId)).verifyComplete();
 
     verify(passwordAuthRepository, never()).findByUserId(any(String.class));
     verify(passwordAuthRepository, never()).save(any(PasswordAuth.class));
-
     verify(userRepository, times(1)).save(mockUser);
-
     verify(userRepository, times(1)).findById(mockUserId);
-
     verify(mockUser, times(1)).withAdmin(false);
   }
 
   @Test
   void findAll_NoUsersExist_ReturnsEmpty() {
     when(userRepository.findAll()).thenReturn(Flux.empty());
-    StepVerifier.create(userService.findAll()).expectComplete().verify();
+    StepVerifier.create(userService.findAll()).verifyComplete();
     verify(userRepository, times(1)).findAll();
   }
 
@@ -566,8 +550,7 @@ class UserServiceTest {
         .expectNext(mockUser1)
         .expectNext(mockUser2)
         .expectNext(mockUser3)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(userRepository, times(1)).findAll();
   }
@@ -580,10 +563,7 @@ class UserServiceTest {
 
     when(userRepository.findById(mockUserId)).thenReturn(Mono.just(mockUser));
 
-    StepVerifier.create(userService.findById(mockUserId))
-        .expectNext(mockUser)
-        .expectComplete()
-        .verify();
+    StepVerifier.create(userService.findById(mockUserId)).expectNext(mockUser).verifyComplete();
 
     verify(userRepository, times(1)).findById(mockUserId);
   }
@@ -599,7 +579,7 @@ class UserServiceTest {
   void findById_NonExistentUserId_ReturnsEmpty() {
     final String nonExistentUserId = "id";
     when(userRepository.findById(nonExistentUserId)).thenReturn(Mono.empty());
-    StepVerifier.create(userService.findById(nonExistentUserId)).expectComplete().verify();
+    StepVerifier.create(userService.findById(nonExistentUserId)).verifyComplete();
     verify(userRepository, times(1)).findById(nonExistentUserId);
   }
 
@@ -614,9 +594,9 @@ class UserServiceTest {
   void findByLoginName_LoginNameDoesNotExist_ReturnsEmptyMono() {
     final String nonExistentLoginName = "NonExistentUser";
     when(passwordAuthRepository.findByLoginName(nonExistentLoginName)).thenReturn(Mono.empty());
-    StepVerifier.create(userService.findUserIdByLoginName(nonExistentLoginName))
-        .expectComplete()
-        .verify();
+
+    StepVerifier.create(userService.findUserIdByLoginName(nonExistentLoginName)).verifyComplete();
+
     verify(passwordAuthRepository, times(1)).findByLoginName(nonExistentLoginName);
   }
 
@@ -638,8 +618,8 @@ class UserServiceTest {
 
     StepVerifier.create(userService.findUserIdByLoginName(loginName))
         .expectNext(mockUserId)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
+
     verify(passwordAuthRepository, times(1)).findByLoginName(loginName);
   }
 
@@ -654,7 +634,7 @@ class UserServiceTest {
   void findDisplayNameById_NoUserExists_ReturnsEmpty() {
     final String mockUserId = "id";
     when(userRepository.findById(mockUserId)).thenReturn(Mono.empty());
-    StepVerifier.create(userService.findDisplayNameById(mockUserId)).expectComplete().verify();
+    StepVerifier.create(userService.findDisplayNameById(mockUserId)).verifyComplete();
     verify(userRepository, times(1)).findById(mockUserId);
   }
 
@@ -669,8 +649,7 @@ class UserServiceTest {
 
     StepVerifier.create(userService.findDisplayNameById(mockUserId))
         .expectNext(mockDisplayName)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(userRepository, times(1)).findById(mockUserId);
     verify(mockUser, times(1)).getDisplayName();
@@ -693,8 +672,7 @@ class UserServiceTest {
 
     StepVerifier.create(userService.findPasswordAuthByLoginName(mockLoginName))
         .expectNext(mockPasswordAuth)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(passwordAuthRepository, times(1)).findByLoginName(mockLoginName);
   }
@@ -703,9 +681,8 @@ class UserServiceTest {
   void findPasswordAuthByLoginName_NonExistentLoginName_ReturnsEmpty() {
     final String mockLoginName = "loginName";
     when(passwordAuthRepository.findByLoginName(mockLoginName)).thenReturn(Mono.empty());
-    StepVerifier.create(userService.findPasswordAuthByLoginName(mockLoginName))
-        .expectComplete()
-        .verify();
+    StepVerifier.create(userService.findPasswordAuthByLoginName(mockLoginName)).verifyComplete();
+
     verify(passwordAuthRepository, times(1)).findByLoginName(mockLoginName);
   }
 
@@ -729,7 +706,7 @@ class UserServiceTest {
 
     when(passwordAuthRepository.findByUserId(mockUserId)).thenReturn(Mono.empty());
 
-    StepVerifier.create(userService.findPasswordAuthByUserId(mockUserId)).expectComplete().verify();
+    StepVerifier.create(userService.findPasswordAuthByUserId(mockUserId)).verifyComplete();
 
     verify(passwordAuthRepository, times(1)).findByUserId(mockUserId);
   }
@@ -743,8 +720,7 @@ class UserServiceTest {
 
     StepVerifier.create(userService.findPasswordAuthByUserId(mockUserId))
         .expectNext(mockPasswordAuth)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(passwordAuthRepository, times(1)).findByUserId(mockUserId);
   }
@@ -773,8 +749,7 @@ class UserServiceTest {
 
     StepVerifier.create(userService.findKeyById(mockUserId))
         .expectNext(testRandomBytes)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     final InOrder order = inOrder(mockUserWithKey, userRepository);
     // userService should query the repository
@@ -813,8 +788,7 @@ class UserServiceTest {
 
     StepVerifier.create(userService.findKeyById(mockUserId))
         .expectNext(testRandomBytes)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(userRepository, times(1)).findById(mockUserId);
     verify(mockUserWithoutKey, times(1)).getKey();
@@ -857,7 +831,7 @@ class UserServiceTest {
     when(userRepository.findById(mockUserId)).thenReturn(Mono.just(mockUser));
     when(mockUser.withAdmin(true)).thenReturn(mockUser);
 
-    StepVerifier.create(userService.promote(mockUserId)).expectComplete().verify();
+    StepVerifier.create(userService.promote(mockUserId)).verifyComplete();
 
     verify(passwordAuthRepository, never()).findByUserId(any(String.class));
     verify(userRepository, times(1)).findById(mockUserId);
@@ -914,8 +888,7 @@ class UserServiceTest {
 
     StepVerifier.create(userService.setClassId(mockUserId, mockClassId))
         .expectNextMatches(user -> user.getClassId() == mockClassId)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(userRepository, times(1)).findById(mockUserId);
     verify(classService, times(1)).existsById(mockClassId);
@@ -978,8 +951,7 @@ class UserServiceTest {
     StepVerifier.create(userService.setDisplayName(mockUserId, newDisplayName))
         .expectNextMatches(user -> user.getDisplayName().equals(newDisplayName))
         .as("Display name should change to supplied value")
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(userRepository, times(1)).existsById(mockUserId);
     verify(userRepository, times(1)).findById(mockUserId);

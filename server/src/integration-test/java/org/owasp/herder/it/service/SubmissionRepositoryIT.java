@@ -128,34 +128,34 @@ class SubmissionRepositoryIT extends BaseIT {
     }
 
     // Create a module to submit to
-    moduleService.create("id1").block();
+    final String moduleId1 = moduleService.create("Test module", "id1").block();
 
     // Set that module to have an exact flag
-    moduleService.setStaticFlag("id1", flag).block();
+    moduleService.setStaticFlag(moduleId1, flag).block();
 
     // Set scoring levels for module1
-    scoreService.setModuleScore("id1", 0, 100).block();
+    scoreService.setModuleScore(moduleId1, 0, 100).block();
 
-    scoreService.setModuleScore("id1", 1, 50).block();
-    scoreService.setModuleScore("id1", 2, 40).block();
-    scoreService.setModuleScore("id1", 3, 30).block();
-    scoreService.setModuleScore("id1", 4, 20).block();
+    scoreService.setModuleScore(moduleId1, 1, 50).block();
+    scoreService.setModuleScore(moduleId1, 2, 40).block();
+    scoreService.setModuleScore(moduleId1, 3, 30).block();
+    scoreService.setModuleScore(moduleId1, 4, 20).block();
 
     // Create some other modules we aren't interested in
-    moduleService.create("id2").block();
-    moduleService.setStaticFlag("id2", flag).block();
+    final String moduleId2 = moduleService.create("Test module 2", "id2").block();
+    moduleService.setStaticFlag(moduleId2, flag).block();
 
     // Set scoring levels for module2
-    scoreService.setModuleScore("id2", 0, 50).block();
-    scoreService.setModuleScore("id2", 1, 30).block();
-    scoreService.setModuleScore("id2", 2, 10).block();
+    scoreService.setModuleScore(moduleId2, 0, 50).block();
+    scoreService.setModuleScore(moduleId2, 1, 30).block();
+    scoreService.setModuleScore(moduleId2, 2, 10).block();
 
-    moduleService.create("id3").block();
+    final String moduleId3 = moduleService.create("Test module 3", "id3").block();
 
-    moduleService.setStaticFlag("id3", flag).block();
+    moduleService.setStaticFlag(moduleId3, flag).block();
 
     // You only get 1 point for this module
-    scoreService.setModuleScore("id3", 0, 1).block();
+    scoreService.setModuleScore(moduleId3, 0, 1).block();
 
     // Create a fixed clock from which we will base our offset submission times
     final Clock startTime =
@@ -187,9 +187,9 @@ class SubmissionRepositoryIT extends BaseIT {
       final String currentFlag = flagIterator.next();
 
       // Submit a new flag
-      submissionService.submit(currentUserId, "id1", currentFlag).block();
-      submissionService.submit(currentUserId, "id2", currentFlag).block();
-      submissionService.submit(currentUserId, "id3", currentFlag).block();
+      submissionService.submit(currentUserId, moduleId1, currentFlag).block();
+      submissionService.submit(currentUserId, moduleId2, currentFlag).block();
+      submissionService.submit(currentUserId, moduleId3, currentFlag).block();
     }
 
     // Now we verify

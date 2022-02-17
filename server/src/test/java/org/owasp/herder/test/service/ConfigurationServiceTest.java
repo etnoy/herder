@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Base64;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +43,7 @@ import org.owasp.herder.configuration.ConfigurationRepository;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.model.Configuration;
 import org.owasp.herder.service.ConfigurationService;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -84,8 +86,7 @@ class ConfigurationServiceTest {
               verify(keyService, never()).generateRandomBytes(16);
               verify(configurationRepository, never()).save(any(Configuration.class));
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -109,8 +110,7 @@ class ConfigurationServiceTest {
               verify(keyService).generateRandomBytes(16);
               verify(configurationRepository).save(any(Configuration.class));
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -140,8 +140,7 @@ class ConfigurationServiceTest {
 
               assertThat(argument.getValue().getValue()).isEqualTo(encodedNewServerKey);
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -182,8 +181,7 @@ class ConfigurationServiceTest {
               assertThat(argument.getValue()).isEqualTo(mockedConfigurationNewKey);
               assertThat(argument.getValue().getValue()).isEqualTo(encodedNewServerKey);
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @BeforeEach

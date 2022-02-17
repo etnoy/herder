@@ -109,8 +109,7 @@ class SqlInjectionTutorialIT extends BaseIT {
                             userId, sqlInjectionTutorial.getName(), flag + "wrong"))
                 .map(Submission::isValid))
         .expectNext(false)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -131,8 +130,7 @@ class SqlInjectionTutorialIT extends BaseIT {
                     flag -> submissionService.submit(userId, sqlInjectionTutorial.getName(), flag))
                 .map(Submission::isValid))
         .expectNext(true)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -141,8 +139,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(5)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -153,14 +150,13 @@ class SqlInjectionTutorialIT extends BaseIT {
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(5)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
   void submitQuery_QueryWithNoMatches_EmptyResultSet() {
     final String userId = userService.create("TestUser1").block();
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "test")).expectComplete().verify();
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "test")).verifyComplete();
   }
 
   @Test
@@ -168,8 +164,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     final String userId = userService.create("TestUser1").block();
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "Jonathan Jogenfors"))
         .expectNextCount(1)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -178,13 +173,11 @@ class SqlInjectionTutorialIT extends BaseIT {
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(5)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
         .expectNextCount(5)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -199,8 +192,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     StepVerifier.create(
             sqlInjectionTutorial.submitQuery(userId, "'").map(SqlInjectionTutorialRow::getError))
         .expectNext(errorMessage)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -216,7 +208,6 @@ class SqlInjectionTutorialIT extends BaseIT {
                 .submitQuery(userId, "' OR '1=1")
                 .map(SqlInjectionTutorialRow::getError))
         .expectNext(errorMessage)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }

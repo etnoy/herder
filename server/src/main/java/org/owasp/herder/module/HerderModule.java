@@ -32,13 +32,5 @@ import org.springframework.stereotype.Component;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface HerderModule {
-  String name();
-
-  long baseScore() default 0;
-
-  long goldBonus() default 0;
-
-  long silverBonus() default 0;
-
-  long bronzeBonus() default 0;
+  String value();
 }

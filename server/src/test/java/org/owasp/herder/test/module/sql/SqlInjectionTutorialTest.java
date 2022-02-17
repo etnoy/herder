@@ -257,7 +257,6 @@ class SqlInjectionTutorialTest {
     StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
         .expectNext(mockSqlInjectionTutorialRow1)
         .expectNext(mockSqlInjectionTutorialRow2)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }

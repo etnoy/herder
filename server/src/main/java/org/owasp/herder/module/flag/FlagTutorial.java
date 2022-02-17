@@ -24,13 +24,15 @@ package org.owasp.herder.module.flag;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
+import org.owasp.herder.module.Locator;
 import org.owasp.herder.module.Tag;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
-@HerderModule(name = "flag-tutorial", baseScore = 100)
+@HerderModule("Flag Tutorial")
+@Locator("flag-tutorial")
 @Tag(name = "type", value = "tutorial")
 public class FlagTutorial implements BaseModule {
   private final FlagHandler flagHandler;

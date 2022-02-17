@@ -22,6 +22,7 @@
 package org.owasp.herder.module;
 
 import java.io.Serializable;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -34,6 +35,8 @@ public class ModuleListItem implements Serializable {
   private static final long serialVersionUID = -5011105798343266330L;
 
   @NonNull String name;
+
+  @NonNull String displayName;
 
   NameValueTag[] tags;
 

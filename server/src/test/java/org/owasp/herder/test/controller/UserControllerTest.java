@@ -60,14 +60,14 @@ class UserControllerTest {
   void deleteById_ValidId_CallsUserService() {
     final String mockUserId = "id";
     when(userService.deleteById(mockUserId)).thenReturn(Mono.empty());
-    StepVerifier.create(userController.deleteById(mockUserId)).expectComplete().verify();
+    StepVerifier.create(userController.deleteById(mockUserId)).verifyComplete();
     verify(userService, times(1)).deleteById(mockUserId);
   }
 
   @Test
   void findAll_NoUsersExist_ReturnsEmpty() {
     when(userService.findAll()).thenReturn(Flux.empty());
-    StepVerifier.create(userController.findAll()).expectComplete().verify();
+    StepVerifier.create(userController.findAll()).verifyComplete();
     verify(userService, times(1)).findAll();
   }
 
@@ -75,7 +75,7 @@ class UserControllerTest {
   void findById_UserIdDoesNotExist_ReturnsUser() {
     final String mockUserId = "id";
     when(userService.findById(mockUserId)).thenReturn(Mono.empty());
-    StepVerifier.create(userController.findById(mockUserId)).expectComplete().verify();
+    StepVerifier.create(userController.findById(mockUserId)).verifyComplete();
     verify(userService, times(1)).findById(mockUserId);
   }
 
@@ -85,10 +85,7 @@ class UserControllerTest {
     final UserEntity user = mock(UserEntity.class);
 
     when(userService.findById(mockUserId)).thenReturn(Mono.just(user));
-    StepVerifier.create(userController.findById(mockUserId))
-        .expectNext(user)
-        .expectComplete()
-        .verify();
+    StepVerifier.create(userController.findById(mockUserId)).expectNext(user).verifyComplete();
     verify(userService, times(1)).findById(mockUserId);
   }
 
@@ -105,8 +102,7 @@ class UserControllerTest {
         .expectNext(user2)
         .expectNext(user3)
         .expectNext(user4)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
     verify(userService, times(1)).findAll();
   }
 

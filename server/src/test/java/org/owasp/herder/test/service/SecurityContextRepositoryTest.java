@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +43,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.server.ServerWebExchange;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -74,8 +76,7 @@ class SecurityContextRepositoryTest {
             securityContextRepository
                 .load(mockServerWebExchange)
                 .map(SecurityContext::getAuthentication))
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -92,8 +93,7 @@ class SecurityContextRepositoryTest {
             securityContextRepository
                 .load(mockServerWebExchange)
                 .map(SecurityContext::getAuthentication))
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -124,8 +124,7 @@ class SecurityContextRepositoryTest {
                 .load(mockServerWebExchange)
                 .map(SecurityContext::getAuthentication))
         .expectNext(mockAuthentication)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test

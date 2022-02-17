@@ -74,8 +74,7 @@ class ControllerAuthenticationTest {
     when(authentication.getPrincipal()).thenReturn(mockUserId);
     StepVerifier.create(controllerAuthentication.getUserId())
         .expectNext(mockUserId)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test

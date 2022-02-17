@@ -36,6 +36,7 @@ import org.owasp.herder.crypto.WebTokenService;
 import org.owasp.herder.user.UserService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
+
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -64,8 +65,7 @@ class AuthenticationManagerTest {
 
     StepVerifier.create(authenticationManager.authenticate(mockAuthentication))
         .expectNext(mockAuthentication)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @BeforeEach

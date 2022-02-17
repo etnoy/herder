@@ -24,6 +24,6 @@ package org.owasp.herder.module;
 /** Base class for all CTF modules */
 public interface BaseModule {
   public default String getName() {
-    return this.getClass().getAnnotation(HerderModule.class).name();
+    return this.getClass().getAnnotation(HerderModule.class).value();
   }
 }

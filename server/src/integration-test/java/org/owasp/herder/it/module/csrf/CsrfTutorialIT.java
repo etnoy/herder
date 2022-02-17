@@ -83,8 +83,7 @@ class CsrfTutorialIT extends BaseIT {
               assertThat(result.getMessage()).isNull();
               assertThat(result.getError()).isEqualTo("Unknown target ID");
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -102,8 +101,7 @@ class CsrfTutorialIT extends BaseIT {
               assertThat(result.getFlag()).isNotNull();
               assertThat(result.getError()).isNull();
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @BeforeEach
@@ -129,7 +127,6 @@ class CsrfTutorialIT extends BaseIT {
               assertThat(result.getMessage()).isNull();
               assertThat(result.getError()).isEqualTo("You cannot activate yourself");
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }

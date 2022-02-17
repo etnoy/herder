@@ -120,7 +120,7 @@ public final class SubmissionService {
     this.clock = clock;
   }
 
-  public Mono<Submission> submit(final String userId, final String moduleName, final String flag) {
+  public Mono<Submission> submit(final String userId, final String moduleId, final String flag) {
     if (userId == null) {
       return Mono.error(new NullPointerException());
     }
@@ -130,21 +130,22 @@ public final class SubmissionService {
 
     SubmissionBuilder submissionBuilder = Submission.builder();
     submissionBuilder.userId(userId);
-    submissionBuilder.moduleName(moduleName);
+    submissionBuilder.moduleName(moduleId);
     submissionBuilder.flag(flag);
     submissionBuilder.time(LocalDateTime.now(clock));
     return
     // Check if flag is correct
     flagHandler
-        .verifyFlag(userId, moduleName, flag)
+        .verifyFlag(userId, moduleId, flag)
         // Get isValid field
         .map(submissionBuilder::isValid)
         // Has this module been solved by this user? In that case, throw exception.
-        .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleName(userId, moduleName))
+        .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleId))
         .switchIfEmpty(
             Mono.error(
                 new ModuleAlreadySolvedException(
-                    String.format("User %s has already finished module %s", userId, moduleName))))
+                    String.format(
+                        "User %s has already finished module with id %s", userId, moduleId))))
         // Otherwise, build a submission and save it in db
         .map(SubmissionBuilder::build)
         .flatMap(submissionRepository::save);
@@ -169,7 +170,7 @@ public final class SubmissionService {
     submissionBuilder.time(LocalDateTime.now(clock));
 
     return Mono.just(submissionBuilder)
-        .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleName(userId, moduleName))
+        .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleName))
         .switchIfEmpty(
             Mono.error(
                 new ModuleAlreadySolvedException(
@@ -179,7 +180,7 @@ public final class SubmissionService {
         .flatMap(submissionRepository::save);
   }
 
-  private Mono<Boolean> validSubmissionDoesNotExistByUserIdAndModuleName(
+  private Mono<Boolean> validSubmissionDoesNotExistByUserIdAndModuleId(
       final String userId, final String moduleName) {
     return submissionRepository
         .existsByUserIdAndModuleNameAndIsValidTrue(userId, moduleName)

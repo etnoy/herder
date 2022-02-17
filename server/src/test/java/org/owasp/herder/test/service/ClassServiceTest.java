@@ -67,10 +67,8 @@ class ClassServiceTest {
 
     when(classRepository.count()).thenReturn(Mono.just(mockedClassCount));
 
-    StepVerifier.create(classService.count())
-        .expectNext(mockedClassCount)
-        .expectComplete()
-        .verify();
+    StepVerifier.create(classService.count()).expectNext(mockedClassCount).verifyComplete();
+
     verify(classRepository, times(1)).count();
   }
 
@@ -119,8 +117,7 @@ class ClassServiceTest {
               assertThat(createdClass).isInstanceOf(ClassEntity.class);
               assertThat(createdClass.getName()).isEqualTo(mockClassName);
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(classRepository, times(1)).findByName(mockClassName);
     verify(classRepository, times(1)).save(any(ClassEntity.class));
@@ -133,10 +130,8 @@ class ClassServiceTest {
 
     when(classRepository.existsById(mockClassId)).thenReturn(Mono.just(true));
 
-    StepVerifier.create(classService.existsById(mockClassId))
-        .expectNext(true)
-        .expectComplete()
-        .verify();
+    StepVerifier.create(classService.existsById(mockClassId)).expectNext(true).verifyComplete();
+
     verify(classRepository, times(1)).existsById(mockClassId);
   }
 
@@ -147,10 +142,7 @@ class ClassServiceTest {
 
     when(classRepository.existsById(mockClassId)).thenReturn(Mono.just(false));
 
-    StepVerifier.create(classService.existsById(mockClassId))
-        .expectNext(false)
-        .expectComplete()
-        .verify();
+    StepVerifier.create(classService.existsById(mockClassId)).expectNext(false).verifyComplete();
 
     verify(classRepository, times(1)).existsById(mockClassId);
   }
@@ -181,8 +173,7 @@ class ClassServiceTest {
             classEntity -> {
               assertThat(classEntity.getName()).isEqualTo(mockName);
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(classRepository, times(1)).findById(mockClassId);
   }
@@ -263,8 +254,8 @@ class ClassServiceTest {
             classEntity -> {
               assertThat(classEntity.getName()).isEqualTo(newName);
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
+
     verify(classRepository, times(1)).findById(mockClassId);
     verify(classRepository, times(1)).findByName(newName);
   }

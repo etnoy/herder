@@ -36,6 +36,7 @@ import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleController;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
@@ -83,6 +84,8 @@ class StaticFlagSubmissionApiIT extends BaseIT {
 
   private String token;
 
+  private ModuleEntity moduleEntity;
+
   @Nested
   @DisplayName("A valid static flag")
   class ValidStaticFlag {
@@ -91,46 +94,43 @@ class StaticFlagSubmissionApiIT extends BaseIT {
     @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should be accepted")
     void canAcceptValidStaticFlag(final String flagToTest) {
-      moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
+      moduleService.setStaticFlag(TestConstants.TEST_MODULE_LOCATOR, flagToTest).block();
       StepVerifier.create(
               integrationTestUtils
-                  .submitFlagAndReturnSubmission(TestConstants.TEST_MODULE_NAME, token, flagToTest)
+                  .submitFlagAndReturnSubmission(moduleEntity.getLocator(), token, flagToTest)
                   .map(Submission::isValid))
           .expectNext(true)
-          .expectComplete()
-          .verify();
+          .verifyComplete();
     }
 
     @ParameterizedTest
     @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should be accepted when in lowercase")
     void canAcceptValidStaticFlagInLowercase(final String flagToTest) {
-      moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
+      moduleService.setStaticFlag(TestConstants.TEST_MODULE_LOCATOR, flagToTest).block();
 
       StepVerifier.create(
               integrationTestUtils
                   .submitFlagAndReturnSubmission(
-                      TestConstants.TEST_MODULE_NAME, token, flagToTest.toLowerCase())
+                      moduleEntity.getLocator(), token, flagToTest.toLowerCase())
                   .map(Submission::isValid))
           .expectNext(true)
-          .expectComplete()
-          .verify();
+          .verifyComplete();
     }
 
     @ParameterizedTest
     @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should be accepted when in uppercase")
     void canAcceptValidStaticFlagInUppercase(final String flagToTest) {
-      moduleService.setStaticFlag(TestConstants.TEST_MODULE_NAME, flagToTest).block();
+      moduleService.setStaticFlag(TestConstants.TEST_MODULE_LOCATOR, flagToTest).block();
 
       StepVerifier.create(
               integrationTestUtils
                   .submitFlagAndReturnSubmission(
-                      TestConstants.TEST_MODULE_NAME, token, flagToTest.toUpperCase())
+                      TestConstants.TEST_MODULE_LOCATOR, token, flagToTest.toUpperCase())
                   .map(Submission::isValid))
           .expectNext(true)
-          .expectComplete()
-          .verify();
+          .verifyComplete();
     }
   }
 
@@ -141,11 +141,10 @@ class StaticFlagSubmissionApiIT extends BaseIT {
       StepVerifier.create(
               integrationTestUtils
                   .submitFlagAndReturnSubmission(
-                      TestConstants.TEST_MODULE_NAME, token, invalidStaticFlag)
+                      moduleEntity.getLocator(), token, invalidStaticFlag)
                   .map(Submission::isValid))
           .expectNext(false)
-          .expectComplete()
-          .verify();
+          .verifyComplete();
     }
   }
 
@@ -153,7 +152,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
   @DisplayName("An empty static flag submission should return 401 when not logged in")
   void canRejectUnauthorizedEmptyStaticFlag() {
     integrationTestUtils
-        .submitFlag(TestConstants.TEST_MODULE_NAME, null, "")
+        .submitFlag(TestConstants.TEST_MODULE_LOCATOR, null, "")
         .expectStatus()
         .isUnauthorized();
   }
@@ -162,7 +161,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
   @DisplayName("A static flag submission should return 401 when not logged in")
   void canRejectUnauthorizedStaticFlag() {
     integrationTestUtils
-        .submitFlag(TestConstants.TEST_MODULE_NAME, null, TestConstants.TEST_STATIC_FLAG)
+        .submitFlag(TestConstants.TEST_MODULE_LOCATOR, null, TestConstants.TEST_STATIC_FLAG)
         .expectStatus()
         .isUnauthorized();
   }
@@ -176,7 +175,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
         integrationTestUtils.performAPILoginWithToken(
             TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
 
-    integrationTestUtils.createStaticTestModule();
+    moduleEntity = integrationTestUtils.createStaticTestModule();
 
     // Bypass all rate limiters
     final Bucket mockBucket = mock(Bucket.class);

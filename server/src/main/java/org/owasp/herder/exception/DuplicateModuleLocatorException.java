@@ -19,43 +19,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.module;
+package org.owasp.herder.exception;
 
-import java.io.Serializable;
+public class DuplicateModuleLocatorException extends ModuleInitializationException {
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+  private static final long serialVersionUID = 3953456107426522726L;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
-import lombok.With;
-
-@Value
-@AllArgsConstructor
-@Builder
-@With
-@Document("module")
-public class ModuleEntity implements Serializable {
-  private static final long serialVersionUID = 6391362512222766270L;
-
-  @Id private String id;
-
-  @Indexed @NonNull private String name;
-
-  @Indexed @NonNull private String locator;
-
-  @JsonProperty("hasStaticFlag")
-  private boolean isFlagStatic;
-
-  private String staticFlag;
-
-  @NonNull private byte[] key;
-
-  @JsonProperty("isOpen")
-  private boolean isOpen;
+  public DuplicateModuleLocatorException(final String message) {
+    super(message);
+  }
 }

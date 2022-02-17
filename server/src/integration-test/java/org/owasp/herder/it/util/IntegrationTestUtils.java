@@ -24,6 +24,7 @@ package org.owasp.herder.it.util;
 import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.configuration.ConfigurationRepository;
 import org.owasp.herder.crypto.WebTokenService;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.ModuleTagRepository;
@@ -83,20 +84,24 @@ public final class IntegrationTestUtils {
 
   @Autowired WebTokenService webTokenService;
 
-  public void createDynamicTestModule() {
-    moduleService
-        .create(TestConstants.TEST_MODULE_NAME)
-        .then(moduleService.setDynamicFlag(TestConstants.TEST_MODULE_NAME))
-        .block();
+  public String createDynamicTestModule() {
+    final String moduleId =
+        moduleService
+            .create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR)
+            .block();
+
+    moduleService.setDynamicFlag(moduleId).block();
+    return moduleId;
   }
 
-  public void createStaticTestModule() {
-    moduleService
-        .create(TestConstants.TEST_MODULE_NAME)
-        .then(
-            moduleService.setStaticFlag(
-                TestConstants.TEST_MODULE_NAME, TestConstants.TEST_STATIC_FLAG))
-        .block();
+  public ModuleEntity createStaticTestModule() {
+    final String moduleId =
+        moduleService
+            .create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR)
+            .block();
+
+    moduleService.setStaticFlag(moduleId, TestConstants.TEST_STATIC_FLAG).block();
+    return moduleService.findById(moduleId).block();
   }
 
   public String createTestAdmin() {
@@ -175,12 +180,12 @@ public final class IntegrationTestUtils {
         .block();
   }
 
-  public ResponseSpec submitFlag(final String moduleName, final String token, final String flag) {
-    if ((moduleName == null) || (flag == null)) {
+  public ResponseSpec submitFlag(final String moduleLocator, final String token, final String flag) {
+    if ((moduleLocator == null) || (flag == null)) {
       throw new NullPointerException();
     }
 
-    final String endpoint = String.format("/api/v1/flag/submit/%s", moduleName);
+    final String endpoint = String.format("/api/v1/flag/submit/%s", moduleLocator);
 
     final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody =
         BodyInserters.fromValue(flag);
@@ -198,12 +203,12 @@ public final class IntegrationTestUtils {
   }
 
   public Flux<Submission> submitFlagAndReturnSubmission(
-      final String moduleName, final String token, final String flag) {
-    if ((moduleName == null) || (token == null) || (flag == null)) {
+      final String moduleLocator, final String token, final String flag) {
+    if ((moduleLocator == null) || (token == null) || (flag == null)) {
       throw new NullPointerException();
     }
 
-    return submitFlag(moduleName, token, flag)
+    return submitFlag(moduleLocator, token, flag)
         .expectStatus()
         .isOk()
         .returnResult(Submission.class)

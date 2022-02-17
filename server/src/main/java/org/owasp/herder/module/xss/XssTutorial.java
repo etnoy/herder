@@ -26,6 +26,7 @@ import java.util.List;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
+import org.owasp.herder.module.Locator;
 import org.owasp.herder.module.Tag;
 import org.owasp.herder.module.xss.XssTutorialResponse.XssTutorialResponseBuilder;
 
@@ -33,7 +34,8 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
-@HerderModule(name = "xss-tutorial", baseScore = 100)
+@HerderModule("XSS Tutorial")
+@Locator("xss-tutorial")
 @Tag(name = "topic", value = "xss")
 public class XssTutorial implements BaseModule {
   private final FlagHandler flagHandler;

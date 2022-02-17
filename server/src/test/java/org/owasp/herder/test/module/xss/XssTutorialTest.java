@@ -99,8 +99,7 @@ class XssTutorialTest {
               assertThat(response.getResult()).contains(mockFlag);
               assertThat(response.getAlert()).isEqualTo(mockAlertList.get(0));
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -122,7 +121,6 @@ class XssTutorialTest {
               assertThat(response.getResult()).doesNotContain("Congratulations");
               assertThat(response.getAlert()).isNull();
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }

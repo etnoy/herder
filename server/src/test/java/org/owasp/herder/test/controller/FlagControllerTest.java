@@ -119,8 +119,7 @@ class FlagControllerTest {
 
     StepVerifier.create(flagController.submitFlag(moduleName, flag))
         .expectNext(new ResponseEntity<Submission>(submission, HttpStatus.OK))
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(submissionService, times(1)).submit(mockUserId, moduleName, flag);
   }

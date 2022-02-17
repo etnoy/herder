@@ -21,41 +21,13 @@
  */
 package org.owasp.herder.module;
 
-import java.io.Serializable;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
-import lombok.With;
-
-@Value
-@AllArgsConstructor
-@Builder
-@With
-@Document("module")
-public class ModuleEntity implements Serializable {
-  private static final long serialVersionUID = 6391362512222766270L;
-
-  @Id private String id;
-
-  @Indexed @NonNull private String name;
-
-  @Indexed @NonNull private String locator;
-
-  @JsonProperty("hasStaticFlag")
-  private boolean isFlagStatic;
-
-  private String staticFlag;
-
-  @NonNull private byte[] key;
-
-  @JsonProperty("isOpen")
-  private boolean isOpen;
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface Locator {
+  String value();
 }

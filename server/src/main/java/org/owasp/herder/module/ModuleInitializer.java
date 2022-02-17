@@ -32,6 +32,7 @@ import javax.annotation.PostConstruct;
 
 import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.InvalidHerderModuleTypeException;
+import org.owasp.herder.exception.ModuleInitializationException;
 import org.owasp.herder.scoring.ScoreService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
@@ -91,10 +92,35 @@ public final class ModuleInitializer implements ApplicationContextAware {
   }
 
   public Mono<Void> initializeModule(final BaseModule module) {
-    final HerderModule moduleAnnotations = module.getClass().getAnnotation(HerderModule.class);
+    final HerderModule herderModuleAnnotation = module.getClass().getAnnotation(HerderModule.class);
+
+    // TODO: check for null here
+
+    int baseScore = 0;
+    int goldBonus = 0;
+    int silverBonus = 0;
+    int bronzeBonus = 0;
+
+    final Score scoreAnnotation = module.getClass().getAnnotation(Score.class);
+    if (scoreAnnotation != null) {
+      // No scores defined for the module
+      baseScore = scoreAnnotation.baseScore();
+      goldBonus = scoreAnnotation.goldBonus();
+      silverBonus = scoreAnnotation.silverBonus();
+      bronzeBonus = scoreAnnotation.bronzeBonus();
+    }
+
+    final Locator locatorAnnotation = module.getClass().getAnnotation(Locator.class);
+    if (locatorAnnotation == null) {
+      return Mono.error(
+          new ModuleInitializationException(
+              "Missing locator annotation on module " + module.getName()));
+    }
+
+    final String locator = locatorAnnotation.value();
 
     // Find the module name declared in the annotation
-    final String moduleName = moduleAnnotations.name();
+    final String moduleName = herderModuleAnnotation.value();
 
     // TODO: Do sanity checks on the module name
 
@@ -120,12 +146,12 @@ public final class ModuleInitializer implements ApplicationContextAware {
     } else {
       return moduleService
           // Persist the module
-          .create(moduleName)
+          .create(moduleName, locator)
           // Persist the default scores (if any)
-          .then(scoreService.setModuleScore(moduleName, 0, moduleAnnotations.baseScore()))
-          .then(scoreService.setModuleScore(moduleName, 1, moduleAnnotations.goldBonus()))
-          .then(scoreService.setModuleScore(moduleName, 2, moduleAnnotations.silverBonus()))
-          .then(scoreService.setModuleScore(moduleName, 3, moduleAnnotations.bronzeBonus()))
+          .then(scoreService.setModuleScore(moduleName, 0, baseScore))
+          .then(scoreService.setModuleScore(moduleName, 1, goldBonus))
+          .then(scoreService.setModuleScore(moduleName, 2, silverBonus))
+          .then(scoreService.setModuleScore(moduleName, 3, bronzeBonus))
           // Persist the default tags (if any)
           .thenMany(moduleService.saveTags(tags))
           // Return a Mono<Void>

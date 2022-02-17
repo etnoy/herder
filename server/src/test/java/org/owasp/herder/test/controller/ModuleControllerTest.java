@@ -39,6 +39,7 @@ import org.owasp.herder.module.ModuleController;
 import org.owasp.herder.module.ModuleListItem;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.SubmissionService;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -86,8 +87,8 @@ class ModuleControllerTest {
         .expectNext(mockModuleListItem2)
         .expectNext(mockModuleListItem3)
         .expectNext(mockModuleListItem4)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
+
     verify(moduleService, times(1)).findAllOpenWithSolutionStatus(mockUserId);
     verify(controllerAuthentication, times(1)).getUserId();
   }
@@ -109,7 +110,7 @@ class ModuleControllerTest {
     when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
     when(moduleService.findByNameWithSolutionStatus(mockUserId, mockModuleName))
         .thenReturn(Mono.empty());
-    StepVerifier.create(moduleController.findByName(mockModuleName)).expectComplete().verify();
+    StepVerifier.create(moduleController.findByName(mockModuleName)).verifyComplete();
   }
 
   @Test
@@ -124,8 +125,8 @@ class ModuleControllerTest {
         .thenReturn(Mono.just(mockModuleListItem));
     StepVerifier.create(moduleController.findByName(mockModuleName))
         .expectNext(mockModuleListItem)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
+
     verify(moduleService, times(1)).findByNameWithSolutionStatus(mockUserId, mockModuleName);
   }
 
@@ -137,7 +138,7 @@ class ModuleControllerTest {
 
     when(moduleService.findByNameWithSolutionStatus(mockUserId, mockModuleName))
         .thenReturn(Mono.empty());
-    StepVerifier.create(moduleController.findByName(mockModuleName)).expectComplete().verify();
+    StepVerifier.create(moduleController.findByName(mockModuleName)).verifyComplete();
     verify(controllerAuthentication, times(1)).getUserId();
     verify(moduleService, times(1)).findByNameWithSolutionStatus(mockUserId, mockModuleName);
   }
@@ -153,8 +154,8 @@ class ModuleControllerTest {
         .thenReturn(Mono.just(mockModuleListItem));
     StepVerifier.create(moduleController.findByName(mockModuleName))
         .expectNext(mockModuleListItem)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
+
     verify(controllerAuthentication, times(1)).getUserId();
     verify(moduleService, times(1)).findByNameWithSolutionStatus(mockUserId, mockModuleName);
   }

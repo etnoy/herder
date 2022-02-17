@@ -78,9 +78,8 @@ class SubmissonServiceTest {
   void findAllByModuleName_NoSubmissionsExist_ReturnsEmpty() {
     final String mockModuleName = "id";
     when(submissionRepository.findAllByModuleName(mockModuleName)).thenReturn(Flux.empty());
-    StepVerifier.create(submissionService.findAllByModuleName(mockModuleName))
-        .expectComplete()
-        .verify();
+    StepVerifier.create(submissionService.findAllByModuleName(mockModuleName)).verifyComplete();
+
     verify(submissionRepository, times(1)).findAllByModuleName(mockModuleName);
   }
 
@@ -99,8 +98,7 @@ class SubmissonServiceTest {
         .expectNext(mockSubmission2)
         .expectNext(mockSubmission3)
         .expectNext(mockSubmission4)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(submissionRepository, times(1)).findAllByModuleName(mockModuleName);
   }
@@ -116,9 +114,8 @@ class SubmissonServiceTest {
   void findAllRankedByUserId_NoRankedSubmissionsExist_ReturnsEmpty() {
     final String mockUserId = "id";
     when(submissionRepository.findAllRankedByUserId(mockUserId)).thenReturn(Flux.empty());
-    StepVerifier.create(submissionService.findAllRankedByUserId(mockUserId))
-        .expectComplete()
-        .verify();
+    StepVerifier.create(submissionService.findAllRankedByUserId(mockUserId)).verifyComplete();
+
     verify(submissionRepository, times(1)).findAllRankedByUserId(mockUserId);
   }
 
@@ -142,8 +139,7 @@ class SubmissonServiceTest {
         .expectNext(mockRankedSubmission2)
         .expectNext(mockRankedSubmission3)
         .expectNext(mockRankedSubmission4)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -157,9 +153,8 @@ class SubmissonServiceTest {
   void findAllValidByUserId_NoSubmissionsExist_ReturnsEmpty() {
     final String mockUserId = "id";
     when(submissionRepository.findAllValidByUserId(mockUserId)).thenReturn(Flux.empty());
-    StepVerifier.create(submissionService.findAllValidByUserId(mockUserId))
-        .expectComplete()
-        .verify();
+    StepVerifier.create(submissionService.findAllValidByUserId(mockUserId)).verifyComplete();
+
     verify(submissionRepository, times(1)).findAllValidByUserId(mockUserId);
   }
 
@@ -178,8 +173,7 @@ class SubmissonServiceTest {
         .expectNext(mockSubmission2)
         .expectNext(mockSubmission3)
         .expectNext(mockSubmission4)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(submissionRepository, times(1)).findAllValidByUserId(mockUserId);
   }
@@ -200,8 +194,8 @@ class SubmissonServiceTest {
         .thenReturn(Mono.empty());
     StepVerifier.create(
             submissionService.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
-        .expectComplete()
-        .verify();
+        .verifyComplete();
+
     verify(submissionRepository, times(1))
         .findAllByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName);
   }
@@ -218,8 +212,7 @@ class SubmissonServiceTest {
     StepVerifier.create(
             submissionService.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
         .expectNext(mockSubmission)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(submissionRepository, times(1))
         .findAllByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName);
@@ -238,8 +231,8 @@ class SubmissonServiceTest {
     when(submissionRepository.findAllValidByUserId(mockUserId)).thenReturn(Flux.empty());
     StepVerifier.create(submissionService.findAllValidModuleNamesByUserId(mockUserId))
         .expectNext(new ArrayList<String>())
-        .expectComplete()
-        .verify();
+        .verifyComplete();
+
     verify(submissionRepository, times(1)).findAllValidByUserId(mockUserId);
   }
 
@@ -270,8 +263,7 @@ class SubmissonServiceTest {
         .thenReturn(Flux.just(mockSubmission1, mockSubmission2, mockSubmission3, mockSubmission4));
     StepVerifier.create(submissionService.findAllValidModuleNamesByUserId(mockUserId))
         .expectNext(moduleNameList)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(submissionRepository, times(1)).findAllValidByUserId(mockUserId);
   }
@@ -318,8 +310,7 @@ class SubmissonServiceTest {
               assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(fixedClock));
               assertThat(submission.isValid()).isFalse();
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(flagHandler, times(1)).verifyFlag(mockUserId, mockModuleName, flag);
     verify(submissionRepository, times(1))
@@ -390,8 +381,7 @@ class SubmissonServiceTest {
               assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(fixedClock));
               assertThat(submission.isValid()).isTrue();
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(flagHandler, times(1)).verifyFlag(mockUserId, mockModuleName, flag);
     verify(submissionRepository, times(1))
@@ -453,8 +443,7 @@ class SubmissonServiceTest {
               assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(fixedClock));
               assertThat(submission.isValid()).isTrue();
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
 
     verify(submissionRepository, times(1))
         .existsByUserIdAndModuleNameAndIsValidTrue(mockUserId, mockModuleName);

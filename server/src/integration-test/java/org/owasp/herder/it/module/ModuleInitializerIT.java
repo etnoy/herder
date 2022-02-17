@@ -65,7 +65,7 @@ class ModuleInitializerIT extends BaseIT {
   @Test
   @DisplayName("Can throw error if module does not extend BaseModule")
   void canThrowErrorIfHerderModuleIsOfWrongType() {
-    @HerderModule(name = "wrong-base")
+    @HerderModule("wrong-base")
     class TestModuleWrongBase {}
 
     applicationContext.registerBean(TestModuleWrongBase.class, () -> new TestModuleWrongBase());
@@ -78,7 +78,7 @@ class ModuleInitializerIT extends BaseIT {
   void canRegisterHerderModule() {
     final String moduleName = "test-module";
 
-    @HerderModule(name = moduleName)
+    @HerderModule(moduleName)
     class TestModule implements BaseModule {}
 
     applicationContext.registerBean(TestModule.class, () -> new TestModule());
@@ -93,10 +93,10 @@ class ModuleInitializerIT extends BaseIT {
   void initializeModules_NameCollision_ReturnsError() {
     final String moduleName = "test-module";
 
-    @HerderModule(name = moduleName)
+    @HerderModule(moduleName)
     class TestModule implements BaseModule {}
 
-    @HerderModule(name = moduleName)
+    @HerderModule(moduleName)
     class TestModuleNameCollision implements BaseModule {}
 
     applicationContext.registerBean(TestModule.class, () -> new TestModule());
@@ -112,7 +112,7 @@ class ModuleInitializerIT extends BaseIT {
   void canInitializeModuleWithTagsOfSameName() {
     final String moduleName = "tags-with-same-name";
 
-    @HerderModule(name = moduleName)
+    @HerderModule(moduleName)
     @Tag(name = "topic", value = "testing")
     @Tag(name = "topic", value = "production")
     class MultipleTagsWithSameName implements BaseModule {}
@@ -140,7 +140,7 @@ class ModuleInitializerIT extends BaseIT {
   void canInitializeModuleWithMultipleTags() {
     final String moduleName = "multiple-tags";
 
-    @HerderModule(name = moduleName)
+    @HerderModule(moduleName)
     @Tag(name = "topic", value = "testing")
     @Tag(name = "difficulty", value = "beginner")
     class MultipleTagsModule implements BaseModule {}
@@ -167,7 +167,7 @@ class ModuleInitializerIT extends BaseIT {
   void canInitializeModuleWithTag() {
     final String moduleName = "single-tag";
 
-    @HerderModule(name = moduleName)
+    @HerderModule(moduleName)
     @Tag(name = "topic", value = "testing")
     class SingleTagModule implements BaseModule {}
 

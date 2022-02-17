@@ -64,8 +64,7 @@ class UserAdministrationIT extends BaseIT {
               assertThat(user.getDisplayName()).isEqualTo(displayName);
               assertThat(user.getId()).isEqualTo(userId);
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -79,8 +78,7 @@ class UserAdministrationIT extends BaseIT {
                     .flatMap(userService::findById)
                     .map(UserEntity::getDisplayName))
             .expectNext(displayName)
-            .expectComplete()
-            .verify();
+            .verifyComplete();
         integrationTestUtils.resetState();
       }
     }

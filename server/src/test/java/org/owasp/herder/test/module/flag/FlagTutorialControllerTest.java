@@ -86,10 +86,7 @@ class FlagTutorialControllerTest {
 
     FlagTutorialResult mockFlag = FlagTutorialResult.builder().flag(flag).build();
 
-    StepVerifier.create(flagTutorialController.getFlag())
-        .expectNext(mockFlag)
-        .expectComplete()
-        .verify();
+    StepVerifier.create(flagTutorialController.getFlag()).expectNext(mockFlag).verifyComplete();
 
     verify(controllerAuthentication, times(1)).getUserId();
     verify(flagTutorial, times(1)).getFlag(mockUserId);

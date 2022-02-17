@@ -73,8 +73,7 @@ class CsrfTutorialControllerTest {
 
     StepVerifier.create(csrfTutorialController.tutorial())
         .expectNext(mockCsrfTutorialResult)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -91,7 +90,6 @@ class CsrfTutorialControllerTest {
 
     StepVerifier.create(csrfTutorialController.attack(mockPseudonym))
         .expectNext(mockCsrfTutorialResult)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }

@@ -136,7 +136,9 @@ public final class TestConstants {
   public static final String HASHED_TEST_PASSWORD =
       "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
 
+  public static final String TEST_MODULE_LOCATOR = "test-module";
   public static final String TEST_MODULE_NAME = "Test Module";
+
   public static final String TEST_STATIC_FLAG = "Static Test Flag 123 456";
 
   public static final long TEST_USER_ID = 1234L;

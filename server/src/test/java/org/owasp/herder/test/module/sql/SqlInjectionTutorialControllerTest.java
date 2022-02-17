@@ -67,10 +67,9 @@ class SqlInjectionTutorialControllerTest {
     final SqlInjectionTutorialRow sqlInjectionTutorialRow1 = mock(SqlInjectionTutorialRow.class);
     final SqlInjectionTutorialRow sqlInjectionTutorialRow2 = mock(SqlInjectionTutorialRow.class);
     final SqlInjectionTutorialRow sqlInjectionTutorialRow3 = mock(SqlInjectionTutorialRow.class);
-
     final String query = "sql";
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
 
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
     when(sqlInjectionTutorial.submitQuery(mockUserId, query))
         .thenReturn(
             Flux.just(
@@ -80,8 +79,8 @@ class SqlInjectionTutorialControllerTest {
         .expectNext(sqlInjectionTutorialRow1)
         .expectNext(sqlInjectionTutorialRow2)
         .expectNext(sqlInjectionTutorialRow3)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
+
     verify(controllerAuthentication, times(1)).getUserId();
     verify(sqlInjectionTutorial, times(1)).submitQuery(mockUserId, query);
   }

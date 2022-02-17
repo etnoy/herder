@@ -266,8 +266,7 @@ class UserControllerApiIT extends BaseIT {
         .recordWith(HashSet::new)
         .thenConsumeWhile(__ -> true)
         .expectRecordedMatches(x -> x.equals(userIdSet))
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -341,8 +340,7 @@ class UserControllerApiIT extends BaseIT {
             getData -> {
               assertThat(getData).isEqualTo(userService.findById(userId).block());
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @BeforeEach

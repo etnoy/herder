@@ -96,7 +96,7 @@ class CsrfServiceTest {
     when(csrfAttackRepository.findByPseudonymAndModuleName(mockTarget, mockModuleName))
         .thenReturn(Mono.empty());
 
-    StepVerifier.create(csrfService.attack(mockTarget, mockModuleName)).expectComplete().verify();
+    StepVerifier.create(csrfService.attack(mockTarget, mockModuleName)).verifyComplete();
   }
 
   @Test
@@ -118,7 +118,7 @@ class CsrfServiceTest {
 
     setClock(fixedClock);
 
-    StepVerifier.create(csrfService.attack(mockTarget, mockModuleName)).expectComplete().verify();
+    StepVerifier.create(csrfService.attack(mockTarget, mockModuleName)).verifyComplete();
 
     ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);
     verify(mockCsrfAttack).withFinished(captor.capture());
@@ -137,8 +137,7 @@ class CsrfServiceTest {
 
     StepVerifier.create(csrfService.getPseudonym(mockUserId, mockModuleName))
         .expectNext(mockFlag)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -152,8 +151,7 @@ class CsrfServiceTest {
 
     StepVerifier.create(csrfService.validatePseudonym(mockPseudonym, mockModuleName))
         .expectNext(true)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -167,8 +165,7 @@ class CsrfServiceTest {
 
     StepVerifier.create(csrfService.validatePseudonym(mockPseudonym, mockModuleName))
         .expectNext(false)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -186,8 +183,7 @@ class CsrfServiceTest {
     when(csrfAttackRepository.save(any(CsrfAttack.class))).thenReturn(Mono.just(mockCsrfAttack));
     StepVerifier.create(csrfService.validate(mockPseudonym, mockModuleName))
         .expectNext(false)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -205,7 +201,6 @@ class CsrfServiceTest {
     when(csrfAttackRepository.save(any(CsrfAttack.class))).thenReturn(Mono.just(mockCsrfAttack));
     StepVerifier.create(csrfService.validate(mockPseudonym, mockModuleName))
         .expectNext(true)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }

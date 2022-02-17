@@ -83,8 +83,7 @@ class ScoreServiceTest {
               assertThat(modulePoint.getRank()).isEqualTo(rank);
               assertThat(modulePoint.getPoints()).isEqualTo(points);
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -109,7 +108,6 @@ class ScoreServiceTest {
         .expectNext(mockScoreboardEntry1)
         .expectNext(mockScoreboardEntry2)
         .expectNext(mockScoreboardEntry3)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }

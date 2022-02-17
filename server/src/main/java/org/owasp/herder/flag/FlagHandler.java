@@ -97,7 +97,7 @@ public final class FlagHandler {
   }
 
   public Mono<Boolean> verifyFlag(
-      final String userId, final String moduleName, final String submittedFlag) {
+      final String userId, final String moduleId, final String submittedFlag) {
     if (submittedFlag == null) {
       return Mono.error(new NullPointerException("Submitted flag cannot be null"));
     }
@@ -107,8 +107,8 @@ public final class FlagHandler {
             + submittedFlag
             + " submitted by userId "
             + userId
-            + " to moduleName "
-            + moduleName);
+            + " to moduleId "
+            + moduleId);
 
     // Check the rate limiter for flag submissions
     Bucket submissionBucket = flagSubmissionRateLimiter.resolveBucket(userId);
@@ -118,14 +118,14 @@ public final class FlagHandler {
     }
 
     // Get the module from the repository
-    final Mono<ModuleEntity> currentModule = moduleService.findByName(moduleName);
+    final Mono<ModuleEntity> currentModule = moduleService.findById(moduleId);
 
     final Mono<Boolean> isValid =
         currentModule
             // If the module wasn't found, return exception
             .switchIfEmpty(
                 Mono.error(
-                    new ModuleNameNotFoundException("Module id " + moduleName + " was not found")))
+                    new ModuleNameNotFoundException("Module id " + moduleId + " was not found")))
             // Check if the flag is valid
             .flatMap(
                 module -> {
@@ -134,7 +134,7 @@ public final class FlagHandler {
                     return Mono.just(module.getStaticFlag().equalsIgnoreCase(submittedFlag));
                   } else {
                     // Verifying a dynamic flag
-                    return getDynamicFlag(userId, moduleName).map(submittedFlag::equalsIgnoreCase);
+                    return getDynamicFlag(userId, moduleId).map(submittedFlag::equalsIgnoreCase);
                   }
                 })
             .flatMap(

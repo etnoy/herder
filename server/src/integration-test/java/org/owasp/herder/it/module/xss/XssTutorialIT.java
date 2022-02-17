@@ -102,8 +102,7 @@ class XssTutorialIT extends BaseIT {
                 .flatMap(flag -> submissionService.submit(userId, xssTutorial.getName(), flag))
                 .map(Submission::isValid))
         .expectNext(true)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -121,8 +120,7 @@ class XssTutorialIT extends BaseIT {
                 .flatMap(flag -> submissionService.submit(userId, "xss-tutorial", flag + "wrong"))
                 .map(Submission::isValid))
         .expectNext(false)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -134,7 +132,6 @@ class XssTutorialIT extends BaseIT {
             response -> {
               assertThat(response.getResult()).startsWith("Sorry");
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }

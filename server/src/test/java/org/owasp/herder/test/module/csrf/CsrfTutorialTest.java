@@ -23,7 +23,6 @@ package org.owasp.herder.test.module.csrf;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -64,10 +63,7 @@ class CsrfTutorialTest {
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    reset(mockModule);
-
     csrfTutorial = new CsrfTutorial(csrfService, flagHandler);
-
     moduleName = csrfTutorial.getName();
   }
 
@@ -89,8 +85,7 @@ class CsrfTutorialTest {
               assertThat(result.getError()).isNotNull();
               assertThat(result.getMessage()).isNull();
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -101,7 +96,6 @@ class CsrfTutorialTest {
     final String mockAttacker = "xyz789";
 
     when(csrfService.getPseudonym(attackerUserId, moduleName)).thenReturn(Mono.just(mockAttacker));
-
     when(csrfService.validatePseudonym(mockTarget, moduleName)).thenReturn(Mono.just(true));
     when(mockModule.isFlagStatic()).thenReturn(false);
     when(mockModule.getName()).thenReturn(moduleName);
@@ -115,8 +109,7 @@ class CsrfTutorialTest {
               assertThat(result.getError()).isNull();
               assertThat(result.getMessage()).isNotNull();
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -126,7 +119,6 @@ class CsrfTutorialTest {
     final String pseudonym = "xyz789";
 
     when(csrfService.getPseudonym(userId, moduleName)).thenReturn(Mono.just(pseudonym));
-
     when(csrfService.validatePseudonym(pseudonym, moduleName)).thenReturn(Mono.just(true));
     when(mockModule.isFlagStatic()).thenReturn(false);
     when(mockModule.getName()).thenReturn(moduleName);
@@ -139,8 +131,7 @@ class CsrfTutorialTest {
               assertThat(result.getError()).isNotNull();
               assertThat(result.getMessage()).isNull();
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -163,8 +154,7 @@ class CsrfTutorialTest {
               assertThat(result.getPseudonym()).isEqualTo(mockPseudonym);
               assertThat(result.getFlag()).isEqualTo(flag);
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 
   @Test
@@ -174,11 +164,8 @@ class CsrfTutorialTest {
     final Mono<String> flag = Mono.just("flag");
 
     when(csrfService.getPseudonym(mockUserId, moduleName)).thenReturn(Mono.just(mockPseudonym));
-
     when(mockModule.isFlagStatic()).thenReturn(false);
-
     when(csrfService.validate(mockPseudonym, moduleName)).thenReturn(Mono.just(false));
-
     when(flagHandler.getDynamicFlag(mockUserId, moduleName)).thenReturn(flag);
 
     StepVerifier.create(csrfTutorial.getTutorial(mockUserId))
@@ -187,7 +174,6 @@ class CsrfTutorialTest {
               assertThat(result.getPseudonym()).isEqualTo(mockPseudonym);
               assertThat(result.getFlag()).isNull();
             })
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }

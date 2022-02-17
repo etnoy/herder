@@ -29,6 +29,7 @@ import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.CorrectionRepository;
@@ -71,12 +72,14 @@ class FlagSubmissionIT extends BaseIT {
 
   private String userId;
 
+  private ModuleEntity module;
+
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
 
     userId = integrationTestUtils.createTestUser();
-    integrationTestUtils.createStaticTestModule();
+    module = integrationTestUtils.createStaticTestModule();
   }
 
   @Test
@@ -84,7 +87,7 @@ class FlagSubmissionIT extends BaseIT {
   void canRejectDuplicateSubmissionsOfValidStaticFlags() {
     StepVerifier.create(
             submissionService
-                .submit(userId, TestConstants.TEST_MODULE_NAME, TestConstants.TEST_STATIC_FLAG)
+                .submit(userId, module.getId(), TestConstants.TEST_STATIC_FLAG)
                 .repeat(1)
                 .map(Submission::isValid))
         .expectNext(true)
@@ -97,10 +100,9 @@ class FlagSubmissionIT extends BaseIT {
   void canAcceptValidStaticFlagSubmission() {
     StepVerifier.create(
             submissionService
-                .submit(userId, TestConstants.TEST_MODULE_NAME, TestConstants.TEST_STATIC_FLAG)
+                .submit(userId, module.getId(), TestConstants.TEST_STATIC_FLAG)
                 .map(Submission::isValid))
         .expectNext(true)
-        .expectComplete()
-        .verify();
+        .verifyComplete();
   }
 }
