@@ -22,12 +22,11 @@
 package org.owasp.herder.scoring;
 
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import reactor.core.publisher.Flux;
 
 @Repository
 public interface ModulePointRepository extends ReactiveMongoRepository<ModulePoint, Long> {
-  public Flux<ModulePoint> findAllByModuleName(@Param("moduleName") final String moduleName);
+  public Flux<ModulePoint> findAllByModuleId(final String moduleId);
 }

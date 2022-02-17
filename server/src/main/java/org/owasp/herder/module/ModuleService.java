@@ -26,6 +26,7 @@ import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.EmptyModuleNameException;
 import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.exception.InvalidModuleIdException;
+import org.owasp.herder.exception.InvalidModuleLocatorException;
 import org.owasp.herder.exception.ModuleIdNotFoundException;
 import org.owasp.herder.exception.ModuleNameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -125,7 +126,7 @@ public final class ModuleService {
     if (moduleName.isEmpty()) {
       return Flux.error(new EmptyModuleNameException());
     }
-    return moduleTagRepository.findAllByModuleName(moduleName);
+    return moduleTagRepository.findAllByModuleId(moduleName);
   }
 
   public Flux<ModuleTag> findAllTagsByModuleNameAndTagName(
@@ -136,7 +137,7 @@ public final class ModuleService {
     if (moduleName.isEmpty()) {
       return Flux.error(new EmptyModuleNameException());
     }
-    return moduleTagRepository.findAllByModuleNameAndName(moduleName, tagName);
+    return moduleTagRepository.findAllByModuleIdAndName(moduleName, tagName);
   }
 
   public Mono<ModuleEntity> findByName(final String moduleName) {
@@ -161,11 +162,9 @@ public final class ModuleService {
     return moduleRepository.findById(moduleId);
   }
 
-  public Mono<ModuleListItem> findByNameWithSolutionStatus(
-      final String userId, final String moduleName) {
-    return moduleRepository
-        .findByNameWithSolutionStatus(userId, moduleName)
-        .map(this::filterEmptyTags);
+  public Mono<ModuleListItem> findByIdWithSolutionStatus(
+      final String userId, final String moduleId) {
+    return moduleRepository.findByIdWithSolutionStatus(userId, moduleId).map(this::filterEmptyTags);
   }
 
   public Flux<ModuleTag> saveTags(final Iterable<ModuleTag> tags) {
@@ -202,5 +201,16 @@ public final class ModuleService {
         .switchIfEmpty(Mono.error(new ModuleIdNotFoundException()))
         .map(module -> module.withFlagStatic(true).withStaticFlag(staticFlag))
         .flatMap(moduleRepository::save);
+  }
+
+  public Mono<ModuleEntity> findByLocator(final String moduleLocator) {
+    if (moduleLocator == null) {
+      return Mono.error(new NullPointerException("Module locator cannot be null"));
+    }
+    if (moduleLocator.isEmpty()) {
+      return Mono.error(new InvalidModuleLocatorException());
+    }
+    log.trace("Finding module with id " + moduleLocator);
+    return moduleRepository.findByLocator(moduleLocator);
   }
 }

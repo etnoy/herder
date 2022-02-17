@@ -95,7 +95,7 @@ class FlagControllerTest {
   @Test
   void submitFlag_UserAuthenticatedAndValidFlagSubmitted_ReturnsValidSubmission() throws Exception {
     final String mockUserId = "id";
-    final String moduleName = "test-module";
+    final String moduleId = "test-module";
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final String flag = "validflag";
@@ -105,22 +105,22 @@ class FlagControllerTest {
     final Submission submission =
         Submission.builder()
             .userId(mockUserId)
-            .moduleName(moduleName)
+            .moduleId(moduleId)
             .flag(flag)
             .isValid(true)
             .time(LocalDateTime.of(2000, Month.JULY, 1, 2, 3, 4))
             .build();
 
-    when(submissionService.submit(mockUserId, moduleName, flag)).thenReturn(Mono.just(submission));
+    when(submissionService.submit(mockUserId, moduleId, flag)).thenReturn(Mono.just(submission));
 
-    when(mockModule.getName()).thenReturn(moduleName);
+    when(mockModule.getName()).thenReturn(moduleId);
 
-    when(moduleService.findByName(moduleName)).thenReturn(Mono.just(mockModule));
+    when(moduleService.findByName(moduleId)).thenReturn(Mono.just(mockModule));
 
-    StepVerifier.create(flagController.submitFlag(moduleName, flag))
+    StepVerifier.create(flagController.submitFlag(moduleId, flag))
         .expectNext(new ResponseEntity<Submission>(submission, HttpStatus.OK))
         .verifyComplete();
 
-    verify(submissionService, times(1)).submit(mockUserId, moduleName, flag);
+    verify(submissionService, times(1)).submit(mockUserId, moduleId, flag);
   }
 }

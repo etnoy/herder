@@ -36,7 +36,6 @@ import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleController;
-import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
@@ -84,7 +83,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
 
   private String token;
 
-  private ModuleEntity moduleEntity;
+  private String moduleId;
 
   @Nested
   @DisplayName("A valid static flag")
@@ -94,10 +93,11 @@ class StaticFlagSubmissionApiIT extends BaseIT {
     @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should be accepted")
     void canAcceptValidStaticFlag(final String flagToTest) {
-      moduleService.setStaticFlag(TestConstants.TEST_MODULE_LOCATOR, flagToTest).block();
+      moduleService.setStaticFlag(moduleId, flagToTest).block();
       StepVerifier.create(
               integrationTestUtils
-                  .submitFlagAndReturnSubmission(moduleEntity.getLocator(), token, flagToTest)
+                  .submitFlagAndReturnSubmission(
+                      TestConstants.TEST_MODULE_LOCATOR, token, flagToTest)
                   .map(Submission::isValid))
           .expectNext(true)
           .verifyComplete();
@@ -107,12 +107,12 @@ class StaticFlagSubmissionApiIT extends BaseIT {
     @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should be accepted when in lowercase")
     void canAcceptValidStaticFlagInLowercase(final String flagToTest) {
-      moduleService.setStaticFlag(TestConstants.TEST_MODULE_LOCATOR, flagToTest).block();
+      moduleService.setStaticFlag(moduleId, flagToTest).block();
 
       StepVerifier.create(
               integrationTestUtils
                   .submitFlagAndReturnSubmission(
-                      moduleEntity.getLocator(), token, flagToTest.toLowerCase())
+                      TestConstants.TEST_MODULE_LOCATOR, token, flagToTest.toLowerCase())
                   .map(Submission::isValid))
           .expectNext(true)
           .verifyComplete();
@@ -122,7 +122,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
     @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should be accepted when in uppercase")
     void canAcceptValidStaticFlagInUppercase(final String flagToTest) {
-      moduleService.setStaticFlag(TestConstants.TEST_MODULE_LOCATOR, flagToTest).block();
+      moduleService.setStaticFlag(moduleId, flagToTest).block();
 
       StepVerifier.create(
               integrationTestUtils
@@ -134,18 +134,17 @@ class StaticFlagSubmissionApiIT extends BaseIT {
     }
   }
 
-  @Test
+  @ParameterizedTest
+  @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
   @DisplayName("An invalid static flag should be rejected")
-  void canRejectInvalidStaticFlag() {
-    for (String invalidStaticFlag : TestConstants.STRINGS) {
-      StepVerifier.create(
-              integrationTestUtils
-                  .submitFlagAndReturnSubmission(
-                      moduleEntity.getLocator(), token, invalidStaticFlag)
-                  .map(Submission::isValid))
-          .expectNext(false)
-          .verifyComplete();
-    }
+  void canRejectInvalidStaticFlag(final String invalidStaticFlag) {
+    StepVerifier.create(
+            integrationTestUtils
+                .submitFlagAndReturnSubmission(
+                    TestConstants.TEST_MODULE_LOCATOR, token, invalidStaticFlag)
+                .map(Submission::isValid))
+        .expectNext(false)
+        .verifyComplete();
   }
 
   @Test
@@ -175,7 +174,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
         integrationTestUtils.performAPILoginWithToken(
             TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
 
-    moduleEntity = integrationTestUtils.createStaticTestModule();
+    moduleId = integrationTestUtils.createStaticTestModule();
 
     // Bypass all rate limiters
     final Bucket mockBucket = mock(Bucket.class);

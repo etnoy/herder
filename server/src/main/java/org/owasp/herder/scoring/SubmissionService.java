@@ -23,9 +23,9 @@ package org.owasp.herder.scoring;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.owasp.herder.exception.EmptyModuleNameException;
+import org.owasp.herder.exception.InvalidModuleIdException;
 import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.flag.FlagHandler;
@@ -51,7 +51,7 @@ public final class SubmissionService {
   }
 
   public Flux<Submission> findAllByModuleName(final String moduleName) {
-    return submissionRepository.findAllByModuleName(moduleName);
+    return submissionRepository.findAllByModuleId(moduleName);
   }
 
   public Flux<Submission> findAllValidByUserId(final String userId) {
@@ -64,14 +64,14 @@ public final class SubmissionService {
     return submissionRepository.findAllValidByUserId(userId);
   }
 
-  public Flux<RankedSubmission> findAllSubmissionsByModuleName(final String moduleName) {
-    if (moduleName == null) {
+  public Flux<RankedSubmission> findAllSubmissionsByModuleName(final String moduleId) {
+    if (moduleId == null) {
       return Flux.error(new NullPointerException());
     }
-    if (moduleName.isEmpty()) {
-      return Flux.error(new EmptyModuleNameException());
+    if (moduleId.isEmpty()) {
+      return Flux.error(new InvalidModuleIdException());
     }
-    return submissionRepository.findAllRankedByModuleName(moduleName);
+    return submissionRepository.findAllRankedByModuleId(moduleId);
   }
 
   public Flux<RankedSubmission> findAllRankedByUserId(final String userId) {
@@ -96,20 +96,7 @@ public final class SubmissionService {
     if (moduleName.isEmpty()) {
       return Mono.error(new EmptyModuleNameException());
     }
-    return submissionRepository.findAllByUserIdAndModuleNameAndIsValidTrue(userId, moduleName);
-  }
-
-  public Mono<List<String>> findAllValidModuleNamesByUserId(final String userId) {
-    if (userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
-    return submissionRepository
-        .findAllValidByUserId(userId)
-        .map(Submission::getModuleName)
-        .collectList();
+    return submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(userId, moduleName);
   }
 
   public void resetClock() {
@@ -130,7 +117,7 @@ public final class SubmissionService {
 
     SubmissionBuilder submissionBuilder = Submission.builder();
     submissionBuilder.userId(userId);
-    submissionBuilder.moduleName(moduleId);
+    submissionBuilder.moduleId(moduleId);
     submissionBuilder.flag(flag);
     submissionBuilder.time(LocalDateTime.now(clock));
     return
@@ -151,30 +138,30 @@ public final class SubmissionService {
         .flatMap(submissionRepository::save);
   }
 
-  public Mono<Submission> submitValid(final String userId, final String moduleName) {
-    if (moduleName == null || userId == null) {
+  public Mono<Submission> submitValid(final String userId, final String moduleId) {
+    if (moduleId == null || userId == null) {
       return Mono.error(new NullPointerException());
     }
     if (userId.isEmpty()) {
       return Mono.error(new InvalidUserIdException());
     }
-    if (moduleName.isEmpty()) {
-      return Mono.error(new EmptyModuleNameException());
+    if (moduleId.isEmpty()) {
+      return Mono.error(new InvalidModuleIdException());
     }
 
     SubmissionBuilder submissionBuilder = Submission.builder();
 
     submissionBuilder.userId(userId);
-    submissionBuilder.moduleName(moduleName);
+    submissionBuilder.moduleId(moduleId);
     submissionBuilder.isValid(true);
     submissionBuilder.time(LocalDateTime.now(clock));
 
     return Mono.just(submissionBuilder)
-        .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleName))
+        .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleId))
         .switchIfEmpty(
             Mono.error(
                 new ModuleAlreadySolvedException(
-                    String.format("User %s has already finished module %s", userId, moduleName))))
+                    String.format("User %s has already finished module %s", userId, moduleId))))
         // Otherwise, build a submission and save it in db
         .map(SubmissionBuilder::build)
         .flatMap(submissionRepository::save);
@@ -183,7 +170,7 @@ public final class SubmissionService {
   private Mono<Boolean> validSubmissionDoesNotExistByUserIdAndModuleId(
       final String userId, final String moduleName) {
     return submissionRepository
-        .existsByUserIdAndModuleNameAndIsValidTrue(userId, moduleName)
+        .existsByUserIdAndModuleIdAndIsValidTrue(userId, moduleName)
         .map(exists -> !exists);
   }
 }

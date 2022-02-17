@@ -40,7 +40,7 @@ public class ModulePoint implements Serializable {
 
   @Id private String id;
 
-  @NonNull private String moduleName;
+  @NonNull private String moduleId;
 
   @NonNull private Long rank;
 

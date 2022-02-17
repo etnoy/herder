@@ -43,7 +43,7 @@ public class RankedSubmission implements Serializable {
 
   Long rank;
 
-  @NonNull String moduleName;
+  @NonNull String moduleId;
 
   @NonNull LocalDateTime time;
 

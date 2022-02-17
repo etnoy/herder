@@ -34,9 +34,11 @@ import lombok.With;
 public class ModuleListItem implements Serializable {
   private static final long serialVersionUID = -5011105798343266330L;
 
+  @NonNull String id;
+
   @NonNull String name;
 
-  @NonNull String displayName;
+  @NonNull String locator;
 
   NameValueTag[] tags;
 

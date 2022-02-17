@@ -32,24 +32,23 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface SubmissionRepository extends ReactiveMongoRepository<Submission, String> {
-  public Flux<Submission> findAllByModuleName(String moduleName);
+  public Flux<Submission> findAllByModuleId(String moduleId);
 
   @Query("{ 'isValid' : true, 'user_id': ?0 }")
   public Flux<Submission> findAllValidByUserId(String userId);
 
-  public Mono<Submission> findAllByUserIdAndModuleNameAndIsValidTrue(
-      String userId, String moduleName);
+  public Mono<Submission> findAllByUserIdAndModuleIdAndIsValidTrue(String userId, String moduleId);
 
-  public Mono<Boolean> existsByUserIdAndModuleNameAndIsValidTrue(
-      @Param("userId") String userId, @Param("moduleName") String moduleName);
+  public Mono<Boolean> existsByUserIdAndModuleIdAndIsValidTrue(
+      @Param("userId") String userId, @Param("moduleId") String moduleId);
 
   @Aggregation({
     "{$match:{isValid:true}}",
-    "{$setWindowFields:{partitionBy:'$moduleName',sortBy:{time:1},output:{rank:{$rank:{}}}}}",
-    "{$lookup:{from:'modulePoint',localField:'moduleName',foreignField:'moduleName',as:'points'}}",
+    "{$setWindowFields:{partitionBy:'$moduleId',sortBy:{time:1},output:{rank:{$rank:{}}}}}",
+    "{$lookup:{from:'modulePoint',localField:'moduleId',foreignField:'moduleId',as:'points'}}",
     "{$addFields:{baseScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank',0]}}},bonusScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank','$rank']}}}}}",
     "{$addFields:{baseScore:{$ifNull:[{$arrayElemAt:['$baseScoreArray.points',0]},0]},bonusScore:{$ifNull:[{$arrayElemAt:['$bonusScoreArray.points',0]},0]}}}",
-    "{$project:{userId:1,rank:1,moduleName:1,time:1,flag:1,baseScore:1,bonusScore:1,score:{$add:['$baseScore','$bonusScore']}}}",
+    "{$project:{userId:1,rank:1,modulemoduleId:1,time:1,flag:1,baseScore:1,bonusScore:1,score:{$add:['$baseScore','$bonusScore']}}}",
     "{$group:{_id:'$userId',score:{$sum:'$score'},goldMedals:{$sum:{$cond:[{$eq:['$rank',1]},1,0]}},silverMedals:{$sum:{$cond:[{$eq:['$rank',2]},1,0]}},bronzeMedals:{$sum:{$cond:[{$eq:['$rank',3]},1,0]}}}}",
     "{$unionWith:{coll:'user',pipeline:[{$set:{_id:{$toString:'$_id'},score:0,goldMedals:0,silverMedals:0,bronzeMedals:0}},{$project:{score:1,goldMedals:1,silverMedals:1,bronzeMedals:1,displayName:1}}]}}",
     "{$unionWith:{coll:'correction',pipeline:[{$set:{_id:'$userId',score:'$amount',goldMedals:0,silverMedals:0,bronzeMedals:0}},{$project:{score:1,goldMedals:1,silverMedals:1,bronzeMedals:1,displayName:1}}]}}",
@@ -62,14 +61,14 @@ public interface SubmissionRepository extends ReactiveMongoRepository<Submission
 
   @Aggregation({
     "{$match:{isValid:true}}",
-    "{$setWindowFields:{partitionBy:'$moduleName',sortBy:{time:1},output:{rank:{$rank:{}}}}}",
-    "{$lookup:{from:'modulePoint',localField:'moduleName',foreignField:'moduleName',as:'points'}}",
+    "{$setWindowFields:{partitionBy:'$moduleId',sortBy:{time:1},output:{rank:{$rank:{}}}}}",
+    "{$lookup:{from:'modulePoint',localField:'moduleId',foreignField:'moduleId',as:'points'}}",
     "{$addFields:{baseScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank',0]}}},bonusScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank','$rank']}}}}}",
     "{$addFields:{baseScore:{$ifNull:[{$arrayElemAt:['$baseScoreArray.points',0]},0]},bonusScore:{$ifNull:[{$arrayElemAt:['$bonusScoreArray.points',0]},0]}}}",
-    "{$project:{_id:0,userId:{$toObjectId:'$userId'},rank:1,moduleName:1,time:1,flag:1,baseScore:1,bonusScore:1,score:{$add:['$baseScore','$bonusScore']}}}",
+    "{$project:{_id:0,userId:{$toObjectId:'$userId'},rank:1,moduleId:1,time:1,flag:1,baseScore:1,bonusScore:1,score:{$add:['$baseScore','$bonusScore']}}}",
     "{$lookup:{from:'user',localField:'userId',foreignField:'_id',as:'user'}}",
     "{$addFields:{displayName:{$ifNull:[{$arrayElemAt:['$user.displayName',0]},0]}}}",
-    "{$project:{userId:{$toString:'$userId'},rank:1,moduleName:1,displayName:1,time:1,flag:1,baseScore:1,bonusScore:1,score:1}}",
+    "{$project:{userId:{$toString:'$userId'},rank:1,moduleId:1,displayName:1,time:1,flag:1,baseScore:1,bonusScore:1,score:1}}",
     "{$match:{'userId': ?0 }}",
     "{$sort: {time: -1}}"
   })
@@ -77,16 +76,16 @@ public interface SubmissionRepository extends ReactiveMongoRepository<Submission
 
   @Aggregation({
     "{$match:{isValid:true}}",
-    "{$match:{'moduleName': ?0 }}",
-    "{$setWindowFields:{partitionBy:'$moduleName',sortBy:{time:1},output:{rank:{$rank:{}}}}}",
-    "{$lookup:{from:'modulePoint',localField:'moduleName',foreignField:'moduleName',as:'points'}}",
+    "{$match:{'moduleId': ?0 }}",
+    "{$setWindowFields:{partitionBy:'$moduleId',sortBy:{time:1},output:{rank:{$rank:{}}}}}",
+    "{$lookup:{from:'modulePoint',localField:'moduleId',foreignField:'moduleId',as:'points'}}",
     "{$addFields:{baseScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank',0]}}},bonusScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank','$rank']}}}}}",
     "{$addFields:{baseScore:{$ifNull:[{$arrayElemAt:['$baseScoreArray.points',0]},0]},bonusScore:{$ifNull:[{$arrayElemAt:['$bonusScoreArray.points',0]},0]}}}",
-    "{$project:{_id:0,userId:{$toObjectId:'$userId'},rank:1,moduleName:1,time:1,flag:1,baseScore:1,bonusScore:1,score:{$add:['$baseScore','$bonusScore']}}}",
+    "{$project:{_id:0,userId:{$toObjectId:'$userId'},rank:1,moduleId:1,time:1,flag:1,baseScore:1,bonusScore:1,score:{$add:['$baseScore','$bonusScore']}}}",
     "{$lookup:{from:'user',localField:'userId',foreignField:'_id',as:'user'}}",
     "{$addFields:{displayName:{$ifNull:[{$arrayElemAt:['$user.displayName',0]},0]}}}",
-    "{$project:{userId:{$toString:'$userId'},rank:1,moduleName:1,displayName:1,time:1,flag:1,baseScore:1,bonusScore:1,score:1}}",
+    "{$project:{userId:{$toString:'$userId'},rank:1,moduleId:1,displayName:1,time:1,flag:1,baseScore:1,bonusScore:1,score:1}}",
     "{$sort: {time: 1}}"
   })
-  public Flux<RankedSubmission> findAllRankedByModuleName(String moduleName);
+  public Flux<RankedSubmission> findAllRankedByModuleId(String moduleId);
 }

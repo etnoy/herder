@@ -69,17 +69,17 @@ class ScoreServiceTest {
 
   @Test
   void setModuleScore_ValidModuleNameAndRank_ReturnsScore() throws Exception {
-    final String mockModuleName = "id";
+    final String mockModuleId = "id";
     final int rank = 3;
     final int points = 1000;
 
     when(modulePointRepository.save(any(ModulePoint.class)))
         .thenAnswer(args -> Mono.just(args.getArgument(0, ModulePoint.class)));
 
-    StepVerifier.create(scoreService.setModuleScore(mockModuleName, rank, points))
+    StepVerifier.create(scoreService.setModuleScore(mockModuleId, rank, points))
         .assertNext(
             modulePoint -> {
-              assertThat(modulePoint.getModuleName()).isEqualTo(mockModuleName);
+              assertThat(modulePoint.getModuleId()).isEqualTo(mockModuleId);
               assertThat(modulePoint.getRank()).isEqualTo(rank);
               assertThat(modulePoint.getPoints()).isEqualTo(points);
             })

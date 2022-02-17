@@ -25,6 +25,7 @@ import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.FlagSubmissionRateLimitException;
 import org.owasp.herder.exception.InvalidFlagStateException;
 import org.owasp.herder.exception.InvalidFlagSubmissionRateLimitException;
+import org.owasp.herder.exception.ModuleIdNotFoundException;
 import org.owasp.herder.exception.ModuleNameNotFoundException;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
@@ -124,8 +125,7 @@ public final class FlagHandler {
         currentModule
             // If the module wasn't found, return exception
             .switchIfEmpty(
-                Mono.error(
-                    new ModuleNameNotFoundException("Module id " + moduleId + " was not found")))
+                Mono.error(new ModuleIdNotFoundException("Module id " + moduleId + " not found")))
             // Check if the flag is valid
             .flatMap(
                 module -> {

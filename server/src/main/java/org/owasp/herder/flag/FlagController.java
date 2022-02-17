@@ -49,13 +49,13 @@ public class FlagController {
 
   private final SubmissionService submissionService;
 
-  @PostMapping(path = "flag/submit/{moduleName}")
+  @PostMapping(path = "flag/submit/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Mono<ResponseEntity<Submission>> submitFlag(
-      @PathVariable("moduleName") final String moduleName, @RequestBody final String flag) {
+      @PathVariable("moduleLocator") final String moduleLocator, @RequestBody final String flag) {
     return controllerAuthentication
         .getUserId()
-        .zipWith(moduleService.findByName(moduleName).map(ModuleEntity::getName))
+        .zipWith(moduleService.findByLocator(moduleLocator).map(ModuleEntity::getId))
         .flatMap(tuple -> submissionService.submit(tuple.getT1(), tuple.getT2(), flag))
         .map(submission -> new ResponseEntity<>(submission, HttpStatus.OK))
         .onErrorResume(

@@ -25,14 +25,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
 import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.InvalidHerderModuleTypeException;
 import org.owasp.herder.exception.ModuleInitializationException;
+import org.owasp.herder.module.ModuleTag.ModuleTagBuilder;
 import org.owasp.herder.scoring.ScoreService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
@@ -41,6 +40,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @ConditionalOnProperty(
@@ -127,17 +127,10 @@ public final class ModuleInitializer implements ApplicationContextAware {
     log.debug("Initializing module " + moduleName);
 
     // Find all tag annotations
-    final List<ModuleTag> tags =
-        Stream.of(module.getClass().getAnnotationsByType(Tag.class))
+    final Flux<ModuleTagBuilder> tagBuilders =
+        Flux.fromArray(module.getClass().getAnnotationsByType(Tag.class))
             // Create a ModuleTag entity for each tag
-            .map(
-                tag ->
-                    ModuleTag.builder()
-                        .moduleName(moduleName)
-                        .name(tag.name())
-                        .value(tag.value())
-                        .build())
-            .collect(Collectors.toUnmodifiableList());
+            .map(tag -> ModuleTag.builder().name(tag.name()).value(tag.value()));
 
     if (Boolean.TRUE.equals(moduleService.existsByName(moduleName).block())) {
       // If the module already exists in the database, do nothing.
@@ -147,13 +140,18 @@ public final class ModuleInitializer implements ApplicationContextAware {
       return moduleService
           // Persist the module
           .create(moduleName, locator)
+          // Create module tags with the correct module ID
+          .flatMapMany(
+              moduleId -> tagBuilders.map(tagBuilder -> tagBuilder.moduleId(moduleId).build()))
+          .collectList()
+          // Persist the tags in the database
+          .map(moduleService::saveTags)
           // Persist the default scores (if any)
           .then(scoreService.setModuleScore(moduleName, 0, baseScore))
           .then(scoreService.setModuleScore(moduleName, 1, goldBonus))
           .then(scoreService.setModuleScore(moduleName, 2, silverBonus))
           .then(scoreService.setModuleScore(moduleName, 3, bronzeBonus))
           // Persist the default tags (if any)
-          .thenMany(moduleService.saveTags(tags))
           // Return a Mono<Void>
           .then();
     }

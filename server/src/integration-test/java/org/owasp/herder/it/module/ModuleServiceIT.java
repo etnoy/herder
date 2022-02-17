@@ -86,18 +86,18 @@ class ModuleServiceIT extends BaseIT {
     @DisplayName("with tags")
     void canListModuleWithTags() {
       final ModuleTag[] moduleTags = {
-        ModuleTag.builder().moduleName("id1").name("key").value("value").build(),
-        ModuleTag.builder().moduleName("id1").name("usage").value("test").build(),
-        ModuleTag.builder().moduleName("id1").name("cow").value("moo").build()
+        ModuleTag.builder().moduleId("id1").name("key").value("value").build(),
+        ModuleTag.builder().moduleId("id1").name("usage").value("test").build(),
+        ModuleTag.builder().moduleId("id1").name("cow").value("moo").build()
       };
+
+      moduleService.saveTags(Arrays.asList(moduleTags)).blockLast();
 
       final NameValueTag[] tags = {
         NameValueTag.builder().name("key").value("value").build(),
         NameValueTag.builder().name("usage").value("test").build(),
         NameValueTag.builder().name("cow").value("moo").build()
       };
-
-      moduleService.saveTags(Arrays.asList(moduleTags)).blockLast();
 
       StepVerifier.create(moduleService.findAllOpenWithSolutionStatus(userId))
           .expectNext(item.withTags(tags))
@@ -143,13 +143,16 @@ class ModuleServiceIT extends BaseIT {
     final String userId = userService.create("Test user").block();
 
     // Create a module to submit to
-    moduleService.create("Test Module 1", "id1").block();
+    final String moduleId =
+        moduleService
+            .create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR)
+            .block();
 
     // Set that module to have an exact flag
-    moduleService.setStaticFlag("id1", "flag").block();
+    moduleService.setStaticFlag(moduleId, "flag").block();
 
     final ModuleTag moduleTag =
-        ModuleTag.builder().moduleName("id1").name("usage").value("test").build();
+        ModuleTag.builder().moduleId(moduleId).name("usage").value("test").build();
 
     moduleService.saveTags(List.of(moduleTag)).blockLast();
 
@@ -157,8 +160,15 @@ class ModuleServiceIT extends BaseIT {
 
     final NameValueTag[] tags = {NameValueTag.builder().name("usage").value("test").build()};
 
-    StepVerifier.create(moduleService.findByNameWithSolutionStatus(userId, "id1"))
-        .expectNext(ModuleListItem.builder().name("id1").isSolved(true).tags(tags).build())
+    StepVerifier.create(moduleService.findByIdWithSolutionStatus(userId, "id1"))
+        .expectNext(
+            ModuleListItem.builder()
+                .id(moduleId)
+                .name(TestConstants.TEST_MODULE_NAME)
+                .locator(TestConstants.TEST_MODULE_LOCATOR)
+                .isSolved(true)
+                .tags(tags)
+                .build())
         .verifyComplete();
   }
 

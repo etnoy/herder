@@ -47,7 +47,7 @@ public class Submission implements Serializable {
 
   @NonNull private String userId;
 
-  @NonNull private String moduleName;
+  @NonNull private String moduleId;
 
   @NonNull private LocalDateTime time;
 

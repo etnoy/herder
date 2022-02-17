@@ -74,8 +74,6 @@ class FlagTutorialApiIT extends BaseIT {
 
   ModuleInitializer moduleInitializer;
 
-  private String moduleName;
-
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
@@ -85,8 +83,6 @@ class FlagTutorialApiIT extends BaseIT {
     flagTutorial = new FlagTutorial(flagHandler);
 
     moduleInitializer.initializeModule(flagTutorial).block();
-
-    moduleName = flagTutorial.getName();
   }
 
   @Test
@@ -118,7 +114,7 @@ class FlagTutorialApiIT extends BaseIT {
 
     StepVerifier.create(
             integrationTestUtils
-                .submitFlagAndReturnSubmission(moduleName, accessToken, flag)
+                .submitFlagAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, accessToken, flag)
                 .map(Submission::isValid))
         .expectNext(true)
         .verifyComplete();

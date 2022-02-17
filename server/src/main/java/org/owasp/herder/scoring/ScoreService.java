@@ -37,15 +37,14 @@ public final class ScoreService {
   private final SubmissionRepository submissionRepository;
 
   public Mono<ModulePoint> setModuleScore(
-      final String moduleName, final long rank, final long points) {
+      final String moduleId, final long rank, final long points) {
     if (rank < 0) {
       return Mono.error(new InvalidRankException("Rank must be zero or a positive integer"));
     }
     if (points == 0) {
       return Mono.empty();
     }
-    ModulePointBuilder builder =
-        ModulePoint.builder().moduleName(moduleName).rank(rank).points(points);
+    ModulePointBuilder builder = ModulePoint.builder().moduleId(moduleId).rank(rank).points(points);
     return modulePointRepository.save(builder.build());
   }
 

@@ -108,7 +108,7 @@ class ModuleControllerTest {
     final String mockModuleName = "test-module";
     final String mockUserId = "id";
     when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
-    when(moduleService.findByNameWithSolutionStatus(mockUserId, mockModuleName))
+    when(moduleService.findByIdWithSolutionStatus(mockUserId, mockModuleName))
         .thenReturn(Mono.empty());
     StepVerifier.create(moduleController.findByName(mockModuleName)).verifyComplete();
   }
@@ -121,13 +121,13 @@ class ModuleControllerTest {
     final ModuleListItem mockModuleListItem = mock(ModuleListItem.class);
     when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
 
-    when(moduleService.findByNameWithSolutionStatus(mockUserId, mockModuleName))
+    when(moduleService.findByIdWithSolutionStatus(mockUserId, mockModuleName))
         .thenReturn(Mono.just(mockModuleListItem));
     StepVerifier.create(moduleController.findByName(mockModuleName))
         .expectNext(mockModuleListItem)
         .verifyComplete();
 
-    verify(moduleService, times(1)).findByNameWithSolutionStatus(mockUserId, mockModuleName);
+    verify(moduleService, times(1)).findByIdWithSolutionStatus(mockUserId, mockModuleName);
   }
 
   @Test
@@ -136,11 +136,11 @@ class ModuleControllerTest {
     final String mockModuleName = "test-module";
     when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
 
-    when(moduleService.findByNameWithSolutionStatus(mockUserId, mockModuleName))
+    when(moduleService.findByIdWithSolutionStatus(mockUserId, mockModuleName))
         .thenReturn(Mono.empty());
     StepVerifier.create(moduleController.findByName(mockModuleName)).verifyComplete();
     verify(controllerAuthentication, times(1)).getUserId();
-    verify(moduleService, times(1)).findByNameWithSolutionStatus(mockUserId, mockModuleName);
+    verify(moduleService, times(1)).findByIdWithSolutionStatus(mockUserId, mockModuleName);
   }
 
   @Test
@@ -150,14 +150,14 @@ class ModuleControllerTest {
     final ModuleListItem mockModuleListItem = mock(ModuleListItem.class);
     when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
 
-    when(moduleService.findByNameWithSolutionStatus(mockUserId, mockModuleName))
+    when(moduleService.findByIdWithSolutionStatus(mockUserId, mockModuleName))
         .thenReturn(Mono.just(mockModuleListItem));
     StepVerifier.create(moduleController.findByName(mockModuleName))
         .expectNext(mockModuleListItem)
         .verifyComplete();
 
     verify(controllerAuthentication, times(1)).getUserId();
-    verify(moduleService, times(1)).findByNameWithSolutionStatus(mockUserId, mockModuleName);
+    verify(moduleService, times(1)).findByIdWithSolutionStatus(mockUserId, mockModuleName);
   }
 
   @BeforeEach

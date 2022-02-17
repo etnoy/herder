@@ -36,9 +36,11 @@ import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
+import org.owasp.herder.module.Locator;
 import org.owasp.herder.module.ModuleInitializer;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.ModuleTag;
+import org.owasp.herder.module.ModuleTag.ModuleTagBuilder;
 import org.owasp.herder.module.Tag;
 import org.owasp.herder.scoring.ScoreService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,22 +112,26 @@ class ModuleInitializerIT extends BaseIT {
   @Test
   @DisplayName("Can initialize a module with tags of same name")
   void canInitializeModuleWithTagsOfSameName() {
-    final String moduleName = "tags-with-same-name";
+    final String moduleName = "Tags with same name";
+    final String moduleLocator = "tags-with-same-name";
 
     @HerderModule(moduleName)
+    @Locator(moduleLocator)
     @Tag(name = "topic", value = "testing")
     @Tag(name = "topic", value = "production")
     class MultipleTagsWithSameName implements BaseModule {}
 
-    final List<ModuleTag> expectedTags = new ArrayList<>();
-    expectedTags.add(
-        ModuleTag.builder().moduleName(moduleName).name("topic").value("testing").build());
-    expectedTags.add(
-        ModuleTag.builder().moduleName(moduleName).name("topic").value("production").build());
-
     applicationContext.registerBean(
         MultipleTagsWithSameName.class, () -> new MultipleTagsWithSameName());
     moduleInitializer.initializeModules();
+
+    final String moduleId = moduleService.findByName(moduleName).block().getId();
+
+    final List<ModuleTag> expectedTags = new ArrayList<>();
+    final ModuleTagBuilder moduleTagBuilder = ModuleTag.builder().moduleId(moduleId);
+    expectedTags.add(moduleTagBuilder.name("topic").value("testing").build());
+    expectedTags.add(moduleTagBuilder.name("topic").value("production").build());
+
     StepVerifier.create(
             moduleService
                 .findAllTagsByModuleName(moduleName)
@@ -145,14 +151,16 @@ class ModuleInitializerIT extends BaseIT {
     @Tag(name = "difficulty", value = "beginner")
     class MultipleTagsModule implements BaseModule {}
 
-    final List<ModuleTag> expectedTags = new ArrayList<>();
-    expectedTags.add(
-        ModuleTag.builder().moduleName(moduleName).name("topic").value("testing").build());
-    expectedTags.add(
-        ModuleTag.builder().moduleName(moduleName).name("difficulty").value("beginner").build());
-
     applicationContext.registerBean(MultipleTagsModule.class, () -> new MultipleTagsModule());
     moduleInitializer.initializeModules();
+
+    final String moduleId = moduleService.findByName(moduleName).block().getId();
+
+    final List<ModuleTag> expectedTags = new ArrayList<>();
+    final ModuleTagBuilder moduleTagBuilder = ModuleTag.builder().moduleId(moduleId);
+    expectedTags.add(moduleTagBuilder.name("topic").value("testing").build());
+    expectedTags.add(moduleTagBuilder.name("difficulty").value("beginner").build());
+
     StepVerifier.create(
             moduleService
                 .findAllTagsByModuleName(moduleName)
@@ -171,9 +179,11 @@ class ModuleInitializerIT extends BaseIT {
     @Tag(name = "topic", value = "testing")
     class SingleTagModule implements BaseModule {}
 
+    final String moduleId = moduleService.findByName(moduleName).block().getId();
+
     final List<ModuleTag> expectedTags = new ArrayList<>();
-    expectedTags.add(
-        ModuleTag.builder().moduleName(moduleName).name("topic").value("testing").build());
+    final ModuleTagBuilder moduleTagBuilder = ModuleTag.builder().moduleId(moduleId);
+    expectedTags.add(moduleTagBuilder.name("topic").value("testing").build());
 
     applicationContext.registerBean(SingleTagModule.class, () -> new SingleTagModule());
     moduleInitializer.initializeModules();

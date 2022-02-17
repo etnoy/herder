@@ -24,7 +24,6 @@ package org.owasp.herder.it.util;
 import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.configuration.ConfigurationRepository;
 import org.owasp.herder.crypto.WebTokenService;
-import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.ModuleTagRepository;
@@ -84,6 +83,8 @@ public final class IntegrationTestUtils {
 
   @Autowired WebTokenService webTokenService;
 
+  String moduleId;
+
   public String createDynamicTestModule() {
     final String moduleId =
         moduleService
@@ -94,14 +95,14 @@ public final class IntegrationTestUtils {
     return moduleId;
   }
 
-  public ModuleEntity createStaticTestModule() {
+  public String createStaticTestModule() {
     final String moduleId =
         moduleService
             .create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR)
             .block();
 
     moduleService.setStaticFlag(moduleId, TestConstants.TEST_STATIC_FLAG).block();
-    return moduleService.findById(moduleId).block();
+    return moduleId;
   }
 
   public String createTestAdmin() {
@@ -180,7 +181,8 @@ public final class IntegrationTestUtils {
         .block();
   }
 
-  public ResponseSpec submitFlag(final String moduleLocator, final String token, final String flag) {
+  public ResponseSpec submitFlag(
+      final String moduleLocator, final String token, final String flag) {
     if ((moduleLocator == null) || (flag == null)) {
       throw new NullPointerException();
     }

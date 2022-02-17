@@ -54,6 +54,6 @@ public class ModuleController {
   public Mono<ModuleListItem> findByName(@PathVariable final String moduleName) {
     return controllerAuthentication
         .getUserId()
-        .flatMap(userId -> moduleService.findByNameWithSolutionStatus(userId, moduleName));
+        .flatMap(userId -> moduleService.findByIdWithSolutionStatus(userId, moduleName));
   }
 }
