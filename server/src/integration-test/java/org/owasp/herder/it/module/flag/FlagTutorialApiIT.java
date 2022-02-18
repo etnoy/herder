@@ -114,7 +114,7 @@ class FlagTutorialApiIT extends BaseIT {
 
     StepVerifier.create(
             integrationTestUtils
-                .submitFlagAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, accessToken, flag)
+                .submitFlagAndReturnSubmission(flagTutorial.getLocator(), accessToken, flag)
                 .map(Submission::isValid))
         .expectNext(true)
         .verifyComplete();

@@ -32,6 +32,7 @@ import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.InvalidHerderModuleTypeException;
 import org.owasp.herder.exception.ModuleInitializationException;
 import org.owasp.herder.module.ModuleTag.ModuleTagBuilder;
+import org.owasp.herder.scoring.ModulePoint;
 import org.owasp.herder.scoring.ScoreService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
@@ -91,33 +92,20 @@ public final class ModuleInitializer implements ApplicationContextAware {
     }
   }
 
-  public Mono<Void> initializeModule(final BaseModule module) {
+  public Mono<String> initializeModule(final BaseModule module) {
     final HerderModule herderModuleAnnotation = module.getClass().getAnnotation(HerderModule.class);
 
     // TODO: check for null here
 
-    int baseScore = 0;
-    int goldBonus = 0;
-    int silverBonus = 0;
-    int bronzeBonus = 0;
-
     final Score scoreAnnotation = module.getClass().getAnnotation(Score.class);
-    if (scoreAnnotation != null) {
-      // No scores defined for the module
-      baseScore = scoreAnnotation.baseScore();
-      goldBonus = scoreAnnotation.goldBonus();
-      silverBonus = scoreAnnotation.silverBonus();
-      bronzeBonus = scoreAnnotation.bronzeBonus();
-    }
 
     final Locator locatorAnnotation = module.getClass().getAnnotation(Locator.class);
     if (locatorAnnotation == null) {
       return Mono.error(
-          new ModuleInitializationException(
-              "Missing locator annotation on module " + module.getName()));
+          new ModuleInitializationException("Missing @Locator on module " + module.getName()));
     }
 
-    final String locator = locatorAnnotation.value();
+    final String moduleLocator = locatorAnnotation.value();
 
     // Find the module name declared in the annotation
     final String moduleName = herderModuleAnnotation.value();
@@ -132,29 +120,38 @@ public final class ModuleInitializer implements ApplicationContextAware {
             // Create a ModuleTag entity for each tag
             .map(tag -> ModuleTag.builder().name(tag.name()).value(tag.value()));
 
-    if (Boolean.TRUE.equals(moduleService.existsByName(moduleName).block())) {
+    if (Boolean.TRUE.equals(moduleService.existsByLocator(moduleLocator).block())) {
       // If the module already exists in the database, do nothing.
       // This case can happen on, for instance, application restart
       return Mono.empty();
-    } else {
-      return moduleService
-          // Persist the module
-          .create(moduleName, locator)
-          // Create module tags with the correct module ID
-          .flatMapMany(
-              moduleId -> tagBuilders.map(tagBuilder -> tagBuilder.moduleId(moduleId).build()))
-          .collectList()
-          // Persist the tags in the database
-          .map(moduleService::saveTags)
-          // Persist the default scores (if any)
-          .then(scoreService.setModuleScore(moduleName, 0, baseScore))
-          .then(scoreService.setModuleScore(moduleName, 1, goldBonus))
-          .then(scoreService.setModuleScore(moduleName, 2, silverBonus))
-          .then(scoreService.setModuleScore(moduleName, 3, bronzeBonus))
-          // Persist the default tags (if any)
-          // Return a Mono<Void>
-          .then();
     }
+
+    return moduleService
+        // Persist the module
+        .create(moduleName, moduleLocator)
+        .flatMap(
+            moduleId -> {
+              Mono<ModulePoint> scoreMono = Mono.empty();
+              // Persist the default scores (if any)
+              if (scoreAnnotation != null) {
+                final int baseScore = scoreAnnotation.baseScore();
+                final int goldBonus = scoreAnnotation.goldBonus();
+                final int silverBonus = scoreAnnotation.silverBonus();
+                final int bronzeBonus = scoreAnnotation.bronzeBonus();
+                scoreMono =
+                    scoreService
+                        .setModuleScore(moduleId, 0, baseScore)
+                        .then(scoreService.setModuleScore(moduleId, 1, goldBonus))
+                        .then(scoreService.setModuleScore(moduleId, 2, silverBonus))
+                        .then(scoreService.setModuleScore(moduleId, 3, bronzeBonus));
+              }
+
+              return scoreMono
+                  .thenMany(
+                      moduleService.saveTags(
+                          tagBuilders.map(tagBuilder -> tagBuilder.moduleId(moduleId).build())))
+                  .then(Mono.just(moduleId));
+            });
   }
 
   @Override

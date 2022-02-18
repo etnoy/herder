@@ -59,7 +59,7 @@ public class XssTutorial implements BaseModule {
       xssTutorialResponseBuilder.alert(alerts.get(0));
 
       return flagHandler
-          .getDynamicFlag(userId, getName())
+          .getDynamicFlag(userId, getLocator())
           .map(flag -> String.format("Congratulations, flag is %s", flag))
           .map(xssTutorialResponseBuilder::result)
           .map(XssTutorialResponseBuilder::build);

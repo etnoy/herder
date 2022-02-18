@@ -76,7 +76,7 @@ class CsrfServiceTest {
     final String mockTarget = "abcd123";
     final String mockModuleName = "csrf-module";
 
-    when(csrfAttackRepository.findByPseudonymAndModuleName(mockTarget, mockModuleName))
+    when(csrfAttackRepository.findByPseudonymAndModuleLocator(mockTarget, mockModuleName))
         .thenReturn(Mono.error(new IOException()));
 
     StepVerifier.create(csrfService.attack(mockTarget, mockModuleName))
@@ -93,7 +93,7 @@ class CsrfServiceTest {
     final String mockTarget = "abcd123";
     final String mockModuleName = "csrf-module";
 
-    when(csrfAttackRepository.findByPseudonymAndModuleName(mockTarget, mockModuleName))
+    when(csrfAttackRepository.findByPseudonymAndModuleLocator(mockTarget, mockModuleName))
         .thenReturn(Mono.empty());
 
     StepVerifier.create(csrfService.attack(mockTarget, mockModuleName)).verifyComplete();
@@ -109,7 +109,7 @@ class CsrfServiceTest {
 
     final CsrfAttack mockCsrfAttack = mock(CsrfAttack.class);
 
-    when(csrfAttackRepository.findByPseudonymAndModuleName(mockTarget, mockModuleName))
+    when(csrfAttackRepository.findByPseudonymAndModuleLocator(mockTarget, mockModuleName))
         .thenReturn(Mono.just(mockCsrfAttack));
 
     when(mockCsrfAttack.withFinished(LocalDateTime.now(fixedClock))).thenReturn(mockCsrfAttack);
@@ -146,7 +146,7 @@ class CsrfServiceTest {
     final String mockPseudonym = "abc123";
     final String mockModuleName = "csrf-module";
 
-    when(csrfAttackRepository.countByPseudonymAndModuleName(mockPseudonym, mockModuleName))
+    when(csrfAttackRepository.countByPseudonymAndModuleLocator(mockPseudonym, mockModuleName))
         .thenReturn(Mono.just(1L));
 
     StepVerifier.create(csrfService.validatePseudonym(mockPseudonym, mockModuleName))
@@ -160,7 +160,7 @@ class CsrfServiceTest {
     final String mockPseudonym = "abc123";
     final String mockModuleName = "csrf-module";
 
-    when(csrfAttackRepository.countByPseudonymAndModuleName(mockPseudonym, mockModuleName))
+    when(csrfAttackRepository.countByPseudonymAndModuleLocator(mockPseudonym, mockModuleName))
         .thenReturn(Mono.just(0L));
 
     StepVerifier.create(csrfService.validatePseudonym(mockPseudonym, mockModuleName))
@@ -175,7 +175,7 @@ class CsrfServiceTest {
     final String mockModuleName = "csrf-module";
     final CsrfAttack mockCsrfAttack = mock(CsrfAttack.class);
 
-    when(csrfAttackRepository.findByPseudonymAndModuleName(mockPseudonym, mockModuleName))
+    when(csrfAttackRepository.findByPseudonymAndModuleLocator(mockPseudonym, mockModuleName))
         .thenReturn(Mono.just(mockCsrfAttack));
 
     when(mockCsrfAttack.getFinished()).thenReturn(null);
@@ -193,7 +193,7 @@ class CsrfServiceTest {
     final String mockModuleName = "csrf-module";
     final CsrfAttack mockCsrfAttack = mock(CsrfAttack.class);
 
-    when(csrfAttackRepository.findByPseudonymAndModuleName(mockPseudonym, mockModuleName))
+    when(csrfAttackRepository.findByPseudonymAndModuleLocator(mockPseudonym, mockModuleName))
         .thenReturn(Mono.just(mockCsrfAttack));
 
     when(mockCsrfAttack.getFinished()).thenReturn(LocalDateTime.MAX);

@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.scoring;
 
+import org.owasp.herder.exception.InvalidModuleIdException;
 import org.owasp.herder.exception.InvalidRankException;
 import org.owasp.herder.scoring.ModulePoint.ModulePointBuilder;
 import org.springframework.stereotype.Service;
@@ -42,10 +43,21 @@ public final class ScoreService {
       return Mono.error(new InvalidRankException("Rank must be zero or a positive integer"));
     }
     if (points == 0) {
+      // TODO: what if we want to clear points?
       return Mono.empty();
     }
     ModulePointBuilder builder = ModulePoint.builder().moduleId(moduleId).rank(rank).points(points);
     return modulePointRepository.save(builder.build());
+  }
+
+  public Flux<ModulePoint> getModuleScores(final String moduleId) {
+    if (moduleId == null) {
+      return Flux.error(new NullPointerException("Module id cannot be null"));
+    }
+    if (moduleId.isEmpty()) {
+      return Flux.error(new InvalidModuleIdException());
+    }
+    return modulePointRepository.findAllByModuleId(moduleId);
   }
 
   public Flux<ScoreboardEntry> getScoreboard() {

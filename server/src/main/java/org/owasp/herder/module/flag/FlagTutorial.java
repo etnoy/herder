@@ -38,6 +38,6 @@ public class FlagTutorial implements BaseModule {
   private final FlagHandler flagHandler;
 
   public Mono<String> getFlag(final String userId) {
-    return flagHandler.getDynamicFlag(userId, getName());
+    return flagHandler.getDynamicFlag(userId, getLocator());
   }
 }

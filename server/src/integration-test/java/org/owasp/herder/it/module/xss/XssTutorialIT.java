@@ -71,6 +71,8 @@ class XssTutorialIT extends BaseIT {
 
   ModuleInitializer moduleInitializer;
 
+  String moduleId;
+
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
@@ -80,6 +82,8 @@ class XssTutorialIT extends BaseIT {
     xssTutorial = new XssTutorial(flagHandler, xssService);
 
     moduleInitializer.initializeModule(xssTutorial).block();
+
+    moduleId = moduleService.findByName(xssTutorial.getName()).block().getId();
   }
 
   private String extractFlagFromResponse(final XssTutorialResponse response) {
@@ -99,7 +103,7 @@ class XssTutorialIT extends BaseIT {
     // Submit the flag we got from the sql injection and make sure it validates
     StepVerifier.create(
             flagMono
-                .flatMap(flag -> submissionService.submit(userId, xssTutorial.getName(), flag))
+                .flatMap(flag -> submissionService.submit(userId, moduleId, flag))
                 .map(Submission::isValid))
         .expectNext(true)
         .verifyComplete();
@@ -117,7 +121,7 @@ class XssTutorialIT extends BaseIT {
     // Take the flag we got from the tutorial, modify it, and expect validation to fail
     StepVerifier.create(
             flagMono
-                .flatMap(flag -> submissionService.submit(userId, "xss-tutorial", flag + "wrong"))
+                .flatMap(flag -> submissionService.submit(userId, moduleId, flag + "wrong"))
                 .map(Submission::isValid))
         .expectNext(false)
         .verifyComplete();

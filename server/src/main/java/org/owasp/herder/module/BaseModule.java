@@ -26,4 +26,8 @@ public interface BaseModule {
   public default String getName() {
     return this.getClass().getAnnotation(HerderModule.class).value();
   }
+
+  public default String getLocator() {
+    return this.getClass().getAnnotation(Locator.class).value();
+  }
 }

@@ -84,7 +84,7 @@ public class SqlInjectionTutorial implements BaseModule {
     final Mono<String> populationQuery =
         // Compute the flag to be hidden in the database
         flagHandler
-            .getDynamicFlag(userId, getName())
+            .getDynamicFlag(userId, getLocator())
             .map(
                 flag ->
                     String.format(

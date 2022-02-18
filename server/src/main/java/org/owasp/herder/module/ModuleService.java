@@ -22,13 +22,13 @@
 package org.owasp.herder.module;
 
 import org.owasp.herder.crypto.KeyService;
+import org.owasp.herder.exception.DuplicateModuleLocatorException;
 import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.EmptyModuleNameException;
 import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.exception.InvalidModuleIdException;
 import org.owasp.herder.exception.InvalidModuleLocatorException;
-import org.owasp.herder.exception.ModuleIdNotFoundException;
-import org.owasp.herder.exception.ModuleNameNotFoundException;
+import org.owasp.herder.exception.ModuleNotFoundException;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -59,25 +59,58 @@ public final class ModuleService {
       return Mono.error(new EmptyModuleNameException());
     }
     // TODO: null check on name
-    log.info("Creating new module " + locator);
+    log.info("Creating new module " + name + " with locator " + locator);
 
     return Mono.just(locator)
+        // Check if locator already exists
+        .filterWhen(this::doesNotExistByLocator)
+        .switchIfEmpty(
+            // Locator already exists, return error
+            Mono.error(
+                new DuplicateModuleLocatorException(
+                    String.format("Module locator %s already exists", locator))))
+        .map(exists -> name)
+        // Check if name already exists
         .filterWhen(this::doesNotExistByName)
         .switchIfEmpty(
+            // Name exists, return error
             Mono.error(
                 new DuplicateModuleNameException(
-                    String.format("Module name %s already exists", locator))))
+                    String.format("Module name %s already exists", name))))
         .map(
+            // Name and locator don't exist already, create new module
             exists ->
                 ModuleEntity.builder()
                     .isOpen(true)
                     .locator(locator)
                     .name(name)
+                    // Generate the secret key
                     .key(keyService.generateRandomBytes(16))
                     .build())
+        // Persist the module in the database
         .flatMap(moduleRepository::save)
-        .doOnSuccess(m -> log.trace("Created module with name " + locator))
+        .doOnSuccess(
+            module ->
+                log.trace(
+                    "Created module with name "
+                        + module.getName()
+                        + " and locator "
+                        + module.getLocator()))
+        // Return the created module id
         .map(ModuleEntity::getId);
+  }
+
+  private Mono<Boolean> doesNotExistByLocator(final String moduleLocator) {
+    if (moduleLocator == null) {
+      return Mono.error(new NullPointerException("Module name cannot be null"));
+    }
+    if (moduleLocator.isEmpty()) {
+      return Mono.error(new InvalidModuleLocatorException());
+    }
+    return findByLocator(moduleLocator)
+        .doOnNext(System.out::println)
+        .map(u -> false)
+        .defaultIfEmpty(true);
   }
 
   private Mono<Boolean> doesNotExistByName(final String moduleName) {
@@ -88,6 +121,16 @@ public final class ModuleService {
       return Mono.error(new EmptyModuleNameException());
     }
     return findByName(moduleName).map(u -> false).defaultIfEmpty(true);
+  }
+
+  public Mono<Boolean> existsByLocator(final String moduleLocator) {
+    if (moduleLocator == null) {
+      return Mono.error(new NullPointerException("Module locator cannot be null"));
+    }
+    if (moduleLocator.isEmpty()) {
+      return Mono.error(new InvalidModuleLocatorException());
+    }
+    return findByLocator(moduleLocator).map(u -> true).defaultIfEmpty(false);
   }
 
   public Mono<Boolean> existsByName(final String moduleName) {
@@ -119,14 +162,18 @@ public final class ModuleService {
     return moduleRepository.findAllOpenWithSolutionStatus(userId).map(this::filterEmptyTags);
   }
 
-  public Flux<ModuleTag> findAllTagsByModuleName(final String moduleName) {
-    if (moduleName == null) {
-      return Flux.error(new NullPointerException("Module name cannot be null"));
+  public Flux<ModuleTag> findAllTagsByModuleId(final String moduleId) {
+    if (moduleId == null) {
+      return Flux.error(new NullPointerException("Module id name cannot be null"));
     }
-    if (moduleName.isEmpty()) {
-      return Flux.error(new EmptyModuleNameException());
+    if (moduleId.isEmpty()) {
+      return Flux.error(new InvalidModuleIdException());
     }
-    return moduleTagRepository.findAllByModuleId(moduleName);
+
+    return findById(moduleId)
+        .switchIfEmpty(
+            Mono.error(new ModuleNotFoundException("Could not find module with id " + moduleId)))
+        .flatMapMany(m -> moduleTagRepository.findAllByModuleId(moduleId));
   }
 
   public Flux<ModuleTag> findAllTagsByModuleNameAndTagName(
@@ -167,19 +214,19 @@ public final class ModuleService {
     return moduleRepository.findByIdWithSolutionStatus(userId, moduleId).map(this::filterEmptyTags);
   }
 
-  public Flux<ModuleTag> saveTags(final Iterable<ModuleTag> tags) {
+  public Flux<ModuleTag> saveTags(final Flux<ModuleTag> tags) {
     return moduleTagRepository.saveAll(tags);
   }
 
-  public Mono<ModuleEntity> setDynamicFlag(final String moduleName) {
-    if (moduleName == null) {
-      return Mono.error(new NullPointerException("Module name cannot be null"));
+  public Mono<ModuleEntity> setDynamicFlag(final String moduleId) {
+    if (moduleId == null) {
+      return Mono.error(new NullPointerException("Module id cannot be null"));
     }
-    if (moduleName.isEmpty()) {
-      return Mono.error(new EmptyModuleNameException());
+    if (moduleId.isEmpty()) {
+      return Mono.error(new InvalidModuleIdException());
     }
-    return findByName(moduleName)
-        .switchIfEmpty(Mono.error(new ModuleNameNotFoundException()))
+    return findById(moduleId)
+        .switchIfEmpty(Mono.error(new ModuleNotFoundException()))
         .map(module -> module.withFlagStatic(false))
         .flatMap(moduleRepository::save);
   }
@@ -198,7 +245,7 @@ public final class ModuleService {
     }
 
     return findById(moduleId)
-        .switchIfEmpty(Mono.error(new ModuleIdNotFoundException()))
+        .switchIfEmpty(Mono.error(new ModuleNotFoundException()))
         .map(module -> module.withFlagStatic(true).withStaticFlag(staticFlag))
         .flatMap(moduleRepository::save);
   }

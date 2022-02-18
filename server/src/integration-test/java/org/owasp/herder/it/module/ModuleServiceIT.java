@@ -25,9 +25,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -52,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import io.github.bucket4j.Bucket;
+import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 @DisplayName("ModuleService integration tests")
@@ -60,13 +58,14 @@ class ModuleServiceIT extends BaseIT {
   @DisplayName("Can list modules")
   class canListModules {
     String userId;
-    ModuleListItem item = ModuleListItem.builder().name("id1").build();
+    String moduleId;
+    ModuleListItem moduleListItem;
 
     @Test
     @DisplayName("with no solutions or tags")
     void canListModule() {
       StepVerifier.create(moduleService.findAllOpenWithSolutionStatus(userId))
-          .expectNext(item)
+          .expectNext(moduleListItem)
           .verifyComplete();
     }
 
@@ -74,11 +73,11 @@ class ModuleServiceIT extends BaseIT {
     @DisplayName("with invalid submissions")
     void canListModuleWithInvalidSubmissions() {
       // Set that module to have an exact flag
-      submissionService.submit(userId, "id1", "invalidflag").block();
-      submissionService.submit(userId, "id1", "invalidflag2").block();
+      submissionService.submit(userId, moduleId, "invalidflag").block();
+      submissionService.submit(userId, moduleId, "invalidflag2").block();
 
       StepVerifier.create(moduleService.findAllOpenWithSolutionStatus(userId))
-          .expectNext(item)
+          .expectNext(moduleListItem)
           .verifyComplete();
     }
 
@@ -86,12 +85,12 @@ class ModuleServiceIT extends BaseIT {
     @DisplayName("with tags")
     void canListModuleWithTags() {
       final ModuleTag[] moduleTags = {
-        ModuleTag.builder().moduleId("id1").name("key").value("value").build(),
-        ModuleTag.builder().moduleId("id1").name("usage").value("test").build(),
-        ModuleTag.builder().moduleId("id1").name("cow").value("moo").build()
+        ModuleTag.builder().moduleId(moduleId).name("key").value("value").build(),
+        ModuleTag.builder().moduleId(moduleId).name("usage").value("test").build(),
+        ModuleTag.builder().moduleId(moduleId).name("cow").value("moo").build()
       };
 
-      moduleService.saveTags(Arrays.asList(moduleTags)).blockLast();
+      moduleService.saveTags(Flux.fromArray(moduleTags)).blockLast();
 
       final NameValueTag[] tags = {
         NameValueTag.builder().name("key").value("value").build(),
@@ -100,26 +99,37 @@ class ModuleServiceIT extends BaseIT {
       };
 
       StepVerifier.create(moduleService.findAllOpenWithSolutionStatus(userId))
-          .expectNext(item.withTags(tags))
+          .expectNext(moduleListItem.withTags(tags))
           .verifyComplete();
     }
 
     @Test
     @DisplayName("with solution")
     void canListSolvedModule() {
-      submissionService.submit(userId, "id1", "flag").block();
+      submissionService.submit(userId, moduleId, "flag").block();
 
       StepVerifier.create(moduleService.findAllOpenWithSolutionStatus(userId))
-          .expectNext(item.withIsSolved(true))
+          .expectNext(moduleListItem.withIsSolved(true))
           .verifyComplete();
     }
 
     @BeforeEach
     private void setUp() {
-      userId = userService.create("Test user").block();
+      userId = userService.create(TestConstants.TEST_DISPLAY_NAME).block();
+
       // Create a module to submit to
-      moduleService.create("Test Module 1", "id1").block();
-      moduleService.setStaticFlag("id1", "flag").block();
+      moduleId =
+          moduleService
+              .create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR)
+              .block();
+
+      moduleService.setStaticFlag(moduleId, "flag").block();
+      moduleListItem =
+          ModuleListItem.builder()
+              .id(moduleId)
+              .name(TestConstants.TEST_LOGIN_NAME)
+              .locator(TestConstants.TEST_MODULE_LOCATOR)
+              .build();
     }
   }
 
@@ -136,41 +146,6 @@ class ModuleServiceIT extends BaseIT {
   @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
 
   @Autowired SubmissionService submissionService;
-
-  @Test
-  @DisplayName("Can get module information")
-  void canGetModuleInformation() {
-    final String userId = userService.create("Test user").block();
-
-    // Create a module to submit to
-    final String moduleId =
-        moduleService
-            .create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR)
-            .block();
-
-    // Set that module to have an exact flag
-    moduleService.setStaticFlag(moduleId, "flag").block();
-
-    final ModuleTag moduleTag =
-        ModuleTag.builder().moduleId(moduleId).name("usage").value("test").build();
-
-    moduleService.saveTags(List.of(moduleTag)).blockLast();
-
-    submissionService.submit(userId, "id1", "flag").block();
-
-    final NameValueTag[] tags = {NameValueTag.builder().name("usage").value("test").build()};
-
-    StepVerifier.create(moduleService.findByIdWithSolutionStatus(userId, "id1"))
-        .expectNext(
-            ModuleListItem.builder()
-                .id(moduleId)
-                .name(TestConstants.TEST_MODULE_NAME)
-                .locator(TestConstants.TEST_MODULE_LOCATOR)
-                .isSolved(true)
-                .tags(tags)
-                .build())
-        .verifyComplete();
-  }
 
   @Test
   @DisplayName("Can show empty module list")
@@ -195,8 +170,8 @@ class ModuleServiceIT extends BaseIT {
   @MethodSource("org.owasp.herder.test.util.TestConstants#validModuleNameProvider")
   @DisplayName("Can throw DuplicateModuleLocatorException when module locator isn't unique")
   void canReturnDuplicateModuleLocatorException(final String moduleLocator) {
-    moduleService.create(TestConstants.TEST_MODULE_NAME, moduleLocator).block();
-    StepVerifier.create(moduleService.create(TestConstants.TEST_MODULE_NAME, moduleLocator))
+    moduleService.create("First module", moduleLocator).block();
+    StepVerifier.create(moduleService.create("Second module", moduleLocator))
         .expectError(DuplicateModuleLocatorException.class)
         .verify();
   }
@@ -205,8 +180,8 @@ class ModuleServiceIT extends BaseIT {
   @MethodSource("org.owasp.herder.test.util.TestConstants#validModuleNameProvider")
   @DisplayName("Can throw DuplicateModuleNameException when module name isn't unique")
   void canReturnDuplicateModuleNameException(final String moduleName) {
-    moduleService.create(moduleName, TestConstants.TEST_MODULE_LOCATOR).block();
-    StepVerifier.create(moduleService.create(moduleName, TestConstants.TEST_MODULE_LOCATOR))
+    moduleService.create(moduleName, "first-module").block();
+    StepVerifier.create(moduleService.create(moduleName, "second-module"))
         .expectError(DuplicateModuleNameException.class)
         .verify();
   }

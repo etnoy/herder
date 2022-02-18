@@ -73,6 +73,8 @@ class SqlInjectionTutorialIT extends BaseIT {
 
   ModuleInitializer moduleInitializer;
 
+  String moduleId;
+
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
@@ -82,7 +84,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     sqlInjectionTutorial =
         new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
-    moduleInitializer.initializeModule(sqlInjectionTutorial).block();
+    moduleId = moduleInitializer.initializeModule(sqlInjectionTutorial).block();
   }
 
   private String extractFlagFromRow(final SqlInjectionTutorialRow row) {
@@ -103,10 +105,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     // Take the flag we got from the tutorial, modify it, and expect validation to fail
     StepVerifier.create(
             flagVerificationMono
-                .flatMap(
-                    flag ->
-                        submissionService.submit(
-                            userId, sqlInjectionTutorial.getName(), flag + "wrong"))
+                .flatMap(flag -> submissionService.submit(userId, moduleId, flag + "wrong"))
                 .map(Submission::isValid))
         .expectNext(false)
         .verifyComplete();
@@ -126,8 +125,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     // Submit the flag we got from the sql injection and make sure it validates
     StepVerifier.create(
             flagMono
-                .flatMap(
-                    flag -> submissionService.submit(userId, sqlInjectionTutorial.getName(), flag))
+                .flatMap(flag -> submissionService.submit(userId, moduleId, flag))
                 .map(Submission::isValid))
         .expectNext(true)
         .verifyComplete();

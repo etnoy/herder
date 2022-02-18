@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 
 import org.owasp.herder.flag.FlagHandler;
 import org.springframework.stereotype.Component;
+
 import reactor.core.publisher.Mono;
 
 @Component
@@ -53,25 +54,25 @@ public class CsrfService {
 
   public Mono<Void> attack(final String pseudonym, final String moduleName) {
     return csrfAttackRepository
-        .findByPseudonymAndModuleName(pseudonym, moduleName)
+        .findByPseudonymAndModuleLocator(pseudonym, moduleName)
         .map(attack -> attack.withFinished(LocalDateTime.now(clock)))
         .flatMap(csrfAttackRepository::save)
         .then(Mono.empty());
   }
 
-  public Mono<String> getPseudonym(final String userId, final String moduleName) {
-    return flagHandler.getSaltedHmac(userId, moduleName, "csrfPseudonym");
+  public Mono<String> getPseudonym(final String userId, final String moduleLocator) {
+    return flagHandler.getSaltedHmac(userId, moduleLocator, "csrfPseudonym");
   }
 
-  public Mono<Boolean> validatePseudonym(final String pseudonym, final String moduleName) {
+  public Mono<Boolean> validatePseudonym(final String pseudonym, final String moduleLocator) {
     return csrfAttackRepository
-        .countByPseudonymAndModuleName(pseudonym, moduleName)
+        .countByPseudonymAndModuleLocator(pseudonym, moduleLocator)
         .map(count -> count > 0);
   }
 
-  public Mono<Boolean> validate(final String pseudonym, final String moduleName) {
+  public Mono<Boolean> validate(final String pseudonym, final String moduleLocator) {
     return csrfAttackRepository
-        .findByPseudonymAndModuleName(pseudonym, moduleName)
+        .findByPseudonymAndModuleLocator(pseudonym, moduleLocator)
         .map(attack -> attack.getFinished() != null)
         .switchIfEmpty(
             csrfAttackRepository
@@ -79,7 +80,7 @@ public class CsrfService {
                     CsrfAttack.builder()
                         .pseudonym(pseudonym)
                         .started(LocalDateTime.now(clock))
-                        .moduleName(moduleName)
+                        .moduleLocator(moduleLocator)
                         .build())
                 .then(Mono.just(false)));
   }

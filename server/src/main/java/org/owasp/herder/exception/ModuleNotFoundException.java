@@ -24,10 +24,10 @@ package org.owasp.herder.exception;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
-public class ModuleNameNotFoundException extends RuntimeException {
+public class ModuleNotFoundException extends RuntimeException {
   private static final long serialVersionUID = -2976620163436522813L;
 
-  public ModuleNameNotFoundException(final String message) {
+  public ModuleNotFoundException(final String message) {
     super(message);
   }
 }

@@ -24,8 +24,10 @@ package org.owasp.herder.it.module;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +43,10 @@ import org.owasp.herder.module.ModuleInitializer;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.ModuleTag;
 import org.owasp.herder.module.ModuleTag.ModuleTagBuilder;
+import org.owasp.herder.module.ModuleTagRepository;
+import org.owasp.herder.module.Score;
 import org.owasp.herder.module.Tag;
+import org.owasp.herder.scoring.ModulePoint;
 import org.owasp.herder.scoring.ScoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.GenericApplicationContext;
@@ -58,9 +63,11 @@ class ModuleInitializerIT extends BaseIT {
 
   @Autowired ScoreService scoreService;
 
-  ModuleInitializer moduleInitializer;
+  @Autowired ModuleTagRepository moduleTagRepository;
 
   @Autowired IntegrationTestUtils integrationTestUtils;
+
+  ModuleInitializer moduleInitializer;
 
   Map<String, Object> beans;
 
@@ -75,18 +82,50 @@ class ModuleInitializerIT extends BaseIT {
         .isInstanceOf(InvalidHerderModuleTypeException.class);
   }
 
-  @Test
-  @DisplayName("Can register a Herder module")
-  void canRegisterHerderModule() {
-    final String moduleName = "test-module";
+  // TODO: test for invalid score configurations
 
-    @HerderModule(moduleName)
+  @Test
+  @DisplayName("Can register a Herder module with scores")
+  void canRegisterHerderModuleWithScores() {
+    final String moduleLocator = "scored-module";
+
+    @HerderModule("Scored module")
+    @Locator(moduleLocator)
+    @Score(baseScore = 100, goldBonus = 50, silverBonus = 30, bronzeBonus = 10)
     class TestModule implements BaseModule {}
 
     applicationContext.registerBean(TestModule.class, () -> new TestModule());
     moduleInitializer.initializeModules();
-    StepVerifier.create(moduleService.findByName(moduleName))
-        .expectNextMatches(module -> module.getName().equals(moduleName))
+
+    final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
+
+    Set<ModulePoint> points = new HashSet<>();
+    points.add(ModulePoint.builder().moduleId(moduleId).rank(0L).points(100L).build());
+    points.add(ModulePoint.builder().moduleId(moduleId).rank(1L).points(50L).build());
+    points.add(ModulePoint.builder().moduleId(moduleId).rank(2L).points(30L).build());
+    points.add(ModulePoint.builder().moduleId(moduleId).rank(3L).points(10L).build());
+
+    StepVerifier.create(scoreService.getModuleScores(moduleId).map(point -> point.withId(null)))
+        .expectNextMatches(moduleScore -> points.contains(moduleScore))
+        .expectNextMatches(moduleScore -> points.contains(moduleScore))
+        .expectNextMatches(moduleScore -> points.contains(moduleScore))
+        .expectNextMatches(moduleScore -> points.contains(moduleScore))
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can register a Herder module")
+  void canRegisterHerderModule() {
+    final String moduleLocator = "test-module";
+
+    @HerderModule("Test module")
+    @Locator(moduleLocator)
+    class TestModule implements BaseModule {}
+
+    applicationContext.registerBean(TestModule.class, () -> new TestModule());
+    moduleInitializer.initializeModules();
+    StepVerifier.create(moduleService.findByLocator(moduleLocator))
+        .expectNextMatches(module -> module.getLocator().equals(moduleLocator))
         .verifyComplete();
   }
 
@@ -112,10 +151,9 @@ class ModuleInitializerIT extends BaseIT {
   @Test
   @DisplayName("Can initialize a module with tags of same name")
   void canInitializeModuleWithTagsOfSameName() {
-    final String moduleName = "Tags with same name";
     final String moduleLocator = "tags-with-same-name";
 
-    @HerderModule(moduleName)
+    @HerderModule("Tags with same name")
     @Locator(moduleLocator)
     @Tag(name = "topic", value = "testing")
     @Tag(name = "topic", value = "production")
@@ -125,7 +163,7 @@ class ModuleInitializerIT extends BaseIT {
         MultipleTagsWithSameName.class, () -> new MultipleTagsWithSameName());
     moduleInitializer.initializeModules();
 
-    final String moduleId = moduleService.findByName(moduleName).block().getId();
+    final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
 
     final List<ModuleTag> expectedTags = new ArrayList<>();
     final ModuleTagBuilder moduleTagBuilder = ModuleTag.builder().moduleId(moduleId);
@@ -133,9 +171,7 @@ class ModuleInitializerIT extends BaseIT {
     expectedTags.add(moduleTagBuilder.name("topic").value("production").build());
 
     StepVerifier.create(
-            moduleService
-                .findAllTagsByModuleName(moduleName)
-                .map(moduleTag -> moduleTag.withId(null)))
+            moduleService.findAllTagsByModuleId(moduleId).map(moduleTag -> moduleTag.withId(null)))
         .expectNextMatches(expectedTag -> expectedTags.contains(expectedTag))
         .expectNextMatches(expectedTag -> expectedTags.contains(expectedTag))
         .verifyComplete();
@@ -144,17 +180,18 @@ class ModuleInitializerIT extends BaseIT {
   @Test
   @DisplayName("Can initialize a module with multiple tags")
   void canInitializeModuleWithMultipleTags() {
-    final String moduleName = "multiple-tags";
+    final String moduleLocator = "multiple-tags";
 
-    @HerderModule(moduleName)
+    @HerderModule("Multiple tags")
     @Tag(name = "topic", value = "testing")
     @Tag(name = "difficulty", value = "beginner")
+    @Locator(moduleLocator)
     class MultipleTagsModule implements BaseModule {}
 
     applicationContext.registerBean(MultipleTagsModule.class, () -> new MultipleTagsModule());
     moduleInitializer.initializeModules();
 
-    final String moduleId = moduleService.findByName(moduleName).block().getId();
+    final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
 
     final List<ModuleTag> expectedTags = new ArrayList<>();
     final ModuleTagBuilder moduleTagBuilder = ModuleTag.builder().moduleId(moduleId);
@@ -162,35 +199,35 @@ class ModuleInitializerIT extends BaseIT {
     expectedTags.add(moduleTagBuilder.name("difficulty").value("beginner").build());
 
     StepVerifier.create(
-            moduleService
-                .findAllTagsByModuleName(moduleName)
-                .map(moduleTag -> moduleTag.withId(null)))
+            moduleService.findAllTagsByModuleId(moduleId).map(moduleTag -> moduleTag.withId(null)))
         .expectNextMatches(expectedTag -> expectedTags.contains(expectedTag))
         .expectNextMatches(expectedTag -> expectedTags.contains(expectedTag))
         .verifyComplete();
   }
 
   @Test
-  @DisplayName("Can initialize a module with tag")
-  void canInitializeModuleWithTag() {
-    final String moduleName = "single-tag";
+  @DisplayName("Can initialize a tagged module")
+  void canInitializeTaggedModule() {
+    final String moduleLocator = "single-tag";
 
-    @HerderModule(moduleName)
+    @HerderModule("Single Tag Module")
+    @Locator(moduleLocator)
     @Tag(name = "topic", value = "testing")
     class SingleTagModule implements BaseModule {}
 
-    final String moduleId = moduleService.findByName(moduleName).block().getId();
+    applicationContext.registerBean(SingleTagModule.class, () -> new SingleTagModule());
+    moduleInitializer.initializeModules();
+
+    final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
 
     final List<ModuleTag> expectedTags = new ArrayList<>();
     final ModuleTagBuilder moduleTagBuilder = ModuleTag.builder().moduleId(moduleId);
     expectedTags.add(moduleTagBuilder.name("topic").value("testing").build());
 
-    applicationContext.registerBean(SingleTagModule.class, () -> new SingleTagModule());
-    moduleInitializer.initializeModules();
+    moduleTagRepository.findAllByModuleId(moduleId).doOnNext(System.out::println);
+
     StepVerifier.create(
-            moduleService
-                .findAllTagsByModuleName(moduleName)
-                .map(moduleTag -> moduleTag.withId(null)))
+            moduleService.findAllTagsByModuleId(moduleId).map(moduleTag -> moduleTag.withId(null)))
         .expectNextMatches(expectedTag -> expectedTags.contains(expectedTag))
         .verifyComplete();
   }

@@ -25,8 +25,7 @@ import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.FlagSubmissionRateLimitException;
 import org.owasp.herder.exception.InvalidFlagStateException;
 import org.owasp.herder.exception.InvalidFlagSubmissionRateLimitException;
-import org.owasp.herder.exception.ModuleIdNotFoundException;
-import org.owasp.herder.exception.ModuleNameNotFoundException;
+import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.service.ConfigurationService;
@@ -62,21 +61,22 @@ public final class FlagHandler {
 
   private final InvalidFlagRateLimiter invalidFlagRateLimiter;
 
-  public Mono<String> getDynamicFlag(final String userId, final String moduleName) {
-    return getSaltedHmac(userId, moduleName, "flag")
+  public Mono<String> getDynamicFlag(final String userId, final String moduleLocator) {
+    return getSaltedHmac(userId, moduleLocator, "flag")
         .map(flag -> String.format(DYNAMIC_FLAG_FORMAT, flag));
   }
 
   public Mono<String> getSaltedHmac(
-      final String userId, final String moduleName, final String prefix) {
+      final String userId, final String moduleLocator, final String prefix) {
     final Mono<byte[]> moduleKey =
         // Find the module in the repo
         moduleService
-            .findByName(moduleName)
+            .findByLocator(moduleLocator)
             // Return error if module wasn't found
             .switchIfEmpty(
                 Mono.error(
-                    new ModuleNameNotFoundException("Did not find module with name " + moduleName)))
+                    new ModuleNotFoundException(
+                        "Could not find module with locator " + moduleLocator)))
             // Make sure that the flag isn't static
             .filter(foundModule -> !foundModule.isFlagStatic())
             .switchIfEmpty(
@@ -119,13 +119,13 @@ public final class FlagHandler {
     }
 
     // Get the module from the repository
-    final Mono<ModuleEntity> currentModule = moduleService.findById(moduleId);
+    final Mono<ModuleEntity> moduleMono = moduleService.findById(moduleId);
 
     final Mono<Boolean> isValid =
-        currentModule
+        moduleMono
             // If the module wasn't found, return exception
             .switchIfEmpty(
-                Mono.error(new ModuleIdNotFoundException("Module id " + moduleId + " not found")))
+                Mono.error(new ModuleNotFoundException("Module id " + moduleId + " not found")))
             // Check if the flag is valid
             .flatMap(
                 module -> {
@@ -134,7 +134,8 @@ public final class FlagHandler {
                     return Mono.just(module.getStaticFlag().equalsIgnoreCase(submittedFlag));
                   } else {
                     // Verifying a dynamic flag
-                    return getDynamicFlag(userId, moduleId).map(submittedFlag::equalsIgnoreCase);
+                    return getDynamicFlag(userId, module.getLocator())
+                        .map(submittedFlag::equalsIgnoreCase);
                   }
                 })
             .flatMap(
@@ -160,7 +161,7 @@ public final class FlagHandler {
     Mono.zip(
             userService.findDisplayNameById(userId),
             validText,
-            currentModule.map(ModuleEntity::getId))
+            moduleMono.map(ModuleEntity::getId))
         .map(
             tuple ->
                 "User "
