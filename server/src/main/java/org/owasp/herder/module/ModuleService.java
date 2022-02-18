@@ -209,9 +209,11 @@ public final class ModuleService {
     return moduleRepository.findById(moduleId);
   }
 
-  public Mono<ModuleListItem> findByIdWithSolutionStatus(
-      final String userId, final String moduleId) {
-    return moduleRepository.findByIdWithSolutionStatus(userId, moduleId).map(this::filterEmptyTags);
+  public Mono<ModuleListItem> findByLocatorWithSolutionStatus(
+      final String userId, final String moduleLocator) {
+    return moduleRepository
+        .findByLocatorWithSolutionStatus(userId, moduleLocator)
+        .map(this::filterEmptyTags);
   }
 
   public Flux<ModuleTag> saveTags(final Flux<ModuleTag> tags) {

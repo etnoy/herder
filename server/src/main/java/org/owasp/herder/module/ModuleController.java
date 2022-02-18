@@ -21,7 +21,6 @@
  */
 package org.owasp.herder.module;
 
-import lombok.RequiredArgsConstructor;
 import org.owasp.herder.authentication.ControllerAuthentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -29,6 +28,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -49,11 +50,11 @@ public class ModuleController {
         .flatMapMany(moduleService::findAllOpenWithSolutionStatus);
   }
 
-  @GetMapping(path = "module/{moduleName}")
+  @GetMapping(path = "module/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Mono<ModuleListItem> findByName(@PathVariable final String moduleName) {
+  public Mono<ModuleListItem> findByName(@PathVariable final String moduleLocator) {
     return controllerAuthentication
         .getUserId()
-        .flatMap(userId -> moduleService.findByIdWithSolutionStatus(userId, moduleName));
+        .flatMap(userId -> moduleService.findByLocatorWithSolutionStatus(userId, moduleLocator));
   }
 }

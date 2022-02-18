@@ -54,49 +54,50 @@ export class ModuleItemComponent implements OnInit {
         // no parameters given, return error
         return throwError(() => 'Invalid argument');
       }
-      const id = segments[0].path;
+      const locator = segments[0].path;
+      this.apiService
+        .getModuleByLocator(locator)
+        .subscribe((module: Module) => {
+          this.module = module;
+          if (segments.length > 1) {
+            this.module.parameters = segments;
+            this.module.parameters.shift();
+          }
+          this.solved = this.module.isSolved;
+          if (this.solved) {
+            this.flagForm.disable();
+          }
+          let currentModule;
+          switch (this.module.locator) {
+            case 'sql-injection-tutorial': {
+              currentModule = SqlInjectionTutorialComponent;
+              break;
+            }
+            case 'xss-tutorial': {
+              currentModule = XssTutorialComponent;
+              break;
+            }
+            case 'csrf-tutorial': {
+              currentModule = CsrfTutorialComponent;
+              break;
+            }
+            case 'flag-tutorial': {
+              currentModule = FlagTutorialComponent;
+              break;
+            }
+            default: {
+              return throwError(() => 'module locator cannot be resolved');
+            }
+          }
 
-      this.apiService.getModuleById(id).subscribe((module: Module) => {
-        this.module = module;
-        if (segments.length > 1) {
-          this.module.parameters = segments;
-          this.module.parameters.shift();
-        }
-        this.solved = this.module.isSolved;
-        if (this.solved) {
-          this.flagForm.disable();
-        }
-        let currentModule;
-        switch (this.module.name) {
-          case 'sql-injection-tutorial': {
-            currentModule = SqlInjectionTutorialComponent;
-            break;
-          }
-          case 'xss-tutorial': {
-            currentModule = XssTutorialComponent;
-            break;
-          }
-          case 'csrf-tutorial': {
-            currentModule = CsrfTutorialComponent;
-            break;
-          }
-          case 'flag-tutorial': {
-            currentModule = FlagTutorialComponent;
-            break;
-          }
-          default: {
-            return throwError(() => 'shortName cannot be resolved');
-          }
-        }
+          const viewContainerRef = this.moduleDirective.viewContainerRef;
+          viewContainerRef.clear();
 
-        const viewContainerRef = this.moduleDirective.viewContainerRef;
-        viewContainerRef.clear();
+          // Load the selected module
+          const componentRef = viewContainerRef.createComponent(currentModule);
 
-        // Load the selected module
-        const componentRef = viewContainerRef.createComponent(currentModule);
-
-        (componentRef.instance as typeof currentModule).module = this.module;
-      });
+          (componentRef.instance as typeof currentModule).module = this.module;
+        });
     });
   }
 
@@ -110,7 +111,7 @@ export class ModuleItemComponent implements OnInit {
     this.loading = true;
 
     return this.apiService
-      .submitFlag(this.module.name, this.flagForm.controls.flag.value)
+      .submitFlag(this.module.locator, this.flagForm.controls.flag.value)
       .subscribe({
         next: (submission: Submission) => {
           this.loading = false;

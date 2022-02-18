@@ -127,7 +127,94 @@ class ModuleServiceIT extends BaseIT {
       moduleListItem =
           ModuleListItem.builder()
               .id(moduleId)
-              .name(TestConstants.TEST_LOGIN_NAME)
+              .name(TestConstants.TEST_MODULE_NAME)
+              .locator(TestConstants.TEST_MODULE_LOCATOR)
+              .build();
+    }
+  }
+
+  @Nested
+  @DisplayName("Can get module")
+  class canGetModules {
+    String userId;
+    String moduleId;
+    ModuleListItem moduleListItem;
+
+    @Test
+    @DisplayName("with no solutions or tags")
+    void canGetModule() {
+      StepVerifier.create(
+              moduleService.findByLocatorWithSolutionStatus(
+                  userId, TestConstants.TEST_MODULE_LOCATOR))
+          .expectNext(moduleListItem)
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("with invalid submissions")
+    void canGetModuleWithInvalidSubmissions() {
+      // Set that module to have an exact flag
+      submissionService.submit(userId, moduleId, "invalidflag").block();
+      submissionService.submit(userId, moduleId, "invalidflag2").block();
+
+      StepVerifier.create(
+              moduleService.findByLocatorWithSolutionStatus(
+                  userId, TestConstants.TEST_MODULE_LOCATOR))
+          .expectNext(moduleListItem)
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("with tags")
+    void canGetModuleWithTags() {
+      final ModuleTag[] moduleTags = {
+        ModuleTag.builder().moduleId(moduleId).name("key").value("value").build(),
+        ModuleTag.builder().moduleId(moduleId).name("usage").value("test").build(),
+        ModuleTag.builder().moduleId(moduleId).name("cow").value("moo").build()
+      };
+
+      moduleService.saveTags(Flux.fromArray(moduleTags)).blockLast();
+
+      final NameValueTag[] tags = {
+        NameValueTag.builder().name("key").value("value").build(),
+        NameValueTag.builder().name("usage").value("test").build(),
+        NameValueTag.builder().name("cow").value("moo").build()
+      };
+
+      StepVerifier.create(
+              moduleService.findByLocatorWithSolutionStatus(
+                  userId, TestConstants.TEST_MODULE_LOCATOR))
+          .expectNext(moduleListItem.withTags(tags))
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("with solution")
+    void canGetSolvedModule() {
+      submissionService.submit(userId, moduleId, "flag").block();
+
+      StepVerifier.create(
+              moduleService.findByLocatorWithSolutionStatus(
+                  userId, TestConstants.TEST_MODULE_LOCATOR))
+          .expectNext(moduleListItem.withIsSolved(true))
+          .verifyComplete();
+    }
+
+    @BeforeEach
+    private void setUp() {
+      userId = userService.create(TestConstants.TEST_DISPLAY_NAME).block();
+
+      // Create a module to submit to
+      moduleId =
+          moduleService
+              .create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR)
+              .block();
+
+      moduleService.setStaticFlag(moduleId, "flag").block();
+      moduleListItem =
+          ModuleListItem.builder()
+              .id(moduleId)
+              .name(TestConstants.TEST_MODULE_NAME)
               .locator(TestConstants.TEST_MODULE_LOCATOR)
               .build();
     }

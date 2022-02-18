@@ -30,7 +30,7 @@ export class FlagTutorialComponent {
 
   public getFlag() {
     this.loading = true;
-    this.apiService.moduleGetRequest(this.module.name, '').subscribe({
+    this.apiService.moduleGetRequest(this.module.locator, '').subscribe({
       next: (data) => {
         this.alertService.clear();
         this.loading = false;

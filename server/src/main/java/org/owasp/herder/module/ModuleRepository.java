@@ -36,29 +36,31 @@ public interface ModuleRepository extends ReactiveMongoRepository<ModuleEntity, 
 
   @Aggregation({
     // Only show open modules
-    "{$match:{'isOpen': true, 'name': ?1 }}",
+    "{$match:{'locator': ?1 }}",
+    "{$project:{moduleId:{$toString: '$_id'},locator: 1,name:1}}",
     // Include all submissions per module
-    "{$lookup:{from:'submission',localField:'_id',foreignField:'moduleId',as:'submissions'}}",
+    "{$lookup:{from:'submission',localField:'moduleId',foreignField:'moduleId',as:'submissions'}}",
     // Include all tabs per module
-    "{$lookup:{from:'moduleTag',localField:'_id',foreignField:'moduleId',as:'tags'}}",
+    "{$lookup:{from:'moduleTag',localField:'moduleId',foreignField:'moduleId',as:'tags'}}",
     // Check if current user has solved the module
     "{$addFields:{isSolved: {$and: [{$in: [true, '$submissions.isValid']}, {$in: [ ?0 , '$submissions.userId']}]}}}",
     // Project only the required values
-    "{$project:{_id: 0, name:1, displayName:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
+    "{$project:{name:1, locator:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
   })
-  public Mono<ModuleListItem> findByIdWithSolutionStatus(String userId, String moduleId);
+  public Mono<ModuleListItem> findByLocatorWithSolutionStatus(String userId, String moduleLocator);
 
   @Aggregation({
     // Only show open modules
     "{$match:{'isOpen': true }}",
+    "{$project:{moduleId:{$toString: '$_id'},locator:1,name:1}}",
     // Include all submissions per module
-    "{$lookup:{from:'submission',localField:'name',foreignField:'moduleId',as:'submissions'}}",
-    // Include all tabs per module
-    "{$lookup:{from:'moduleTag',localField:'name',foreignField:'moduleId',as:'tags'}}",
+    "{$lookup:{from:'submission',localField:'moduleId',foreignField:'moduleId',as:'submissions'}}",
+    // Include all tags per module
+    "{$lookup:{from:'moduleTag',localField:'moduleId',foreignField:'moduleId',as:'tags'}}",
     // Check if current user has solved the module
     "{$addFields:{isSolved: {$and: [{$in: [true, '$submissions.isValid']}, {$in: [ ?0 , '$submissions.userId']}]}}}",
     // Project only the required values
-    "{$project:{_id: 0, name:1, displayName:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
+    "{$project:{name:1, locator:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
   })
   public Flux<ModuleListItem> findAllOpenWithSolutionStatus(String userId);
 

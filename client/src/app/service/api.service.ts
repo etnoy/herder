@@ -25,8 +25,8 @@ export class ApiService {
     this.currentUser = this.currentUserSubject.asObservable();
   }
 
-  submitFlag(moduleId: string, flag: string): Observable<any> {
-    const api = `${this.endpoint}/flag/submit/${moduleId}`;
+  submitFlag(moduleLocator: string, flag: string): Observable<any> {
+    const api = `${this.endpoint}/flag/submit/${moduleLocator}`;
     return this.http.post<any>(api, flag).pipe(
       map((res: Response) => {
         return res || {};
@@ -36,11 +36,11 @@ export class ApiService {
   }
 
   modulePostRequest(
-    shortName: string,
+    locator: string,
     resource: string,
     request: string
   ): Observable<any> {
-    const api = `${this.endpoint}/module/${shortName}/${resource}`;
+    const api = `${this.endpoint}/module/${locator}/${resource}`;
     return this.http.post<any>(api, request).pipe(
       map((res: Response) => {
         return res || {};
@@ -49,8 +49,8 @@ export class ApiService {
     );
   }
 
-  moduleGetRequest(shortName: string, resource: string): Observable<any> {
-    const api = `${this.endpoint}/module/${shortName}/${resource}`;
+  moduleGetRequest(locator: string, resource: string): Observable<any> {
+    const api = `${this.endpoint}/module/${locator}/${resource}`;
     return this.http.get<any>(api).pipe(
       map((res: Response) => {
         return res || {};
@@ -100,7 +100,6 @@ export class ApiService {
     const api = `${this.endpoint}/scoreboard/`;
     return this.http.get(api, { headers: this.headers }).pipe(
       map((res: Response) => {
-        console.log(res);
         return res || {};
       }),
       catchError(this.handleError)
@@ -117,8 +116,8 @@ export class ApiService {
     );
   }
 
-  getModuleById(moduleId: string): Observable<any> {
-    const api = `${this.endpoint}/module/${moduleId}`;
+  getModuleByLocator(locator: string): Observable<any> {
+    const api = `${this.endpoint}/module/${locator}`;
     return this.http.get(api, { headers: this.headers }).pipe(
       map((res: Response) => {
         return res || {};
@@ -127,8 +126,8 @@ export class ApiService {
     );
   }
 
-  getSolvesByModuleName(moduleName: string): Observable<any> {
-    const api = `${this.endpoint}/scoreboard/module/${moduleName}`;
+  getSolvesByLocator(locator: string): Observable<any> {
+    const api = `${this.endpoint}/scoreboard/module/${locator}`;
     return this.http.get(api, { headers: this.headers }).pipe(
       map((res: Response) => {
         return res || {};

@@ -17,12 +17,12 @@ export class ModuleSolvesComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
-      const moduleName: string = params.get('moduleName');
+      const locator: string = params.get('locator');
 
       this.apiService
-        .getSolvesByModuleName(moduleName)
+        .getSolvesByLocator(locator)
         .subscribe((submissions: UserScore[]) => {
-          this.moduleName = moduleName;
+          this.moduleName = locator;
           this.submissions = submissions;
         });
     });
