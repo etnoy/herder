@@ -44,7 +44,7 @@ const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
-    path: 'scoreboard/module/:moduleName',
+    path: 'scoreboard/module/:moduleLocator',
     component: ModuleSolvesComponent,
     canActivate: [AuthGuard],
   },
