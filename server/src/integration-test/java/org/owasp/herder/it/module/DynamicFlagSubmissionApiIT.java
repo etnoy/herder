@@ -112,8 +112,6 @@ class DynamicFlagSubmissionApiIT extends BaseIT {
 
   private String userId;
 
-  private String moduleId;
-
   private String token;
 
   private String dynamicFlag;
@@ -157,7 +155,7 @@ class DynamicFlagSubmissionApiIT extends BaseIT {
         integrationTestUtils.performAPILoginWithToken(
             TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
 
-    moduleId = integrationTestUtils.createDynamicTestModule();
+    integrationTestUtils.createDynamicTestModule();
     dynamicFlag = flagHandler.getDynamicFlag(userId, TestConstants.TEST_MODULE_LOCATOR).block();
   }
 }

@@ -194,7 +194,10 @@ class SubmissionRepositoryIT extends BaseIT {
 
     // Now we verify
 
-    StepVerifier.create(submissionRepository.findAllRankedByUserId(userIds.get(0)))
+    StepVerifier.create(
+            submissionRepository
+                .findAllRankedByUserId(userIds.get(0))
+                .doOnNext(System.out::println))
         .expectNextMatches(submission -> submission.getRank() == 4)
         .expectNextMatches(submission -> submission.getRank() == 4)
         .expectNextMatches(submission -> submission.getRank() == 4)

@@ -53,6 +53,6 @@ public class ScoreboardController {
   @GetMapping(path = "scoreboard/module/{moduleName}")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Flux<RankedSubmission> getSubmissionsForModule(@PathVariable final String moduleName) {
-    return submissionService.findAllSubmissionsByModuleName(moduleName);
+    return submissionService.findAllByModuleLocator(moduleName);
   }
 }

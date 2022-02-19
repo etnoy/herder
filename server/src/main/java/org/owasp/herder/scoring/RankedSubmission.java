@@ -45,6 +45,10 @@ public class RankedSubmission implements Serializable {
 
   @NonNull String moduleId;
 
+  @NonNull String moduleName;
+
+  @NonNull String moduleLocator;
+
   @NonNull LocalDateTime time;
 
   String flag;
