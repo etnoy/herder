@@ -29,7 +29,9 @@ describe('FlagTutorialComponent', () => {
     const module: Module = {
       name: 'test',
       parameters: [],
-      isSolved: null,
+      isSolved: false,
+      locator: 'csrf',
+      tags: [],
     };
     component.module = module;
     fixture.detectChanges();

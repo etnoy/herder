@@ -30,6 +30,8 @@ describe('CsrfTutorialComponent', () => {
       name: 'test',
       parameters: [],
       isSolved: false,
+      locator: 'csrf',
+      tags: [],
     };
     component.module = module;
     fixture.detectChanges();

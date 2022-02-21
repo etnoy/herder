@@ -123,6 +123,20 @@ public final class ModuleService {
     return findByName(moduleName).map(u -> false).defaultIfEmpty(true);
   }
 
+  public Mono<Void> verifyModuleExistence(final String moduleLocator) {
+    if (moduleLocator == null) {
+      return Mono.error(new NullPointerException("Module locator cannot be null"));
+    }
+    if (moduleLocator.isEmpty()) {
+      return Mono.error(new InvalidModuleLocatorException());
+    }
+    return findByLocator(moduleLocator)
+        .switchIfEmpty(
+            Mono.error(
+                new ModuleNotFoundException("No module with locator " + moduleLocator + " found.")))
+        .then();
+  }
+
   public Mono<Boolean> existsByLocator(final String moduleLocator) {
     if (moduleLocator == null) {
       return Mono.error(new NullPointerException("Module locator cannot be null"));

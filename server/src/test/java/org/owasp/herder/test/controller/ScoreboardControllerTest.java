@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.RankedSubmission;
 import org.owasp.herder.scoring.RankedSubmission.RankedSubmissionBuilder;
 import org.owasp.herder.scoring.ScoreService;
@@ -59,6 +60,8 @@ class ScoreboardControllerTest {
   private ScoreboardController scoreboardController;
 
   @Mock private ScoreService scoreService;
+
+  @Mock private ModuleService moduleService;
 
   @Mock private SubmissionService submissionService;
 
@@ -131,6 +134,6 @@ class ScoreboardControllerTest {
   @BeforeEach
   private void setUp() throws Exception {
     // Set up the system under test
-    scoreboardController = new ScoreboardController(scoreService, submissionService);
+    scoreboardController = new ScoreboardController(scoreService, submissionService, moduleService);
   }
 }

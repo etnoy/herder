@@ -118,7 +118,7 @@ export class ApiService {
 
   getModuleByLocator(locator: string): Observable<any> {
     const api = `${this.endpoint}/module/${locator}`;
-    return this.http.get(api, { headers: this.headers }).pipe(
+    return this.http.get(api).pipe(
       map((res: Response) => {
         return res || {};
       }),
@@ -128,12 +128,7 @@ export class ApiService {
 
   getSolvesByLocator(locator: string): Observable<any> {
     const api = `${this.endpoint}/scoreboard/module/${locator}`;
-    return this.http.get(api, { headers: this.headers }).pipe(
-      map((res: Response) => {
-        return res || {};
-      }),
-      catchError(this.handleError)
-    );
+    return this.http.get(api).pipe(catchError(this.handleError));
   }
 
   getScoresByUserId(userId: string): Observable<any> {
@@ -158,14 +153,6 @@ export class ApiService {
 
   // Error
   handleError(error: HttpErrorResponse) {
-    let msg = '';
-    if (error.error instanceof ErrorEvent) {
-      // client-side error
-      msg = error.error.message;
-    } else {
-      // server-side error
-      msg = `Error Code: ${error.status}\nMessage: ${error.message}`;
-    }
-    return throwError(() => msg);
+    return throwError(() => error.error.message);
   }
 }

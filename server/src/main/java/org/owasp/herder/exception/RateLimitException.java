@@ -21,8 +21,11 @@
  */
 package org.owasp.herder.exception;
 
-public abstract class RateLimitException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
+@ResponseStatus(value = HttpStatus.TOO_MANY_REQUESTS)
+public abstract class RateLimitException extends RuntimeException {
   private static final long serialVersionUID = 1912619103090478680L;
 
   protected RateLimitException() {

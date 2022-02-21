@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.scoring;
 
+import org.owasp.herder.module.ModuleService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +39,8 @@ public class ScoreboardController {
 
   private final SubmissionService submissionService;
 
+  private final ModuleService moduleService;
+
   @GetMapping(path = "scoreboard")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Flux<ScoreboardEntry> getScoreboard() {
@@ -50,9 +53,11 @@ public class ScoreboardController {
     return submissionService.findAllRankedByUserId(userId);
   }
 
-  @GetMapping(path = "scoreboard/module/{moduleName}")
+  @GetMapping(path = "scoreboard/module/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<RankedSubmission> getSubmissionsForModule(@PathVariable final String moduleName) {
-    return submissionService.findAllByModuleLocator(moduleName);
+  public Flux<RankedSubmission> getSubmissionsForModule(@PathVariable final String moduleLocator) {
+    return moduleService
+        .verifyModuleExistence(moduleLocator)
+        .flatMapMany(m -> submissionService.findAllByModuleLocator(moduleLocator));
   }
 }

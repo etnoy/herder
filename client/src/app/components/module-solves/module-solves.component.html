@@ -1,17 +1,24 @@
 <div class="auth-wrapper">
-  <h1>Solutions for {{ module.name }} </h1>
-  <div class="row">
+  <p *ngIf="!moduleFound">Module {{ this.locator }} not found</p>
+  <div class="row" *ngIf="moduleFound">
     <div class="inner-main">
       <ul>
         <ng-container *ngFor="let submission of submissions">
           <li>
             <p>
-              {{submission.time.toLocaleString() | amTimeAgo }}: <a href="/scoreboard/user/{{submission.userId}}">{{submission.displayName}}</a> <app-rank [rank]=submission.rank></app-rank>{{submission.score}} points.
+              {{ submission.time.toLocaleString() | amTimeAgo }}:
+              <a href="/scoreboard/user/{{ submission.userId }}">{{
+                submission.displayName
+              }}</a>
+              <app-rank [rank]="submission.rank"></app-rank
+              >{{ submission.score }} points.
             </p>
           </li>
         </ng-container>
       </ul>
-      <p *ngIf="submissions.length === 0">No submissions for {{ module.name }}</p>
+      <p *ngIf="submissions.length === 0">
+        No submissions for this module.
+      </p>
     </div>
   </div>
 </div>
