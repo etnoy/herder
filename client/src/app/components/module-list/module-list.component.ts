@@ -1,6 +1,5 @@
 import { Module } from '../../model/module';
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
 import { ApiService } from 'src/app/service/api.service';
 
 @Component({
@@ -10,7 +9,7 @@ import { ApiService } from 'src/app/service/api.service';
 export class ModuleListComponent implements OnInit {
   modules: Module[];
 
-  constructor(public apiService: ApiService, public router: Router) {
+  constructor(public apiService: ApiService) {
     this.modules = [];
   }
   ngOnInit(): void {

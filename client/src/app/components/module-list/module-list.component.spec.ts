@@ -1,29 +1,38 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ModuleListComponent } from './module-list.component';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ApiService } from 'src/app/service/api.service';
+import { Module } from 'src/app/model/module';
+import { of } from 'rxjs';
+import { MockInstance, MockProvider, MockRender } from 'ng-mocks';
 
 describe('ModuleListComponent', () => {
-  let component: ModuleListComponent;
-  let fixture: ComponentFixture<ModuleListComponent>;
-
   beforeEach(
     waitForAsync(() => {
       TestBed.configureTestingModule({
         declarations: [ModuleListComponent],
-        imports: [HttpClientTestingModule, RouterTestingModule],
+        providers: [MockProvider(ApiService)],
       }).compileComponents();
     })
   );
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(ModuleListComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+  beforeEach(() => {});
 
   it('should create', () => {
-    expect(component).toBeTruthy();
+    const mockModule = new Module();
+
+    mockModule.name = 'Test module';
+    mockModule.locator = 'test-module';
+
+    const getModules = MockInstance(
+      ApiService,
+      'getModules',
+      jasmine.createSpy()
+    ).and.returnValue(of([mockModule]));
+
+    const fixture = MockRender(ModuleListComponent);
+
+    expect(fixture.point.componentInstance.modules).toEqual([mockModule]);
+    expect(getModules).toHaveBeenCalled();
   });
 });
