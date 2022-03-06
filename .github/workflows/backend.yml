@@ -48,6 +48,8 @@ jobs:
       - name: Docker build
         uses: docker/build-push-action@v2
         with:
+          context: ./server
+          file: ./server/Dockerfile
           push: true
           tags: etnoy/herder-backend:latest
       - name: Build and test
