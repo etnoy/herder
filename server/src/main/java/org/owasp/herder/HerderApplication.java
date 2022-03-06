@@ -22,11 +22,12 @@
 package org.owasp.herder;
 
 import java.time.Clock;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 
+@EnableReactiveMongoRepositories(basePackages = {"org.owasp.herder"})
 @SpringBootApplication(scanBasePackages = {"org.owasp.herder"})
 public class HerderApplication {
 

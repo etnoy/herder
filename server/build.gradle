@@ -53,9 +53,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
-	implementation 'org.springframework.data:spring-data-mongodb'
-    
-	implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.1.0'    
+    implementation 'org.springframework.data:spring-data-mongodb'
+
+    implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.1.0'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.11.1'
     implementation 'com.fasterxml.jackson:jackson-bom:2.10.3'
@@ -76,10 +76,10 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
 
-	testImplementation "org.testcontainers:mongodb:1.16.3"	
-	
+    testImplementation "org.testcontainers:mongodb:1.16.3"
+
     testImplementation "org.testcontainers:junit-jupiter:1.16.3"
-    
+
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 
     testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.8.2'
@@ -182,4 +182,3 @@ spotless {
     licenseHeaderFile "${project.rootDir}/license.template"
   }
 }
-
