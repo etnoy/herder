@@ -21,12 +21,13 @@
  */
 package org.owasp.herder.configuration;
 
-import lombok.Generated;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+
+import lombok.Generated;
 
 @Generated
 @Configuration
@@ -35,6 +36,7 @@ public class CrossOriginConfiguration {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowCredentials(true);
+    config.addAllowedOrigin("http://localhost");
     config.addAllowedOrigin("http://localhost:4200");
     config.addAllowedHeader("*");
     config.addAllowedMethod("OPTIONS");

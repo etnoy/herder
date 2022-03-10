@@ -1,31 +1,42 @@
 version: "3.4"
 
 services:
-  mongodb:
+  mongo:
     image: mongo
-    container_name: mongoDB  
+    container_name: mongo
     restart: always
+    expose:
+      - "27017"
     ports:
     - 27017:27017
 
   backend:
+    container_name: herder-backend
     build:
       dockerfile: Dockerfile
       context: ./server
     volumes:
       - ./backend:/app
     environment:
-      - NODE_ENV=production
+      - SPRING_DATA_MONGODB_HOST=mongo
+      - SPRING_DATA_MONGODB_PORT=27017
+      - SPRING_DATA_MONGODB_DATABASE=herder
+    ports:
+      - "8080:8080"
     depends_on:
       - mongodb
 
   frontend:
+    container_name: herder-frontend
     build:
       dockerfile: Dockerfile
       context: ./client
     volumes:
       - ./frontend:/app
     environment:
-      - apiUrl=http://backend:8080/
+      - apiUrl=http://localhost:8080/
     depends_on:
       - backend
+    ports:
+      - "80:80"
+  
