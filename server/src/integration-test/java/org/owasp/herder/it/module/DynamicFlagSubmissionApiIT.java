@@ -56,7 +56,7 @@ class DynamicFlagSubmissionApiIT extends BaseIT {
     void canAcceptValidDynamicFlag() {
       StepVerifier.create(
               integrationTestUtils
-                  .submitFlagAndReturnSubmission(
+                  .submitFlagApiAndReturnSubmission(
                       TestConstants.TEST_MODULE_LOCATOR, token, dynamicFlag)
                   .map(Submission::isValid))
           .expectNext(true)
@@ -68,7 +68,7 @@ class DynamicFlagSubmissionApiIT extends BaseIT {
     void canAcceptValidDynamicFlagInLowercase() {
       StepVerifier.create(
               integrationTestUtils
-                  .submitFlagAndReturnSubmission(
+                  .submitFlagApiAndReturnSubmission(
                       TestConstants.TEST_MODULE_LOCATOR, token, dynamicFlag.toLowerCase())
                   .map(Submission::isValid))
           .expectNext(true)
@@ -80,7 +80,7 @@ class DynamicFlagSubmissionApiIT extends BaseIT {
     void canAcceptValidDynamicFlagInUppercase() {
       StepVerifier.create(
               integrationTestUtils
-                  .submitFlagAndReturnSubmission(
+                  .submitFlagApiAndReturnSubmission(
                       TestConstants.TEST_MODULE_LOCATOR, token, dynamicFlag.toUpperCase())
                   .map(Submission::isValid))
           .expectNext(true)
@@ -122,7 +122,7 @@ class DynamicFlagSubmissionApiIT extends BaseIT {
   void canRejectInvalidDynamicFlag(final String testString) {
     StepVerifier.create(
             integrationTestUtils
-                .submitFlagAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, testString)
+                .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, testString)
                 .map(Submission::isValid))
         .expectNext(false)
         .verifyComplete();
@@ -132,7 +132,7 @@ class DynamicFlagSubmissionApiIT extends BaseIT {
   @DisplayName("A dynamic flag submission should return 401 when not logged in")
   void canRejectUnauthorizedDynamicFlag() {
     integrationTestUtils
-        .submitFlag(TestConstants.TEST_MODULE_LOCATOR, null, dynamicFlag)
+        .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, dynamicFlag)
         .expectStatus()
         .isUnauthorized();
   }
@@ -141,7 +141,7 @@ class DynamicFlagSubmissionApiIT extends BaseIT {
   @DisplayName("An empty dynamic flag submission should return 401 when not logged in")
   void canRejectUnauthorizedEmptyDynamicFlag() {
     integrationTestUtils
-        .submitFlag(TestConstants.TEST_MODULE_LOCATOR, null, "")
+        .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "")
         .expectStatus()
         .isUnauthorized();
   }

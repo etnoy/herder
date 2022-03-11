@@ -24,6 +24,8 @@ package org.owasp.herder.it.util;
 import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.configuration.ConfigurationRepository;
 import org.owasp.herder.crypto.WebTokenService;
+import org.owasp.herder.flag.FlagHandler;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.ModuleTagRepository;
@@ -32,6 +34,7 @@ import org.owasp.herder.scoring.CorrectionRepository;
 import org.owasp.herder.scoring.ModulePointRepository;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
+import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.ClassRepository;
 import org.owasp.herder.user.UserRepository;
@@ -58,6 +61,10 @@ public final class IntegrationTestUtils {
   @Autowired UserService userService;
 
   @Autowired ModuleService moduleService;
+
+  @Autowired FlagHandler flagHandler;
+
+  @Autowired SubmissionService submissionService;
 
   @Autowired WebTestClient webTestClient;
 
@@ -116,6 +123,25 @@ public final class IntegrationTestUtils {
 
     userService.promote(userId).block();
     return userId;
+  }
+
+  public Submission submitValidFlag(final String userId, final String moduleId) {
+
+    final ModuleEntity moduleEntity = moduleService.findById(moduleId).block();
+
+    String validFlag;
+
+    if (moduleEntity.isFlagStatic()) {
+      validFlag = moduleEntity.getStaticFlag();
+    } else {
+      validFlag = flagHandler.getDynamicFlag(userId, moduleEntity.getLocator()).block();
+    }
+
+    return submissionService.submit(userId, moduleId, validFlag).block();
+  }
+
+  public Submission submitInvalidFlag(final String userId, final String moduleId) {
+    return submissionService.submit(userId, moduleId, "an-invalid-flag-cant-be-right").block();
   }
 
   public String createTestUser() {
@@ -181,7 +207,7 @@ public final class IntegrationTestUtils {
         .block();
   }
 
-  public ResponseSpec submitFlag(
+  public ResponseSpec submitFlagApi(
       final String moduleLocator, final String token, final String flag) {
     if ((moduleLocator == null) || (flag == null)) {
       throw new NullPointerException();
@@ -204,13 +230,13 @@ public final class IntegrationTestUtils {
         .exchange();
   }
 
-  public Flux<Submission> submitFlagAndReturnSubmission(
+  public Flux<Submission> submitFlagApiAndReturnSubmission(
       final String moduleLocator, final String token, final String flag) {
     if ((moduleLocator == null) || (token == null) || (flag == null)) {
       throw new NullPointerException();
     }
 
-    return submitFlag(moduleLocator, token, flag)
+    return submitFlagApi(moduleLocator, token, flag)
         .expectStatus()
         .isOk()
         .returnResult(Submission.class)

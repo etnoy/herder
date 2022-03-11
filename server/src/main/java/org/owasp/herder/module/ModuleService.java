@@ -47,6 +47,19 @@ public final class ModuleService {
 
   private final KeyService keyService;
 
+  public Mono<ModuleEntity> close(final String moduleId) {
+    if (moduleId == null) {
+      return Mono.error(new NullPointerException("Module id cannot be null"));
+    }
+    if (moduleId.isEmpty()) {
+      return Mono.error(new InvalidModuleIdException());
+    }
+    return findById(moduleId)
+        .switchIfEmpty(Mono.error(new ModuleNotFoundException()))
+        .map(module -> module.withOpen(false))
+        .flatMap(moduleRepository::save);
+  }
+
   public Mono<Long> count() {
     return moduleRepository.count();
   }
@@ -123,20 +136,6 @@ public final class ModuleService {
     return findByName(moduleName).map(u -> false).defaultIfEmpty(true);
   }
 
-  public Mono<Void> verifyModuleExistence(final String moduleLocator) {
-    if (moduleLocator == null) {
-      return Mono.error(new NullPointerException("Module locator cannot be null"));
-    }
-    if (moduleLocator.isEmpty()) {
-      return Mono.error(new InvalidModuleLocatorException());
-    }
-    return findByLocator(moduleLocator)
-        .switchIfEmpty(
-            Mono.error(
-                new ModuleNotFoundException("No module with locator " + moduleLocator + " found.")))
-        .then();
-  }
-
   public Mono<Boolean> existsByLocator(final String moduleLocator) {
     if (moduleLocator == null) {
       return Mono.error(new NullPointerException("Module locator cannot be null"));
@@ -201,17 +200,6 @@ public final class ModuleService {
     return moduleTagRepository.findAllByModuleIdAndName(moduleName, tagName);
   }
 
-  public Mono<ModuleEntity> findByName(final String moduleName) {
-    if (moduleName == null) {
-      return Mono.error(new NullPointerException("Module name cannot be null"));
-    }
-    if (moduleName.isEmpty()) {
-      return Mono.error(new EmptyModuleNameException());
-    }
-    log.trace("Find module with name " + moduleName);
-    return moduleRepository.findByName(moduleName);
-  }
-
   public Mono<ModuleEntity> findById(final String moduleId) {
     if (moduleId == null) {
       return Mono.error(new NullPointerException("Module id cannot be null"));
@@ -223,11 +211,46 @@ public final class ModuleService {
     return moduleRepository.findById(moduleId);
   }
 
+  public Mono<ModuleEntity> findByLocator(final String moduleLocator) {
+    if (moduleLocator == null) {
+      return Mono.error(new NullPointerException("Module locator cannot be null"));
+    }
+    if (moduleLocator.isEmpty()) {
+      return Mono.error(new InvalidModuleLocatorException());
+    }
+    log.trace("Finding module with id " + moduleLocator);
+    return moduleRepository.findByLocator(moduleLocator);
+  }
+
   public Mono<ModuleListItem> findByLocatorWithSolutionStatus(
       final String userId, final String moduleLocator) {
     return moduleRepository
         .findByLocatorWithSolutionStatus(userId, moduleLocator)
         .map(this::filterEmptyTags);
+  }
+
+  public Mono<ModuleEntity> findByName(final String moduleName) {
+    if (moduleName == null) {
+      return Mono.error(new NullPointerException("Module name cannot be null"));
+    }
+    if (moduleName.isEmpty()) {
+      return Mono.error(new EmptyModuleNameException());
+    }
+    log.trace("Find module with name " + moduleName);
+    return moduleRepository.findByName(moduleName);
+  }
+
+  public Mono<ModuleEntity> open(final String moduleId) {
+    if (moduleId == null) {
+      return Mono.error(new NullPointerException("Module id cannot be null"));
+    }
+    if (moduleId.isEmpty()) {
+      return Mono.error(new InvalidModuleIdException());
+    }
+    return findById(moduleId)
+        .switchIfEmpty(Mono.error(new ModuleNotFoundException()))
+        .map(module -> module.withOpen(true))
+        .flatMap(moduleRepository::save);
   }
 
   public Flux<ModuleTag> saveTags(final Flux<ModuleTag> tags) {
@@ -266,14 +289,17 @@ public final class ModuleService {
         .flatMap(moduleRepository::save);
   }
 
-  public Mono<ModuleEntity> findByLocator(final String moduleLocator) {
+  public Mono<Void> verifyModuleExistence(final String moduleLocator) {
     if (moduleLocator == null) {
       return Mono.error(new NullPointerException("Module locator cannot be null"));
     }
     if (moduleLocator.isEmpty()) {
       return Mono.error(new InvalidModuleLocatorException());
     }
-    log.trace("Finding module with id " + moduleLocator);
-    return moduleRepository.findByLocator(moduleLocator);
+    return findByLocator(moduleLocator)
+        .switchIfEmpty(
+            Mono.error(
+                new ModuleNotFoundException("No module with locator " + moduleLocator + " found.")))
+        .then();
   }
 }

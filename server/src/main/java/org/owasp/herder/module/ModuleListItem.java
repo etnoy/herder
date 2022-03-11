@@ -40,7 +40,7 @@ public class ModuleListItem implements Serializable {
 
   @NonNull String locator;
 
-  NameValueTag[] tags;
+  @Builder.Default NameValueTag[] tags = new NameValueTag[0];
 
   @Builder.Default Boolean isSolved = false;
 }

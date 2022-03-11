@@ -35,8 +35,9 @@ public interface ModuleRepository extends ReactiveMongoRepository<ModuleEntity, 
   public Flux<ModuleEntity> findAllOpen();
 
   @Aggregation({
-    // Only show open modules
+    // Find module by locator
     "{$match:{'locator': ?1 }}",
+    // Convert id to moduleId string
     "{$project:{moduleId:{$toString: '$_id'},locator: 1,name:1}}",
     // Include all submissions per module
     "{$lookup:{from:'submission',localField:'moduleId',foreignField:'moduleId',as:'submissions'}}",
@@ -52,6 +53,7 @@ public interface ModuleRepository extends ReactiveMongoRepository<ModuleEntity, 
   @Aggregation({
     // Only show open modules
     "{$match:{'isOpen': true }}",
+    // Convert id to moduleId string
     "{$project:{moduleId:{$toString: '$_id'},locator:1,name:1}}",
     // Include all submissions per module
     "{$lookup:{from:'submission',localField:'moduleId',foreignField:'moduleId',as:'submissions'}}",

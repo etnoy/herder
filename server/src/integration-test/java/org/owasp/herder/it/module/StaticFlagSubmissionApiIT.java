@@ -96,7 +96,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
       moduleService.setStaticFlag(moduleId, flagToTest).block();
       StepVerifier.create(
               integrationTestUtils
-                  .submitFlagAndReturnSubmission(
+                  .submitFlagApiAndReturnSubmission(
                       TestConstants.TEST_MODULE_LOCATOR, token, flagToTest)
                   .map(Submission::isValid))
           .expectNext(true)
@@ -111,7 +111,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
 
       StepVerifier.create(
               integrationTestUtils
-                  .submitFlagAndReturnSubmission(
+                  .submitFlagApiAndReturnSubmission(
                       TestConstants.TEST_MODULE_LOCATOR, token, flagToTest.toLowerCase())
                   .map(Submission::isValid))
           .expectNext(true)
@@ -126,7 +126,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
 
       StepVerifier.create(
               integrationTestUtils
-                  .submitFlagAndReturnSubmission(
+                  .submitFlagApiAndReturnSubmission(
                       TestConstants.TEST_MODULE_LOCATOR, token, flagToTest.toUpperCase())
                   .map(Submission::isValid))
           .expectNext(true)
@@ -140,7 +140,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
   void canRejectInvalidStaticFlag(final String invalidStaticFlag) {
     StepVerifier.create(
             integrationTestUtils
-                .submitFlagAndReturnSubmission(
+                .submitFlagApiAndReturnSubmission(
                     TestConstants.TEST_MODULE_LOCATOR, token, invalidStaticFlag)
                 .map(Submission::isValid))
         .expectNext(false)
@@ -151,7 +151,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
   @DisplayName("An empty static flag submission should return 401 when not logged in")
   void canRejectUnauthorizedEmptyStaticFlag() {
     integrationTestUtils
-        .submitFlag(TestConstants.TEST_MODULE_LOCATOR, null, "")
+        .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "")
         .expectStatus()
         .isUnauthorized();
   }
@@ -160,7 +160,7 @@ class StaticFlagSubmissionApiIT extends BaseIT {
   @DisplayName("A static flag submission should return 401 when not logged in")
   void canRejectUnauthorizedStaticFlag() {
     integrationTestUtils
-        .submitFlag(TestConstants.TEST_MODULE_LOCATOR, null, TestConstants.TEST_STATIC_FLAG)
+        .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, TestConstants.TEST_STATIC_FLAG)
         .expectStatus()
         .isUnauthorized();
   }
