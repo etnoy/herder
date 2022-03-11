@@ -146,10 +146,10 @@ class SubmissonServiceTest {
   @Test
   void findAllValidByUserId_NoSubmissionsExist_ReturnsEmpty() {
     final String mockUserId = "id";
-    when(submissionRepository.findAllValidByUserId(mockUserId)).thenReturn(Flux.empty());
+    when(submissionRepository.findAllByUserIdAndIsValidTrue(mockUserId)).thenReturn(Flux.empty());
     StepVerifier.create(submissionService.findAllValidByUserId(mockUserId)).verifyComplete();
 
-    verify(submissionRepository, times(1)).findAllValidByUserId(mockUserId);
+    verify(submissionRepository, times(1)).findAllByUserIdAndIsValidTrue(mockUserId);
   }
 
   @Test
@@ -160,7 +160,7 @@ class SubmissonServiceTest {
     final Submission mockSubmission3 = mock(Submission.class);
     final Submission mockSubmission4 = mock(Submission.class);
 
-    when(submissionRepository.findAllValidByUserId(mockUserId))
+    when(submissionRepository.findAllByUserIdAndIsValidTrue(mockUserId))
         .thenReturn(Flux.just(mockSubmission1, mockSubmission2, mockSubmission3, mockSubmission4));
     StepVerifier.create(submissionService.findAllValidByUserId(mockUserId))
         .expectNext(mockSubmission1)
@@ -169,7 +169,7 @@ class SubmissonServiceTest {
         .expectNext(mockSubmission4)
         .verifyComplete();
 
-    verify(submissionRepository, times(1)).findAllValidByUserId(mockUserId);
+    verify(submissionRepository, times(1)).findAllByUserIdAndIsValidTrue(mockUserId);
   }
 
   @Test

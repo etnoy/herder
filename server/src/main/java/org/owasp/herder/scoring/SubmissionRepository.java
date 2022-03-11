@@ -22,7 +22,6 @@
 package org.owasp.herder.scoring;
 
 import org.springframework.data.mongodb.repository.Aggregation;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -34,8 +33,7 @@ import reactor.core.publisher.Mono;
 public interface SubmissionRepository extends ReactiveMongoRepository<Submission, String> {
   public Flux<Submission> findAllByModuleId(String moduleId);
 
-  @Query("{ 'isValid' : true, 'user_id': ?0 }")
-  public Flux<Submission> findAllValidByUserId(String userId);
+  public Flux<Submission> findAllByUserIdAndIsValidTrue(String userId);
 
   public Mono<Submission> findAllByUserIdAndModuleIdAndIsValidTrue(String userId, String moduleId);
 

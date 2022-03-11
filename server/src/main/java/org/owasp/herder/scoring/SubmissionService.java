@@ -62,7 +62,7 @@ public final class SubmissionService {
     if (userId.isEmpty()) {
       return Flux.error(new InvalidUserIdException());
     }
-    return submissionRepository.findAllValidByUserId(userId);
+    return submissionRepository.findAllByUserIdAndIsValidTrue(userId);
   }
 
   public Flux<RankedSubmission> findAllByModuleLocator(final String moduleLocator) {
