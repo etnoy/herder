@@ -51,7 +51,7 @@ public abstract class BaseIT {
 
   @DynamicPropertySource
   static void mongoDbProperties(DynamicPropertyRegistry registry) {
-    log.info("Loading testcontainer database for MongoDB");
+    log.info("Using testcontainer for MongoDB at " + mongoDBContainer.getReplicaSetUrl());
     registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
   }
 }
