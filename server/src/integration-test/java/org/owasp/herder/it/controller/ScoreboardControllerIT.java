@@ -42,6 +42,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.crypto.KeyService;
+import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
@@ -302,6 +303,15 @@ class ScoreboardControllerIT extends BaseIT {
     when(mockBucket.tryConsume(1)).thenReturn(true);
     when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
     when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+  }
+
+  @Test
+  @WithMockUser
+  @DisplayName("Can return error if invalid module locator is given")
+  void canFindRankedSubmissionsByModuleLocator() {
+    StepVerifier.create(scoreboardController.getSubmissionsForModule("non-existent"))
+        .expectError(ModuleNotFoundException.class)
+        .verify();
   }
 
   @BeforeAll
