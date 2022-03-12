@@ -23,7 +23,6 @@ package org.owasp.herder.module;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Set;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -42,7 +41,7 @@ public class ModuleListItem implements Serializable {
 
   @NonNull String locator;
 
-  @Builder.Default Set<NameValueTag> tags = new HashSet<>();
+  @Builder.Default HashSet<NameValueTag> tags = new HashSet<>();
 
   @Builder.Default Boolean isSolved = false;
 }
