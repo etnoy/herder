@@ -156,13 +156,6 @@ public final class ModuleService {
     return findByName(moduleName).map(u -> true).defaultIfEmpty(false);
   }
 
-  private ModuleListItem filterEmptyTags(final ModuleListItem item) {
-    if (item.getTags().length == 0) {
-      return item.withTags(null);
-    }
-    return item;
-  }
-
   public Flux<ModuleEntity> findAll() {
     return moduleRepository.findAll();
   }
@@ -172,7 +165,7 @@ public final class ModuleService {
   }
 
   public Flux<ModuleListItem> findAllOpenWithSolutionStatus(final String userId) {
-    return moduleRepository.findAllOpenWithSolutionStatus(userId).map(this::filterEmptyTags);
+    return moduleRepository.findAllOpenWithSolutionStatus(userId);
   }
 
   public Flux<ModuleTag> findAllTagsByModuleId(final String moduleId) {
@@ -224,9 +217,7 @@ public final class ModuleService {
 
   public Mono<ModuleListItem> findByLocatorWithSolutionStatus(
       final String userId, final String moduleLocator) {
-    return moduleRepository
-        .findByLocatorWithSolutionStatus(userId, moduleLocator)
-        .map(this::filterEmptyTags);
+    return moduleRepository.findByLocatorWithSolutionStatus(userId, moduleLocator);
   }
 
   public Mono<ModuleEntity> findByName(final String moduleName) {

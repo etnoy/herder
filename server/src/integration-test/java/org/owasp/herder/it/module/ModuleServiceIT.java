@@ -25,6 +25,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -92,11 +95,11 @@ class ModuleServiceIT extends BaseIT {
 
       moduleService.saveTags(Flux.fromArray(moduleTags)).blockLast();
 
-      final NameValueTag[] tags = {
-        NameValueTag.builder().name("key").value("value").build(),
-        NameValueTag.builder().name("usage").value("test").build(),
-        NameValueTag.builder().name("cow").value("moo").build()
-      };
+      final Set<NameValueTag> tags = new HashSet<>();
+
+      tags.add(NameValueTag.builder().name("key").value("value").build());
+      tags.add(NameValueTag.builder().name("usage").value("test").build());
+      tags.add(NameValueTag.builder().name("cow").value("moo").build());
 
       StepVerifier.create(moduleService.findAllOpenWithSolutionStatus(userId))
           .expectNext(moduleListItem.withTags(tags))
@@ -175,11 +178,11 @@ class ModuleServiceIT extends BaseIT {
 
       moduleService.saveTags(Flux.fromArray(moduleTags)).blockLast();
 
-      final NameValueTag[] tags = {
-        NameValueTag.builder().name("key").value("value").build(),
-        NameValueTag.builder().name("usage").value("test").build(),
-        NameValueTag.builder().name("cow").value("moo").build()
-      };
+      Set<NameValueTag> tags = new HashSet<>();
+
+      tags.add(NameValueTag.builder().name("key").value("value").build());
+      tags.add(NameValueTag.builder().name("usage").value("test").build());
+      tags.add(NameValueTag.builder().name("cow").value("moo").build());
 
       StepVerifier.create(
               moduleService.findByLocatorWithSolutionStatus(
