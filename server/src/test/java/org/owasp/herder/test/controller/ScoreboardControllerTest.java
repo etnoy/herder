@@ -108,7 +108,9 @@ class ScoreboardControllerTest {
         rankedSubmissionBuilder
             .userId("uwu")
             .displayName("User 1")
+            .moduleName("Module 1")
             .moduleId("id")
+            .moduleLocator("module-1")
             .time(LocalDateTime.MIN)
             .build();
     final RankedSubmission rankedSubmission2 =
@@ -116,6 +118,8 @@ class ScoreboardControllerTest {
             .userId("user2")
             .displayName("User 2")
             .moduleId("id")
+            .moduleName("Module 2")
+            .moduleLocator("module-2")
             .time(LocalDateTime.MAX)
             .build();
 

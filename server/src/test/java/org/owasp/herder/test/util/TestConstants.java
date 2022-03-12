@@ -137,11 +137,12 @@ public final class TestConstants {
       "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
 
   public static final String TEST_MODULE_LOCATOR = "test-module";
+  public static final String TEST_MODULE_ID = "testmodule123";
   public static final String TEST_MODULE_NAME = "Test Module";
 
   public static final String TEST_STATIC_FLAG = "Static Test Flag 123 456";
 
-  public static final long TEST_USER_ID = 1234L;
+  public static final String TEST_USER_ID = "testuserid123";
 
   public static final Clock longAgoClock =
       Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());

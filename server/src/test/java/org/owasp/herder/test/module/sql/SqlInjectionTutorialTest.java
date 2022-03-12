@@ -56,7 +56,7 @@ import reactor.test.StepVerifier;
 @DisplayName("SqlInjectionTutorial unit tests")
 class SqlInjectionTutorialTest {
 
-  private String moduleName;
+  private String moduleLocator;
 
   @BeforeAll
   private static void reactorVerbose() {
@@ -85,7 +85,7 @@ class SqlInjectionTutorialTest {
     final byte[] randomBytes = {120, 56, 111};
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
 
-    when(flagHandler.getDynamicFlag(mockUserId, moduleName)).thenReturn(Mono.just(mockFlag));
+    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
     final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
     when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
@@ -127,7 +127,7 @@ class SqlInjectionTutorialTest {
     sqlInjectionTutorial =
         new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
-    moduleName = sqlInjectionTutorial.getName();
+    moduleLocator = sqlInjectionTutorial.getLocator();
   }
 
   @SuppressWarnings("unchecked")
@@ -143,7 +143,7 @@ class SqlInjectionTutorialTest {
     final byte[] randomBytes = {120, 56, 111};
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
 
-    when(flagHandler.getDynamicFlag(mockUserId, moduleName)).thenReturn(Mono.just(mockFlag));
+    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
     final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
     when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
@@ -191,7 +191,7 @@ class SqlInjectionTutorialTest {
     final byte[] randomBytes = {120, 56, 111};
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
 
-    when(flagHandler.getDynamicFlag(mockUserId, moduleName)).thenReturn(Mono.just(mockFlag));
+    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
     sqlInjectionTutorial =
         new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
@@ -224,7 +224,7 @@ class SqlInjectionTutorialTest {
     final String mockFlag = "mockedflag";
     final String query = "username";
 
-    when(flagHandler.getDynamicFlag(mockUserId, moduleName)).thenReturn(Mono.just(mockFlag));
+    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
     sqlInjectionTutorial =
         new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);

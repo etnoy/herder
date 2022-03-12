@@ -65,13 +65,18 @@ public final class SubmissionService {
     return submissionRepository.findAllByUserIdAndIsValidTrue(userId);
   }
 
-  public Flux<RankedSubmission> findAllByModuleLocator(final String moduleLocator) {
+  public Flux<RankedSubmission> findAllRankedByModuleLocator(final String moduleLocator) {
     if (moduleLocator == null) {
       return Flux.error(new NullPointerException());
     }
     if (moduleLocator.isEmpty()) {
       return Flux.error(new InvalidModuleLocatorException());
     }
+    System.out.println(moduleLocator);
+    submissionRepository
+        .findAllRankedByModuleLocator2(moduleLocator)
+        .doOnNext(System.out::println)
+        .subscribe();
     return submissionRepository.findAllRankedByModuleLocator(moduleLocator);
   }
 

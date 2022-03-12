@@ -48,7 +48,7 @@ class FlagTutorialTest {
     Hooks.onOperatorDebug();
   }
 
-  private String moduleName;
+  private String moduleLocator;
 
   FlagTutorial flagTutorial;
 
@@ -64,7 +64,7 @@ class FlagTutorialTest {
 
     flagTutorial = new FlagTutorial(flagHandler);
 
-    moduleName = flagTutorial.getName();
+    moduleLocator = flagTutorial.getLocator();
   }
 
   @Test
@@ -73,7 +73,7 @@ class FlagTutorialTest {
     final String testUserId = "id";
     final String flag = "flag";
 
-    when(flagHandler.getDynamicFlag(testUserId, moduleName)).thenReturn(Mono.just(flag));
+    when(flagHandler.getDynamicFlag(testUserId, moduleLocator)).thenReturn(Mono.just(flag));
 
     StepVerifier.create(flagTutorial.getFlag(testUserId)).expectNext(flag).verifyComplete();
   }

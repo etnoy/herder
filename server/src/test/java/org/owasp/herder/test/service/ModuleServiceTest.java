@@ -37,7 +37,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.KeyService;
-import org.owasp.herder.exception.DuplicateModuleNameException;
+import org.owasp.herder.exception.DuplicateModuleLocatorException;
 import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
@@ -91,10 +91,13 @@ class ModuleServiceTest {
   }
 
   @Test
-  void create_NewModuleName_Succeeds() {
+  void create_NewModuleLocator_Succeeds() {
     final String mockModuleId = "id1";
     final byte[] randomBytes = {120, 56, 111};
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
+
+    when(moduleRepository.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+        .thenReturn(Mono.empty());
 
     when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.empty());
 
@@ -109,15 +112,15 @@ class ModuleServiceTest {
   }
 
   @Test
-  void create_ModuleNameExists_ReturnsException() {
+  void create_ModuleLocatorExists_ReturnsDuplicateModuleLocatorException() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME))
+    when(moduleRepository.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
         .thenReturn(Mono.just(mockModule));
 
     StepVerifier.create(
             moduleService.create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR))
-        .expectError(DuplicateModuleNameException.class)
+        .expectError(DuplicateModuleLocatorException.class)
         .verify();
   }
 
@@ -195,10 +198,9 @@ class ModuleServiceTest {
     final ModuleEntity mockModuleWithStaticFlag = mock(ModuleEntity.class);
     final ModuleEntity mockModuleWithDynamicFlag = mock(ModuleEntity.class);
 
-    final String mockModuleName = "id";
+    final String mockModuleId = "id";
 
-    when(moduleRepository.findByName(mockModuleName))
-        .thenReturn(Mono.just(mockModuleWithStaticFlag));
+    when(moduleRepository.findById(mockModuleId)).thenReturn(Mono.just(mockModuleWithStaticFlag));
 
     when(mockModuleWithStaticFlag.withFlagStatic(false)).thenReturn(mockModuleWithDynamicFlag);
 
@@ -207,7 +209,7 @@ class ModuleServiceTest {
     when(moduleRepository.save(mockModuleWithDynamicFlag))
         .thenReturn(Mono.just(mockModuleWithDynamicFlag));
 
-    StepVerifier.create(moduleService.setDynamicFlag(mockModuleName))
+    StepVerifier.create(moduleService.setDynamicFlag(mockModuleId))
         .assertNext(
             module -> {
               assertThat(module.getKey()).isEqualTo(newFlag);
@@ -226,10 +228,9 @@ class ModuleServiceTest {
     final ModuleEntity mockModuleWithStaticFlag = mock(ModuleEntity.class);
     final ModuleEntity mockModuleWithDynamicFlag = mock(ModuleEntity.class);
 
-    final String mockModuleName = "id";
+    final String mockModuleId = "id";
 
-    when(moduleRepository.findByName(mockModuleName))
-        .thenReturn(Mono.just(mockModuleWithStaticFlag));
+    when(moduleRepository.findById(mockModuleId)).thenReturn(Mono.just(mockModuleWithStaticFlag));
 
     when(mockModuleWithStaticFlag.withFlagStatic(false)).thenReturn(mockModuleWithDynamicFlag);
 
@@ -238,7 +239,7 @@ class ModuleServiceTest {
     when(moduleRepository.save(mockModuleWithDynamicFlag))
         .thenReturn(Mono.just(mockModuleWithDynamicFlag));
 
-    StepVerifier.create(moduleService.setDynamicFlag(mockModuleName))
+    StepVerifier.create(moduleService.setDynamicFlag(mockModuleId))
         .assertNext(
             module -> {
               assertThat(module.isFlagStatic()).isFalse();
@@ -273,9 +274,9 @@ class ModuleServiceTest {
     final ModuleEntity mockModuleWithStaticFlag = mock(ModuleEntity.class);
     final ModuleEntity mockModuleWithStaticFlagEnabled = mock(ModuleEntity.class);
 
-    final String mockModuleName = "id";
+    final String mockModuleId = "id";
 
-    when(moduleRepository.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
+    when(moduleRepository.findById(mockModuleId)).thenReturn(Mono.just(mockModule));
     when(mockModule.withFlagStatic(true)).thenReturn(mockModuleWithStaticFlag);
     when(mockModuleWithStaticFlag.withStaticFlag(staticFlag))
         .thenReturn(mockModuleWithStaticFlagEnabled);
@@ -286,21 +287,13 @@ class ModuleServiceTest {
     when(moduleRepository.save(mockModuleWithStaticFlagEnabled))
         .thenReturn(Mono.just(mockModuleWithStaticFlagEnabled));
 
-    StepVerifier.create(moduleService.setStaticFlag(mockModuleName, staticFlag))
+    StepVerifier.create(moduleService.setStaticFlag(mockModuleId, staticFlag))
         .assertNext(
             module -> {
               assertThat(module.isFlagStatic()).isTrue();
               assertThat(module.getStaticFlag()).isEqualTo(staticFlag);
             })
         .verifyComplete();
-
-    ArgumentCaptor<String> findArgument = ArgumentCaptor.forClass(String.class);
-    verify(moduleRepository).findByName(findArgument.capture());
-    assertThat(findArgument.getValue()).isEqualTo(mockModuleName);
-
-    ArgumentCaptor<ModuleEntity> saveArgument = ArgumentCaptor.forClass(ModuleEntity.class);
-    verify(moduleRepository).save(saveArgument.capture());
-    assertThat(saveArgument.getValue().getStaticFlag()).isEqualTo(staticFlag);
   }
 
   @BeforeEach

@@ -43,6 +43,7 @@ import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.test.util.TestConstants;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -76,16 +77,16 @@ class FlagControllerTest {
 
   @Test
   void submitFlag_UserNotAuthenticated_ReturnsException() throws Exception {
-    final String mockModuleName = "test-module";
     final String flag = "validflag";
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(controllerAuthentication.getUserId())
         .thenReturn(Mono.error(new NotAuthenticatedException()));
 
-    when(moduleService.findByName(mockModuleName)).thenReturn(Mono.just(mockModule));
+    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+        .thenReturn(Mono.just(mockModule));
 
-    StepVerifier.create(flagController.submitFlag(mockModuleName, flag))
+    StepVerifier.create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag))
         .expectError(NotAuthenticatedException.class)
         .verify();
 
@@ -94,33 +95,34 @@ class FlagControllerTest {
 
   @Test
   void submitFlag_UserAuthenticatedAndValidFlagSubmitted_ReturnsValidSubmission() throws Exception {
-    final String mockUserId = "id";
-    final String moduleId = "test-module";
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final String flag = "validflag";
 
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
 
     final Submission submission =
         Submission.builder()
-            .userId(mockUserId)
-            .moduleId(moduleId)
+            .userId(TestConstants.TEST_USER_ID)
+            .moduleId(TestConstants.TEST_MODULE_ID)
             .flag(flag)
             .isValid(true)
             .time(LocalDateTime.of(2000, Month.JULY, 1, 2, 3, 4))
             .build();
 
-    when(submissionService.submit(mockUserId, moduleId, flag)).thenReturn(Mono.just(submission));
+    when(submissionService.submit(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
+        .thenReturn(Mono.just(submission));
 
-    when(mockModule.getName()).thenReturn(moduleId);
+    when(mockModule.getId()).thenReturn(TestConstants.TEST_MODULE_ID);
 
-    when(moduleService.findByName(moduleId)).thenReturn(Mono.just(mockModule));
+    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+        .thenReturn(Mono.just(mockModule));
 
-    StepVerifier.create(flagController.submitFlag(moduleId, flag))
+    StepVerifier.create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag))
         .expectNext(new ResponseEntity<Submission>(submission, HttpStatus.OK))
         .verifyComplete();
 
-    verify(submissionService, times(1)).submit(mockUserId, moduleId, flag);
+    verify(submissionService, times(1))
+        .submit(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag);
   }
 }

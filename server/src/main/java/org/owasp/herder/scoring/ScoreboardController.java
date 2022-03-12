@@ -58,6 +58,6 @@ public class ScoreboardController {
   public Flux<RankedSubmission> getSubmissionsForModule(@PathVariable final String moduleLocator) {
     return moduleService
         .verifyModuleExistence(moduleLocator)
-        .flatMapMany(m -> submissionService.findAllByModuleLocator(moduleLocator));
+        .flatMapMany(m -> submissionService.findAllRankedByModuleLocator(moduleLocator));
   }
 }
