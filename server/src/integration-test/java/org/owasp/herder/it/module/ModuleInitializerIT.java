@@ -224,8 +224,6 @@ class ModuleInitializerIT extends BaseIT {
     final ModuleTagBuilder moduleTagBuilder = ModuleTag.builder().moduleId(moduleId);
     expectedTags.add(moduleTagBuilder.name("topic").value("testing").build());
 
-    moduleTagRepository.findAllByModuleId(moduleId).doOnNext(System.out::println);
-
     StepVerifier.create(
             moduleService.findAllTagsByModuleId(moduleId).map(moduleTag -> moduleTag.withId(null)))
         .expectNextMatches(expectedTag -> expectedTags.contains(expectedTag))

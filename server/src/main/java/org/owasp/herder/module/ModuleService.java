@@ -120,10 +120,7 @@ public final class ModuleService {
     if (moduleLocator.isEmpty()) {
       return Mono.error(new InvalidModuleLocatorException());
     }
-    return findByLocator(moduleLocator)
-        .doOnNext(System.out::println)
-        .map(u -> false)
-        .defaultIfEmpty(true);
+    return findByLocator(moduleLocator).map(u -> false).defaultIfEmpty(true);
   }
 
   private Mono<Boolean> doesNotExistByName(final String moduleName) {
@@ -278,19 +275,5 @@ public final class ModuleService {
         .switchIfEmpty(Mono.error(new ModuleNotFoundException()))
         .map(module -> module.withFlagStatic(true).withStaticFlag(staticFlag))
         .flatMap(moduleRepository::save);
-  }
-
-  public Mono<Void> verifyModuleExistence(final String moduleLocator) {
-    if (moduleLocator == null) {
-      return Mono.error(new NullPointerException("Module locator cannot be null"));
-    }
-    if (moduleLocator.isEmpty()) {
-      return Mono.error(new InvalidModuleLocatorException());
-    }
-    return findByLocator(moduleLocator)
-        .switchIfEmpty(
-            Mono.error(
-                new ModuleNotFoundException("No module with locator " + moduleLocator + " found.")))
-        .then();
   }
 }

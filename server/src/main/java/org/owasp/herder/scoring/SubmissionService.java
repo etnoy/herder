@@ -72,11 +72,6 @@ public final class SubmissionService {
     if (moduleLocator.isEmpty()) {
       return Flux.error(new InvalidModuleLocatorException());
     }
-    System.out.println(moduleLocator);
-    submissionRepository
-        .findAllRankedByModuleLocator2(moduleLocator)
-        .doOnNext(System.out::println)
-        .subscribe();
     return submissionRepository.findAllRankedByModuleLocator(moduleLocator);
   }
 

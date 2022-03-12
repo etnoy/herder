@@ -21,7 +21,6 @@
  */
 package org.owasp.herder.scoring;
 
-import org.bson.Document;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.repository.query.Param;
@@ -75,24 +74,6 @@ public interface SubmissionRepository extends ReactiveMongoRepository<Submission
     "{$sort: {time: -1}}"
   })
   public Flux<RankedSubmission> findAllRankedByUserId(String userId);
-
-  @Aggregation({
-    "{$match:{isValid:true}}",
-    "{$project: {moduleIdObject: {$toObjectId: '$moduleId'},moduleId:1,userId:1,time:1,isValid:1,flag:1}}",
-    "{$setWindowFields:{partitionBy:'$moduleId',sortBy:{time:1},output:{rank:{$rank:{}}}}}",
-    "{$lookup:{from:'module',localField:'moduleIdObject',foreignField:'_id',as:'modules'}}",
-    "{$lookup:{from:'modulePoint',localField:'moduleId',foreignField:'moduleId',as:'points'}}",
-    "{$addFields:{moduleName:{$ifNull:[{$arrayElemAt:['$modules.name',0]},0]},moduleLocator:{$ifNull:[{$arrayElemAt:['$modules.locator',0]},0]}}}",
-    "{$match:{'moduleLocator': ?0 }}",
-    "{$addFields:{baseScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank',0]}}},bonusScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank','$rank']}}}}}",
-    "{$addFields:{baseScore:{$ifNull:[{$arrayElemAt:['$baseScoreArray.points',0]},0]},bonusScore:{$ifNull:[{$arrayElemAt:['$bonusScoreArray.points',0]},0]}}}",
-    "{$project:{_id:0,userId:{$toObjectId:'$userId'},rank:1,moduleId:1,moduleName:1,moduleLocator:1,time:1,flag:1,baseScore:1,bonusScore:1,score:{$add:['$baseScore','$bonusScore']}}}",
-    "{$lookup:{from:'user',localField:'userId',foreignField:'_id',as:'user'}}",
-    "{$addFields:{displayName:{$ifNull:[{$arrayElemAt:['$user.displayName',0]},0]}}}",
-    "{$project:{userId:{$toString:'$userId'},rank:1,moduleId:1,moduleName:1,moduleLocator:1,displayName:1,time:1,flag:1,baseScore:1,bonusScore:1,score:1}}",
-    "{$sort: {time: 1}}"
-  })
-  public Flux<Document> findAllRankedByModuleLocator2(String moduleLocator);
 
   @Aggregation({
     "{$match:{isValid:true}}",

@@ -55,6 +55,8 @@ import reactor.test.StepVerifier;
 @DisplayName("ModuleService unit tests")
 class ModuleServiceTest {
 
+  final ModuleEntity mockModule = mock(ModuleEntity.class);
+
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages
@@ -113,8 +115,6 @@ class ModuleServiceTest {
 
   @Test
   void create_ModuleLocatorExists_ReturnsDuplicateModuleLocatorException() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-
     when(moduleRepository.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
         .thenReturn(Mono.just(mockModule));
 

@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.scoring;
 
+import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.module.ModuleService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
@@ -56,8 +58,11 @@ public class ScoreboardController {
   @GetMapping(path = "scoreboard/module/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Flux<RankedSubmission> getSubmissionsForModule(@PathVariable final String moduleLocator) {
-    return moduleService
-        .verifyModuleExistence(moduleLocator)
-        .flatMapMany(m -> submissionService.findAllRankedByModuleLocator(moduleLocator));
+    return Mono.just(moduleLocator)
+        .filterWhen(moduleService::existsByLocator)
+        .switchIfEmpty(
+            Mono.error(
+                new ModuleNotFoundException("No module with locator " + moduleLocator + " found.")))
+        .flatMapMany(submissionService::findAllRankedByModuleLocator);
   }
 }

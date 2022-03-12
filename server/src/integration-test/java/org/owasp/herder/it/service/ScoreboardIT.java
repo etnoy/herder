@@ -162,8 +162,6 @@ class ScoreboardIT extends BaseIT {
     // You only get 1 point for this module
     scoreService.setModuleScore(moduleId3, 0, 1).block();
 
-    moduleRepository.findAll().doOnNext(System.out::println).blockLast();
-
     // Create a fixed clock from which we will base our offset submission times
     final Clock startTime =
         Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
