@@ -47,15 +47,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Lint
         run: ./gradlew spotlessCheck
-      - name: Build
-        run: ./gradlew assemble
-      - name: Build Docker
-        uses: docker/build-push-action@v2
-        with:
-          context: ./server
-          file: ./server/Dockerfile
-          push: true
-          tags: etnoy/herder-backend:latest
       - name: Test
         run: ./gradlew build jacocoTestReport sonarqube
         env:
@@ -63,3 +54,10 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   
       - name: Integration tests
         run: ./gradlew integrationTest
+      - name: Build Docker
+        uses: docker/build-push-action@v2
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          push: true
+          tags: etnoy/herder-backend:latest
