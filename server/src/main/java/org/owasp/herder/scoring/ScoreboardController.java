@@ -22,7 +22,7 @@
 package org.owasp.herder.scoring;
 
 import javax.validation.ConstraintViolationException;
-
+import lombok.RequiredArgsConstructor;
 import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.module.ModuleService;
@@ -35,8 +35,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

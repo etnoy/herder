@@ -23,15 +23,13 @@ package org.owasp.herder.test.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import java.security.Key;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.crypto.WebTokenKeyManager;
-
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 
 @DisplayName("WebTokenKeyManager unit tests")
 class WebTokenKeyManagerTest {

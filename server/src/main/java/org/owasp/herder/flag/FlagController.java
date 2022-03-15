@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.flag;
 
+import lombok.RequiredArgsConstructor;
 import org.owasp.herder.authentication.ControllerAuthentication;
 import org.owasp.herder.exception.RateLimitException;
 import org.owasp.herder.module.ModuleEntity;
@@ -37,8 +38,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @RestController

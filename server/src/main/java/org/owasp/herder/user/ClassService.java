@@ -21,6 +21,8 @@
  */
 package org.owasp.herder.user;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateClassNameException;
 import org.owasp.herder.model.ClassEntity;
@@ -28,9 +30,6 @@ import org.owasp.herder.validation.ValidClassId;
 import org.owasp.herder.validation.ValidClassName;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Slf4j

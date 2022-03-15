@@ -34,7 +34,6 @@ import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 

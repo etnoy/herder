@@ -21,6 +21,8 @@
  */
 package org.owasp.herder.module;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.DuplicateModuleLocatorException;
 import org.owasp.herder.exception.DuplicateModuleNameException;
@@ -32,9 +34,6 @@ import org.owasp.herder.validation.ValidModuleName;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

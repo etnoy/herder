@@ -21,9 +21,13 @@
  */
 package org.owasp.herder.flag;
 
+import com.google.common.io.BaseEncoding;
+import com.google.common.primitives.Bytes;
+import io.github.bucket4j.Bucket;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.FlagSubmissionRateLimitException;
 import org.owasp.herder.exception.InvalidFlagStateException;
@@ -40,13 +44,6 @@ import org.owasp.herder.validation.ValidModuleLocator;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import com.google.common.io.BaseEncoding;
-import com.google.common.primitives.Bytes;
-
-import io.github.bucket4j.Bucket;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Slf4j

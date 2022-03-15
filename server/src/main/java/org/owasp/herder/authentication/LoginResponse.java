@@ -22,11 +22,9 @@
 package org.owasp.herder.authentication;
 
 import java.io.Serializable;
-
-import org.owasp.herder.validation.ValidDisplayName;
-
 import lombok.Builder;
 import lombok.Value;
+import org.owasp.herder.validation.ValidDisplayName;
 
 @Value
 @Builder

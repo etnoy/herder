@@ -22,13 +22,11 @@
 package org.owasp.herder.scoring;
 
 import javax.validation.constraints.Min;
-
+import lombok.RequiredArgsConstructor;
 import org.owasp.herder.scoring.ModulePoint.ModulePointBuilder;
 import org.owasp.herder.validation.ValidModuleId;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

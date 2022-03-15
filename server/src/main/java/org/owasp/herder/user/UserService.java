@@ -25,7 +25,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.authentication.AuthResponse;
 import org.owasp.herder.authentication.AuthResponse.AuthResponseBuilder;
 import org.owasp.herder.authentication.PasswordAuth;
@@ -48,8 +48,6 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

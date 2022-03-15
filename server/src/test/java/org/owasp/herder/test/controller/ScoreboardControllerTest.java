@@ -26,7 +26,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,9 +42,9 @@ import org.owasp.herder.scoring.ScoreboardEntry;
 import org.owasp.herder.scoring.ScoreboardEntry.ScoreboardEntryBuilder;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.user.UserService;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
@@ -129,6 +128,7 @@ class ScoreboardControllerTest {
     final Flux<RankedSubmission> rankedSubmissions =
         Flux.just(rankedSubmission1, rankedSubmission2);
     when(submissionService.findAllRankedByUserId(mockUserId)).thenReturn(rankedSubmissions);
+    when(userService.existsById(mockUserId)).thenReturn(Mono.just(true));
 
     StepVerifier.create(scoreboardController.getSubmissionsByUserId(mockUserId))
         .expectNext(rankedSubmission1)

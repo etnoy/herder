@@ -22,11 +22,9 @@
 package org.owasp.herder.authentication;
 
 import java.io.Serializable;
-
+import lombok.Value;
 import org.owasp.herder.validation.ValidLoginName;
 import org.owasp.herder.validation.ValidPassword;
-
-import lombok.Value;
 
 @Value
 public class PasswordLoginDto implements Serializable {

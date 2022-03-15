@@ -54,7 +54,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
     implementation 'org.springframework.data:spring-data-mongodb'
-    
+
     implementation 'javax.validation:validation-api'
 
     implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.1.0'

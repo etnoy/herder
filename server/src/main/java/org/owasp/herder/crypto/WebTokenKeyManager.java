@@ -21,18 +21,16 @@
  */
 package org.owasp.herder.crypto;
 
-import java.security.Key;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.owasp.herder.validation.ValidUserId;
-import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
-
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import java.security.Key;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.herder.validation.ValidUserId;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 @Service
 @Validated

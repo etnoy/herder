@@ -24,16 +24,13 @@ package org.owasp.herder.crypto;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-
 import javax.validation.constraints.Min;
-
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.owasp.herder.exception.RngException;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Validated

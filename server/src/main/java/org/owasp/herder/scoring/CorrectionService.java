@@ -23,12 +23,10 @@ package org.owasp.herder.scoring;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-
 import org.owasp.herder.scoring.Correction.CorrectionBuilder;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
 import reactor.core.publisher.Mono;
 
 @Service
