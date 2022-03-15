@@ -19,14 +19,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.service;
+package org.owasp.herder.user;
 
 import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateClassNameException;
-import org.owasp.herder.exception.InvalidClassIdException;
 import org.owasp.herder.model.ClassEntity;
-import org.owasp.herder.user.ClassRepository;
+import org.owasp.herder.validation.ValidClassId;
+import org.owasp.herder.validation.ValidClassName;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,8 +35,9 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @RequiredArgsConstructor
+@Validated
 @Service
-public final class ClassService {
+public class ClassService {
 
   private final ClassRepository classRepository;
 
@@ -43,49 +45,40 @@ public final class ClassService {
     return classRepository.count();
   }
 
-  public Mono<ClassEntity> create(final String name) {
-    if (name == null) {
+  public Mono<ClassEntity> create(@ValidClassName final String className) {
+    if (className == null) {
       return Mono.error(new NullPointerException());
     }
 
-    if (name.isEmpty()) {
+    if (className.isEmpty()) {
       return Mono.error(new IllegalArgumentException());
     }
 
-    log.debug("Creating class with name " + name);
+    log.debug("Creating class with name " + className);
 
-    return Mono.just(name)
+    return Mono.just(className)
         .filterWhen(this::doesNotExistByName)
         .switchIfEmpty(Mono.error(new DuplicateClassNameException("Class name already exists")))
-        .flatMap(className -> classRepository.save(ClassEntity.builder().name(className).build()));
+        .flatMap(name -> classRepository.save(ClassEntity.builder().name(name).build()));
   }
 
-  private Mono<Boolean> doesNotExistByName(final String name) {
-    return classRepository.findByName(name).map(u -> false).defaultIfEmpty(true);
+  private Mono<Boolean> doesNotExistByName(@ValidClassName final String className) {
+    return classRepository.findByName(className).map(u -> false).defaultIfEmpty(true);
   }
 
-  public Mono<Boolean> existsById(final String classId) {
+  public Mono<Boolean> existsById(@ValidClassId final String classId) {
     return classRepository.existsById(classId);
   }
 
-  public Mono<ClassEntity> getById(final String classId) {
-    if (classId == null) {
-      return Mono.error(new InvalidClassIdException("Class id can't be null"));
-    }
-    if (classId.isEmpty()) {
-      return Mono.error(new InvalidClassIdException("Class id can't be empty"));
-    }
+  public Mono<ClassEntity> getById(@ValidClassId final String classId) {
     return Mono.just(classId)
         .filterWhen(classRepository::existsById)
         .switchIfEmpty(Mono.error(new ClassIdNotFoundException()))
         .flatMap(classRepository::findById);
   }
 
-  public Mono<ClassEntity> setName(final String classId, final String name) {
-    if (name == null) {
-      return Mono.error(new IllegalArgumentException("Class name can't be null"));
-    }
-
+  public Mono<ClassEntity> setName(
+      @ValidClassId final String classId, @ValidClassName final String name) {
     Mono<String> nameMono =
         Mono.just(name)
             .filterWhen(this::doesNotExistByName)

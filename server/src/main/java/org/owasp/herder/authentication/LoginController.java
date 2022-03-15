@@ -22,7 +22,7 @@
 package org.owasp.herder.authentication;
 
 import javax.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.owasp.herder.authentication.LoginResponse.LoginResponseBuilder;
 import org.owasp.herder.crypto.WebTokenService;
 import org.owasp.herder.user.UserService;
@@ -30,16 +30,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/")
+@Validated
 public class LoginController {
   private final UserService userService;
 

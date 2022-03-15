@@ -40,7 +40,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.scoring.RankedSubmission;
@@ -98,13 +97,6 @@ class SubmissonServiceTest {
   }
 
   @Test
-  void findAllRankedByUserId_EmptyUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(submissionService.findAllRankedByUserId(""))
-        .expectError(InvalidUserIdException.class)
-        .verify();
-  }
-
-  @Test
   void findAllRankedByUserId_NoRankedSubmissionsExist_ReturnsEmpty() {
     final String mockUserId = "id";
     when(submissionRepository.findAllRankedByUserId(mockUserId)).thenReturn(Flux.empty());
@@ -137,13 +129,6 @@ class SubmissonServiceTest {
   }
 
   @Test
-  void findAllValidByUserId_EmptyUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(submissionService.findAllValidByUserId(""))
-        .expectError(InvalidUserIdException.class)
-        .verify();
-  }
-
-  @Test
   void findAllValidByUserId_NoSubmissionsExist_ReturnsEmpty() {
     final String mockUserId = "id";
     when(submissionRepository.findAllByUserIdAndIsValidTrue(mockUserId)).thenReturn(Flux.empty());
@@ -170,13 +155,6 @@ class SubmissonServiceTest {
         .verifyComplete();
 
     verify(submissionRepository, times(1)).findAllByUserIdAndIsValidTrue(mockUserId);
-  }
-
-  @Test
-  void findAllValidByUserIdAndModuleName_InvalidUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(submissionService.findAllValidByUserIdAndModuleName("", "id"))
-        .expectError(InvalidUserIdException.class)
-        .verify();
   }
 
   @Test
@@ -261,13 +239,6 @@ class SubmissonServiceTest {
   }
 
   @Test
-  void submit_InvalidUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(submissionService.submit("", "module", "flag"))
-        .expectError(InvalidUserIdException.class)
-        .verify();
-  }
-
-  @Test
   void submit_ModuleAlreadySolvedByUser_ReturnsModuleAlreadySolvedException() {
     final String mockUserId = "id";
     final String mockModuleName = "id";
@@ -329,13 +300,6 @@ class SubmissonServiceTest {
     verify(submissionRepository, times(1))
         .existsByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleId);
     verify(submissionRepository, times(1)).save(any(Submission.class));
-  }
-
-  @Test
-  void submitValid_EmptyUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(submissionService.submitValid("", "id"))
-        .expectError(InvalidUserIdException.class)
-        .verify();
   }
 
   @Test

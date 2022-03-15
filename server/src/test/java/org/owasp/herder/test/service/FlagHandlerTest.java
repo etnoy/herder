@@ -587,22 +587,6 @@ class FlagHandlerTest {
   }
 
   @Test
-  void verifyFlag_NullDynamicFlag_ReturnsFalse() {
-    StepVerifier.create(
-            flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, null))
-        .expectError(NullPointerException.class)
-        .verify();
-  }
-
-  @Test
-  void verifyFlag_NullStaticFlag_ReturnsFalse() {
-    StepVerifier.create(
-            flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, null))
-        .expectError(NullPointerException.class)
-        .verify();
-  }
-
-  @Test
   void verifyFlag_WrongDynamicFlag_ReturnsFalse() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 

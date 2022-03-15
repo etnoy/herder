@@ -149,7 +149,7 @@ class UserApiIT extends BaseIT {
                 .getResponseBody())
         .assertNext(
             user -> {
-              assertThat(user.getDisplayName()).isEqualTo(TestConstants.TEST_DISPLAY_NAME);
+              assertThat(user.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
             })
         .verifyComplete();
   }
@@ -184,5 +184,47 @@ class UserApiIT extends BaseIT {
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
+  }
+
+  @Test
+  @DisplayName("Can return HTTP 400 for an invalid user id")
+  void canReturn404ForInvalidUserId() {
+    integrationTestUtils.createTestAdmin();
+
+    final String token =
+        integrationTestUtils.performAPILoginWithToken(
+            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+
+    final String invalidUserId = "XYZ";
+
+    webTestClient
+        .get()
+        .uri(String.format("/api/v1/user/%s", invalidUserId))
+        .header("Authorization", "Bearer " + token)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .isNotFound();
+  }
+
+  @Test
+  @DisplayName("Can return HTTP 400 for a nonexistent user id")
+  void canReturn404ForNonExistentUserId() {
+    integrationTestUtils.createTestAdmin();
+
+    final String token =
+        integrationTestUtils.performAPILoginWithToken(
+            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+
+    final String invalidUserId = TestConstants.TEST_USER_ID;
+
+    webTestClient
+        .get()
+        .uri(String.format("/api/v1/user/%s", invalidUserId))
+        .header("Authorization", "Bearer " + token)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .isNotFound();
   }
 }

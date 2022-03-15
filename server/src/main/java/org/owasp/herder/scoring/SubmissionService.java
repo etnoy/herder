@@ -24,21 +24,22 @@ package org.owasp.herder.scoring;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
-import org.owasp.herder.exception.EmptyModuleNameException;
-import org.owasp.herder.exception.InvalidModuleIdException;
-import org.owasp.herder.exception.InvalidModuleLocatorException;
-import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.scoring.Submission.SubmissionBuilder;
+import org.owasp.herder.validation.ValidModuleId;
+import org.owasp.herder.validation.ValidModuleLocator;
+import org.owasp.herder.validation.ValidModuleName;
+import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-public final class SubmissionService {
-
+@Validated
+public class SubmissionService {
   private final SubmissionRepository submissionRepository;
 
   private final FlagHandler flagHandler;
@@ -51,52 +52,26 @@ public final class SubmissionService {
     resetClock();
   }
 
-  public Flux<Submission> findAllByModuleName(final String moduleName) {
+  public Flux<Submission> findAllByModuleName(@ValidModuleName final String moduleName) {
     return submissionRepository.findAllByModuleId(moduleName);
   }
 
-  public Flux<Submission> findAllValidByUserId(final String userId) {
-    if (userId == null) {
-      return Flux.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Flux.error(new InvalidUserIdException());
-    }
+  public Flux<Submission> findAllValidByUserId(@ValidUserId final String userId) {
     return submissionRepository.findAllByUserIdAndIsValidTrue(userId);
   }
 
-  public Flux<RankedSubmission> findAllRankedByModuleLocator(final String moduleLocator) {
-    if (moduleLocator == null) {
-      return Flux.error(new NullPointerException());
-    }
-    if (moduleLocator.isEmpty()) {
-      return Flux.error(new InvalidModuleLocatorException());
-    }
+  public Flux<RankedSubmission> findAllRankedByModuleLocator(
+      @ValidModuleLocator final String moduleLocator) {
     return submissionRepository.findAllRankedByModuleLocator(moduleLocator);
   }
 
-  public Flux<RankedSubmission> findAllRankedByUserId(final String userId) {
-    if (userId == null) {
-      return Flux.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Flux.error(new InvalidUserIdException());
-    }
-
+  public Flux<RankedSubmission> findAllRankedByUserId(@ValidUserId final String userId) {
     return submissionRepository.findAllRankedByUserId(userId);
   }
 
   public Mono<Submission> findAllValidByUserIdAndModuleName(
-      final String userId, final String moduleName) {
-    if (moduleName == null || userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
-    if (moduleName.isEmpty()) {
-      return Mono.error(new EmptyModuleNameException());
-    }
+      @ValidUserId final String userId, @ValidModuleName final String moduleName) {
+
     return submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(userId, moduleName);
   }
 
@@ -108,14 +83,9 @@ public final class SubmissionService {
     this.clock = clock;
   }
 
-  public Mono<Submission> submit(final String userId, final String moduleId, final String flag) {
-    if (userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
-
+  // TODO: validate flag
+  public Mono<Submission> submit(
+      @ValidUserId final String userId, @ValidModuleId final String moduleId, final String flag) {
     SubmissionBuilder submissionBuilder = Submission.builder();
     submissionBuilder.userId(userId);
     submissionBuilder.moduleId(moduleId);
@@ -139,17 +109,8 @@ public final class SubmissionService {
         .flatMap(submissionRepository::save);
   }
 
-  public Mono<Submission> submitValid(final String userId, final String moduleId) {
-    if (moduleId == null || userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
-    if (moduleId.isEmpty()) {
-      return Mono.error(new InvalidModuleIdException());
-    }
-
+  public Mono<Submission> submitValid(
+      @ValidUserId final String userId, @ValidModuleId final String moduleId) {
     SubmissionBuilder submissionBuilder = Submission.builder();
 
     submissionBuilder.userId(userId);
@@ -169,7 +130,7 @@ public final class SubmissionService {
   }
 
   private Mono<Boolean> validSubmissionDoesNotExistByUserIdAndModuleId(
-      final String userId, final String moduleName) {
+      @ValidUserId final String userId, @ValidModuleName final String moduleName) {
     return submissionRepository
         .existsByUserIdAndModuleIdAndIsValidTrue(userId, moduleName)
         .map(exists -> !exists);

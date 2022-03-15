@@ -107,17 +107,16 @@ public final class TestConstants {
     "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ، "
   };
 
-  public static final String[] VALID_MODULE_NAMES = {
-    "flag",
-    "åäöÅÄÖ",
+  public static final String[] VALID_NAMES = {
+    "Module Name",
+    "aa",
     "me@example.com",
     "module-name-without-whitespace",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "%",
-    "𝕋𝕙𝕖 𝕢𝕦𝕚𝕔𝕜 𝕓𝕣𝕠𝕨𝕟 𝕗𝕠𝕩 𝕛𝕦𝕞𝕡𝕤 𝕠𝕧𝕖𝕣 𝕥𝕙𝕖 𝕝𝕒𝕫𝕪 𝕕𝕠𝕘",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "%*",
+    "𝕋𝕙𝕖 𝕢𝕦𝕚𝕔𝕜 𝕓𝕣𝕠𝕨𝕟 𝕗𝕠𝕩 𝕛𝕦𝕞𝕡𝕤",
     "❤️ 💔 💌 💕 💞 💓 💗 💖 💘 💝 💟 💜 💛 💚 💙",
-    " ﷽ ",
-    "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ، "
+    " ﷽ ﷽  ﷽  "
   };
 
   public static final String INITIAL_NAME = "id";
@@ -128,7 +127,7 @@ public final class TestConstants {
 
   public static final String[] STRINGS_WITH_NULL = ArrayUtils.addAll(STRINGS, (String) null);
 
-  public static final String TEST_DISPLAY_NAME = "Test User";
+  public static final String TEST_USER_DISPLAY_NAME = "Test User";
   public static final String TEST_LOGIN_NAME = "test";
   public static final String TEST_PASSWORD = "test";
 
@@ -137,12 +136,19 @@ public final class TestConstants {
       "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
 
   public static final String TEST_MODULE_LOCATOR = "test-module";
-  public static final String TEST_MODULE_ID = "testmodule123";
+  public static final String TEST_MODULE_ID = "abcdef123456789012345678";
   public static final String TEST_MODULE_NAME = "Test Module";
+
+  public static final String TEST_MODULE_TAG_NAME = "test-tag";
 
   public static final String TEST_STATIC_FLAG = "Static Test Flag 123 456";
 
-  public static final String TEST_USER_ID = "testuserid123";
+  public static final String TEST_USER_ID = "abcdef123456789012345678";
+
+  public static final String TEST_CLASS_ID = "abcdef1234567890abcd5678";
+
+  public static final String VERY_LONG_STRING =
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
   public static final Clock longAgoClock =
       Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
@@ -156,11 +162,15 @@ public final class TestConstants {
     return Stream.of(STRINGS);
   }
 
-  public static Stream<String> validStaticFlagProvider() {
-    return Stream.of(VALID_STATIC_FLAGS);
+  public static Stream<String> validDisplayNameProvider() {
+    return Stream.of(VALID_NAMES);
   }
 
   public static Stream<String> validModuleNameProvider() {
-    return Stream.of(VALID_MODULE_NAMES);
+    return Stream.of(VALID_NAMES);
+  }
+
+  public static Stream<String> validStaticFlagProvider() {
+    return Stream.of(VALID_STATIC_FLAGS);
   }
 }

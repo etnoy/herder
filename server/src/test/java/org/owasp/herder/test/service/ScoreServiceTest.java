@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.exception.InvalidRankException;
 import org.owasp.herder.scoring.ModulePoint;
 import org.owasp.herder.scoring.ModulePointRepository;
 import org.owasp.herder.scoring.ScoreService;
@@ -84,15 +83,6 @@ class ScoreServiceTest {
               assertThat(modulePoint.getPoints()).isEqualTo(points);
             })
         .verifyComplete();
-  }
-
-  @Test
-  void submit_InvalidRank_ReturnsRankException() {
-    for (final int rank : new int[] {-1, -123, -999999}) {
-      StepVerifier.create(scoreService.setModuleScore("id", rank, 1))
-          .expectError(InvalidRankException.class)
-          .verify();
-    }
   }
 
   @Test

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from 'src/app/service/api.service';
 import { UserScore } from 'src/app/model/user-score';
-import { catchError, throwError } from 'rxjs';
+import { catchError, of, throwError } from 'rxjs';
 
 @Component({
   selector: 'app-module-solves',
@@ -23,20 +23,21 @@ export class ModuleSolvesComponent implements OnInit {
       this.locator = params.get('moduleLocator');
       this.apiService
         .getSolvesByLocator(this.locator)
-        .pipe(catchError(this.handleError))
+        .pipe(
+          catchError((error) => {
+            console.log(error);
+            if (error.status === 404) {
+              this.moduleFound = false;
+              return of();
+            } else {
+              return throwError(() => error);
+            }
+          })
+        )
         .subscribe((submissions: UserScore[]) => {
           this.submissions = submissions;
           this.moduleFound = true;
         });
     });
-  }
-
-  handleError(error: string) {
-    if (error.includes('Module not found')) {
-      this.moduleFound = false;
-      console.log('Error');
-    } else {
-      return throwError(() => error);
-    }
   }
 }

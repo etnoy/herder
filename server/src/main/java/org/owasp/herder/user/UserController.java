@@ -21,7 +21,12 @@
  */
 package org.owasp.herder.user;
 
+import javax.validation.ConstraintViolationException;
+
+import org.owasp.herder.exception.UserNotFoundException;
+import org.owasp.herder.validation.ValidUserId;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,17 +41,17 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 @RequestMapping("/api/v1/")
 public class UserController {
-
   private final UserService userService;
 
-  @PostMapping(path = "user/delete/{id}")
+  @PostMapping(path = "user/delete/{userId}")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
-  public Mono<Void> deleteById(@PathVariable final String id) {
-    log.debug("Deleting user with id " + id);
+  public Mono<Void> deleteById(@PathVariable @ValidUserId final String userId) {
+    log.debug("Deleting user with id " + userId);
 
-    return userService.deleteById(id);
+    return userService.deleteById(userId);
   }
 
   @GetMapping(path = "users")
@@ -55,10 +60,16 @@ public class UserController {
     return userService.findAll();
   }
 
-  @GetMapping(path = "user/{id}")
+  @GetMapping(path = "user/{userId}")
   @PreAuthorize(
-      "(hasRole('ROLE_USER') and #id == authentication.principal) or hasRole('ROLE_ADMIN')")
-  public Mono<UserEntity> findById(@PathVariable final String id) {
-    return userService.findById(id);
+      "(hasRole('ROLE_USER') and #userId == authentication.principal) or hasRole('ROLE_ADMIN')")
+  public Mono<UserEntity> findById(@PathVariable final String userId) {
+    Mono<UserEntity> userMono;
+    try {
+      userMono = userService.findById(userId);
+    } catch (ConstraintViolationException e) {
+      return Mono.error(new UserNotFoundException(e.getMessage()));
+    }
+    return userMono.switchIfEmpty(Mono.error(new UserNotFoundException()));
   }
 }

@@ -19,15 +19,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.exception;
+package org.owasp.herder.validation;
 
-import lombok.NoArgsConstructor;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@NoArgsConstructor
-public class InvalidModuleIdException extends RuntimeException {
-  public InvalidModuleIdException(String message) {
-    super(message);
-  }
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
-  private static final long serialVersionUID = -5350036580936173008L;
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = {})
+@NotNull(message = "{org.owasp.herder.ValidModuleName.NullMessage}")
+@Size(min = 2, message = "{org.owasp.herder.ValidModuleName.TooShortMessage}")
+@Size(max = 80, message = "{org.owasp.herder.ValidModuleName.TooLongMessage}")
+public @interface ValidModuleName {
+  String message() default "{org.owasp.herder.ValidModuleName.message}";
+
+  Class<?>[] groups() default {};
+
+  Class<? extends Payload>[] payload() default {};
 }

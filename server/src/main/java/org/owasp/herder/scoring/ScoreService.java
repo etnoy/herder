@@ -21,42 +21,32 @@
  */
 package org.owasp.herder.scoring;
 
-import org.owasp.herder.exception.InvalidModuleIdException;
-import org.owasp.herder.exception.InvalidRankException;
+import javax.validation.constraints.Min;
+
 import org.owasp.herder.scoring.ModulePoint.ModulePointBuilder;
+import org.owasp.herder.validation.ValidModuleId;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
+@Validated
 @Service
-public final class ScoreService {
+public class ScoreService {
   private final ModulePointRepository modulePointRepository;
 
   private final SubmissionRepository submissionRepository;
 
   public Mono<ModulePoint> setModuleScore(
-      final String moduleId, final long rank, final long points) {
-    if (rank < 0) {
-      return Mono.error(new InvalidRankException("Rank must be zero or a positive integer"));
-    }
-    if (points == 0) {
-      // TODO: what if we want to clear points?
-      return Mono.empty();
-    }
+      @ValidModuleId final String moduleId, @Min(0) final long rank, @Min(0) final long points) {
     ModulePointBuilder builder = ModulePoint.builder().moduleId(moduleId).rank(rank).points(points);
     return modulePointRepository.save(builder.build());
   }
 
-  public Flux<ModulePoint> getModuleScores(final String moduleId) {
-    if (moduleId == null) {
-      return Flux.error(new NullPointerException("Module id cannot be null"));
-    }
-    if (moduleId.isEmpty()) {
-      return Flux.error(new InvalidModuleIdException());
-    }
+  public Flux<ModulePoint> getModuleScores(@ValidModuleId final String moduleId) {
     return modulePointRepository.findAllByModuleId(moduleId);
   }
 

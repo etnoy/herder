@@ -21,6 +21,9 @@
  */
 package org.owasp.herder.flag;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.FlagSubmissionRateLimitException;
 import org.owasp.herder.exception.InvalidFlagStateException;
@@ -32,7 +35,11 @@ import org.owasp.herder.service.ConfigurationService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.user.UserService;
+import org.owasp.herder.validation.ValidModuleId;
+import org.owasp.herder.validation.ValidModuleLocator;
+import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
@@ -44,9 +51,9 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @RequiredArgsConstructor
+@Validated
 @Service
-public final class FlagHandler {
-
+public class FlagHandler {
   private static final String DYNAMIC_FLAG_FORMAT = "flag{%s}";
 
   private final ModuleService moduleService;
@@ -61,13 +68,16 @@ public final class FlagHandler {
 
   private final InvalidFlagRateLimiter invalidFlagRateLimiter;
 
-  public Mono<String> getDynamicFlag(final String userId, final String moduleLocator) {
+  public Mono<String> getDynamicFlag(
+      @ValidUserId final String userId, @ValidModuleLocator final String moduleLocator) {
     return getSaltedHmac(userId, moduleLocator, "flag")
         .map(flag -> String.format(DYNAMIC_FLAG_FORMAT, flag));
   }
 
   public Mono<String> getSaltedHmac(
-      final String userId, final String moduleLocator, final String prefix) {
+      @ValidUserId final String userId,
+      @ValidModuleLocator final String moduleLocator,
+      @NotNull @NotEmpty final String prefix) {
     final Mono<byte[]> moduleKey =
         // Find the module in the repo
         moduleService
@@ -98,11 +108,9 @@ public final class FlagHandler {
   }
 
   public Mono<Boolean> verifyFlag(
-      final String userId, final String moduleId, final String submittedFlag) {
-    if (submittedFlag == null) {
-      return Mono.error(new NullPointerException("Submitted flag cannot be null"));
-    }
-
+      @ValidUserId final String userId,
+      @ValidModuleId final String moduleId,
+      @NotEmpty @NotNull final String submittedFlag) {
     log.trace(
         "Verifying flag "
             + submittedFlag
@@ -159,9 +167,7 @@ public final class FlagHandler {
             .map(validFlag -> Boolean.TRUE.equals(validFlag) ? "valid" : "invalid");
 
     Mono.zip(
-            userService.findDisplayNameById(userId),
-            validText,
-            moduleMono.map(ModuleEntity::getId))
+            userService.findDisplayNameById(userId), validText, moduleMono.map(ModuleEntity::getId))
         .map(
             tuple ->
                 "User "

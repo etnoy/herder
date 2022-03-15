@@ -133,12 +133,7 @@ export class ApiService {
 
   getScoresByUserId(userId: string): Observable<any> {
     const api = `${this.endpoint}/scoreboard/user/${userId}`;
-    return this.http.get(api, { headers: this.headers }).pipe(
-      map((res: Response) => {
-        return res || {};
-      }),
-      catchError(this.handleError)
-    );
+    return this.http.get(api).pipe(catchError(this.handleError));
   }
 
   getModules(): Observable<any> {
@@ -153,6 +148,6 @@ export class ApiService {
 
   // Error
   handleError(error: HttpErrorResponse) {
-    return throwError(() => error.error.message);
+    return throwError(() => error);
   }
 }

@@ -42,6 +42,7 @@ import org.owasp.herder.scoring.ScoreboardController;
 import org.owasp.herder.scoring.ScoreboardEntry;
 import org.owasp.herder.scoring.ScoreboardEntry.ScoreboardEntryBuilder;
 import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.user.UserService;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
@@ -60,6 +61,8 @@ class ScoreboardControllerTest {
   private ScoreboardController scoreboardController;
 
   @Mock private ScoreService scoreService;
+
+  @Mock private UserService userService;
 
   @Mock private ModuleService moduleService;
 
@@ -127,7 +130,7 @@ class ScoreboardControllerTest {
         Flux.just(rankedSubmission1, rankedSubmission2);
     when(submissionService.findAllRankedByUserId(mockUserId)).thenReturn(rankedSubmissions);
 
-    StepVerifier.create(scoreboardController.getScoreboardByUserId(mockUserId))
+    StepVerifier.create(scoreboardController.getSubmissionsByUserId(mockUserId))
         .expectNext(rankedSubmission1)
         .expectNext(rankedSubmission2)
         .verifyComplete();
@@ -138,6 +141,7 @@ class ScoreboardControllerTest {
   @BeforeEach
   private void setUp() throws Exception {
     // Set up the system under test
-    scoreboardController = new ScoreboardController(scoreService, submissionService, moduleService);
+    scoreboardController =
+        new ScoreboardController(scoreService, userService, submissionService, moduleService);
   }
 }

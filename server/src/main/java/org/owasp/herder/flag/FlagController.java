@@ -27,9 +27,11 @@ import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.validation.ValidModuleLocator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,6 +44,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/")
+@Validated
 public class FlagController {
   private final ControllerAuthentication controllerAuthentication;
 
@@ -52,7 +55,8 @@ public class FlagController {
   @PostMapping(path = "flag/submit/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Mono<ResponseEntity<Submission>> submitFlag(
-      @PathVariable("moduleLocator") final String moduleLocator, @RequestBody final String flag) {
+      @PathVariable("moduleLocator") @ValidModuleLocator final String moduleLocator,
+      @RequestBody final String flag) {
     return controllerAuthentication
         .getUserId()
         .zipWith(moduleService.findByLocator(moduleLocator).map(ModuleEntity::getId))

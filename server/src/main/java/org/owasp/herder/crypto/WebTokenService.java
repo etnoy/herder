@@ -26,13 +26,18 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Date;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 import org.owasp.herder.authentication.Role;
+import org.owasp.herder.validation.ValidUserId;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwsHeader;
@@ -44,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
+@Validated
 public class WebTokenService {
   private final WebTokenKeyManager webTokenKeyManager;
 
@@ -61,11 +67,11 @@ public class WebTokenService {
     return 1000 * EXPIRATION_TIME;
   }
 
-  public String generateToken(final String userId) {
+  public String generateToken(@ValidUserId final String userId) {
     return generateToken(userId, false);
   }
 
-  public String generateToken(final String userId, final boolean isAdmin) {
+  public String generateToken(@ValidUserId final String userId, final boolean isAdmin) {
     if (userId == null) {
       throw new NullPointerException();
     }
@@ -92,8 +98,7 @@ public class WebTokenService {
         .compact();
   }
 
-  public Authentication parseToken(String token) throws AuthenticationException {
-
+  public Authentication parseToken(@NotNull @NotEmpty String token) throws AuthenticationException {
     final Claims parsedClaims;
 
     try {

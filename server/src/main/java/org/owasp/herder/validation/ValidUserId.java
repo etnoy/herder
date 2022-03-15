@@ -19,12 +19,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.exception;
+package org.owasp.herder.validation;
 
-public class EmptyModuleNameException extends RuntimeException {
-  private static final long serialVersionUID = -505553415557894220L;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-  public EmptyModuleNameException() {
-    super();
-  }
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = {})
+@NotNull(message = "{org.owasp.herder.ValidUserId.NullMessage}")
+@Size(min = 24, max = 24, message = "{org.owasp.herder.ValidUserId.WrongLengthMessage}")
+@Pattern(regexp = "^[a-f0-9]*$", message = "{org.owasp.herder.ValidUserId.PatternMessage}")
+public @interface ValidUserId {
+  String message() default "{org.owasp.herder.ValidUserId.message}";
+
+  Class<?>[] groups() default {};
+
+  Class<? extends Payload>[] payload() default {};
 }

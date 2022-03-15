@@ -19,11 +19,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.exception;
+package org.owasp.herder.validation;
 
-import lombok.NoArgsConstructor;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@NoArgsConstructor
-public class UserIdNotFoundException extends RuntimeException {
-  private static final long serialVersionUID = -5692051527699555141L;
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = {})
+@NotNull(message = "{org.owasp.herder.ValidModuleLocator.NullMessage}")
+@Size(min = 2, message = "{org.owasp.herder.ValidModuleLocator.TooShortMessage}")
+@Size(max = 80, message = "{org.owasp.herder.ValidModuleLocator.TooLongMessage}")
+@Pattern(regexp = "^[a-z0-9-]*$", message = "{org.owasp.herder.ValidModuleLocator.PatternMessage}")
+public @interface ValidModuleLocator {
+  String message() default "{org.owasp.herder.ValidModuleLocator.message}";
+
+  Class<?>[] groups() default {};
+
+  Class<? extends Payload>[] payload() default {};
 }

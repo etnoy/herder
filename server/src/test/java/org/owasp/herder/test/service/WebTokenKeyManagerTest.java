@@ -21,7 +21,6 @@
  */
 package org.owasp.herder.test.service;
 
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import java.security.Key;
@@ -41,13 +40,6 @@ class WebTokenKeyManagerTest {
   final Key testKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
   private WebTokenKeyManager webTokenKeyManager;
-
-  @Test
-  void invalidateAccessToken_NullUserId_ThrowsNullPointerException() {
-
-    assertThatExceptionOfType(NullPointerException.class)
-        .isThrownBy(() -> webTokenKeyManager.invalidateAccessToken(null));
-  }
 
   @Test
   void invalidateAccessToken_ValidUserId_Succeeds() {

@@ -21,6 +21,11 @@
  */
 package org.owasp.herder.it.util;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import javax.validation.ConstraintViolationException;
+
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.configuration.ConfigurationRepository;
 import org.owasp.herder.crypto.WebTokenService;
@@ -116,7 +121,7 @@ public final class IntegrationTestUtils {
     final String userId =
         userService
             .createPasswordUser(
-                TestConstants.TEST_DISPLAY_NAME,
+                TestConstants.TEST_USER_DISPLAY_NAME,
                 TestConstants.TEST_LOGIN_NAME,
                 TestConstants.HASHED_TEST_PASSWORD)
             .block();
@@ -147,7 +152,7 @@ public final class IntegrationTestUtils {
   public String createTestUser() {
     return userService
         .createPasswordUser(
-            TestConstants.TEST_DISPLAY_NAME,
+            TestConstants.TEST_USER_DISPLAY_NAME,
             TestConstants.TEST_LOGIN_NAME,
             TestConstants.HASHED_TEST_PASSWORD)
         .block();
@@ -241,5 +246,12 @@ public final class IntegrationTestUtils {
         .isOk()
         .returnResult(Submission.class)
         .getResponseBody();
+  }
+
+  public void checkConstraintViolation(
+      final ThrowingCallable shouldRaiseThrowable, final String containedMessage) {
+    assertThatThrownBy(shouldRaiseThrowable)
+        .isInstanceOf(ConstraintViolationException.class)
+        .hasMessageContaining(containedMessage);
   }
 }

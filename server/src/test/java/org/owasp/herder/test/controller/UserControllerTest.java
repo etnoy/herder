@@ -26,6 +26,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import javax.validation.ConstraintViolationException;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +35,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.owasp.herder.exception.UserNotFoundException;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserController;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
@@ -58,10 +62,9 @@ class UserControllerTest {
 
   @Test
   void deleteById_ValidId_CallsUserService() {
-    final String mockUserId = "id";
-    when(userService.deleteById(mockUserId)).thenReturn(Mono.empty());
-    StepVerifier.create(userController.deleteById(mockUserId)).verifyComplete();
-    verify(userService, times(1)).deleteById(mockUserId);
+    when(userService.deleteById(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
+    StepVerifier.create(userController.deleteById(TestConstants.TEST_USER_ID)).verifyComplete();
+    verify(userService, times(1)).deleteById(TestConstants.TEST_USER_ID);
   }
 
   @Test
@@ -69,24 +72,6 @@ class UserControllerTest {
     when(userService.findAll()).thenReturn(Flux.empty());
     StepVerifier.create(userController.findAll()).verifyComplete();
     verify(userService, times(1)).findAll();
-  }
-
-  @Test
-  void findById_UserIdDoesNotExist_ReturnsUser() {
-    final String mockUserId = "id";
-    when(userService.findById(mockUserId)).thenReturn(Mono.empty());
-    StepVerifier.create(userController.findById(mockUserId)).verifyComplete();
-    verify(userService, times(1)).findById(mockUserId);
-  }
-
-  @Test
-  void findById_UserIdExists_ReturnsUser() {
-    final String mockUserId = "id";
-    final UserEntity user = mock(UserEntity.class);
-
-    when(userService.findById(mockUserId)).thenReturn(Mono.just(user));
-    StepVerifier.create(userController.findById(mockUserId)).expectNext(user).verifyComplete();
-    verify(userService, times(1)).findById(mockUserId);
   }
 
   @Test
@@ -104,6 +89,40 @@ class UserControllerTest {
         .expectNext(user4)
         .verifyComplete();
     verify(userService, times(1)).findAll();
+  }
+
+  @Test
+  void findById_InvalidUserId_ReturnsUserNotFoundException() {
+    final ConstraintViolationException mockConstraintViolation =
+        mock(ConstraintViolationException.class);
+    final String testMessage = "Invalid id";
+    when(mockConstraintViolation.getMessage()).thenReturn(testMessage);
+
+    when(userService.findById(TestConstants.TEST_USER_ID)).thenThrow(mockConstraintViolation);
+    StepVerifier.create(userController.findById(TestConstants.TEST_USER_ID))
+        .expectError(UserNotFoundException.class)
+        .verify();
+    verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
+  }
+
+  @Test
+  void findById_UserIdDoesNotExist_ReturnsUserNotFoundException() {
+    when(userService.findById(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
+    StepVerifier.create(userController.findById(TestConstants.TEST_USER_ID))
+        .expectError(UserNotFoundException.class)
+        .verify();
+    verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
+  }
+
+  @Test
+  void findById_UserIdExists_ReturnsUser() {
+    final UserEntity mockUser = mock(UserEntity.class);
+
+    when(userService.findById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    StepVerifier.create(userController.findById(TestConstants.TEST_USER_ID))
+        .expectNext(mockUser)
+        .verifyComplete();
+    verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
   }
 
   @BeforeEach

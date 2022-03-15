@@ -84,15 +84,6 @@ class ModuleServiceTest {
   }
 
   @Test
-  void create_NullModuleName_ThrowsException() {
-    StepVerifier.create(moduleService.create(TestConstants.TEST_MODULE_NAME, null))
-        .expectError(NullPointerException.class)
-        .verify();
-
-    verify(moduleRepository, never()).findByName(any());
-  }
-
-  @Test
   void create_NewModuleLocator_Succeeds() {
     final String mockModuleId = "id1";
     final byte[] randomBytes = {120, 56, 111};

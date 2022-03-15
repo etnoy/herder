@@ -25,8 +25,9 @@ import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.owasp.herder.exception.InvalidUserIdException;
+import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -34,11 +35,12 @@ import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Validated
 @Slf4j
 public class WebTokenKeyManager {
   private static final Map<String, Key> userToKeyMap = new HashMap<>();
 
-  public Key getOrGenerateKeyForUser(final String userId) {
+  public Key getOrGenerateKeyForUser(@ValidUserId final String userId) {
     if (!userToKeyMap.containsKey(userId)) {
       // No key found, generate new key for user and store it
       return generateUserKey(userId);
@@ -47,10 +49,7 @@ public class WebTokenKeyManager {
     }
   }
 
-  public Key getKeyForUser(final String userId) {
-
-    if (userId == null || userId.isEmpty()) throw new InvalidUserIdException();
-
+  public Key getKeyForUser(@ValidUserId final String userId) {
     if (!userToKeyMap.containsKey(userId)) {
       // No key found, generate new key for user and store it
       throw new SignatureException("Signing key is not registred for the subject");
@@ -63,11 +62,7 @@ public class WebTokenKeyManager {
     userToKeyMap.clear();
   }
 
-  public Key generateUserKey(final String userId) {
-    if (userId == null) {
-      throw new NullPointerException();
-    }
-
+  public Key generateUserKey(@ValidUserId final String userId) {
     log.debug("Generating new web token key for user with id " + userId);
 
     final Key userKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
@@ -75,11 +70,7 @@ public class WebTokenKeyManager {
     return userKey;
   }
 
-  public void invalidateAccessToken(final String userId) {
-    if (userId == null) {
-      throw new NullPointerException();
-    }
-
+  public void invalidateAccessToken(@ValidUserId final String userId) {
     log.debug("Invalidating web token for user with id " + userId);
 
     userToKeyMap.remove(userId);

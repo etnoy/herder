@@ -27,9 +27,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
-import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,21 +68,18 @@ class UserAdministrationIT extends BaseIT {
         .verifyComplete();
   }
 
-  @Test
+  @ParameterizedTest
+  @MethodSource("org.owasp.herder.test.util.TestConstants#validDisplayNameProvider")
   @DisplayName("The database must handle non-latin display names")
-  void canHandleNonLatinUsernames() {
-    for (final String displayName : TestConstants.STRINGS) {
-      if (!displayName.isEmpty()) {
-        StepVerifier.create(
-                userService
-                    .create(displayName)
-                    .flatMap(userService::findById)
-                    .map(UserEntity::getDisplayName))
-            .expectNext(displayName)
-            .verifyComplete();
-        integrationTestUtils.resetState();
-      }
-    }
+  void canHandleNonLatinUsernames(final String displayName) {
+    StepVerifier.create(
+            userService
+                .create(displayName)
+                .flatMap(userService::findById)
+                .map(UserEntity::getDisplayName))
+        .expectNext(displayName)
+        .verifyComplete();
+    integrationTestUtils.resetState();
   }
 
   @BeforeEach

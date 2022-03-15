@@ -22,6 +22,9 @@
 package org.owasp.herder.authentication;
 
 import java.io.Serializable;
+
+import org.owasp.herder.validation.ValidDisplayName;
+
 import lombok.Builder;
 import lombok.Value;
 
@@ -35,5 +38,5 @@ public final class LoginResponse implements Serializable {
 
   private String errorMessage;
 
-  private String displayName;
+  @ValidDisplayName private String displayName;
 }

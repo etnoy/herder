@@ -37,10 +37,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateClassNameException;
-import org.owasp.herder.exception.InvalidClassIdException;
 import org.owasp.herder.model.ClassEntity;
-import org.owasp.herder.service.ClassService;
 import org.owasp.herder.user.ClassRepository;
+import org.owasp.herder.user.ClassService;
 
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -148,14 +147,6 @@ class ClassServiceTest {
   }
 
   @Test
-  @DisplayName("Getting an invalid class id should return InvalidClassIdException")
-  void getById_InvalidClassId_ReturnsInvalidClassIdException() {
-    StepVerifier.create(classService.getById(""))
-        .expectError(InvalidClassIdException.class)
-        .verify();
-  }
-
-  @Test
   @DisplayName("Getting a class id should return the correct class")
   void getById_ValidClassId_CallsRepository() {
     final ClassEntity mockClass = mock(ClassEntity.class);
@@ -198,16 +189,6 @@ class ClassServiceTest {
   }
 
   @Test
-  @DisplayName("Setting a class name with invalid id should return InvalidClassIdException")
-  void setName_InvalidClassId_ReturnsInvalidClassIdException() {
-    final String newName = "newName";
-
-    StepVerifier.create(classService.setName("", newName))
-        .expectError(InvalidClassIdException.class)
-        .verify();
-  }
-
-  @Test
   @DisplayName(
       "Setting the name of a class that does not exist should return ClassIdNotFoundException")
   void setName_NonExistentId_ReturnsClassIdNotFoundException() {
@@ -219,14 +200,6 @@ class ClassServiceTest {
 
     StepVerifier.create(classService.setName(mockClassId, newName))
         .expectError(ClassIdNotFoundException.class)
-        .verify();
-  }
-
-  @Test
-  @DisplayName("Setting the name of a class to null should return IllegalArgumentException")
-  void setName_NullName_ReturnsIllegalArgumentException() {
-    StepVerifier.create(classService.setName("id", null))
-        .expectError(IllegalArgumentException.class)
         .verify();
   }
 

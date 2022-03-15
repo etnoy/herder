@@ -43,6 +43,7 @@ import org.junit.jupiter.api.Test;
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.ModuleNotFoundException;
+import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
@@ -59,10 +60,12 @@ import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.service.ConfigurationService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.github.bucket4j.Bucket;
 import reactor.core.publisher.Hooks;
@@ -70,45 +73,102 @@ import reactor.test.StepVerifier;
 
 @DisplayName("ScoreboardController integration tests")
 class ScoreboardControllerIT extends BaseIT {
-  @Autowired ModuleService moduleService;
-
-  @Autowired UserService userService;
-
-  @Autowired SubmissionService submissionService;
-
-  @Autowired CorrectionService correctionService;
-
-  @Autowired ScoreService scoreService;
-
-  @Autowired ScoreboardController scoreboardController;
-
-  @Autowired CorrectionRepository correctionRepository;
-
-  @Autowired ModuleRepository moduleRepository;
-
-  @Autowired SubmissionRepository submissionRepository;
-
-  @Autowired ModulePointRepository modulePointRepository;
-
-  @Autowired FlagHandler flagHandler;
-
-  @Autowired ConfigurationService configurationService;
-
-  @Autowired KeyService keyService;
-
-  @Autowired CryptoService cryptoService;
-
-  @Autowired IntegrationTestUtils integrationTestUtils;
-
-  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
-
-  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
-
   @Nested
   @DisplayName("Can find ranked submissions")
   class rankedSubmissions {
 
     List<String> userIds;
+
+    @Test
+    @WithMockUser
+    @DisplayName("by module locator")
+    void canFindRankedSubmissionsByModuleLocator() {
+      StepVerifier.create(
+              scoreboardController
+                  .getSubmissionsByModuleLocator("id1")
+                  .map(RankedSubmission::getUserId)
+                  .map(userIds::indexOf))
+          .expectNext(6)
+          .expectNext(2)
+          .expectNext(5)
+          .expectNext(0)
+          .expectNext(4)
+          .expectNext(1)
+          .verifyComplete();
+
+      StepVerifier.create(
+              scoreboardController
+                  .getSubmissionsByModuleLocator("id2")
+                  .map(RankedSubmission::getUserId)
+                  .map(userIds::indexOf))
+          .expectNext(6)
+          .expectNext(2)
+          .expectNext(5)
+          .expectNext(0)
+          .expectNext(4)
+          .expectNext(1)
+          .verifyComplete();
+
+      StepVerifier.create(
+              scoreboardController
+                  .getSubmissionsByModuleLocator("id3")
+                  .map(RankedSubmission::getUserId)
+                  .map(userIds::indexOf))
+          .expectNext(6)
+          .expectNext(2)
+          .expectNext(5)
+          .expectNext(0)
+          .expectNext(4)
+          .expectNext(1)
+          .verifyComplete();
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("by userId")
+    void canFindRankedSubmissionsByUserId() {
+      StepVerifier.create(scoreboardController.getSubmissionsByUserId(userIds.get(0)))
+          .expectNextMatches(submission -> submission.getRank() == 4)
+          .expectNextMatches(submission -> submission.getRank() == 4)
+          .expectNextMatches(submission -> submission.getRank() == 4)
+          .verifyComplete();
+
+      StepVerifier.create(scoreboardController.getSubmissionsByUserId(userIds.get(1)))
+          .expectNextMatches(submission -> submission.getRank() == 6)
+          .expectNextMatches(submission -> submission.getRank() == 6)
+          .expectNextMatches(submission -> submission.getRank() == 6)
+          .verifyComplete();
+
+      StepVerifier.create(scoreboardController.getSubmissionsByUserId(userIds.get(2)))
+          .expectNextMatches(submission -> submission.getRank() == 2)
+          .expectNextMatches(submission -> submission.getRank() == 2)
+          .expectNextMatches(submission -> submission.getRank() == 2)
+          .verifyComplete();
+
+      StepVerifier.create(scoreboardController.getSubmissionsByUserId(userIds.get(3)))
+          .verifyComplete();
+
+      StepVerifier.create(scoreboardController.getSubmissionsByUserId(userIds.get(4)))
+          .expectNextMatches(submission -> submission.getRank() == 4)
+          .expectNextMatches(submission -> submission.getRank() == 4)
+          .expectNextMatches(submission -> submission.getRank() == 4)
+          .verifyComplete();
+
+      StepVerifier.create(scoreboardController.getSubmissionsByUserId(userIds.get(5)))
+          .expectNextMatches(submission -> submission.getRank() == 2)
+          .expectNextMatches(submission -> submission.getRank() == 2)
+          .expectNextMatches(submission -> submission.getRank() == 2)
+          .verifyComplete();
+
+      StepVerifier.create(scoreboardController.getSubmissionsByUserId(userIds.get(6)))
+          .expectNextMatches(submission -> submission.getRank() == 1)
+          .expectNextMatches(submission -> submission.getRank() == 1)
+          .expectNextMatches(submission -> submission.getRank() == 1)
+          .verifyComplete();
+
+      StepVerifier.create(scoreboardController.getSubmissionsByUserId(userIds.get(7)))
+          .verifyComplete();
+    }
 
     @BeforeEach
     private void setUp() {
@@ -201,97 +261,100 @@ class ScoreboardControllerIT extends BaseIT {
         submissionService.submit(currentUserId, moduleId3, currentFlag).block();
       }
     }
+  }
 
-    @Test
-    @WithMockUser
-    @DisplayName("by userId")
-    void canFindRankedSubmissionsByUserId() {
-      StepVerifier.create(scoreboardController.getScoreboardByUserId(userIds.get(0)))
-          .expectNextMatches(submission -> submission.getRank() == 4)
-          .expectNextMatches(submission -> submission.getRank() == 4)
-          .expectNextMatches(submission -> submission.getRank() == 4)
-          .verifyComplete();
+  @BeforeAll
+  private static void reactorVerbose() {
+    // Tell Reactor to print verbose error messages
+    Hooks.onOperatorDebug();
+  }
 
-      StepVerifier.create(scoreboardController.getScoreboardByUserId(userIds.get(1)))
-          .expectNextMatches(submission -> submission.getRank() == 6)
-          .expectNextMatches(submission -> submission.getRank() == 6)
-          .expectNextMatches(submission -> submission.getRank() == 6)
-          .verifyComplete();
+  @Autowired ModuleService moduleService;
 
-      StepVerifier.create(scoreboardController.getScoreboardByUserId(userIds.get(2)))
-          .expectNextMatches(submission -> submission.getRank() == 2)
-          .expectNextMatches(submission -> submission.getRank() == 2)
-          .expectNextMatches(submission -> submission.getRank() == 2)
-          .verifyComplete();
+  @Autowired UserService userService;
 
-      StepVerifier.create(scoreboardController.getScoreboardByUserId(userIds.get(3)))
-          .verifyComplete();
+  @Autowired SubmissionService submissionService;
 
-      StepVerifier.create(scoreboardController.getScoreboardByUserId(userIds.get(4)))
-          .expectNextMatches(submission -> submission.getRank() == 4)
-          .expectNextMatches(submission -> submission.getRank() == 4)
-          .expectNextMatches(submission -> submission.getRank() == 4)
-          .verifyComplete();
+  @Autowired CorrectionService correctionService;
 
-      StepVerifier.create(scoreboardController.getScoreboardByUserId(userIds.get(5)))
-          .expectNextMatches(submission -> submission.getRank() == 2)
-          .expectNextMatches(submission -> submission.getRank() == 2)
-          .expectNextMatches(submission -> submission.getRank() == 2)
-          .verifyComplete();
+  @Autowired ScoreService scoreService;
 
-      StepVerifier.create(scoreboardController.getScoreboardByUserId(userIds.get(6)))
-          .expectNextMatches(submission -> submission.getRank() == 1)
-          .expectNextMatches(submission -> submission.getRank() == 1)
-          .expectNextMatches(submission -> submission.getRank() == 1)
-          .verifyComplete();
+  @Autowired ScoreboardController scoreboardController;
 
-      StepVerifier.create(scoreboardController.getScoreboardByUserId(userIds.get(7)))
-          .verifyComplete();
-    }
+  @Autowired CorrectionRepository correctionRepository;
 
-    @Test
-    @WithMockUser
-    @DisplayName("by module locator")
-    void canFindRankedSubmissionsByModuleLocator() {
-      StepVerifier.create(
-              scoreboardController
-                  .getSubmissionsForModule("id1")
-                  .map(RankedSubmission::getUserId)
-                  .map(userIds::indexOf))
-          .expectNext(6)
-          .expectNext(2)
-          .expectNext(5)
-          .expectNext(0)
-          .expectNext(4)
-          .expectNext(1)
-          .verifyComplete();
+  @Autowired ModuleRepository moduleRepository;
 
-      StepVerifier.create(
-              scoreboardController
-                  .getSubmissionsForModule("id2")
-                  .map(RankedSubmission::getUserId)
-                  .map(userIds::indexOf))
-          .expectNext(6)
-          .expectNext(2)
-          .expectNext(5)
-          .expectNext(0)
-          .expectNext(4)
-          .expectNext(1)
-          .verifyComplete();
+  @Autowired SubmissionRepository submissionRepository;
 
-      StepVerifier.create(
-              scoreboardController
-                  .getSubmissionsForModule("id3")
-                  .map(RankedSubmission::getUserId)
-                  .map(userIds::indexOf))
-          .expectNext(6)
-          .expectNext(2)
-          .expectNext(5)
-          .expectNext(0)
-          .expectNext(4)
-          .expectNext(1)
-          .verifyComplete();
-    }
+  @Autowired ModulePointRepository modulePointRepository;
+
+  @Autowired FlagHandler flagHandler;
+
+  @Autowired ConfigurationService configurationService;
+
+  @Autowired KeyService keyService;
+
+  @Autowired CryptoService cryptoService;
+
+  @Autowired IntegrationTestUtils integrationTestUtils;
+
+  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+
+  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+
+  @Test
+  @WithMockUser
+  @DisplayName("Can return error if invalid module locator is given")
+  void canReturnErrorForInvalidModuleLocator() {
+    StepVerifier.create(scoreboardController.getSubmissionsByModuleLocator("XYZ"))
+        .expectError(ResponseStatusException.class)
+        .verify();
+  }
+
+  @Test
+  @WithMockUser
+  @DisplayName("Can return error for invalid user id")
+  void canReturnErrorForInvalidUserId() {
+    StepVerifier.create(scoreboardController.getSubmissionsByUserId("xyz"))
+        .expectError(ResponseStatusException.class)
+        .verify();
+  }
+
+  @Test
+  @WithMockUser
+  @DisplayName("Can return error if nonexistent module locator is given")
+  void canReturnErrorForNonExistentModuleLocator() {
+    StepVerifier.create(scoreboardController.getSubmissionsByModuleLocator("non-existent"))
+        .expectError(ModuleNotFoundException.class)
+        .verify();
+  }
+
+  @Test
+  @WithMockUser
+  @DisplayName("Can return error for nonexistent user id")
+  void canReturnErrorForNonExistentUserId() {
+    StepVerifier.create(scoreboardController.getSubmissionsByUserId(TestConstants.TEST_USER_ID))
+        .expectError(UserNotFoundException.class)
+        .verify();
+  }
+
+  @Test
+  @WithMockUser
+  @DisplayName("Can return zero submissions for module without submissions")
+  void canReturnZeroSubmissionsForModuleWithoutSubmissions() {
+    integrationTestUtils.createStaticTestModule();
+    StepVerifier.create(
+            scoreboardController.getSubmissionsByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+        .verifyComplete();
+  }
+
+  @Test
+  @WithMockUser
+  @DisplayName("Can return zero submissions for user without submissions")
+  void canReturnZeroSubmissionsForUserWithoutSubmissions() {
+    final String userId = integrationTestUtils.createTestUser();
+    StepVerifier.create(scoreboardController.getSubmissionsByUserId(userId)).verifyComplete();
   }
 
   @BeforeEach
@@ -303,20 +366,5 @@ class ScoreboardControllerIT extends BaseIT {
     when(mockBucket.tryConsume(1)).thenReturn(true);
     when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
     when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-  }
-
-  @Test
-  @WithMockUser
-  @DisplayName("Can return error if invalid module locator is given")
-  void canFindRankedSubmissionsByModuleLocator() {
-    StepVerifier.create(scoreboardController.getSubmissionsForModule("non-existent"))
-        .expectError(ModuleNotFoundException.class)
-        .verify();
-  }
-
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
   }
 }

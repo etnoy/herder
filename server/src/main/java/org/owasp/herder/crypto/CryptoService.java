@@ -23,17 +23,21 @@ package org.owasp.herder.crypto;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import lombok.RequiredArgsConstructor;
+
 import org.owasp.herder.exception.CryptographicException;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
 public final class CryptoService {
   private final CryptoFactory cryptoFactory;
 
+  // TODO: validation
   public byte[] hmac(final byte[] key, final byte[] message) {
     if (key == null) {
       throw new NullPointerException("Key cannot be null");

@@ -22,34 +22,42 @@
 package org.owasp.herder.service;
 
 import java.util.Base64;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 import org.owasp.herder.configuration.ConfigurationRepository;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.ConfigurationKeyNotFoundException;
 import org.owasp.herder.model.Configuration;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Slf4j
 @RequiredArgsConstructor
+@Validated
 @Service
-public final class ConfigurationService {
+public class ConfigurationService {
 
   private final ConfigurationRepository configurationRepository;
 
   private final KeyService keyService;
 
-  private Mono<Configuration> create(final String key, final String value) {
+  private Mono<Configuration> create(
+      @NotNull @NotEmpty final String key, @NotNull @NotEmpty final String value) {
     log.debug("Creating configuration key " + key + " with value " + value);
     return configurationRepository.save(Configuration.builder().key(key).value(value).build());
   }
 
-  private Mono<Boolean> existsByKey(final String key) {
+  private Mono<Boolean> existsByKey(@NotNull @NotEmpty final String key) {
     return configurationRepository.findByKey(key).map(u -> true).defaultIfEmpty(false);
   }
 
-  private Mono<String> getByKey(final String key) {
+  private Mono<String> getByKey(@NotNull @NotEmpty final String key) {
     return configurationRepository
         .findByKey(key)
         .switchIfEmpty(
@@ -82,7 +90,8 @@ public final class ConfigurationService {
         .map(Base64.getDecoder()::decode);
   }
 
-  private Mono<Configuration> setValue(final String key, final String value) {
+  private Mono<Configuration> setValue(
+      @NotNull @NotEmpty final String key, @NotNull @NotEmpty final String value) {
     log.debug("Setting configuration key " + key + " to value " + value);
     return Mono.just(key)
         .filterWhen(this::existsByKey)

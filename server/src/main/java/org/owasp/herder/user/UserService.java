@@ -36,15 +36,18 @@ import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
-import org.owasp.herder.exception.InvalidClassIdException;
-import org.owasp.herder.exception.InvalidUserIdException;
-import org.owasp.herder.exception.UserIdNotFoundException;
-import org.owasp.herder.service.ClassService;
+import org.owasp.herder.exception.UserNotFoundException;
+import org.owasp.herder.validation.ValidClassId;
+import org.owasp.herder.validation.ValidDisplayName;
+import org.owasp.herder.validation.ValidLoginName;
+import org.owasp.herder.validation.ValidPassword;
+import org.owasp.herder.validation.ValidUserId;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
@@ -52,8 +55,8 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
-public final class UserService {
-
+@Validated
+public class UserService {
   private final UserRepository userRepository;
 
   private final PasswordAuthRepository passwordAuthRepository;
@@ -80,16 +83,8 @@ public final class UserService {
     resetClock();
   }
 
-  public Mono<AuthResponse> authenticate(final String loginName, final String password) {
-    if ((loginName == null) || (password == null)) {
-      return Mono.error(new NullPointerException());
-    }
-    if (loginName.isEmpty()) {
-      return Mono.error(new IllegalArgumentException());
-    }
-    if (password.isEmpty()) {
-      return Mono.error(new IllegalArgumentException());
-    }
+  public Mono<AuthResponse> authenticate(
+      @ValidLoginName final String loginName, @ValidPassword final String password) {
     // Initialize the encoder
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(16);
 
@@ -139,15 +134,7 @@ public final class UserService {
     return userRepository.count();
   }
 
-  public Mono<String> create(final String displayName) {
-    if (displayName == null) {
-      return Mono.error(new NullPointerException());
-    }
-
-    if (displayName.isEmpty()) {
-      return Mono.error(new IllegalArgumentException());
-    }
-
+  public Mono<String> create(@ValidDisplayName final String displayName) {
     log.info("Creating new user with display name " + displayName);
 
     return Mono.just(displayName)
@@ -165,23 +152,9 @@ public final class UserService {
   }
 
   public Mono<String> createPasswordUser(
-      final String displayName, final String loginName, final String passwordHash) {
-    if (displayName == null) {
-      return Mono.error(new NullPointerException("Display name cannot be null"));
-    }
-
-    if (loginName == null) {
-      return Mono.error(new NullPointerException("Login name cannot be null"));
-    }
-
-    if (passwordHash == null) {
-      return Mono.error(new NullPointerException("Password hash cannot be null"));
-    }
-
-    if (displayName.isEmpty() || loginName.isEmpty() || passwordHash.isEmpty()) {
-      return Mono.error(new IllegalArgumentException());
-    }
-
+      @ValidDisplayName final String displayName,
+      @ValidLoginName final String loginName,
+      final String passwordHash) {
     log.info(
         "Creating new password login user with display name "
             + displayName
@@ -221,26 +194,14 @@ public final class UserService {
             });
   }
 
-  public Mono<Void> deleteById(final String userId) {
-    if (userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
+  public Mono<Void> deleteById(@ValidUserId final String userId) {
     return passwordAuthRepository
         .deleteByUserId(userId)
         .then(userRepository.deleteById(userId))
         .doOnSuccess(u -> kick(userId));
   }
 
-  public Mono<Void> demote(final String userId) {
-    if (userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
+  public Mono<Void> demote(@ValidUserId final String userId) {
     log.info("Demoting user with id " + userId + " to user");
 
     return findById(userId)
@@ -250,7 +211,7 @@ public final class UserService {
         .then();
   }
 
-  public Mono<Void> disable(final String userId) {
+  public Mono<Void> disable(@ValidUserId final String userId) {
     log.info("Disabling user with id " + userId);
 
     return findById(userId)
@@ -260,28 +221,32 @@ public final class UserService {
         .then();
   }
 
-  private Mono<String> displayNameAlreadyExists(final String displayName) {
+  private Mono<String> displayNameAlreadyExists(@ValidDisplayName final String displayName) {
     return Mono.error(
         new DuplicateUserDisplayNameException("Display name " + displayName + " already exists"));
   }
 
-  public Mono<Boolean> existsByDisplayName(final String displayName) {
+  public Mono<Boolean> existsByDisplayName(@ValidDisplayName final String displayName) {
     return userRepository.findByDisplayName(displayName).map(u -> true).defaultIfEmpty(false);
   }
 
-  public Mono<Boolean> existsByLoginName(final String loginName) {
+  public Mono<Boolean> existsById(@ValidUserId final String userId) {
+    return userRepository.findById(userId).map(u -> true).defaultIfEmpty(false);
+  }
+
+  public Mono<Boolean> existsByLoginName(@ValidLoginName final String loginName) {
     return passwordAuthRepository.findByLoginName(loginName).map(u -> true).defaultIfEmpty(false);
   }
 
-  private Mono<Boolean> doesNotExistByDisplayName(final String displayName) {
+  private Mono<Boolean> doesNotExistByDisplayName(@ValidDisplayName final String displayName) {
     return userRepository.findByDisplayName(displayName).map(u -> false).defaultIfEmpty(true);
   }
 
-  private Mono<Boolean> doesNotExistByLoginName(final String loginName) {
+  private Mono<Boolean> doesNotExistByLoginName(@ValidLoginName final String loginName) {
     return passwordAuthRepository.findByLoginName(loginName).map(u -> false).defaultIfEmpty(true);
   }
 
-  public Mono<Void> enable(final String userId) {
+  public Mono<Void> enable(@ValidUserId final String userId) {
     log.info("Enabling user with id " + userId);
 
     return findById(userId)
@@ -295,36 +260,18 @@ public final class UserService {
     return userRepository.findAll();
   }
 
-  public Mono<UserEntity> findById(final String userId) {
-    if (userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
+  public Mono<UserEntity> findById(@ValidUserId final String userId) {
     return userRepository.findById(userId);
   }
 
-  public Mono<String> findDisplayNameById(final String userId) {
-    if (userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
+  public Mono<String> findDisplayNameById(@ValidUserId final String userId) {
     return userRepository.findById(userId).map(UserEntity::getDisplayName);
   }
 
-  public Mono<byte[]> findKeyById(final String userId) {
-    if (userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
+  public Mono<byte[]> findKeyById(@ValidUserId final String userId) {
     return Mono.just(userId)
         .filterWhen(userRepository::existsById)
-        .switchIfEmpty(Mono.error(new UserIdNotFoundException()))
+        .switchIfEmpty(Mono.error(new UserNotFoundException()))
         .flatMap(userRepository::findById)
         .flatMap(
             user -> {
@@ -338,57 +285,30 @@ public final class UserService {
             });
   }
 
-  public Mono<PasswordAuth> findPasswordAuthByLoginName(final String loginName) {
-    if (loginName == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (loginName.isEmpty()) {
-      return Mono.error(new IllegalArgumentException());
-    }
+  public Mono<PasswordAuth> findPasswordAuthByLoginName(@ValidLoginName final String loginName) {
     return passwordAuthRepository.findByLoginName(loginName);
   }
 
-  public Mono<PasswordAuth> findPasswordAuthByUserId(final String userId) {
-    if (userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
+  public Mono<PasswordAuth> findPasswordAuthByUserId(@ValidUserId final String userId) {
     return passwordAuthRepository.findByUserId(userId);
   }
 
-  public Mono<String> findUserIdByLoginName(final String loginName) {
-    if (loginName == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (loginName.isEmpty()) {
-      return Mono.error(new IllegalArgumentException());
-    }
-
+  public Mono<String> findUserIdByLoginName(@ValidLoginName final String loginName) {
     return passwordAuthRepository.findByLoginName(loginName).map(PasswordAuth::getUserId);
   }
 
-  public void kick(final String userId) {
-
+  public void kick(@ValidUserId final String userId) {
     log.info("Revoking all tokens for user with id " + userId);
 
     webTokenKeyManager.invalidateAccessToken(userId);
   }
 
-  private Mono<String> loginNameAlreadyExists(final String loginName) {
+  private Mono<String> loginNameAlreadyExists(@ValidLoginName final String loginName) {
     return Mono.error(
         new DuplicateUserLoginNameException("Login name " + loginName + " already exists"));
   }
 
-  public Mono<Void> promote(final String userId) {
-    if (userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
-
+  public Mono<Void> promote(@ValidUserId final String userId) {
     log.info("Promoting user with id " + userId + " to admin");
 
     return findById(userId)
@@ -402,19 +322,8 @@ public final class UserService {
     this.clock = Clock.systemDefaultZone();
   }
 
-  public Mono<UserEntity> setClassId(final String userId, final String classId) {
-    if (userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
-    if (classId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (classId.isEmpty()) {
-      return Mono.error(new InvalidClassIdException());
-    }
+  public Mono<UserEntity> setClassId(
+      @ValidUserId final String userId, @ValidClassId final String classId) {
     final Mono<String> classIdMono =
         Mono.just(classId)
             .filterWhen(classService::existsById)
@@ -432,20 +341,8 @@ public final class UserService {
     this.clock = clock;
   }
 
-  public Mono<UserEntity> setDisplayName(final String userId, final String displayName) {
-    if (userId == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (userId.isEmpty()) {
-      return Mono.error(new InvalidUserIdException());
-    }
-    if (displayName == null) {
-      return Mono.error(new NullPointerException());
-    }
-    if (displayName.isEmpty()) {
-      return Mono.error(new IllegalArgumentException());
-    }
-
+  public Mono<UserEntity> setDisplayName(
+      @ValidUserId final String userId, @ValidDisplayName final String displayName) {
     log.info("Setting display name of user id " + userId + " to " + displayName);
 
     final Mono<String> displayNameMono =
@@ -455,28 +352,32 @@ public final class UserService {
 
     return Mono.just(userId)
         .filterWhen(userRepository::existsById)
-        .switchIfEmpty(Mono.error(new UserIdNotFoundException()))
+        .switchIfEmpty(Mono.error(new UserNotFoundException()))
         .flatMap(this::findById)
         .zipWith(displayNameMono)
         .map(tuple -> tuple.getT1().withDisplayName(tuple.getT2()))
         .flatMap(userRepository::save);
   }
 
-  public Mono<Void> suspendUntil(final String userId, final Duration duration) {
+  // TODO: validate durations etc. for these functions
+  public Mono<Void> suspendUntil(@ValidUserId final String userId, final Duration duration) {
     return suspendUntil(userId, LocalDateTime.now().plus(duration), null);
   }
 
   public Mono<Void> suspendUntil(
-      final String userId, final Duration duration, final String suspensionMessage) {
+      @ValidUserId final String userId, final Duration duration, final String suspensionMessage) {
     return suspendUntil(userId, LocalDateTime.now().plus(duration), suspensionMessage);
   }
 
-  public Mono<Void> suspendUntil(final String userId, final LocalDateTime suspensionDate) {
+  public Mono<Void> suspendUntil(
+      @ValidUserId final String userId, final LocalDateTime suspensionDate) {
     return suspendUntil(userId, suspensionDate, null);
   }
 
   public Mono<Void> suspendUntil(
-      final String userId, final LocalDateTime suspensionDate, final String suspensionMessage) {
+      @ValidUserId final String userId,
+      final LocalDateTime suspensionDate,
+      final String suspensionMessage) {
     if (suspensionDate.isBefore(LocalDateTime.now(clock))) {
       return Mono.error(new IllegalArgumentException("Suspension date must be in the future"));
     }

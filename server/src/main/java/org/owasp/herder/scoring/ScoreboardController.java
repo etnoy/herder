@@ -21,13 +21,20 @@
  */
 package org.owasp.herder.scoring;
 
+import javax.validation.ConstraintViolationException;
+
 import org.owasp.herder.exception.ModuleNotFoundException;
+import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.user.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -35,9 +42,12 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("/api/v1/")
 public class ScoreboardController {
   private final ScoreService scoreService;
+
+  private final UserService userService;
 
   private final SubmissionService submissionService;
 
@@ -51,18 +61,34 @@ public class ScoreboardController {
 
   @GetMapping(path = "scoreboard/user/{userId}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<RankedSubmission> getScoreboardByUserId(@PathVariable final String userId) {
-    return submissionService.findAllRankedByUserId(userId);
+  public Flux<RankedSubmission> getSubmissionsByUserId(@PathVariable final String userId) {
+    try {
+      return userService
+          .existsById(userId)
+          .filter(exists -> exists)
+          .switchIfEmpty(Mono.error(new UserNotFoundException("User id " + userId + " not found.")))
+          .flatMapMany(u -> submissionService.findAllRankedByUserId(userId));
+    } catch (ConstraintViolationException e) {
+      return Flux.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user id", e));
+    }
   }
 
   @GetMapping(path = "scoreboard/module/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<RankedSubmission> getSubmissionsForModule(@PathVariable final String moduleLocator) {
-    return Mono.just(moduleLocator)
-        .filterWhen(moduleService::existsByLocator)
-        .switchIfEmpty(
-            Mono.error(
-                new ModuleNotFoundException("No module with locator " + moduleLocator + " found.")))
-        .flatMapMany(submissionService::findAllRankedByModuleLocator);
+  public Flux<RankedSubmission> getSubmissionsByModuleLocator(
+      @PathVariable final String moduleLocator) {
+    try {
+      return moduleService
+          .existsByLocator(moduleLocator)
+          .filter(exists -> exists)
+          .switchIfEmpty(
+              Mono.error(
+                  new ModuleNotFoundException(
+                      "No module with locator " + moduleLocator + " found.")))
+          .flatMapMany(u -> submissionService.findAllRankedByModuleLocator(moduleLocator));
+    } catch (ConstraintViolationException e) {
+      return Flux.error(
+          new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid module locator", e));
+    }
   }
 }

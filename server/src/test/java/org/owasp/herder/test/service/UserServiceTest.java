@@ -49,10 +49,8 @@ import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
-import org.owasp.herder.exception.InvalidClassIdException;
-import org.owasp.herder.exception.InvalidUserIdException;
-import org.owasp.herder.exception.UserIdNotFoundException;
-import org.owasp.herder.service.ClassService;
+import org.owasp.herder.exception.UserNotFoundException;
+import org.owasp.herder.user.ClassService;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
@@ -90,20 +88,6 @@ class UserServiceTest {
   @Mock private WebTokenKeyManager webTokenKeyManager;
 
   @Test
-  void authenticate_EmptyPassword_ReturnsIllegalArgumentException() {
-    StepVerifier.create(userService.authenticate("username", ""))
-        .expectError(IllegalArgumentException.class)
-        .verify();
-  }
-
-  @Test
-  void authenticate_EmptyUsername_ReturnsIllegalArgumentException() {
-    StepVerifier.create(userService.authenticate("", "password"))
-        .expectError(IllegalArgumentException.class)
-        .verify();
-  }
-
-  @Test
   void authenticate_InvalidUsername_ReturnsFalse() {
     final String mockedLoginName = "MockUser";
     final String mockedPassword = "MockPassword";
@@ -116,20 +100,6 @@ class UserServiceTest {
                     && throwable.getMessage().equals("Invalid username or password"))
         .verify();
     verify(passwordAuthRepository, times(1)).findByLoginName(mockedLoginName);
-  }
-
-  @Test
-  void authenticate_NullPassword_ReturnsNullPointerException() {
-    StepVerifier.create(userService.authenticate("username", null))
-        .expectError(NullPointerException.class)
-        .verify();
-  }
-
-  @Test
-  void authenticate_NullUsername_ReturnsNullPointerException() {
-    StepVerifier.create(userService.authenticate(null, "password"))
-        .expectError(NullPointerException.class)
-        .verify();
   }
 
   @Test
@@ -281,19 +251,6 @@ class UserServiceTest {
   }
 
   @Test
-  @DisplayName("create() must return exception if display name already exists")
-  void create_EmptyArgument_ReturnsIllegalArgumentException() {
-    StepVerifier.create(userService.create(""))
-        .expectError(IllegalArgumentException.class)
-        .verify();
-  }
-
-  @Test
-  void create_NullArgument_ReturnsNullPointerException() {
-    StepVerifier.create(userService.create(null)).expectError(NullPointerException.class).verify();
-  }
-
-  @Test
   void create_ValidDisplayName_CreatesUser() {
     final String displayName = "TestUser";
     final String mockUserId = "id";
@@ -358,41 +315,6 @@ class UserServiceTest {
   }
 
   @Test
-  void createPasswordUser_EmptyDisplayName_ReturnsIllegalArgumentException() {
-    StepVerifier.create(userService.createPasswordUser("", "loginName", "passwordHash"))
-        .expectError(IllegalArgumentException.class)
-        .verify();
-  }
-
-  @Test
-  void createPasswordUser_EmptyLoginName_ReturnsIllegalArgumentException() {
-    StepVerifier.create(userService.createPasswordUser("displayName", "", "passwordHash"))
-        .expectError(IllegalArgumentException.class)
-        .verify();
-  }
-
-  @Test
-  void createPasswordUser_EmptyPasswordHash_ReturnsIllegalArgumentException() {
-    StepVerifier.create(userService.createPasswordUser("displayName", "loginName", ""))
-        .expectError(IllegalArgumentException.class)
-        .verify();
-  }
-
-  @Test
-  void createPasswordUser_NullDisplayName_ReturnsNullPointerException() {
-    StepVerifier.create(userService.createPasswordUser(null, "loginName", "passwordHash"))
-        .expectError(NullPointerException.class)
-        .verify();
-  }
-
-  @Test
-  void createPasswordUser_NullLoginName_ReturnsNullPointerException() {
-    StepVerifier.create(userService.createPasswordUser("displayName", null, "passwordHash"))
-        .expectError(NullPointerException.class)
-        .verify();
-  }
-
-  @Test
   void createPasswordUser_NullPasswordHash_ReturnsNullPointerException() {
     StepVerifier.create(userService.createPasswordUser("displayName", "loginName", null))
         .expectError(NullPointerException.class)
@@ -443,24 +365,12 @@ class UserServiceTest {
   }
 
   @Test
-  void deleteById_InvalidUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(userService.deleteById(""))
-        .expectError(InvalidUserIdException.class)
-        .verify();
-  }
-
-  @Test
   void deleteById_ValidUserId_CallsRepository() {
     final String mockUserId = "id";
     when(passwordAuthRepository.deleteByUserId(mockUserId)).thenReturn(Mono.empty());
     when(userRepository.deleteById(mockUserId)).thenReturn(Mono.empty());
 
     StepVerifier.create(userService.deleteById(mockUserId)).verifyComplete();
-  }
-
-  @Test
-  void demote_InvalidUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(userService.demote("")).expectError(InvalidUserIdException.class).verify();
   }
 
   @Test
@@ -569,25 +479,11 @@ class UserServiceTest {
   }
 
   @Test
-  void findById_InvalidUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(userService.findById(""))
-        .expectError(InvalidUserIdException.class)
-        .verify();
-  }
-
-  @Test
   void findById_NonExistentUserId_ReturnsEmpty() {
     final String nonExistentUserId = "id";
     when(userRepository.findById(nonExistentUserId)).thenReturn(Mono.empty());
     StepVerifier.create(userService.findById(nonExistentUserId)).verifyComplete();
     verify(userRepository, times(1)).findById(nonExistentUserId);
-  }
-
-  @Test
-  void findByLoginName_EmptyLoginName_ReturnsIllegalArgumentException() {
-    StepVerifier.create(userService.findUserIdByLoginName(""))
-        .expectError(IllegalArgumentException.class)
-        .verify();
   }
 
   @Test
@@ -598,13 +494,6 @@ class UserServiceTest {
     StepVerifier.create(userService.findUserIdByLoginName(nonExistentLoginName)).verifyComplete();
 
     verify(passwordAuthRepository, times(1)).findByLoginName(nonExistentLoginName);
-  }
-
-  @Test
-  void findByLoginName_NullLoginName_ReturnsNullPointerException() {
-    StepVerifier.create(userService.findUserIdByLoginName(null))
-        .expectError(NullPointerException.class)
-        .verify();
   }
 
   @Test
@@ -621,13 +510,6 @@ class UserServiceTest {
         .verifyComplete();
 
     verify(passwordAuthRepository, times(1)).findByLoginName(loginName);
-  }
-
-  @Test
-  void findDisplayNameById_InvalidUserId_ReturnsInvalidUserIdExceptio() {
-    StepVerifier.create(userService.findDisplayNameById(""))
-        .expectError(InvalidUserIdException.class)
-        .verify();
   }
 
   @Test
@@ -656,13 +538,6 @@ class UserServiceTest {
   }
 
   @Test
-  void findPasswordAuthByLoginName_EmptyLoginName_ReturnsIllegalArgumentException() {
-    StepVerifier.create(userService.findPasswordAuthByLoginName(""))
-        .expectError(IllegalArgumentException.class)
-        .verify();
-  }
-
-  @Test
   void findPasswordAuthByLoginName_ExistingLoginName_ReturnsPasswordAuth() {
     final PasswordAuth mockPasswordAuth = mock(PasswordAuth.class);
 
@@ -684,20 +559,6 @@ class UserServiceTest {
     StepVerifier.create(userService.findPasswordAuthByLoginName(mockLoginName)).verifyComplete();
 
     verify(passwordAuthRepository, times(1)).findByLoginName(mockLoginName);
-  }
-
-  @Test
-  void findPasswordAuthByLoginName_NullLoginName_ReturnsNullPointerException() {
-    StepVerifier.create(userService.findPasswordAuthByLoginName(null))
-        .expectError(NullPointerException.class)
-        .verify();
-  }
-
-  @Test
-  void findPasswordAuthByUserId_InvalidUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(userService.findPasswordAuthByUserId(""))
-        .expectError(InvalidUserIdException.class)
-        .verify();
   }
 
   @Test
@@ -723,13 +584,6 @@ class UserServiceTest {
         .verifyComplete();
 
     verify(passwordAuthRepository, times(1)).findByUserId(mockUserId);
-  }
-
-  @Test
-  void getKeyById_InvalidUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(userService.findKeyById(""))
-        .expectError(InvalidUserIdException.class)
-        .verify();
   }
 
   @Test
@@ -805,11 +659,6 @@ class UserServiceTest {
   }
 
   @Test
-  void promote_InvalidUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(userService.promote("")).expectError(InvalidUserIdException.class).verify();
-  }
-
-  @Test
   void promote_UserIsAdmin_StaysAdmin() {
     final String mockUserId = "id";
     final String mockAuthId = "Authid";
@@ -837,20 +686,6 @@ class UserServiceTest {
     verify(userRepository, times(1)).findById(mockUserId);
     verify(mockUser, times(1)).withAdmin(true);
     verify(userRepository, times(1)).save(mockUser);
-  }
-
-  @Test
-  void setClassId_InvalidClassId_ReturnsInvalidClassIdException() {
-    StepVerifier.create(userService.setClassId("id", ""))
-        .expectError(InvalidClassIdException.class)
-        .verify();
-  }
-
-  @Test
-  void setClassId_InvalidUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(userService.setClassId("", "id"))
-        .expectError(InvalidUserIdException.class)
-        .verify();
   }
 
   @Test
@@ -899,27 +734,6 @@ class UserServiceTest {
   }
 
   @Test
-  void setDisplayName_EmptyDisplayName_ReturnsIllegalArgumentException() {
-    StepVerifier.create(userService.setDisplayName("id", ""))
-        .expectError(IllegalArgumentException.class)
-        .verify();
-  }
-
-  @Test
-  void setDisplayName_InvalidUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(userService.setDisplayName("", "displayName"))
-        .expectError(InvalidUserIdException.class)
-        .verify();
-  }
-
-  @Test
-  void setDisplayName_NullDisplayName_ReturnsNullPointerException() {
-    StepVerifier.create(userService.setDisplayName("id", null))
-        .expectError(NullPointerException.class)
-        .verify();
-  }
-
-  @Test
   void setDisplayName_UserIdDoesNotExist_ReturnsUserIdNotFoundException() {
     final String newDisplayName = "newName";
 
@@ -928,7 +742,7 @@ class UserServiceTest {
     when(userRepository.existsById(mockUserId)).thenReturn(Mono.just(false));
 
     StepVerifier.create(userService.setDisplayName(mockUserId, newDisplayName))
-        .expectError(UserIdNotFoundException.class)
+        .expectError(UserNotFoundException.class)
         .verify();
     verify(userRepository, times(1)).existsById(mockUserId);
   }

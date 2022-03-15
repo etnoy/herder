@@ -26,7 +26,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
-import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -95,7 +94,7 @@ class ModuleServiceIT extends BaseIT {
 
       moduleService.saveTags(Flux.fromArray(moduleTags)).blockLast();
 
-      final Set<NameValueTag> tags = new HashSet<>();
+      final HashSet<NameValueTag> tags = new HashSet<>();
 
       tags.add(NameValueTag.builder().name("key").value("value").build());
       tags.add(NameValueTag.builder().name("usage").value("test").build());
@@ -118,7 +117,7 @@ class ModuleServiceIT extends BaseIT {
 
     @BeforeEach
     private void setUp() {
-      userId = userService.create(TestConstants.TEST_DISPLAY_NAME).block();
+      userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
 
       // Create a module to submit to
       moduleId =
@@ -178,7 +177,7 @@ class ModuleServiceIT extends BaseIT {
 
       moduleService.saveTags(Flux.fromArray(moduleTags)).blockLast();
 
-      Set<NameValueTag> tags = new HashSet<>();
+      HashSet<NameValueTag> tags = new HashSet<>();
 
       tags.add(NameValueTag.builder().name("key").value("value").build());
       tags.add(NameValueTag.builder().name("usage").value("test").build());
@@ -205,7 +204,7 @@ class ModuleServiceIT extends BaseIT {
 
     @BeforeEach
     private void setUp() {
-      userId = userService.create(TestConstants.TEST_DISPLAY_NAME).block();
+      userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
 
       // Create a module to submit to
       moduleId =
@@ -256,12 +255,11 @@ class ModuleServiceIT extends BaseIT {
         .verifyComplete();
   }
 
-  @ParameterizedTest
-  @MethodSource("org.owasp.herder.test.util.TestConstants#validModuleNameProvider")
+  @Test
   @DisplayName("Can throw DuplicateModuleLocatorException when module locator isn't unique")
-  void canReturnDuplicateModuleLocatorException(final String moduleLocator) {
-    moduleService.create("First module", moduleLocator).block();
-    StepVerifier.create(moduleService.create("Second module", moduleLocator))
+  void canReturnDuplicateModuleLocatorException() {
+    moduleService.create("First module", TestConstants.TEST_MODULE_LOCATOR).block();
+    StepVerifier.create(moduleService.create("Second module", TestConstants.TEST_MODULE_LOCATOR))
         .expectError(DuplicateModuleLocatorException.class)
         .verify();
   }

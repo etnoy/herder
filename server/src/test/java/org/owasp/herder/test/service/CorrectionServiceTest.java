@@ -37,7 +37,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.exception.InvalidUserIdException;
 import org.owasp.herder.scoring.Correction;
 import org.owasp.herder.scoring.CorrectionRepository;
 import org.owasp.herder.scoring.CorrectionService;
@@ -70,13 +69,6 @@ class CorrectionServiceTest {
   private void setUp() {
     // Set up the system under test
     correctionService = new CorrectionService(correctionRepository);
-  }
-
-  @Test
-  void submit_InvalidUserId_ReturnsInvalidUserIdException() {
-    StepVerifier.create(correctionService.submit("", 500, ""))
-        .expectError(InvalidUserIdException.class)
-        .verify();
   }
 
   @Test

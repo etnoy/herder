@@ -19,20 +19,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.authentication;
+package org.owasp.herder.validation;
 
-import java.io.Serializable;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.owasp.herder.validation.ValidLoginName;
-import org.owasp.herder.validation.ValidPassword;
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
-import lombok.Value;
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = {})
+@NotNull(message = "{org.owasp.herder.ValidModuleId.NullMessage}")
+@Size(min = 24, max = 24, message = "{org.owasp.herder.ValidModuleId.WrongLengthMessage}")
+@Pattern(regexp = "^[a-f0-9]*$", message = "{org.owasp.herder.ValidModuleId.PatternMessage}")
+public @interface ValidModuleId {
+  String message() default "{org.owasp.herder.ValidModuleId.message}";
 
-@Value
-public class PasswordLoginDto implements Serializable {
-  private static final long serialVersionUID = 225588142559080211L;
+  Class<?>[] groups() default {};
 
-  @ValidLoginName private String userName;
-
-  @ValidPassword private String password;
+  Class<? extends Payload>[] payload() default {};
 }

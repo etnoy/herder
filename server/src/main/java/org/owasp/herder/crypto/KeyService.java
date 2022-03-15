@@ -24,15 +24,21 @@ package org.owasp.herder.crypto;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import lombok.RequiredArgsConstructor;
+
+import javax.validation.constraints.Min;
+
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.owasp.herder.exception.RngException;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
+@Validated
 @Service
-public final class KeyService {
+public class KeyService {
   private final CryptoFactory cryptoFactory;
 
   private byte[] byteGenerator(final SecureRandom strongPRNG, final int numberOfBytes) {
@@ -53,7 +59,7 @@ public final class KeyService {
     return Hex.decodeHex(stringFlag);
   }
 
-  public byte[] generateRandomBytes(final int numberOfBytes) {
+  public byte[] generateRandomBytes(@Min(1) final int numberOfBytes) {
     try {
       final SecureRandom prng = cryptoFactory.getPrng();
       return byteGenerator(prng, numberOfBytes);
@@ -62,7 +68,7 @@ public final class KeyService {
     }
   }
 
-  public String generateRandomString(final int numberOfBytes) {
+  public String generateRandomString(@Min(1) final int numberOfBytes) {
     return convertByteKeyToString(generateRandomBytes(numberOfBytes));
   }
 }
