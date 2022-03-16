@@ -119,7 +119,7 @@ class WebTokenServiceTest {
             .setClock(TestConstants.year2000WebTokenClock)
             .build();
 
-    assertThat(jwtParser.parseClaimsJws(token).getBody().get("role")).isEqualTo("user");
+    assertThat(jwtParser.parseClaimsJws(token).getBody()).containsEntry("role","user");
   }
 
   @Test
