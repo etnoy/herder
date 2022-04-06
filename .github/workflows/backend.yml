@@ -20,12 +20,15 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
       - uses: gradle/wrapper-validation-action@v1
+
       - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
           java-version: "11"
           distribution: "adopt"
+
       - uses: actions/cache@v2
         with:
           path: |
@@ -34,42 +37,62 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
       - name: Cache SonarCloud packages
         uses: actions/cache@v1
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
+
       - name: Login to DockerHub
         uses: docker/login-action@v1 
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }} 
+
       - name: Build
         run: ./gradlew assemble
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   
+          
       - run: sh ./gradlew dependencies > .debricked-gradle-dependencies.txt
       - uses: debricked/actions/scan@v1
         env:
           DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}
+
       - name: Test
         run: ./gradlew build jacocoTestReport sonarqube -x spotlessCheck
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   
+
       - name: Integration tests
         run: ./gradlew integrationTest
+
       - name: Lint
         run: ./gradlew spotlessCheck
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: herder-backend
+          path: backend/
+
   deploy:
     needs: build
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-20.04
     steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: herder-backend
+
       - name: Build Docker
         uses: docker/build-push-action@v2
         with:
