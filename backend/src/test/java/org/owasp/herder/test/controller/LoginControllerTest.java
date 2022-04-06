@@ -125,7 +125,7 @@ class LoginControllerTest {
   }
 
   @BeforeEach
-  private void setUp() throws Exception {
+  private void setUp() {
     // Set up the system under test
     loginController = new LoginController(userService, webTokenService, passwordEncoder);
   }

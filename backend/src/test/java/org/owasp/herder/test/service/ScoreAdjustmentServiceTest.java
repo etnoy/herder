@@ -26,9 +26,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,6 +38,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.scoring.ScoreAdjustment;
 import org.owasp.herder.scoring.ScoreAdjustmentRepository;
 import org.owasp.herder.scoring.ScoreAdjustmentService;
+import org.owasp.herder.test.util.TestConstants;
+import org.owasp.herder.user.UserService;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -57,20 +59,24 @@ class ScoreAdjustmentServiceTest {
 
   @Mock ScoreAdjustmentRepository scoreAdjustmentRepository;
 
+  @Mock UserService userService;
+
   @Mock Clock clock;
 
-  private void setClock(final Clock clock) {
-    scoreAdjustmentService.setClock(clock);
+  private void setClock(final Clock testClock) {
+    when(clock.instant()).thenReturn(testClock.instant());
+    when(clock.getZone()).thenReturn(testClock.getZone());
   }
 
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    scoreAdjustmentService = new ScoreAdjustmentService(scoreAdjustmentRepository, null);
+    scoreAdjustmentService =
+        new ScoreAdjustmentService(scoreAdjustmentRepository, userService, clock);
   }
 
   @Test
-  void submit_ValidUserId_ReturnsCorrection() throws Exception {
+  void submit_ValidUserId_ReturnsCorrection() {
     final String mockUserId = "id";
     final int amount = 1000;
     final String description = "Bonus";
@@ -79,10 +85,7 @@ class ScoreAdjustmentServiceTest {
         .thenAnswer(
             scoreAdjustment -> Mono.just(scoreAdjustment.getArgument(0, ScoreAdjustment.class)));
 
-    final Clock fixedClock =
-        Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
-
-    setClock(fixedClock);
+    setClock(TestConstants.year2000Clock);
 
     StepVerifier.create(
             scoreAdjustmentService.submitUserAdjustment(mockUserId, amount, description))
@@ -91,7 +94,8 @@ class ScoreAdjustmentServiceTest {
               assertThat(scoreAdjustment.getUserIds()).contains(mockUserId);
               assertThat(scoreAdjustment.getAmount()).isEqualTo(amount);
               assertThat(scoreAdjustment.getDescription()).isEqualTo(description);
-              assertThat(scoreAdjustment.getTime()).isEqualTo(LocalDateTime.now(fixedClock));
+              assertThat(scoreAdjustment.getTime())
+                  .isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
             })
         .verifyComplete();
   }

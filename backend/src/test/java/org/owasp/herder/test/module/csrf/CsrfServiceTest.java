@@ -45,6 +45,7 @@ import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.csrf.CsrfAttack;
 import org.owasp.herder.module.csrf.CsrfAttackRepository;
 import org.owasp.herder.module.csrf.CsrfService;
+import org.owasp.herder.test.util.TestConstants;
 
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -65,10 +66,12 @@ class CsrfServiceTest {
 
   @Mock FlagHandler flagHandler;
 
+  @Mock Clock clock;
+
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    csrfService = new CsrfService(csrfAttackRepository, flagHandler);
+    csrfService = new CsrfService(csrfAttackRepository, flagHandler, clock);
   }
 
   @Test
@@ -84,8 +87,9 @@ class CsrfServiceTest {
         .verify();
   }
 
-  private void setClock(final Clock clock) {
-    csrfService.setClock(clock);
+  private void setClock(final Clock testClock) {
+    when(clock.instant()).thenReturn(testClock.instant());
+    when(clock.getZone()).thenReturn(testClock.getZone());
   }
 
   @Test
@@ -181,6 +185,8 @@ class CsrfServiceTest {
     when(mockCsrfAttack.getFinished()).thenReturn(null);
 
     when(csrfAttackRepository.save(any(CsrfAttack.class))).thenReturn(Mono.just(mockCsrfAttack));
+    setClock(TestConstants.year2000Clock);
+
     StepVerifier.create(csrfService.validate(mockPseudonym, mockModuleName))
         .expectNext(false)
         .verifyComplete();
@@ -199,6 +205,9 @@ class CsrfServiceTest {
     when(mockCsrfAttack.getFinished()).thenReturn(LocalDateTime.MAX);
 
     when(csrfAttackRepository.save(any(CsrfAttack.class))).thenReturn(Mono.just(mockCsrfAttack));
+
+    setClock(TestConstants.year2000Clock);
+
     StepVerifier.create(csrfService.validate(mockPseudonym, mockModuleName))
         .expectNext(true)
         .verifyComplete();

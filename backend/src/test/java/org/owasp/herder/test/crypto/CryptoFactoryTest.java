@@ -27,7 +27,9 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+
 import javax.crypto.Mac;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.CryptoFactory;
+
 import reactor.core.publisher.Hooks;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,7 +57,7 @@ class CryptoFactoryTest {
   }
 
   @Test
-  void getHmac_ReturnsMacInstance() throws Exception {
+  void getHmac_ReturnsMacInstance() throws NoSuchAlgorithmException {
     assertThat(cryptoFactory.getHmac()).isInstanceOf(Mac.class);
   }
 

@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,6 +45,7 @@ import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.RefresherService;
 import org.springframework.http.ResponseEntity;
+
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -69,7 +71,7 @@ class FlagControllerTest {
   @Mock private RefresherService refresherService;
 
   @BeforeEach
-  private void setUp() throws Exception {
+  private void setUp() {
     // Set up the system under test
     flagController =
         new FlagController(
@@ -77,7 +79,7 @@ class FlagControllerTest {
   }
 
   @Test
-  void submitFlag_UserNotAuthenticated_ReturnsException() throws Exception {
+  void submitFlag_UserNotAuthenticated_ReturnsException() {
     final String flag = "validflag";
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
@@ -95,7 +97,7 @@ class FlagControllerTest {
   }
 
   @Test
-  void submitFlag_UserAuthenticatedAndValidFlagSubmitted_ReturnsValidSubmission() throws Exception {
+  void submitFlag_UserAuthenticatedAndValidFlagSubmitted_ReturnsValidSubmission() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final String flag = "validflag";

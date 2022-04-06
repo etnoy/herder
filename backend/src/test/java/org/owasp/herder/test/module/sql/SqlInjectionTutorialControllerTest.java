@@ -97,7 +97,7 @@ class SqlInjectionTutorialControllerTest {
   }
 
   @BeforeEach
-  private void setUp() throws Exception {
+  private void setUp() {
     // Set up the system under test
     sqlInjectionTutorialController =
         new SqlInjectionTutorialController(sqlInjectionTutorial, controllerAuthentication);

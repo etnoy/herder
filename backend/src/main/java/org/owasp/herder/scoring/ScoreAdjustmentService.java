@@ -25,6 +25,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+
 import org.owasp.herder.scoring.ScoreAdjustment.ScoreAdjustmentBuilder;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
@@ -33,31 +34,19 @@ import org.owasp.herder.validation.ValidTeamId;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @Service
 @Validated
+@RequiredArgsConstructor
 public class ScoreAdjustmentService {
   private final ScoreAdjustmentRepository scoreAdjustmentRepository;
 
   private final UserService userService;
 
-  private Clock clock;
-
-  public ScoreAdjustmentService(
-      final ScoreAdjustmentRepository scoreAdjustmentRepository, final UserService userService) {
-    this.scoreAdjustmentRepository = scoreAdjustmentRepository;
-    this.userService = userService;
-    resetClock();
-  }
-
-  public void resetClock() {
-    this.clock = Clock.systemDefaultZone();
-  }
-
-  public void setClock(Clock clock) {
-    this.clock = clock;
-  }
+  private final Clock clock;
 
   public Mono<ScoreAdjustment> submitUserAdjustment(
       @ValidUserId final String userId, final long amount, final String description) {

@@ -27,30 +27,17 @@ import java.time.LocalDateTime;
 import org.owasp.herder.flag.FlagHandler;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @Component
+@RequiredArgsConstructor
 public class CsrfService {
   private final CsrfAttackRepository csrfAttackRepository;
 
   private final FlagHandler flagHandler;
 
-  private Clock clock;
-
-  public CsrfService(
-      final CsrfAttackRepository csrfAttackRepository, final FlagHandler flagHandler) {
-    this.csrfAttackRepository = csrfAttackRepository;
-    this.flagHandler = flagHandler;
-    resetClock();
-  }
-
-  public void resetClock() {
-    this.clock = Clock.systemDefaultZone();
-  }
-
-  public void setClock(Clock clock) {
-    this.clock = clock;
-  }
+  private final Clock clock;
 
   public Mono<Void> attack(final String pseudonym, final String moduleName) {
     return csrfAttackRepository

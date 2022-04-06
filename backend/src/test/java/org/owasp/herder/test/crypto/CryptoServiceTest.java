@@ -29,8 +29,10 @@ import static org.mockito.Mockito.when;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,6 +43,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.CryptoFactory;
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.CryptographicException;
+
 import reactor.core.publisher.Hooks;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,7 +60,8 @@ class CryptoServiceTest {
   @Mock CryptoFactory cryptoFactory;
 
   @Test
-  void hmac_GetHmacThrowsNoSuchAlgorithmException_ThrowsCryptographicException() throws Exception {
+  void hmac_GetHmacThrowsNoSuchAlgorithmException_ThrowsCryptographicException()
+      throws NoSuchAlgorithmException {
     final byte[] key = {-91, -79, 67};
     final byte[] message = {120, 56};
     when(cryptoFactory.getHmac()).thenThrow(new NoSuchAlgorithmException());
@@ -99,7 +103,7 @@ class CryptoServiceTest {
   }
 
   @Test
-  void hmac_ValidData_ReturnsHash() throws Exception {
+  void hmac_ValidData_ReturnsHash() throws NoSuchAlgorithmException {
     final byte[] key = {-91};
     final byte[] message = {120, 56, 111};
     final byte[] expectedHash = {46};

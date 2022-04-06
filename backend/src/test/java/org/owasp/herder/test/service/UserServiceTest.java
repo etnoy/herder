@@ -30,7 +30,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,6 +51,7 @@ import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
 import org.owasp.herder.exception.UserNotFoundException;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.ClassService;
 import org.owasp.herder.user.TeamRepository;
 import org.owasp.herder.user.UserEntity;
@@ -59,6 +62,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -87,6 +91,8 @@ class UserServiceTest {
   @Mock KeyService keyService;
 
   @Mock WebTokenKeyManager webTokenKeyManager;
+
+  @Mock Clock clock;
 
   PasswordAuth mockPasswordAuth;
 
@@ -157,6 +163,8 @@ class UserServiceTest {
     LocalDateTime longAgo = LocalDateTime.MIN;
     when(mockedUser.getSuspendedUntil()).thenReturn(longAgo);
 
+    setClock(TestConstants.year2000Clock);
+
     StepVerifier.create(userService.authenticate(mockedLoginName, mockedPassword))
         .expectErrorMatches(
             throwable ->
@@ -185,6 +193,8 @@ class UserServiceTest {
     when(mockUser.getSuspendedUntil()).thenReturn(futureDate);
 
     when(userRepository.findByIdAndIsDeletedFalse(mockedUserId)).thenReturn(Mono.just(mockUser));
+
+    setClock(TestConstants.year2000Clock);
 
     StepVerifier.create(userService.authenticate(mockedLoginName, mockedPassword))
         .expectErrorMatches(
@@ -250,6 +260,8 @@ class UserServiceTest {
 
     when(userRepository.findByDisplayName(displayName)).thenReturn(Mono.just(mockUser));
 
+    setClock(TestConstants.year2000Clock);
+
     StepVerifier.create(userService.create(displayName))
         .expectError(DuplicateUserDisplayNameException.class)
         .verify();
@@ -272,6 +284,8 @@ class UserServiceTest {
 
     when(userRepository.save(any(UserEntity.class)))
         .thenAnswer(user -> Mono.just(user.getArgument(0, UserEntity.class).withId(mockUserId)));
+
+    setClock(TestConstants.year2000Clock);
 
     StepVerifier.create(userService.create(displayName)).expectNext(mockUserId).verifyComplete();
 
@@ -347,6 +361,8 @@ class UserServiceTest {
         .thenAnswer(user -> Mono.just(user.getArgument(0, UserEntity.class).withId(mockUserId)));
     when(passwordAuthRepository.save(any(PasswordAuth.class)))
         .thenAnswer(user -> Mono.just(user.getArgument(0, PasswordAuth.class).withId(mockUserId)));
+
+    setClock(TestConstants.year2000Clock);
 
     StepVerifier.create(userService.createPasswordUser(displayName, loginName, hashedPassword))
         .expectNext(mockUserId)
@@ -714,6 +730,11 @@ class UserServiceTest {
     verify(mockUserWithClass, times(1)).getClassId();
   }
 
+  private void setClock(final Clock testClock) {
+    when(clock.instant()).thenReturn(testClock.instant());
+    when(clock.getZone()).thenReturn(testClock.getZone());
+  }
+
   @Test
   void setDisplayName_UserIdDoesNotExist_ReturnsUserIdNotFoundException() {
     final String newDisplayName = "newName";
@@ -764,7 +785,8 @@ class UserServiceTest {
             passwordAuthRepository,
             classService,
             keyService,
-            webTokenKeyManager);
+            webTokenKeyManager,
+            clock);
 
     mockPasswordAuth = mock(PasswordAuth.class);
     mockUser = mock(UserEntity.class);

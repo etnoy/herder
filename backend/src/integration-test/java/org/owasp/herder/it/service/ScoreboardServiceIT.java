@@ -26,9 +26,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.github.bucket4j.Bucket;
 import java.time.Clock;
 import java.time.Duration;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,6 +50,8 @@ import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+
+import io.github.bucket4j.Bucket;
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -79,15 +81,15 @@ class ScoreboardServiceIT extends BaseIT {
       moduleService.setBaseScore(moduleId1, 100).block();
 
       Clock testClock = TestConstants.year2000Clock;
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       refresherService.refreshSubmissionRanks().block();
@@ -139,15 +141,15 @@ class ScoreboardServiceIT extends BaseIT {
       moduleService.setBaseScore(moduleId1, 100).block();
 
       Clock testClock = TestConstants.year2000Clock;
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       scoreAdjustmentService.submitUserAdjustment(userId1, -1000, "Penalty for cheating").block();
@@ -207,15 +209,15 @@ class ScoreboardServiceIT extends BaseIT {
       moduleService.setBaseScore(moduleId1, 100).block();
 
       Clock testClock = TestConstants.year2000Clock;
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       final String teamId = integrationTestUtils.createTestTeam();
@@ -271,15 +273,15 @@ class ScoreboardServiceIT extends BaseIT {
       moduleService.setBaseScore(moduleId1, 100).block();
 
       Clock testClock = TestConstants.year2000Clock;
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       final String teamId = integrationTestUtils.createTestTeam();
@@ -348,15 +350,15 @@ class ScoreboardServiceIT extends BaseIT {
       moduleService.setBaseScore(moduleId1, 100).block();
 
       Clock testClock = TestConstants.year2000Clock;
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       final String teamId = integrationTestUtils.createTestTeam();
@@ -412,15 +414,15 @@ class ScoreboardServiceIT extends BaseIT {
       moduleService.setBaseScore(moduleId1, 100).block();
 
       Clock testClock = TestConstants.year2000Clock;
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       scoreAdjustmentService.submitUserAdjustment(userId1, -1000, "Penalty for cheating").block();
@@ -478,15 +480,15 @@ class ScoreboardServiceIT extends BaseIT {
     @DisplayName("with users with zero score submissions")
     void canGetScoreboardWithZeroScoreSubmissions() {
       Clock testClock = TestConstants.year2000Clock;
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
 
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       refresherService.refreshSubmissionRanks().block();
@@ -644,11 +646,11 @@ class ScoreboardServiceIT extends BaseIT {
     void canGetScoresWithUserAndTeamSubmissions() {
       Clock testClock = TestConstants.year2000Clock;
 
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
 
-      submissionService.setClock(testClock);
+      setClock(testClock);
 
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
@@ -708,11 +710,11 @@ class ScoreboardServiceIT extends BaseIT {
 
       Clock testClock = TestConstants.year2000Clock;
 
-      submissionService.setClock(testClock);
+      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
       testClock = Clock.offset(testClock, Duration.ofSeconds(1));
 
-      submissionService.setClock(testClock);
+      setClock(testClock);
 
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
@@ -811,6 +813,17 @@ class ScoreboardServiceIT extends BaseIT {
 
   @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
 
+  @MockBean Clock clock;
+
+  private void resetClock() {
+    setClock(Clock.systemDefaultZone());
+  }
+
+  private void setClock(final Clock testClock) {
+    when(clock.instant()).thenReturn(testClock.instant());
+    when(clock.getZone()).thenReturn(testClock.getZone());
+  }
+
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
@@ -820,5 +833,7 @@ class ScoreboardServiceIT extends BaseIT {
     when(mockBucket.tryConsume(1)).thenReturn(true);
     when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
     when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+
+    resetClock();
   }
 }

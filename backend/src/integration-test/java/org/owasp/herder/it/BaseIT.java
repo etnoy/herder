@@ -21,7 +21,6 @@
  */
 package org.owasp.herder.it;
 
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -32,6 +31,8 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.MongoDBContainer;
+
+import lombok.extern.slf4j.Slf4j;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
@@ -44,7 +45,7 @@ public abstract class BaseIT {
   static final MongoDBContainer mongoDBContainer;
 
   static {
-    mongoDBContainer = new MongoDBContainer("mongo").withReuse(true);
+    mongoDBContainer = new MongoDBContainer("mongo:5").withReuse(true);
     mongoDBContainer.start();
   }
 

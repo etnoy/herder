@@ -39,6 +39,7 @@ import org.owasp.herder.scoring.ScoreboardController;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.user.UserService;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -120,7 +121,7 @@ class ScoreboardControllerTest {
   }
 
   @BeforeEach
-  private void setUp() throws Exception {
+  private void setUp() {
     // Set up the system under test
     scoreboardController =
         new ScoreboardController(scoreboardService, userService, submissionService, moduleService);

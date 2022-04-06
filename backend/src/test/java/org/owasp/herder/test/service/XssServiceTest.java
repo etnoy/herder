@@ -30,15 +30,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.gargoylesoftware.htmlunit.CollectingAlertHandler;
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,6 +45,12 @@ import org.owasp.herder.exception.XssEvaluationException;
 import org.owasp.herder.module.xss.XssService;
 import org.owasp.herder.module.xss.XssWebClientFactory;
 
+import com.gargoylesoftware.htmlunit.CollectingAlertHandler;
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.DomElement;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("XssService unit tests")
 class XssServiceTest {
@@ -58,7 +60,8 @@ class XssServiceTest {
   @Mock XssWebClientFactory xssWebClientFactory;
 
   @Test
-  void doXss_AlertHandlerFindsAlerts_ReturnsCollectedAlerts() throws Exception {
+  void doXss_AlertHandlerFindsAlerts_ReturnsCollectedAlerts()
+      throws FailingHttpStatusCodeException, MalformedURLException, IOException {
     final String htmlPage = "<html></html>";
     final HtmlPage mockPage = mock(HtmlPage.class);
     final DomElement mockElement1 = mock(DomElement.class);

@@ -32,6 +32,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -51,6 +52,7 @@ import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -76,6 +78,8 @@ class SubmissonServiceTest {
   @Mock UserService userService;
 
   @Mock ModuleService moduleService;
+
+  @Mock Clock clock;
 
   UserEntity mockUser;
 
@@ -186,8 +190,9 @@ class SubmissonServiceTest {
         .findAllByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, mockModuleName);
   }
 
-  private void setClock(final Clock clock) {
-    submissionService.setClock(clock);
+  private void setClock(final Clock testClock) {
+    when(clock.instant()).thenReturn(testClock.instant());
+    when(clock.getZone()).thenReturn(testClock.getZone());
   }
 
   @BeforeEach
@@ -199,7 +204,8 @@ class SubmissonServiceTest {
             rankedSubmissionRepository,
             flagHandler,
             userService,
-            moduleService);
+            moduleService,
+            clock);
 
     mockUser = mock(UserEntity.class);
     mockModule = mock(ModuleEntity.class);

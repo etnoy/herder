@@ -26,12 +26,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.github.bucket4j.Bucket;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,323 +55,13 @@ import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+
+import io.github.bucket4j.Bucket;
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @DisplayName("RankedSubmissionRepository integration tests")
 class RankedSubmissionRepositoryIT extends BaseIT {
-  @Nested
-  @DisplayName("Can rank submissions")
-  class canRankSubmissions {
-    @Nested
-    @DisplayName("for a team")
-    class forTeam {
-      String teamId;
-
-      @Test
-      @DisplayName("per team")
-      void canCombineSubmissionsForTeam() {
-        StepVerifier.create(
-                rankedSubmissionRepository
-                    .findAllByTeamId(teamId)
-                    .map(RankedSubmission::getTeam)
-                    .map(TeamEntity::getId))
-            .expectNext(teamId)
-            .verifyComplete();
-      }
-
-      @Test
-      @DisplayName("per module")
-      void canCombineSubmissionsForTeamPerModule() {
-        StepVerifier.create(
-                rankedSubmissionRepository
-                    .findAllByModuleLocator(TestConstants.TEST_MODULE_LOCATOR)
-                    .map(RankedSubmission::getTeam)
-                    .map(TeamEntity::getId))
-            .expectNext(teamId)
-            .verifyComplete();
-      }
-
-      @BeforeEach
-      private void setUp() {
-        teamId = integrationTestUtils.createTestTeam();
-
-        userService.addUserToTeam(userId1, teamId).block();
-        userService.addUserToTeam(userId2, teamId).block();
-        userService.addUserToTeam(userId3, teamId).block();
-
-        refresherService.afterUserUpdate(userId1).block();
-        refresherService.afterUserUpdate(userId2).block();
-        refresherService.afterUserUpdate(userId3).block();
-
-        refresherService.refreshSubmissionRanks().block();
-      }
-    }
-
-    @Nested
-    @DisplayName("for a team and a user")
-    class forTeamAndUser {
-      String teamId;
-
-      @Test
-      @DisplayName("per module")
-      void canCombineSubmissionsForTeamPerModule() {
-        StepVerifier.create(
-                rankedSubmissionRepository.findAllByModuleLocator(
-                    TestConstants.TEST_MODULE_LOCATOR))
-            .assertNext(submission -> assertThat(submission.getTeam().getId()).isEqualTo(teamId))
-            .assertNext(submission -> assertThat(submission.getUser().getId()).isEqualTo(userId2))
-            .verifyComplete();
-      }
-
-      @Test
-      @DisplayName("per team")
-      void canCombineSubmissionsPerTeam() {
-        StepVerifier.create(
-                rankedSubmissionRepository.findAllByTeamId(teamId).map(RankedSubmission::getRank))
-            .expectNext(1L)
-            .verifyComplete();
-      }
-
-      @Test
-      @DisplayName("per user")
-      void canCombineSubmissionsPerUser() {
-        StepVerifier.create(
-                rankedSubmissionRepository.findAllByUserId(userId2).map(RankedSubmission::getRank))
-            .expectNext(2L)
-            .verifyComplete();
-      }
-
-      @BeforeEach
-      private void setUp() {
-        teamId = integrationTestUtils.createTestTeam();
-
-        userService.addUserToTeam(userId1, teamId).block();
-        userService.addUserToTeam(userId3, teamId).block();
-
-        refresherService.afterUserUpdate(userId1).block();
-        refresherService.afterUserUpdate(userId3).block();
-
-        refresherService.refreshSubmissionRanks().block();
-      }
-    }
-
-    @Nested
-    @DisplayName("for a team and a user with multiple modules")
-    class forTeamAndUserWithMultipleModules {
-      String teamId;
-      String moduleId2;
-
-      @Test
-      @DisplayName("per team")
-      void canCombineSubmissionsForTeam() {
-        StepVerifier.create(rankedSubmissionRepository.findAllByTeamId(teamId))
-            .recordWith(HashSet::new)
-            .expectNextCount(2)
-            .consumeRecordedWith(
-                resultSet -> {
-                  assertThat(resultSet)
-                      .filteredOn(
-                          rankedSubmission ->
-                              rankedSubmission
-                                      .getModule()
-                                      .getLocator()
-                                      .equals(TestConstants.TEST_MODULE_LOCATOR)
-                                  && rankedSubmission.getRank().equals(1L))
-                      .hasSize(1);
-                  assertThat(resultSet)
-                      .filteredOn(
-                          rankedSubmission ->
-                              rankedSubmission.getModule().getLocator().equals("test-2")
-                                  && rankedSubmission.getRank().equals(2L))
-                      .hasSize(1);
-                })
-            .verifyComplete();
-      }
-
-      @Test
-      @DisplayName("for first module")
-      void canCombineSubmissionsForTeamForFirstModule() {
-        StepVerifier.create(
-                rankedSubmissionRepository.findAllByModuleLocator(
-                    TestConstants.TEST_MODULE_LOCATOR))
-            .assertNext(submission -> assertThat(submission.getTeam().getId()).isEqualTo(teamId))
-            .assertNext(submission -> assertThat(submission.getUser().getId()).isEqualTo(userId2))
-            .verifyComplete();
-      }
-
-      @Test
-      @DisplayName("for second module")
-      void canCombineSubmissionsForTeamForSecondModule() {
-        StepVerifier.create(rankedSubmissionRepository.findAllByModuleLocator("test-2"))
-            .assertNext(submission -> assertThat(submission.getUser().getId()).isEqualTo(userId2))
-            .assertNext(submission -> assertThat(submission.getTeam().getId()).isEqualTo(teamId))
-            .verifyComplete();
-      }
-
-      @Test
-      @DisplayName("for the user")
-      void canCombineSubmissionsForUserId2() {
-        StepVerifier.create(rankedSubmissionRepository.findAllByUserId(userId2))
-            .recordWith(HashSet::new)
-            .expectNextCount(2)
-            .consumeRecordedWith(
-                resultSet -> {
-                  assertThat(resultSet)
-                      .filteredOn(
-                          rankedSubmission ->
-                              rankedSubmission
-                                      .getModule()
-                                      .getLocator()
-                                      .equals(TestConstants.TEST_MODULE_LOCATOR)
-                                  && rankedSubmission.getRank().equals(2L))
-                      .hasSize(1);
-                  assertThat(resultSet)
-                      .filteredOn(
-                          rankedSubmission ->
-                              rankedSubmission.getModule().getLocator().equals("test-2")
-                                  && rankedSubmission.getRank().equals(1L))
-                      .hasSize(1);
-                })
-            .verifyComplete();
-      }
-
-      @BeforeEach
-      private void setUp() {
-        teamId = integrationTestUtils.createTestTeam();
-        moduleId2 = moduleService.create("Test module 2", "test-2").block();
-        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-        submissionService.setClock(testClock);
-        integrationTestUtils.submitValidFlag(userId2, moduleId2);
-
-        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-        submissionService.setClock(testClock);
-        integrationTestUtils.submitValidFlag(userId3, moduleId2);
-
-        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-        submissionService.setClock(testClock);
-        integrationTestUtils.submitValidFlag(userId1, moduleId2);
-
-        userService.addUserToTeam(userId1, teamId).block();
-        userService.addUserToTeam(userId3, teamId).block();
-        refresherService.afterUserUpdate(userId1).block();
-        refresherService.afterUserUpdate(userId3).block();
-
-        refresherService.refreshSubmissionRanks().block();
-      }
-    }
-
-    String userId1;
-    String userId2;
-    String userId3;
-
-    String moduleId;
-
-    UserEntity user1;
-    UserEntity user2;
-    UserEntity user3;
-
-    ModuleEntity module;
-
-    Clock testClock;
-
-    @Test
-    @DisplayName("for a module")
-    void canRankSubmissionsForModule() {
-
-      StepVerifier.create(
-              rankedSubmissionRepository.findAllByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
-          .assertNext(
-              sanitizedRankedSubmission -> {
-                assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(1);
-                assertThat(sanitizedRankedSubmission.getUser().getId()).isEqualTo(user1.getId());
-                assertThat(sanitizedRankedSubmission.getModule().getLocator())
-                    .isEqualTo(module.getLocator());
-                assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
-                assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(20);
-                assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(520);
-              })
-          .assertNext(
-              sanitizedRankedSubmission -> {
-                assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(2);
-                assertThat(sanitizedRankedSubmission.getUser().getId()).isEqualTo(user2.getId());
-                assertThat(sanitizedRankedSubmission.getModule().getLocator())
-                    .isEqualTo(module.getLocator());
-                assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
-                assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(10);
-                assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(510);
-              })
-          .assertNext(
-              sanitizedRankedSubmission -> {
-                assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(3);
-                assertThat(sanitizedRankedSubmission.getUser().getId()).isEqualTo(user3.getId());
-                assertThat(sanitizedRankedSubmission.getModule().getLocator())
-                    .isEqualTo(module.getLocator());
-                assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
-                assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(5);
-                assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(505);
-              })
-          .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("for users")
-    void canRankSubmissionsForUsers() {
-      StepVerifier.create(
-              rankedSubmissionRepository.findAllByUserId(userId1).map(RankedSubmission::getRank))
-          .expectNext(1L)
-          .verifyComplete();
-
-      StepVerifier.create(
-              rankedSubmissionRepository.findAllByUserId(userId2).map(RankedSubmission::getRank))
-          .expectNext(2L)
-          .verifyComplete();
-
-      StepVerifier.create(
-              rankedSubmissionRepository.findAllByUserId(userId3).map(RankedSubmission::getRank))
-          .expectNext(3L)
-          .verifyComplete();
-    }
-
-    @BeforeEach
-    private void setUp() {
-      userId1 = userService.create("User 1").block();
-      userId2 = userService.create("User 2").block();
-      userId3 = userService.create("User 3").block();
-
-      moduleId = integrationTestUtils.createStaticTestModule();
-
-      moduleService.setBaseScore(moduleId, 500).block();
-
-      final ArrayList<Integer> scores = new ArrayList<>();
-
-      scores.add(20);
-      scores.add(10);
-      scores.add(5);
-
-      moduleService.setBonusScores(moduleId, scores).block();
-
-      testClock = TestConstants.year2000Clock;
-      submissionService.setClock(testClock);
-      integrationTestUtils.submitValidFlag(userId1, moduleId);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
-      integrationTestUtils.submitValidFlag(userId2, moduleId);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      submissionService.setClock(testClock);
-      integrationTestUtils.submitValidFlag(userId3, moduleId);
-
-      user1 = userService.getById(userId1).block();
-      user2 = userService.getById(userId2).block();
-      user3 = userService.getById(userId3).block();
-      module = moduleService.getById(moduleId).block();
-
-      refresherService.refreshSubmissionRanks().block();
-    }
-  }
-
   @Nested
   @DisplayName("Can get unranked scoreboard")
   class canGetUnrankedScoreboard {
@@ -583,6 +273,319 @@ class RankedSubmissionRepositoryIT extends BaseIT {
     }
   }
 
+  @Nested
+  @DisplayName("Can rank submissions")
+  class canRankSubmissions {
+    @Nested
+    @DisplayName("for a team")
+    class forTeam {
+      String teamId;
+
+      @Test
+      @DisplayName("per team")
+      void canCombineSubmissionsForTeam() {
+        StepVerifier.create(
+                rankedSubmissionRepository
+                    .findAllByTeamId(teamId)
+                    .map(RankedSubmission::getTeam)
+                    .map(TeamEntity::getId))
+            .expectNext(teamId)
+            .verifyComplete();
+      }
+
+      @Test
+      @DisplayName("per module")
+      void canCombineSubmissionsForTeamPerModule() {
+        StepVerifier.create(
+                rankedSubmissionRepository
+                    .findAllByModuleLocator(TestConstants.TEST_MODULE_LOCATOR)
+                    .map(RankedSubmission::getTeam)
+                    .map(TeamEntity::getId))
+            .expectNext(teamId)
+            .verifyComplete();
+      }
+
+      @BeforeEach
+      private void setUp() {
+        teamId = integrationTestUtils.createTestTeam();
+
+        userService.addUserToTeam(userId1, teamId).block();
+        userService.addUserToTeam(userId2, teamId).block();
+        userService.addUserToTeam(userId3, teamId).block();
+
+        refresherService.afterUserUpdate(userId1).block();
+        refresherService.afterUserUpdate(userId2).block();
+        refresherService.afterUserUpdate(userId3).block();
+
+        refresherService.refreshSubmissionRanks().block();
+      }
+    }
+
+    @Nested
+    @DisplayName("for a team and a user")
+    class forTeamAndUser {
+      String teamId;
+
+      @Test
+      @DisplayName("per module")
+      void canCombineSubmissionsForTeamPerModule() {
+        StepVerifier.create(
+                rankedSubmissionRepository.findAllByModuleLocator(
+                    TestConstants.TEST_MODULE_LOCATOR))
+            .assertNext(submission -> assertThat(submission.getTeam().getId()).isEqualTo(teamId))
+            .assertNext(submission -> assertThat(submission.getUser().getId()).isEqualTo(userId2))
+            .verifyComplete();
+      }
+
+      @Test
+      @DisplayName("per team")
+      void canCombineSubmissionsPerTeam() {
+        StepVerifier.create(
+                rankedSubmissionRepository.findAllByTeamId(teamId).map(RankedSubmission::getRank))
+            .expectNext(1L)
+            .verifyComplete();
+      }
+
+      @Test
+      @DisplayName("per user")
+      void canCombineSubmissionsPerUser() {
+        StepVerifier.create(
+                rankedSubmissionRepository.findAllByUserId(userId2).map(RankedSubmission::getRank))
+            .expectNext(2L)
+            .verifyComplete();
+      }
+
+      @BeforeEach
+      private void setUp() {
+        teamId = integrationTestUtils.createTestTeam();
+
+        userService.addUserToTeam(userId1, teamId).block();
+        userService.addUserToTeam(userId3, teamId).block();
+
+        refresherService.afterUserUpdate(userId1).block();
+        refresherService.afterUserUpdate(userId3).block();
+
+        refresherService.refreshSubmissionRanks().block();
+      }
+    }
+
+    @Nested
+    @DisplayName("for a team and a user with multiple modules")
+    class forTeamAndUserWithMultipleModules {
+      String teamId;
+      String moduleId2;
+
+      @Test
+      @DisplayName("per team")
+      void canCombineSubmissionsForTeam() {
+        StepVerifier.create(rankedSubmissionRepository.findAllByTeamId(teamId))
+            .recordWith(HashSet::new)
+            .expectNextCount(2)
+            .consumeRecordedWith(
+                resultSet -> {
+                  assertThat(resultSet)
+                      .filteredOn(
+                          rankedSubmission ->
+                              rankedSubmission
+                                      .getModule()
+                                      .getLocator()
+                                      .equals(TestConstants.TEST_MODULE_LOCATOR)
+                                  && rankedSubmission.getRank().equals(1L))
+                      .hasSize(1);
+                  assertThat(resultSet)
+                      .filteredOn(
+                          rankedSubmission ->
+                              rankedSubmission.getModule().getLocator().equals("test-2")
+                                  && rankedSubmission.getRank().equals(2L))
+                      .hasSize(1);
+                })
+            .verifyComplete();
+      }
+
+      @Test
+      @DisplayName("for first module")
+      void canCombineSubmissionsForTeamForFirstModule() {
+        StepVerifier.create(
+                rankedSubmissionRepository.findAllByModuleLocator(
+                    TestConstants.TEST_MODULE_LOCATOR))
+            .assertNext(submission -> assertThat(submission.getTeam().getId()).isEqualTo(teamId))
+            .assertNext(submission -> assertThat(submission.getUser().getId()).isEqualTo(userId2))
+            .verifyComplete();
+      }
+
+      @Test
+      @DisplayName("for second module")
+      void canCombineSubmissionsForTeamForSecondModule() {
+        StepVerifier.create(rankedSubmissionRepository.findAllByModuleLocator("test-2"))
+            .assertNext(submission -> assertThat(submission.getUser().getId()).isEqualTo(userId2))
+            .assertNext(submission -> assertThat(submission.getTeam().getId()).isEqualTo(teamId))
+            .verifyComplete();
+      }
+
+      @Test
+      @DisplayName("for the user")
+      void canCombineSubmissionsForUserId2() {
+        StepVerifier.create(rankedSubmissionRepository.findAllByUserId(userId2))
+            .recordWith(HashSet::new)
+            .expectNextCount(2)
+            .consumeRecordedWith(
+                resultSet -> {
+                  assertThat(resultSet)
+                      .filteredOn(
+                          rankedSubmission ->
+                              rankedSubmission
+                                      .getModule()
+                                      .getLocator()
+                                      .equals(TestConstants.TEST_MODULE_LOCATOR)
+                                  && rankedSubmission.getRank().equals(2L))
+                      .hasSize(1);
+                  assertThat(resultSet)
+                      .filteredOn(
+                          rankedSubmission ->
+                              rankedSubmission.getModule().getLocator().equals("test-2")
+                                  && rankedSubmission.getRank().equals(1L))
+                      .hasSize(1);
+                })
+            .verifyComplete();
+      }
+
+      @BeforeEach
+      private void setUp() {
+        teamId = integrationTestUtils.createTestTeam();
+        moduleId2 = moduleService.create("Test module 2", "test-2").block();
+        setClock(testClock);
+        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+        setClock(testClock);
+        integrationTestUtils.submitValidFlag(userId2, moduleId2);
+
+        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+        setClock(testClock);
+        integrationTestUtils.submitValidFlag(userId3, moduleId2);
+
+        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+        setClock(testClock);
+        integrationTestUtils.submitValidFlag(userId1, moduleId2);
+
+        userService.addUserToTeam(userId1, teamId).block();
+        userService.addUserToTeam(userId3, teamId).block();
+        refresherService.afterUserUpdate(userId1).block();
+        refresherService.afterUserUpdate(userId3).block();
+
+        refresherService.refreshSubmissionRanks().block();
+      }
+    }
+
+    String userId1;
+    String userId2;
+    String userId3;
+
+    String moduleId;
+
+    UserEntity user1;
+    UserEntity user2;
+    UserEntity user3;
+
+    ModuleEntity module;
+
+    Clock testClock;
+
+    @Test
+    @DisplayName("for a module")
+    void canRankSubmissionsForModule() {
+
+      StepVerifier.create(
+              rankedSubmissionRepository.findAllByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+          .assertNext(
+              sanitizedRankedSubmission -> {
+                assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(1);
+                assertThat(sanitizedRankedSubmission.getUser().getId()).isEqualTo(user1.getId());
+                assertThat(sanitizedRankedSubmission.getModule().getLocator())
+                    .isEqualTo(module.getLocator());
+                assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
+                assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(20);
+                assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(520);
+              })
+          .assertNext(
+              sanitizedRankedSubmission -> {
+                assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(2);
+                assertThat(sanitizedRankedSubmission.getUser().getId()).isEqualTo(user2.getId());
+                assertThat(sanitizedRankedSubmission.getModule().getLocator())
+                    .isEqualTo(module.getLocator());
+                assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
+                assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(10);
+                assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(510);
+              })
+          .assertNext(
+              sanitizedRankedSubmission -> {
+                assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(3);
+                assertThat(sanitizedRankedSubmission.getUser().getId()).isEqualTo(user3.getId());
+                assertThat(sanitizedRankedSubmission.getModule().getLocator())
+                    .isEqualTo(module.getLocator());
+                assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
+                assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(5);
+                assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(505);
+              })
+          .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("for users")
+    void canRankSubmissionsForUsers() {
+      StepVerifier.create(
+              rankedSubmissionRepository.findAllByUserId(userId1).map(RankedSubmission::getRank))
+          .expectNext(1L)
+          .verifyComplete();
+
+      StepVerifier.create(
+              rankedSubmissionRepository.findAllByUserId(userId2).map(RankedSubmission::getRank))
+          .expectNext(2L)
+          .verifyComplete();
+
+      StepVerifier.create(
+              rankedSubmissionRepository.findAllByUserId(userId3).map(RankedSubmission::getRank))
+          .expectNext(3L)
+          .verifyComplete();
+    }
+
+    @BeforeEach
+    private void setUp() {
+      userId1 = userService.create("User 1").block();
+      userId2 = userService.create("User 2").block();
+      userId3 = userService.create("User 3").block();
+
+      moduleId = integrationTestUtils.createStaticTestModule();
+
+      moduleService.setBaseScore(moduleId, 500).block();
+
+      final ArrayList<Integer> scores = new ArrayList<>();
+
+      scores.add(20);
+      scores.add(10);
+      scores.add(5);
+
+      moduleService.setBonusScores(moduleId, scores).block();
+
+      testClock = TestConstants.year2000Clock;
+      setClock(testClock);
+      integrationTestUtils.submitValidFlag(userId1, moduleId);
+
+      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+      setClock(testClock);
+      integrationTestUtils.submitValidFlag(userId2, moduleId);
+
+      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+      setClock(testClock);
+      integrationTestUtils.submitValidFlag(userId3, moduleId);
+
+      user1 = userService.getById(userId1).block();
+      user2 = userService.getById(userId2).block();
+      user3 = userService.getById(userId3).block();
+      module = moduleService.getById(moduleId).block();
+
+      refresherService.refreshSubmissionRanks().block();
+    }
+  }
+
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages
@@ -606,6 +609,8 @@ class RankedSubmissionRepositoryIT extends BaseIT {
   @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
 
   @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+
+  @MockBean Clock clock;
 
   @Test
   @DisplayName("Can find a single valid ranked submission")
@@ -739,6 +744,15 @@ class RankedSubmissionRepositoryIT extends BaseIT {
         .verifyComplete();
   }
 
+  private void resetClock() {
+    setClock(Clock.systemDefaultZone());
+  }
+
+  private void setClock(final Clock testClock) {
+    when(clock.instant()).thenReturn(testClock.instant());
+    when(clock.getZone()).thenReturn(testClock.getZone());
+  }
+
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
@@ -748,5 +762,6 @@ class RankedSubmissionRepositoryIT extends BaseIT {
     when(mockBucket.tryConsume(1)).thenReturn(true);
     when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
     when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    resetClock();
   }
 }

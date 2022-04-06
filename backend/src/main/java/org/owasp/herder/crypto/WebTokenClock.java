@@ -25,11 +25,14 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+
+import org.springframework.stereotype.Component;
+
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
+@Component
 public class WebTokenClock implements io.jsonwebtoken.Clock {
-
   private final Clock clock;
 
   @Override

@@ -21,11 +21,6 @@
  */
 package org.owasp.herder.application;
 
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneId;
-import lombok.RequiredArgsConstructor;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.flag.FlagTutorial;
@@ -36,6 +31,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
 
 @ConditionalOnProperty(
     prefix = "application.runner",
@@ -93,29 +90,17 @@ public class StartupRunner implements ApplicationRunner {
       if (flagTutorialModule != null) {
         final String flagTutorialId = flagTutorialModule.getId();
 
-        Clock testClock =
-            Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
-
-        submissionService.setClock(testClock);
-
         submissionService
             .submitFlag(userId1, flagTutorialId, flagTutorial.getFlag(userId1).block())
             .block();
 
-        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-        submissionService.setClock(testClock);
-
         submissionService
             .submitFlag(userId2, flagTutorialId, flagTutorial.getFlag(userId2).block())
             .block();
-        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-        submissionService.setClock(testClock);
 
         submissionService
             .submitFlag(userId3, flagTutorialId, flagTutorial.getFlag(userId3).block())
             .block();
-
-        submissionService.resetClock();
       }
 
       userService.addUserToTeam(userId1, teamId1).block();

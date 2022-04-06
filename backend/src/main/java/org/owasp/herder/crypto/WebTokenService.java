@@ -21,19 +21,13 @@
  */
 package org.owasp.herder.crypto;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwsHeader;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MissingClaimException;
-import io.jsonwebtoken.SigningKeyResolverAdapter;
 import java.security.Key;
-import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Date;
+
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import lombok.extern.slf4j.Slf4j;
+
 import org.owasp.herder.authentication.Role;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -44,21 +38,26 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwsHeader;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MissingClaimException;
+import io.jsonwebtoken.SigningKeyResolverAdapter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @Slf4j
 @Validated
+@RequiredArgsConstructor
 public class WebTokenService {
   private final WebTokenKeyManager webTokenKeyManager;
 
   // How many seconds a JWT token should last before expiring
   private static final long EXPIRATION_TIME = 900;
 
-  private WebTokenClock clock;
-
-  public WebTokenService(WebTokenKeyManager webTokenKeyManager) {
-    this.webTokenKeyManager = webTokenKeyManager;
-    resetClock();
-  }
+  private final WebTokenClock webTokenClock;
 
   public long getExpirationTime() {
     return 1000 * EXPIRATION_TIME;
@@ -69,12 +68,8 @@ public class WebTokenService {
   }
 
   public String generateToken(@ValidUserId final String userId, final boolean isAdmin) {
-    if (userId == null) {
-      throw new NullPointerException();
-    }
-
-    final Date creationTime = clock.now();
-    final Date expirationTime = new Date(clock.now().getTime() + getExpirationTime());
+    final Date creationTime = webTokenClock.now();
+    final Date expirationTime = new Date(webTokenClock.now().getTime() + getExpirationTime());
     final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(userId);
 
     String role;
@@ -116,7 +111,7 @@ public class WebTokenService {
                     }
                   })
               .requireIssuer("herder")
-              .setClock(clock)
+              .setClock(webTokenClock)
               .build()
               .parseClaimsJws(token)
               .getBody();
@@ -157,15 +152,5 @@ public class WebTokenService {
     }
 
     return new UsernamePasswordAuthenticationToken(userId, token, authorities);
-  }
-
-  // Only used in unit tests
-  public void resetClock() {
-    setClock(Clock.systemDefaultZone());
-  }
-
-  // Only used in unit tests
-  public void setClock(Clock clock) {
-    this.clock = new WebTokenClock(clock);
   }
 }

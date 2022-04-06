@@ -65,7 +65,7 @@ class ConfigurationServiceTest {
   @Mock private KeyService keyService;
 
   @Test
-  void getServerKey_KeyExists_ReturnsExistingKey() throws Exception {
+  void getServerKey_KeyExists_ReturnsExistingKey() {
     final String serverKeyConfigurationKey = "serverKey";
     final Configuration mockedConfiguration = mock(Configuration.class);
 
@@ -90,7 +90,7 @@ class ConfigurationServiceTest {
   }
 
   @Test
-  void getServerKey_NoKeyExists_ReturnsNewKey() throws Exception {
+  void getServerKey_NoKeyExists_ReturnsNewKey() {
     final String serverKeyConfigurationKey = "serverKey";
     final byte[] mockedServerKey = {
       -118, 9, -7, -35, 17, -116, -94, 0, -32, -117, 65, -127, 12, 82, 9, 29
@@ -114,7 +114,7 @@ class ConfigurationServiceTest {
   }
 
   @Test
-  void refreshServerKey_KeyDoesNotExist_GeneratesNewKey() throws Exception {
+  void refreshServerKey_KeyDoesNotExist_GeneratesNewKey() {
     final String serverKeyConfigurationKey = "serverKey";
     final byte[] newServerKey = {
       -118, 9, -7, -35, 17, -116, -94, 0, -32, -117, 65, -127, 12, 82, 9, 29
@@ -144,7 +144,7 @@ class ConfigurationServiceTest {
   }
 
   @Test
-  void refreshServerKey_KeyExists_GeneratesNewKey() throws Exception {
+  void refreshServerKey_KeyExists_GeneratesNewKey() {
     final String serverKeyConfigurationKey = "serverKey";
     final Configuration mockedConfiguration = mock(Configuration.class);
     final Configuration mockedConfigurationNewKey = mock(Configuration.class);

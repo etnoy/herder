@@ -22,9 +22,11 @@
 package org.owasp.herder.it.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Duration;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +49,8 @@ import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -76,29 +80,11 @@ class SubmissionServiceIT extends BaseIT {
 
   @Autowired IntegrationTestUtils integrationTestUtils;
 
+  @MockBean Clock clock;
+
   private String userId;
 
   private String moduleId;
-
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
-  }
-
-  @Test
-  @DisplayName("Duplicate submission of a static flag should throw an exception")
-  void canRejectDuplicateSubmissionsOfValidStaticFlags() {
-    userId = integrationTestUtils.createTestUser();
-    moduleId = integrationTestUtils.createStaticTestModule();
-    StepVerifier.create(
-            submissionService
-                .submitFlag(userId, moduleId, TestConstants.TEST_STATIC_FLAG)
-                .repeat(1)
-                .map(Submission::isValid))
-        .expectNext(true)
-        .expectError(ModuleAlreadySolvedException.class)
-        .verify();
-  }
 
   @Test
   @DisplayName("Valid submission of a static flag should be accepted")
@@ -113,6 +99,50 @@ class SubmissionServiceIT extends BaseIT {
               assertThat(submission.getModuleId()).isEqualTo(moduleId);
               assertThat(submission.getTeamId()).isNull();
               assertThat(submission.isValid()).isTrue();
+            })
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can combine submissions for users in a team")
+  void canCombineSubmissionsForTeam() {
+    final String userId1 = userService.create("User 1").block();
+    final String userId2 = userService.create("User 2").block();
+    final String userId3 = userService.create("User 3").block();
+
+    final String teamId = integrationTestUtils.createTestTeam();
+    final String moduleId = integrationTestUtils.createStaticTestModule();
+
+    Clock testClock = TestConstants.year2000Clock;
+
+    setClock(testClock);
+    integrationTestUtils.submitValidFlag(userId1, moduleId);
+
+    testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+    setClock(testClock);
+
+    integrationTestUtils.submitValidFlag(userId2, moduleId);
+    testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+    setClock(testClock);
+
+    integrationTestUtils.submitValidFlag(userId3, moduleId);
+
+    userService.addUserToTeam(userId1, teamId).block();
+    userService.addUserToTeam(userId3, teamId).block();
+
+    refresherService.afterUserUpdate(userId1).block();
+    refresherService.afterUserUpdate(userId3).block();
+
+    final TeamEntity team = userService.getTeamById(teamId).block();
+
+    refresherService.refreshSubmissionRanks().block();
+
+    StepVerifier.create(submissionService.findAllRankedByTeamId(teamId))
+        .assertNext(
+            rankedSubmission -> {
+              assertThat(rankedSubmission.getId()).isEqualTo(team.getId());
+              assertThat(rankedSubmission.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
+              assertThat(rankedSubmission.getRank()).isEqualTo(1L);
             })
         .verifyComplete();
   }
@@ -140,46 +170,32 @@ class SubmissionServiceIT extends BaseIT {
   }
 
   @Test
-  @DisplayName("Can combine submissions for users in a team")
-  void canCombineSubmissionsForTeam() {
-    final String userId1 = userService.create("User 1").block();
-    final String userId2 = userService.create("User 2").block();
-    final String userId3 = userService.create("User 3").block();
+  @DisplayName("Duplicate submission of a static flag should throw an exception")
+  void canRejectDuplicateSubmissionsOfValidStaticFlags() {
+    userId = integrationTestUtils.createTestUser();
+    moduleId = integrationTestUtils.createStaticTestModule();
+    StepVerifier.create(
+            submissionService
+                .submitFlag(userId, moduleId, TestConstants.TEST_STATIC_FLAG)
+                .repeat(1)
+                .map(Submission::isValid))
+        .expectNext(true)
+        .expectError(ModuleAlreadySolvedException.class)
+        .verify();
+  }
 
-    final String teamId = integrationTestUtils.createTestTeam();
-    final String moduleId = integrationTestUtils.createStaticTestModule();
+  private void resetClock() {
+    setClock(Clock.systemDefaultZone());
+  }
 
-    Clock testClock = TestConstants.year2000Clock;
+  private void setClock(final Clock testClock) {
+    when(clock.instant()).thenReturn(testClock.instant());
+    when(clock.getZone()).thenReturn(testClock.getZone());
+  }
 
-    submissionService.setClock(testClock);
-    integrationTestUtils.submitValidFlag(userId1, moduleId);
-
-    testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-    submissionService.setClock(testClock);
-
-    integrationTestUtils.submitValidFlag(userId2, moduleId);
-    testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-    submissionService.setClock(testClock);
-
-    integrationTestUtils.submitValidFlag(userId3, moduleId);
-
-    userService.addUserToTeam(userId1, teamId).block();
-    userService.addUserToTeam(userId3, teamId).block();
-
-    refresherService.afterUserUpdate(userId1).block();
-    refresherService.afterUserUpdate(userId3).block();
-
-    final TeamEntity team = userService.getTeamById(teamId).block();
-
-    refresherService.refreshSubmissionRanks().block();
-
-    StepVerifier.create(submissionService.findAllRankedByTeamId(teamId))
-        .assertNext(
-            rankedSubmission -> {
-              assertThat(rankedSubmission.getId()).isEqualTo(team.getId());
-              assertThat(rankedSubmission.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
-              assertThat(rankedSubmission.getRank()).isEqualTo(1L);
-            })
-        .verifyComplete();
+  @BeforeEach
+  private void setUp() {
+    integrationTestUtils.resetState();
+    resetClock();
   }
 }

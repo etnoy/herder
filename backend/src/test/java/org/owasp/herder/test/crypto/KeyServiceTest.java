@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+
 import org.apache.commons.codec.DecoderException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.CryptoFactory;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.RngException;
+
 import reactor.core.publisher.Hooks;
 
 @ExtendWith(MockitoExtension.class)
@@ -71,7 +73,8 @@ class KeyServiceTest {
   }
 
   @Test
-  void generateRandomBytes_NoSuchAlgorithmException_ThrowsRngException() throws Exception {
+  void generateRandomBytes_NoSuchAlgorithmException_ThrowsRngException()
+      throws NoSuchAlgorithmException {
     final int[] testedLengths = {0, 1, 12, 16, 128, 4096};
 
     when(prngFactory.getPrng())
@@ -87,7 +90,7 @@ class KeyServiceTest {
   }
 
   @Test
-  void generateRandomBytes_ValidLength_ReturnsRandomBytes() throws Exception {
+  void generateRandomBytes_ValidLength_ReturnsRandomBytes() throws NoSuchAlgorithmException {
     final int[] testedLengths = {0, 1, 12, 16, 128, 4096};
 
     final SecureRandom mockPrng = mock(SecureRandom.class);
@@ -102,7 +105,7 @@ class KeyServiceTest {
   }
 
   @Test
-  void generateRandomString_ValidLength_ReturnsRandomString() throws Exception {
+  void generateRandomString_ValidLength_ReturnsRandomString() throws NoSuchAlgorithmException {
     final SecureRandom mockPrng = mock(SecureRandom.class);
 
     when(prngFactory.getPrng()).thenReturn(mockPrng);

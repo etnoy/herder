@@ -24,13 +24,18 @@ package org.owasp.herder.it.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 
 import java.time.Clock;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collection;
+import java.util.Date;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.owasp.herder.crypto.WebTokenClock;
 import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.crypto.WebTokenService;
 import org.owasp.herder.it.BaseIT;
@@ -38,6 +43,7 @@ import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -53,6 +59,8 @@ class WebTokenIT extends BaseIT {
   @Autowired UserService userService;
 
   @Autowired IntegrationTestUtils integrationTestUtils;
+
+  @MockBean WebTokenClock webTokenClock;
 
   @Test
   @DisplayName("A token that is about to expire should still be valid")
@@ -70,7 +78,7 @@ class WebTokenIT extends BaseIT {
             TestConstants.year2000Clock
                 .instant()
                 .plusMillis(webTokenService.getExpirationTime() - 1),
-            ZoneId.systemDefault());
+            ZoneId.of("Z"));
 
     // Set the clock to 1 second before the token expires
     setClock(rightBeforeTheTokenExpires);
@@ -205,11 +213,22 @@ class WebTokenIT extends BaseIT {
   }
 
   @BeforeEach
-  private void clear() {
+  private void setUp() {
     integrationTestUtils.resetState();
+    resetClock();
   }
 
-  private void setClock(final Clock clock) {
-    webTokenService.setClock(clock);
+  private void setClock(final Clock testClock) {
+    when(webTokenClock.now())
+        .thenReturn(Date.from(LocalDateTime.now(testClock).atZone(ZoneId.of("Z")).toInstant()));
+  }
+
+  private void resetClock() {
+    when(webTokenClock.now())
+        .thenReturn(
+            Date.from(
+                LocalDateTime.now(Clock.systemDefaultZone())
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()));
   }
 }

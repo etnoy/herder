@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
-import lombok.extern.slf4j.Slf4j;
+
 import org.owasp.herder.authentication.AuthResponse;
 import org.owasp.herder.authentication.AuthResponse.AuthResponseBuilder;
 import org.owasp.herder.authentication.PasswordAuth;
@@ -55,6 +55,9 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -62,6 +65,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @Validated
+@RequiredArgsConstructor
 public class UserService {
   private final UserRepository userRepository;
 
@@ -75,23 +79,7 @@ public class UserService {
 
   private final WebTokenKeyManager webTokenKeyManager;
 
-  private Clock clock;
-
-  public UserService(
-      UserRepository userRepository,
-      TeamRepository teamRepository,
-      PasswordAuthRepository passwordAuthRepository,
-      ClassService classService,
-      KeyService keyService,
-      WebTokenKeyManager webTokenKeyManager) {
-    this.userRepository = userRepository;
-    this.teamRepository = teamRepository;
-    this.passwordAuthRepository = passwordAuthRepository;
-    this.classService = classService;
-    this.keyService = keyService;
-    this.webTokenKeyManager = webTokenKeyManager;
-    resetClock();
-  }
+  private final Clock clock;
 
   public Mono<Void> addUserToTeam(
       @ValidUserId final String userId, @ValidTeamId final String teamId) {
@@ -204,7 +192,7 @@ public class UserService {
         UserEntity.builder()
             .displayName(displayName)
             .key(keyService.generateRandomBytes(16))
-            .creationTime(LocalDateTime.now())
+            .creationTime(LocalDateTime.now(clock))
             .build();
 
     return Mono.just(displayName)
@@ -256,7 +244,7 @@ public class UserService {
                       .displayName(tuple.getT1())
                       .key(keyService.generateRandomBytes(16))
                       .isEnabled(true)
-                      .creationTime(LocalDateTime.now())
+                      .creationTime(LocalDateTime.now(clock))
                       .build();
 
               final Mono<String> userIdMono =
@@ -292,7 +280,7 @@ public class UserService {
                 teamRepository.save(
                     TeamEntity.builder()
                         .displayName(name)
-                        .creationTime(LocalDateTime.now())
+                        .creationTime(LocalDateTime.now(clock))
                         .members(new ArrayList<>())
                         .build()))
         .map(TeamEntity::getId);
@@ -601,10 +589,6 @@ public class UserService {
         .then();
   }
 
-  public void resetClock() {
-    this.clock = Clock.systemDefaultZone();
-  }
-
   public Mono<UserEntity> setClassId(
       @ValidUserId final String userId, @ValidClassId final String classId) {
     final Mono<String> classIdMono =
@@ -618,10 +602,6 @@ public class UserService {
         .map(tuple -> tuple.getT1().withClassId(tuple.getT2()))
         .flatMap(userRepository::save)
         .doOnSuccess(u -> kick(userId));
-  }
-
-  public void setClock(Clock clock) {
-    this.clock = clock;
   }
 
   public Mono<UserEntity> setDisplayName(
@@ -644,12 +624,12 @@ public class UserService {
 
   // TODO: validate durations etc. for these functions
   public Mono<Void> suspendUntil(@ValidUserId final String userId, final Duration duration) {
-    return suspendUntil(userId, LocalDateTime.now().plus(duration), null);
+    return suspendUntil(userId, LocalDateTime.now(clock).plus(duration), null);
   }
 
   public Mono<Void> suspendUntil(
       @ValidUserId final String userId, final Duration duration, final String suspensionMessage) {
-    return suspendUntil(userId, LocalDateTime.now().plus(duration), suspensionMessage);
+    return suspendUntil(userId, LocalDateTime.now(clock).plus(duration), suspensionMessage);
   }
 
   public Mono<Void> suspendUntil(

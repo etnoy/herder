@@ -175,7 +175,7 @@ class UserControllerApiIT extends BaseIT {
   }
 
   @Test
-  void listUsers_UsersExist_ReturnsUserList() throws Exception {
+  void listUsers_UsersExist_ReturnsUserList() {
     final String loginName = "test";
     final String password = "paLswOrdha17£@£sh";
 
@@ -270,7 +270,7 @@ class UserControllerApiIT extends BaseIT {
   }
 
   @Test
-  void register_ValidData_ReturnsValidUser() throws Exception {
+  void register_ValidData_ReturnsValidUser() {
     final String loginName = "test";
     final String password = "paLswOrdha17£@£sh";
 

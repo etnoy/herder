@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.test.util.TestConstants;
+
 import reactor.core.publisher.Hooks;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +43,7 @@ class ClassIdNotFoundExceptionTest {
   }
 
   @Test
-  void messageConstructor_ValidMessage_MessageIncluded() throws Exception {
+  void messageConstructor_ValidMessage_MessageIncluded() {
     for (final String message : TestConstants.STRINGS) {
       ClassIdNotFoundException exception = new ClassIdNotFoundException(message);
       assertThat(exception.getMessage()).isEqualTo(message);

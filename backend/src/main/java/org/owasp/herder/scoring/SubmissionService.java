@@ -23,8 +23,10 @@ package org.owasp.herder.scoring;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.exception.ModuleClosedException;
 import org.owasp.herder.flag.FlagHandler;
@@ -41,11 +43,14 @@ import org.owasp.herder.validation.ValidTeamId;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @Validated
+@RequiredArgsConstructor
 public class SubmissionService {
   private final SubmissionRepository submissionRepository;
 
@@ -57,21 +62,7 @@ public class SubmissionService {
 
   private final ModuleService moduleService;
 
-  private Clock clock;
-
-  public SubmissionService(
-      SubmissionRepository submissionRepository,
-      RankedSubmissionRepository rankedSubmissionRepository,
-      FlagHandler flagHandler,
-      UserService userService,
-      ModuleService moduleService) {
-    this.submissionRepository = submissionRepository;
-    this.rankedSubmissionRepository = rankedSubmissionRepository;
-    this.flagHandler = flagHandler;
-    this.userService = userService;
-    this.moduleService = moduleService;
-    resetClock();
-  }
+  private final Clock clock;
 
   public Flux<SanitizedRankedSubmission> findAllRankedByModuleLocator(
       @ValidModuleLocator final String moduleLocator) {
@@ -105,11 +96,6 @@ public class SubmissionService {
     return rankedSubmissionRepository.getUnrankedScoreboard();
   }
 
-  // TODO: refactor clock handler to be singleton
-  public void resetClock() {
-    this.clock = Clock.systemDefaultZone();
-  }
-
   private SanitizedRankedSubmission sanitizeRankedSubmission(
       final RankedSubmission rankedSubmission) {
     final SanitizedRankedSubmissionBuilder builder = SanitizedRankedSubmission.builder();
@@ -136,10 +122,6 @@ public class SubmissionService {
     builder.moduleName(rankedSubmission.getModule().getName());
 
     return builder.build();
-  }
-
-  public void setClock(Clock clock) {
-    this.clock = clock;
   }
 
   // TODO: validate flag
