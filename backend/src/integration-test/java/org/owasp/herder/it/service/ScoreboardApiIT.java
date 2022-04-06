@@ -54,7 +54,7 @@ class ScoreboardApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     integrationTestUtils.createStaticTestModule();
 
@@ -79,7 +79,7 @@ class ScoreboardApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     integrationTestUtils.createStaticTestModule();
 
@@ -104,7 +104,7 @@ class ScoreboardApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     webTestClient
         .get()
@@ -128,7 +128,7 @@ class ScoreboardApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     webTestClient
         .get()
@@ -147,7 +147,7 @@ class ScoreboardApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     webTestClient
         .get()
@@ -166,7 +166,7 @@ class ScoreboardApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     webTestClient
         .get()

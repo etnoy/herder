@@ -23,6 +23,8 @@ package org.owasp.herder.it.authentication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,9 +36,6 @@ import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.reactive.server.WebTestClient;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import reactor.core.publisher.Hooks;
 
 @DisplayName("Login API integration tests")
@@ -62,7 +61,7 @@ class LoginApiIT extends BaseIT {
   void canLoginWithValidCredentials() {
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     final Claims claims =
         Jwts.parserBuilder()
@@ -78,7 +77,7 @@ class LoginApiIT extends BaseIT {
   @DisplayName("Logging in with an empty password should return HTTP Bad Request")
   void canReturn400WhenLogginInWithEmptyPassword() {
     integrationTestUtils
-        .performAPILogin(TestConstants.TEST_LOGIN_NAME, "")
+        .performAPILogin(TestConstants.TEST_USER_LOGIN_NAME, "")
         .expectStatus()
         .isBadRequest();
   }
@@ -87,7 +86,7 @@ class LoginApiIT extends BaseIT {
   @DisplayName("Logging in with an empty username should return HTTP Unauthorized")
   void canReturn400WhenLogginInWithEmptyUsername() {
     integrationTestUtils
-        .performAPILogin("", TestConstants.TEST_PASSWORD)
+        .performAPILogin("", TestConstants.TEST_USER_PASSWORD)
         .expectStatus()
         .isBadRequest();
   }
@@ -96,7 +95,7 @@ class LoginApiIT extends BaseIT {
   @DisplayName("Logging in with an incorrect password should return HTTP Unauthorized")
   void canReturn401WhenLogginInWithWrongPassword() {
     integrationTestUtils
-        .performAPILogin(TestConstants.TEST_LOGIN_NAME, "wrong")
+        .performAPILogin(TestConstants.TEST_USER_LOGIN_NAME, "wrong")
         .expectStatus()
         .isUnauthorized();
   }
@@ -105,7 +104,7 @@ class LoginApiIT extends BaseIT {
   @DisplayName("Logging in with an incorrect username should return HTTP Unauthorized")
   void canReturn401WhenLogginInWithWrongUsername() {
     integrationTestUtils
-        .performAPILogin("wrong", TestConstants.TEST_PASSWORD)
+        .performAPILogin("wrong", TestConstants.TEST_USER_PASSWORD)
         .expectStatus()
         .isUnauthorized();
   }

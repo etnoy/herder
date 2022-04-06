@@ -31,7 +31,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Date;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -71,7 +70,7 @@ class WebTokenIT extends BaseIT {
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     final Clock rightBeforeTheTokenExpires =
         Clock.fixed(
@@ -97,14 +96,14 @@ class WebTokenIT extends BaseIT {
 
     // Create a token (we don't save it)
     integrationTestUtils.performAPILoginWithToken(
-        TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     // Invalidate the token
     webTokenKeyManager.invalidateAccessToken(userId);
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     final Authentication authentication = webTokenService.parseToken(accessToken);
 
@@ -126,7 +125,7 @@ class WebTokenIT extends BaseIT {
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
     Authentication authentication = webTokenService.parseToken(accessToken);
 
     assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
@@ -149,7 +148,7 @@ class WebTokenIT extends BaseIT {
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
     Authentication authentication = webTokenService.parseToken(accessToken);
 
     assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
@@ -170,7 +169,7 @@ class WebTokenIT extends BaseIT {
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     // Invalidate the token
     webTokenKeyManager.invalidateAccessToken(userId);
@@ -192,7 +191,7 @@ class WebTokenIT extends BaseIT {
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     final Clock rightAfterTheTokenExpires =
         Clock.fixed(

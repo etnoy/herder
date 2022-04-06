@@ -27,7 +27,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import javax.validation.ConstraintViolationException;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +39,6 @@ import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserController;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -62,9 +60,9 @@ class UserControllerTest {
 
   @Test
   void deleteById_ValidId_CallsUserService() {
-    when(userService.deleteById(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
+    when(userService.delete(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
     StepVerifier.create(userController.deleteById(TestConstants.TEST_USER_ID)).verifyComplete();
-    verify(userService, times(1)).deleteById(TestConstants.TEST_USER_ID);
+    verify(userService, times(1)).delete(TestConstants.TEST_USER_ID);
   }
 
   @Test

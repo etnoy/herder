@@ -87,7 +87,7 @@ class FlagTutorialApiIT extends BaseIT {
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     final String endpoint = "/api/v1/module/flag-tutorial/";
 

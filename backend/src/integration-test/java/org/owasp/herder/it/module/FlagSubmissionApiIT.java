@@ -137,7 +137,7 @@ class FlagSubmissionApiIT extends BaseIT {
       userId = integrationTestUtils.createTestUser();
       token =
           integrationTestUtils.performAPILoginWithToken(
-              TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+              TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
       integrationTestUtils.createDynamicTestModule();
       dynamicFlag = flagHandler.getDynamicFlag(userId, TestConstants.TEST_MODULE_LOCATOR).block();
@@ -236,7 +236,7 @@ class FlagSubmissionApiIT extends BaseIT {
       integrationTestUtils.createTestUser();
       token =
           integrationTestUtils.performAPILoginWithToken(
-              TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+              TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
       moduleId = integrationTestUtils.createStaticTestModule();
     }

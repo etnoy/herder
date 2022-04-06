@@ -49,7 +49,7 @@ public class UserController {
   public Mono<Void> deleteById(@PathVariable @ValidUserId final String userId) {
     log.debug("Deleting user with id " + userId);
 
-    return userService.deleteById(userId);
+    return userService.delete(userId);
   }
 
   @GetMapping(path = "users")

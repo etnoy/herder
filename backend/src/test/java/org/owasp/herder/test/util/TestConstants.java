@@ -26,7 +26,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.stream.Stream;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
 
@@ -130,8 +129,8 @@ public final class TestConstants {
   public static final String TEST_TEAM_DISPLAY_NAME = "Test Team";
 
   public static final String TEST_USER_DISPLAY_NAME = "Test User";
-  public static final String TEST_LOGIN_NAME = "test";
-  public static final String TEST_PASSWORD = "test";
+  public static final String TEST_USER_LOGIN_NAME = "test-login-name";
+  public static final String TEST_USER_PASSWORD = "test";
 
   // The password "test" hashed with BCrypt
   public static final String HASHED_TEST_PASSWORD =

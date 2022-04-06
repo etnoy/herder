@@ -158,7 +158,7 @@ class UserAdministrationIT extends BaseIT {
         userService
             .createPasswordUser(
                 TestConstants.TEST_USER_DISPLAY_NAME,
-                TestConstants.TEST_LOGIN_NAME,
+                TestConstants.TEST_USER_LOGIN_NAME,
                 TestConstants.HASHED_TEST_PASSWORD)
             .block();
 
@@ -173,7 +173,7 @@ class UserAdministrationIT extends BaseIT {
         userService
             .createPasswordUser(
                 TestConstants.TEST_USER_DISPLAY_NAME,
-                TestConstants.TEST_LOGIN_NAME,
+                TestConstants.TEST_USER_LOGIN_NAME,
                 TestConstants.HASHED_TEST_PASSWORD)
             .block();
 

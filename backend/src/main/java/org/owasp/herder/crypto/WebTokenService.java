@@ -21,13 +21,19 @@
  */
 package org.owasp.herder.crypto;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwsHeader;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MissingClaimException;
+import io.jsonwebtoken.SigningKeyResolverAdapter;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.Date;
-
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.authentication.Role;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -37,15 +43,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwsHeader;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MissingClaimException;
-import io.jsonwebtoken.SigningKeyResolverAdapter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -69,7 +66,7 @@ public class WebTokenService {
 
   public String generateToken(@ValidUserId final String userId, final boolean isAdmin) {
     final Date creationTime = webTokenClock.now();
-    final Date expirationTime = new Date(webTokenClock.now().getTime() + getExpirationTime());
+    final Date expirationTime = new Date(creationTime.getTime() + getExpirationTime());
     final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(userId);
 
     String role;

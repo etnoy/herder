@@ -65,7 +65,7 @@ class UserApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     webTestClient
         .get()
@@ -86,7 +86,7 @@ class UserApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     webTestClient
         .get()
@@ -106,7 +106,7 @@ class UserApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     StepVerifier.create(
             webTestClient
@@ -133,7 +133,7 @@ class UserApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     StepVerifier.create(
             webTestClient
@@ -163,7 +163,7 @@ class UserApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     StepVerifier.create(
             webTestClient
@@ -192,7 +192,7 @@ class UserApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     final String invalidUserId = "XYZ";
 
@@ -213,7 +213,7 @@ class UserApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD);
+            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     final String invalidUserId = TestConstants.TEST_USER_ID;
 

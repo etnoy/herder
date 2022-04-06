@@ -126,7 +126,7 @@ class EntityIdValidationIT extends BaseIT {
   @DisplayName("in userService.deleteById()")
   void userService_deleteById(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-        () -> userService.deleteById(userId), containingMessage);
+        () -> userService.delete(userId), containingMessage);
   }
 
   @ParameterizedTest
@@ -250,7 +250,7 @@ class EntityIdValidationIT extends BaseIT {
   @DisplayName("in userController.deleteById()")
   void userController_deleteById(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-        () -> userService.deleteById(userId), containingMessage);
+        () -> userService.delete(userId), containingMessage);
   }
 
   @ParameterizedTest

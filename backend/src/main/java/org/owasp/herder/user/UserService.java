@@ -27,7 +27,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.authentication.AuthResponse;
 import org.owasp.herder.authentication.AuthResponse.AuthResponseBuilder;
 import org.owasp.herder.authentication.PasswordAuth;
@@ -55,9 +56,6 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -171,15 +169,6 @@ public class UserService {
   }
 
   /**
-   * Count the number of users in the database
-   *
-   * @return number of users
-   */
-  public Mono<Long> count() {
-    return userRepository.count();
-  }
-
-  /**
    * Creates a new user
    *
    * @param displayName The display name of the user
@@ -192,6 +181,7 @@ public class UserService {
         UserEntity.builder()
             .displayName(displayName)
             .key(keyService.generateRandomBytes(16))
+            .isEnabled(true)
             .creationTime(LocalDateTime.now(clock))
             .build();
 
@@ -287,35 +277,6 @@ public class UserService {
   }
 
   /**
-   * Deletes a given user
-   *
-   * @param userId
-   * @return
-   */
-  public Mono<Void> deleteById(@ValidUserId final String userId) {
-    return passwordAuthRepository
-        .deleteByUserId(userId)
-        .then(userRepository.deleteById(userId))
-        .doOnSuccess(u -> kick(userId));
-  }
-
-  /**
-   * Removes admin access from user
-   *
-   * @param userId
-   * @return
-   */
-  public Mono<Void> demote(@ValidUserId final String userId) {
-    log.info("Demoting user with id " + userId + " to user");
-
-    return findById(userId)
-        .map(user -> user.withAdmin(false))
-        .flatMap(userRepository::save)
-        .doOnSuccess(u -> kick(userId))
-        .then();
-  }
-
-  /**
    * Deletes a user. In the database, the corresponding document is set to deleted, and all fields
    * are cleared
    *
@@ -334,7 +295,7 @@ public class UserService {
                     .withEnabled(false)
                     .withDeleted(true)
                     .withDisplayName("")
-                    .withSuspensionMessage("")
+                    .withSuspensionMessage(null)
                     .withAdmin(false))
         .flatMap(userRepository::save)
         .flatMap(u -> passwordAuthRepository.deleteByUserId(userId))
@@ -351,6 +312,22 @@ public class UserService {
     log.info("Deleting team with id " + teamId);
 
     return teamRepository.deleteById(teamId).then();
+  }
+
+  /**
+   * Removes admin access from user
+   *
+   * @param userId
+   * @return
+   */
+  public Mono<Void> demote(@ValidUserId final String userId) {
+    log.info("Demoting user with id " + userId + " to user");
+
+    return findById(userId)
+        .map(user -> user.withAdmin(false))
+        .flatMap(userRepository::save)
+        .doOnSuccess(u -> kick(userId))
+        .then();
   }
 
   /**
@@ -549,6 +526,12 @@ public class UserService {
         .switchIfEmpty(Mono.error(new UserNotFoundException("User id " + userId + " not found")));
   }
 
+  public Mono<TeamEntity> getTeamById(@ValidTeamId final String teamId) {
+    return teamRepository
+        .findById(teamId)
+        .switchIfEmpty(Mono.error(new TeamNotFoundException("Team id " + teamId + " not found")));
+  }
+
   public Mono<TeamEntity> getTeamByUserId(@ValidUserId final String userId) {
     return getById(userId)
         .flatMap(
@@ -560,12 +543,6 @@ public class UserService {
                 return getTeamById(teamId);
               }
             });
-  }
-
-  public Mono<TeamEntity> getTeamById(@ValidTeamId final String teamId) {
-    return teamRepository
-        .findById(teamId)
-        .switchIfEmpty(Mono.error(new TeamNotFoundException("Team id " + teamId + " not found")));
   }
 
   public void kick(@ValidUserId final String userId) {

@@ -23,8 +23,9 @@ package org.owasp.herder.it.util;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.jayway.jsonpath.JsonPath;
 import javax.validation.ConstraintViolationException;
-
+import lombok.RequiredArgsConstructor;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.configuration.ConfigurationRepository;
@@ -55,10 +56,6 @@ import org.springframework.test.web.reactive.server.WebTestClient.RequestBodySpe
 import org.springframework.test.web.reactive.server.WebTestClient.ResponseSpec;
 import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
-
-import com.jayway.jsonpath.JsonPath;
-
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -139,7 +136,7 @@ public final class IntegrationTestUtils {
         userService
             .createPasswordUser(
                 TestConstants.TEST_USER_DISPLAY_NAME,
-                TestConstants.TEST_LOGIN_NAME,
+                TestConstants.TEST_USER_LOGIN_NAME,
                 TestConstants.HASHED_TEST_PASSWORD)
             .block();
 
@@ -151,7 +148,7 @@ public final class IntegrationTestUtils {
     return userService
         .createPasswordUser(
             TestConstants.TEST_USER_DISPLAY_NAME,
-            TestConstants.TEST_LOGIN_NAME,
+            TestConstants.TEST_USER_LOGIN_NAME,
             TestConstants.HASHED_TEST_PASSWORD)
         .block();
   }
@@ -172,7 +169,8 @@ public final class IntegrationTestUtils {
   public String performAPILoginWithToken(String username, String password) {
     return JsonPath.parse(
             new String(
-                performAPILogin(TestConstants.TEST_LOGIN_NAME, TestConstants.TEST_PASSWORD)
+                performAPILogin(
+                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD)
                     .expectStatus()
                     .isOk()
                     .expectBody(String.class)
