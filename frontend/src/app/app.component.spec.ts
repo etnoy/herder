@@ -5,14 +5,12 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { Component } from '@angular/core';
 
 describe('AppComponent', () => {
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        declarations: [AppComponent, MockAlertComponent],
-        imports: [HttpClientTestingModule, RouterTestingModule],
-      }).compileComponents();
-    })
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      declarations: [AppComponent, MockAlertComponent],
+      imports: [HttpClientTestingModule, RouterTestingModule],
+    }).compileComponents();
+  }));
 
   it('should create the app', () => {
     const fixture = TestBed.createComponent(AppComponent);

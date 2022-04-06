@@ -8,19 +8,17 @@ describe('SqlInjectionTutorialComponent', () => {
   let component: SqlInjectionTutorialComponent;
   let fixture: ComponentFixture<SqlInjectionTutorialComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        declarations: [SqlInjectionTutorialComponent],
-        imports: [
-          RouterTestingModule,
-          HttpClientModule,
-          FormsModule,
-          ReactiveFormsModule,
-        ],
-      }).compileComponents();
-    })
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      declarations: [SqlInjectionTutorialComponent],
+      imports: [
+        RouterTestingModule,
+        HttpClientModule,
+        FormsModule,
+        ReactiveFormsModule,
+      ],
+    }).compileComponents();
+  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SqlInjectionTutorialComponent);

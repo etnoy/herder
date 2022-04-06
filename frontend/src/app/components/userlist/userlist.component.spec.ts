@@ -8,18 +8,12 @@ describe('UserListComponent', () => {
   let component: UserListComponent;
   let fixture: ComponentFixture<UserListComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        declarations: [UserListComponent],
-        imports: [
-          HttpClientModule,
-          RouterTestingModule,
-          HttpClientTestingModule,
-        ],
-      }).compileComponents();
-    })
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      declarations: [UserListComponent],
+      imports: [HttpClientModule, RouterTestingModule, HttpClientTestingModule],
+    }).compileComponents();
+  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(UserListComponent);
