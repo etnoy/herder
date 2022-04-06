@@ -25,12 +25,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import java.security.Key;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,14 +51,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.JwtParser;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WebTokenService unit tests")
@@ -77,11 +75,10 @@ class WebTokenServiceTest {
 
     final String token = webTokenService.generateToken(testUserId, true);
 
+    setClock(TestConstants.year2100Clock);
+
     final JwtParser jwtParser =
-        Jwts.parserBuilder()
-            .setClock(TestConstants.year2100WebTokenClock)
-            .setSigningKey(testKey)
-            .build();
+        Jwts.parserBuilder().setClock(webTokenClock).setSigningKey(testKey).build();
 
     assertThatThrownBy(
             () -> {
@@ -89,7 +86,7 @@ class WebTokenServiceTest {
             })
         .isInstanceOf(JwtException.class)
         .hasMessageContaining(
-            "JWT expired at 2000-01-01T10:15:00Z. Current time: 2100-01-01T09:00:00Z");
+            "JWT expired at 2000-01-01T10:15:00Z. Current time: 2100-01-01T10:00:00Z");
   }
 
   @Test
