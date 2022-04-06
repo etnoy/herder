@@ -19,34 +19,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.scoring;
+package org.owasp.herder.user;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
+import java.util.ArrayList;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
+@AllArgsConstructor
 @Builder
 @With
-@Document
-public class Correction implements Serializable {
+@Document("team")
+public final class TeamEntity implements Serializable {
+  private static final long serialVersionUID = -7440925760611988872L;
 
-  private static final long serialVersionUID = -3672798577756177047L;
+  @Id String id;
 
-  @Id private String id;
+  @NonNull String displayName;
 
-  @NonNull private String userId;
+  LocalDateTime creationTime;
 
-  @NonNull private Long amount;
-
-  @NonNull private LocalDateTime time;
-
-  private String description;
+  @NonNull ArrayList<UserEntity> members;
 }

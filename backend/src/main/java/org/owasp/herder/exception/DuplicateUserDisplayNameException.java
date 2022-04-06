@@ -21,7 +21,7 @@
  */
 package org.owasp.herder.exception;
 
-public class DuplicateUserDisplayNameException extends Exception {
+public class DuplicateUserDisplayNameException extends RuntimeException {
   private static final long serialVersionUID = -5442400129568765216L;
 
   public DuplicateUserDisplayNameException(final String message) {

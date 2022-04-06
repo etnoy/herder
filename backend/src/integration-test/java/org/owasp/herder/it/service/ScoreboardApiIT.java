@@ -132,7 +132,7 @@ class ScoreboardApiIT extends BaseIT {
 
     webTestClient
         .get()
-        .uri("/api/v1/scoreboard/user/" + TestConstants.TEST_USER_ID)
+        .uri("/api/v1/scoreboard/user/" + TestConstants.TEST_MODULE_ID)
         .header("Authorization", "Bearer " + token)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()

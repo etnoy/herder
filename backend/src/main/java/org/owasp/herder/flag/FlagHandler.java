@@ -38,6 +38,7 @@ import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.service.ConfigurationService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
+import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.owasp.herder.validation.ValidModuleId;
 import org.owasp.herder.validation.ValidModuleLocator;
@@ -164,7 +165,9 @@ public class FlagHandler {
             .map(validFlag -> Boolean.TRUE.equals(validFlag) ? "valid" : "invalid");
 
     Mono.zip(
-            userService.findDisplayNameById(userId), validText, moduleMono.map(ModuleEntity::getId))
+            userService.getById(userId).map(UserEntity::getDisplayName),
+            validText,
+            moduleMono.map(ModuleEntity::getId))
         .map(
             tuple ->
                 "User "

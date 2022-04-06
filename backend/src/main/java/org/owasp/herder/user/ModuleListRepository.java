@@ -19,36 +19,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.scoring;
+package org.owasp.herder.user;
 
-import javax.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
-import org.owasp.herder.scoring.ModulePoint.ModulePointBuilder;
-import org.owasp.herder.validation.ValidModuleId;
-import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
-import reactor.core.publisher.Flux;
+import org.owasp.herder.module.ModuleList;
+import org.owasp.herder.module.ModuleListItem;
+import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
-@RequiredArgsConstructor
-@Validated
-@Service
-public class ScoreService {
-  private final ModulePointRepository modulePointRepository;
+@Repository
+public interface ModuleListRepository extends ReactiveMongoRepository<ModuleList, String> {
+  @Aggregation({
+    "{$match: {'_id': ?0}}",
+    "{$unwind: {path: '$modules'}}",
+    "{$replaceRoot: {newRoot: '$modules'}}",
+    "{$match: {'locator': ?1}}",
+  })
+  public Mono<ModuleListItem> findListItemByLocator(final String userId, final String locator);
 
-  private final SubmissionRepository submissionRepository;
-
-  public Mono<ModulePoint> setModuleScore(
-      @ValidModuleId final String moduleId, @Min(0) final long rank, @Min(0) final long points) {
-    ModulePointBuilder builder = ModulePoint.builder().moduleId(moduleId).rank(rank).points(points);
-    return modulePointRepository.save(builder.build());
-  }
-
-  public Flux<ModulePoint> getModuleScores(@ValidModuleId final String moduleId) {
-    return modulePointRepository.findAllByModuleId(moduleId);
-  }
-
-  public Flux<ScoreboardEntry> getScoreboard() {
-    return submissionRepository.getScoreboard();
-  }
+  public Mono<ModuleList> findByTeamId(final String teamId);
 }

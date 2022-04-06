@@ -19,45 +19,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.scoring;
+package org.owasp.herder.user;
 
-import java.time.Clock;
-import java.time.LocalDateTime;
-import org.owasp.herder.scoring.Correction.CorrectionBuilder;
-import org.owasp.herder.validation.ValidUserId;
-import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
-@Service
-@Validated
-public class CorrectionService {
-  private final CorrectionRepository correctionRepository;
-
-  private Clock clock;
-
-  public CorrectionService(final CorrectionRepository correctionRepository) {
-    this.correctionRepository = correctionRepository;
-    resetClock();
-  }
-
-  public void resetClock() {
-    this.clock = Clock.systemDefaultZone();
-  }
-
-  public void setClock(Clock clock) {
-    this.clock = clock;
-  }
-
-  public Mono<Correction> submit(
-      @ValidUserId final String userId, final long amount, final String description) {
-    final CorrectionBuilder correctionBuilder = Correction.builder();
-
-    correctionBuilder.userId(userId);
-    correctionBuilder.amount(amount);
-    correctionBuilder.description(description);
-    correctionBuilder.time(LocalDateTime.now(clock));
-
-    return correctionRepository.save(correctionBuilder.build());
-  }
+@Repository
+public interface TeamRepository extends ReactiveMongoRepository<TeamEntity, String> {
+  public Mono<TeamEntity> findByDisplayName(final String displayName);
 }

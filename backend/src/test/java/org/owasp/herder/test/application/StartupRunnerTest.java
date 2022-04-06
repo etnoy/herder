@@ -39,8 +39,9 @@ import org.owasp.herder.module.csrf.CsrfTutorial;
 import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.xss.XssTutorial;
+import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.UserService;
-
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 
@@ -59,6 +60,10 @@ class StartupRunnerTest {
   @Mock private UserService userService;
 
   @Mock private ModuleService moduleService;
+
+  @Mock private SubmissionService submissionService;
+
+  @Mock private RefresherService refresherService;
 
   @Mock private XssTutorial xssTutorial;
 
@@ -86,6 +91,11 @@ class StartupRunnerTest {
     when(userService.existsByLoginName(any(String.class))).thenReturn(Mono.just(false));
     when(userService.existsByDisplayName(any(String.class))).thenReturn(Mono.just(false));
 
+    when(userService.teamExistsByDisplayName("Team 1")).thenReturn(Mono.just(true));
+    when(refresherService.refreshModuleLists()).thenReturn(Mono.empty());
+    when(refresherService.refreshSubmissionRanks()).thenReturn(Mono.empty());
+    when(refresherService.refreshScoreboard()).thenReturn(Mono.empty());
+
     assertDoesNotThrow(() -> startupRunner.run(null));
   }
 
@@ -93,6 +103,8 @@ class StartupRunnerTest {
   private void setUp() {
     // Set up the system under test
 
-    startupRunner = new StartupRunner(userService);
+    startupRunner =
+        new StartupRunner(
+            userService, moduleService, submissionService, refresherService, flagTutorial);
   }
 }

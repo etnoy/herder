@@ -1,6 +1,7 @@
 export class UserScore {
   rank: number;
-  userId: string;
+  id: string;
+  principalType: string;
   displayName: string;
   moduleName: string;
   moduleLocator: string;

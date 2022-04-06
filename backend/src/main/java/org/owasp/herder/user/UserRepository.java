@@ -21,13 +21,25 @@
  */
 package org.owasp.herder.user;
 
+import org.owasp.herder.module.ModuleList;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
 public interface UserRepository extends ReactiveMongoRepository<UserEntity, String> {
-  public Mono<UserEntity> findByDisplayName(@Param("display_name") final String displayName);
+  public Mono<UserEntity> findByDisplayName(final String displayName);
+
+  public Mono<UserEntity> findByIdAndIsDeletedFalse(final String id);
+
+  public Flux<UserEntity> findAllByTeamId(final String teamId);
+
+  @Aggregation({
+    "{$lookup:{from:'submission','let':{userid:'$_id',teamid:'$teamId'},pipeline:[{$match:{$expr:{$and:[{$or:[{$eq:['$userId','$$userid']},{$eq:['$teamId','$$teamid']}]},{$eq:['$isValid',true]}]}}},{$lookup:{from:'module',let:{moduleIdObj:{$toObjectId:'$moduleId'}},pipeline:[{$match:{$expr:{$eq:['$_id','$$moduleIdObj']}}}],as:'module'}},{$unwind:'$module'},{$addFields:{isSolved:true,name:'$module.name',locator:'$module.locator',tags:'$module.tags',moduleId:'$module._id','isOpen':'$module.isOpen'}},{$unionWith:{coll:'module',pipeline:[{$addFields:{isSolved:false,moduleId:'$_id'}}]}},{$match:{isOpen:true}},{$sort:{time:1}},{$group:{_id:'$moduleId',name:{$first:'$name'},locator:{$first:'$locator'},tags:{$first:'$tags'},isSolved:{$max:'$isSolved'}}}],as:'modules'}}",
+    "{$project:{teamId:1,modules:1}}",
+    "{$out:'moduleList'}"
+  })
+  public Flux<ModuleList> computeModuleLists();
 }

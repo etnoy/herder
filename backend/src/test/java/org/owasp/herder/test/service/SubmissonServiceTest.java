@@ -41,10 +41,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.scoring.RankedSubmission;
+import org.owasp.herder.module.ModuleEntity;
+import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.scoring.RankedSubmissionRepository;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.test.util.TestConstants;
+import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.UserEntity;
+import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -61,129 +67,123 @@ class SubmissonServiceTest {
 
   private SubmissionService submissionService;
 
-  @Mock private SubmissionRepository submissionRepository;
+  @Mock SubmissionRepository submissionRepository;
 
-  @Mock private FlagHandler flagHandler;
+  @Mock RankedSubmissionRepository rankedSubmissionRepository;
 
-  @Test
-  void findAllByModuleName_NoSubmissionsExist_ReturnsEmpty() {
-    final String mockModuleName = "id";
-    when(submissionRepository.findAllByModuleId(mockModuleName)).thenReturn(Flux.empty());
-    StepVerifier.create(submissionService.findAllByModuleName(mockModuleName)).verifyComplete();
+  @Mock FlagHandler flagHandler;
 
-    verify(submissionRepository, times(1)).findAllByModuleId(mockModuleName);
-  }
+  @Mock UserService userService;
 
-  @Test
-  void findAllByModuleName_SubmissionsExist_ReturnsSubmissions() {
-    final String mockModuleName = "id";
-    final Submission mockSubmission1 = mock(Submission.class);
-    final Submission mockSubmission2 = mock(Submission.class);
-    final Submission mockSubmission3 = mock(Submission.class);
-    final Submission mockSubmission4 = mock(Submission.class);
+  @Mock ModuleService moduleService;
 
-    when(submissionRepository.findAllByModuleId(mockModuleName))
-        .thenReturn(Flux.just(mockSubmission1, mockSubmission2, mockSubmission3, mockSubmission4));
-    StepVerifier.create(submissionService.findAllByModuleName(mockModuleName))
-        .expectNext(mockSubmission1)
-        .expectNext(mockSubmission2)
-        .expectNext(mockSubmission3)
-        .expectNext(mockSubmission4)
-        .verifyComplete();
+  UserEntity mockUser;
 
-    verify(submissionRepository, times(1)).findAllByModuleId(mockModuleName);
-  }
+  //  @Test
+  //  void findAllRankedByUserId_RankedSubmissionsExist_ReturnsRankedSubmissions() {
+  //
+  //    final RankedSubmission mockRankedSubmission1 = mock(RankedSubmission.class);
+  //    final RankedSubmission mockRankedSubmission2 = mock(RankedSubmission.class);
+  //    final RankedSubmission mockRankedSubmission3 = mock(RankedSubmission.class);
+  //    final RankedSubmission mockRankedSubmission4 = mock(RankedSubmission.class);
+  //
+  //    when(submissionRepository.findAllRankedByUserId(TestConstants.TEST_USER_ID))
+  //        .thenReturn(
+  //            Flux.just(
+  //                mockRankedSubmission1,
+  //                mockRankedSubmission2,
+  //                mockRankedSubmission3,
+  //                mockRankedSubmission4));
+  //
+  //    StepVerifier.create(submissionService.findAllRankedByUserId(TestConstants.TEST_USER_ID))
+  //        .expectNext(mockRankedSubmission1)
+  //        .expectNext(mockRankedSubmission2)
+  //        .expectNext(mockRankedSubmission3)
+  //        .expectNext(mockRankedSubmission4)
+  //        .verifyComplete();
+  //  }
+
+  ModuleEntity mockModule;
+
+  TeamEntity mockTeam;
 
   @Test
   void findAllRankedByUserId_NoRankedSubmissionsExist_ReturnsEmpty() {
-    final String mockUserId = "id";
-    when(submissionRepository.findAllRankedByUserId(mockUserId)).thenReturn(Flux.empty());
-    StepVerifier.create(submissionService.findAllRankedByUserId(mockUserId)).verifyComplete();
 
-    verify(submissionRepository, times(1)).findAllRankedByUserId(mockUserId);
-  }
-
-  @Test
-  void findAllRankedByUserId_RankedSubmissionsExist_ReturnsRankedSubmissions() {
-    final String mockUserId = "id";
-    final RankedSubmission mockRankedSubmission1 = mock(RankedSubmission.class);
-    final RankedSubmission mockRankedSubmission2 = mock(RankedSubmission.class);
-    final RankedSubmission mockRankedSubmission3 = mock(RankedSubmission.class);
-    final RankedSubmission mockRankedSubmission4 = mock(RankedSubmission.class);
-
-    when(submissionRepository.findAllRankedByUserId(mockUserId))
-        .thenReturn(
-            Flux.just(
-                mockRankedSubmission1,
-                mockRankedSubmission2,
-                mockRankedSubmission3,
-                mockRankedSubmission4));
-    StepVerifier.create(submissionService.findAllRankedByUserId(mockUserId))
-        .expectNext(mockRankedSubmission1)
-        .expectNext(mockRankedSubmission2)
-        .expectNext(mockRankedSubmission3)
-        .expectNext(mockRankedSubmission4)
+    when(rankedSubmissionRepository.findAllByUserId(TestConstants.TEST_USER_ID))
+        .thenReturn(Flux.empty());
+    StepVerifier.create(submissionService.findAllRankedByUserId(TestConstants.TEST_USER_ID))
         .verifyComplete();
+
+    verify(rankedSubmissionRepository, times(1)).findAllByUserId(TestConstants.TEST_USER_ID);
   }
 
   @Test
   void findAllValidByUserId_NoSubmissionsExist_ReturnsEmpty() {
-    final String mockUserId = "id";
-    when(submissionRepository.findAllByUserIdAndIsValidTrue(mockUserId)).thenReturn(Flux.empty());
-    StepVerifier.create(submissionService.findAllValidByUserId(mockUserId)).verifyComplete();
 
-    verify(submissionRepository, times(1)).findAllByUserIdAndIsValidTrue(mockUserId);
+    when(submissionRepository.findAllByUserIdAndIsValidTrue(TestConstants.TEST_USER_ID))
+        .thenReturn(Flux.empty());
+    StepVerifier.create(submissionService.findAllValidByUserId(TestConstants.TEST_USER_ID))
+        .verifyComplete();
+
+    verify(submissionRepository, times(1))
+        .findAllByUserIdAndIsValidTrue(TestConstants.TEST_USER_ID);
   }
 
   @Test
   void findAllValidByUserId_SubmissionsExist_ReturnsSubmissions() {
-    final String mockUserId = "id";
+
     final Submission mockSubmission1 = mock(Submission.class);
     final Submission mockSubmission2 = mock(Submission.class);
     final Submission mockSubmission3 = mock(Submission.class);
     final Submission mockSubmission4 = mock(Submission.class);
 
-    when(submissionRepository.findAllByUserIdAndIsValidTrue(mockUserId))
+    when(submissionRepository.findAllByUserIdAndIsValidTrue(TestConstants.TEST_USER_ID))
         .thenReturn(Flux.just(mockSubmission1, mockSubmission2, mockSubmission3, mockSubmission4));
-    StepVerifier.create(submissionService.findAllValidByUserId(mockUserId))
+    StepVerifier.create(submissionService.findAllValidByUserId(TestConstants.TEST_USER_ID))
         .expectNext(mockSubmission1)
         .expectNext(mockSubmission2)
         .expectNext(mockSubmission3)
         .expectNext(mockSubmission4)
         .verifyComplete();
 
-    verify(submissionRepository, times(1)).findAllByUserIdAndIsValidTrue(mockUserId);
+    verify(submissionRepository, times(1))
+        .findAllByUserIdAndIsValidTrue(TestConstants.TEST_USER_ID);
   }
 
   @Test
   void findAllValidByUserIdAndModuleName_NoSubmissionsExist_ReturnsEmpty() {
-    final String mockUserId = "id";
+
     final String mockModuleName = "id";
-    when(submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleName))
+    when(submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(
+            TestConstants.TEST_USER_ID, mockModuleName))
         .thenReturn(Mono.empty());
     StepVerifier.create(
-            submissionService.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
+            submissionService.findAllValidByUserIdAndModuleName(
+                TestConstants.TEST_USER_ID, mockModuleName))
         .verifyComplete();
 
     verify(submissionRepository, times(1))
-        .findAllByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleName);
+        .findAllByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, mockModuleName);
   }
 
   @Test
   void findAllValidByUserIdAndModuleName_SubmissionsExist_ReturnsSubmissions() {
-    final String mockUserId = "id";
+
     final String mockModuleName = "id";
     final Submission mockSubmission = mock(Submission.class);
 
-    when(submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleName))
+    when(submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(
+            TestConstants.TEST_USER_ID, mockModuleName))
         .thenReturn(Mono.just(mockSubmission));
     StepVerifier.create(
-            submissionService.findAllValidByUserIdAndModuleName(mockUserId, mockModuleName))
+            submissionService.findAllValidByUserIdAndModuleName(
+                TestConstants.TEST_USER_ID, mockModuleName))
         .expectNext(mockSubmission)
         .verifyComplete();
 
     verify(submissionRepository, times(1))
-        .findAllByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleName);
+        .findAllByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, mockModuleName);
   }
 
   private void setClock(final Clock clock) {
@@ -193,13 +193,21 @@ class SubmissonServiceTest {
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    submissionService = new SubmissionService(submissionRepository, flagHandler);
+    submissionService =
+        new SubmissionService(
+            submissionRepository,
+            rankedSubmissionRepository,
+            flagHandler,
+            userService,
+            moduleService);
+
+    mockUser = mock(UserEntity.class);
+    mockModule = mock(ModuleEntity.class);
+    mockTeam = mock(TeamEntity.class);
   }
 
   @Test
   void submit_InvalidFlag_ReturnsInvalidSubmission() {
-    final String mockUserId = "userId";
-    final String mockModuleId = "id";
     final String mockSubmissionId = "submissionId";
 
     final String flag = "invalidFlag";
@@ -209,62 +217,83 @@ class SubmissonServiceTest {
 
     setClock(fixedClock);
 
-    when(flagHandler.verifyFlag(mockUserId, mockModuleId, flag)).thenReturn(Mono.just(false));
+    when(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
+        .thenReturn(Mono.just(false));
 
-    when(submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleId))
+    when(submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(
+            TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID))
         .thenReturn(Mono.just(false));
 
     when(submissionRepository.save(any(Submission.class)))
         .thenAnswer(
             user -> Mono.just(user.getArgument(0, Submission.class).withId(mockSubmissionId)));
 
-    StepVerifier.create(submissionService.submit(mockUserId, mockModuleId, flag))
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(moduleService.getById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
+
+    when(mockModule.isOpen()).thenReturn(true);
+
+    StepVerifier.create(
+            submissionService.submitFlag(
+                TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
         .assertNext(
             submission -> {
               assertThat(submission.getId()).isEqualTo(mockSubmissionId);
-              assertThat(submission.getUserId()).isEqualTo(mockUserId);
-              assertThat(submission.getModuleId()).isEqualTo(mockModuleId);
+              assertThat(submission.getUserId()).isEqualTo(TestConstants.TEST_USER_ID);
+              assertThat(submission.getModuleId()).isEqualTo(TestConstants.TEST_MODULE_ID);
               assertThat(submission.getFlag()).isEqualTo(flag);
               assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(fixedClock));
               assertThat(submission.isValid()).isFalse();
             })
         .verifyComplete();
 
-    verify(flagHandler, times(1)).verifyFlag(mockUserId, mockModuleId, flag);
+    verify(flagHandler, times(1))
+        .verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag);
     verify(submissionRepository, times(1))
-        .existsByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleId);
+        .existsByUserIdAndModuleIdAndIsValidTrue(
+            TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID);
     verify(submissionRepository, times(1)).save(any(Submission.class));
   }
 
+  // TODO: module does not exist error handling
+
   @Test
   void submit_ModuleAlreadySolvedByUser_ReturnsModuleAlreadySolvedException() {
-    final String mockUserId = "id";
-    final String mockModuleName = "id";
+
     final String flag = "validFlag";
+    final UserEntity mockUser = mock(UserEntity.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     final Clock fixedClock =
         Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
 
     setClock(fixedClock);
 
-    when(flagHandler.verifyFlag(mockUserId, mockModuleName, flag)).thenReturn(Mono.just(true));
-
-    when(submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleName))
+    when(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
         .thenReturn(Mono.just(true));
 
-    StepVerifier.create(submissionService.submit(mockUserId, mockModuleName, flag))
+    when(submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(
+            TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID))
+        .thenReturn(Mono.just(true));
+
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(moduleService.getById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
+
+    StepVerifier.create(
+            submissionService.submitFlag(
+                TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
         .expectError(ModuleAlreadySolvedException.class)
         .verify();
 
-    verify(flagHandler, times(1)).verifyFlag(mockUserId, mockModuleName, flag);
+    verify(flagHandler, times(1))
+        .verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag);
     verify(submissionRepository, times(1))
-        .existsByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleName);
+        .existsByUserIdAndModuleIdAndIsValidTrue(
+            TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID);
   }
 
   @Test
   void submit_ValidFlag_ReturnsValidSubmission() {
-    final String mockUserId = "user-id";
-    final String mockModuleId = "module-name";
     final String mockSubmissionId = "sub-id";
 
     final String flag = "validFlag";
@@ -273,84 +302,41 @@ class SubmissonServiceTest {
 
     setClock(fixedClock);
 
-    when(flagHandler.verifyFlag(mockUserId, mockModuleId, flag)).thenReturn(Mono.just(true));
+    when(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
+        .thenReturn(Mono.just(true));
 
-    when(submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleId))
+    when(submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(
+            TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID))
         .thenReturn(Mono.just(false));
 
     when(submissionRepository.save(any(Submission.class)))
         .thenAnswer(
             user -> Mono.just(user.getArgument(0, Submission.class).withId(mockSubmissionId)));
 
-    StepVerifier.create(submissionService.submit(mockUserId, mockModuleId, flag))
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(moduleService.getById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
+
+    when(mockModule.isOpen()).thenReturn(true);
+
+    StepVerifier.create(
+            submissionService.submitFlag(
+                TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
         .assertNext(
             submission -> {
               assertThat(submission.getId()).isEqualTo(mockSubmissionId);
-              assertThat(submission.getUserId()).isEqualTo(mockUserId);
-              assertThat(submission.getModuleId()).isEqualTo(mockModuleId);
+              assertThat(submission.getUserId()).isEqualTo(TestConstants.TEST_USER_ID);
+              assertThat(submission.getModuleId()).isEqualTo(TestConstants.TEST_MODULE_ID);
               assertThat(submission.getFlag()).isEqualTo(flag);
               assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(fixedClock));
               assertThat(submission.isValid()).isTrue();
             })
         .verifyComplete();
 
-    verify(flagHandler, times(1)).verifyFlag(mockUserId, mockModuleId, flag);
+    verify(flagHandler, times(1))
+        .verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag);
     verify(submissionRepository, times(1))
-        .existsByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleId);
-    verify(submissionRepository, times(1)).save(any(Submission.class));
-  }
-
-  @Test
-  void submitValid_ModuleAlreadySolvedByUser_ReturnsModuleAlreadySolvedException() {
-    final String mockUserId = "id";
-    final String mockModuleName = "id";
-
-    final Clock fixedClock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
-
-    setClock(fixedClock);
-
-    when(submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleName))
-        .thenReturn(Mono.just(true));
-
-    StepVerifier.create(submissionService.submitValid(mockUserId, mockModuleName))
-        .expectError(ModuleAlreadySolvedException.class)
-        .verify();
-
-    verify(submissionRepository, times(1))
-        .existsByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleName);
-  }
-
-  @Test
-  void submitValid_ModuleNotAlreadySolved_ReturnsValidSubmission() {
-    final String mockUserId = "id";
-    final String mockModuleId = "id";
-    final String mockSubmissionId = "submissionId";
-
-    final Clock fixedClock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
-
-    setClock(fixedClock);
-
-    when(submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleId))
-        .thenReturn(Mono.just(false));
-
-    when(submissionRepository.save(any(Submission.class)))
-        .thenAnswer(
-            user -> Mono.just(user.getArgument(0, Submission.class).withId(mockSubmissionId)));
-
-    StepVerifier.create(submissionService.submitValid(mockUserId, mockModuleId))
-        .assertNext(
-            submission -> {
-              assertThat(submission.getId()).isEqualTo(mockSubmissionId);
-              assertThat(submission.getUserId()).isEqualTo(mockUserId);
-              assertThat(submission.getModuleId()).isEqualTo(mockModuleId);
-              assertThat(submission.getFlag()).isNull();
-              assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(fixedClock));
-              assertThat(submission.isValid()).isTrue();
-            })
-        .verifyComplete();
-
-    verify(submissionRepository, times(1))
-        .existsByUserIdAndModuleIdAndIsValidTrue(mockUserId, mockModuleId);
+        .existsByUserIdAndModuleIdAndIsValidTrue(
+            TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID);
     verify(submissionRepository, times(1)).save(any(Submission.class));
   }
 }

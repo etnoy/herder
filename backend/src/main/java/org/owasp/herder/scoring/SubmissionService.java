@@ -23,12 +23,21 @@ package org.owasp.herder.scoring;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
+import org.owasp.herder.exception.ModuleClosedException;
 import org.owasp.herder.flag.FlagHandler;
+import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.scoring.SanitizedRankedSubmission.SanitizedRankedSubmissionBuilder;
 import org.owasp.herder.scoring.Submission.SubmissionBuilder;
+import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.UserEntity;
+import org.owasp.herder.user.UserService;
 import org.owasp.herder.validation.ValidModuleId;
 import org.owasp.herder.validation.ValidModuleLocator;
 import org.owasp.herder.validation.ValidModuleName;
+import org.owasp.herder.validation.ValidTeamId;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -40,41 +49,93 @@ import reactor.core.publisher.Mono;
 public class SubmissionService {
   private final SubmissionRepository submissionRepository;
 
+  private final RankedSubmissionRepository rankedSubmissionRepository;
+
   private final FlagHandler flagHandler;
+
+  private final UserService userService;
+
+  private final ModuleService moduleService;
 
   private Clock clock;
 
-  public SubmissionService(SubmissionRepository submissionRepository, FlagHandler flagHandler) {
+  public SubmissionService(
+      SubmissionRepository submissionRepository,
+      RankedSubmissionRepository rankedSubmissionRepository,
+      FlagHandler flagHandler,
+      UserService userService,
+      ModuleService moduleService) {
     this.submissionRepository = submissionRepository;
+    this.rankedSubmissionRepository = rankedSubmissionRepository;
     this.flagHandler = flagHandler;
+    this.userService = userService;
+    this.moduleService = moduleService;
     resetClock();
   }
 
-  public Flux<Submission> findAllByModuleName(@ValidModuleName final String moduleName) {
-    return submissionRepository.findAllByModuleId(moduleName);
+  public Flux<SanitizedRankedSubmission> findAllRankedByModuleLocator(
+      @ValidModuleLocator final String moduleLocator) {
+    return rankedSubmissionRepository
+        .findAllByModuleLocator(moduleLocator)
+        .map(this::sanitizeRankedSubmission);
+  }
+
+  public Flux<SanitizedRankedSubmission> findAllRankedByTeamId(@ValidTeamId final String teamId) {
+    return rankedSubmissionRepository.findAllByTeamId(teamId).map(this::sanitizeRankedSubmission);
+  }
+
+  public Flux<SanitizedRankedSubmission> findAllRankedByUserId(@ValidUserId final String userId) {
+    return rankedSubmissionRepository.findAllByUserId(userId).map(this::sanitizeRankedSubmission);
+  }
+
+  public Flux<Submission> findAllSubmissions() {
+    return submissionRepository.findAll();
   }
 
   public Flux<Submission> findAllValidByUserId(@ValidUserId final String userId) {
     return submissionRepository.findAllByUserIdAndIsValidTrue(userId);
   }
 
-  public Flux<RankedSubmission> findAllRankedByModuleLocator(
-      @ValidModuleLocator final String moduleLocator) {
-    return submissionRepository.findAllRankedByModuleLocator(moduleLocator);
-  }
-
-  public Flux<RankedSubmission> findAllRankedByUserId(@ValidUserId final String userId) {
-    return submissionRepository.findAllRankedByUserId(userId);
-  }
-
   public Mono<Submission> findAllValidByUserIdAndModuleName(
       @ValidUserId final String userId, @ValidModuleName final String moduleName) {
-
     return submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(userId, moduleName);
   }
 
+  public Flux<UnrankedScoreboardEntry> getUnrankedScoreboard() {
+    return rankedSubmissionRepository.getUnrankedScoreboard();
+  }
+
+  // TODO: refactor clock handler to be singleton
   public void resetClock() {
     this.clock = Clock.systemDefaultZone();
+  }
+
+  private SanitizedRankedSubmission sanitizeRankedSubmission(
+      final RankedSubmission rankedSubmission) {
+    final SanitizedRankedSubmissionBuilder builder = SanitizedRankedSubmission.builder();
+
+    if (rankedSubmission.getTeam() != null) {
+      final TeamEntity team = rankedSubmission.getTeam();
+      builder.id(team.getId());
+      builder.displayName(team.getDisplayName());
+      builder.principalType(PrincipalType.TEAM);
+    } else {
+      final UserEntity user = rankedSubmission.getUser();
+      builder.id(user.getId());
+      builder.displayName(user.getDisplayName());
+      builder.principalType(PrincipalType.USER);
+    }
+    builder.baseScore(rankedSubmission.getBaseScore());
+    builder.bonusScore(rankedSubmission.getBonusScore());
+    builder.score(rankedSubmission.getScore());
+    builder.time(rankedSubmission.getTime());
+    builder.flag(rankedSubmission.getFlag());
+    builder.rank(rankedSubmission.getRank());
+
+    builder.moduleLocator(rankedSubmission.getModule().getLocator());
+    builder.moduleName(rankedSubmission.getModule().getName());
+
+    return builder.build();
   }
 
   public void setClock(Clock clock) {
@@ -82,15 +143,18 @@ public class SubmissionService {
   }
 
   // TODO: validate flag
-  public Mono<Submission> submit(
-      @ValidUserId final String userId, @ValidModuleId final String moduleId, final String flag) {
-    SubmissionBuilder submissionBuilder = Submission.builder();
-    submissionBuilder.userId(userId);
-    submissionBuilder.moduleId(moduleId);
-    submissionBuilder.flag(flag);
+  public Mono<Submission> submitFlag(
+      @ValidUserId final String userId,
+      @ValidModuleId final String moduleId,
+      @NotEmpty @NotNull final String flag) {
+    final SubmissionBuilder submissionBuilder = Submission.builder();
+
+    if (flag != null) {
+      submissionBuilder.flag(flag);
+    }
     submissionBuilder.time(LocalDateTime.now(clock));
-    return
-    // Check if flag is correct
+
+    return // Check if flag is correct
     flagHandler
         .verifyFlag(userId, moduleId, flag)
         // Get isValid field
@@ -103,34 +167,23 @@ public class SubmissionService {
                     String.format(
                         "User %s has already finished module with id %s", userId, moduleId))))
         // Otherwise, build a submission and save it in db
-        .map(SubmissionBuilder::build)
-        .flatMap(submissionRepository::save);
-  }
-
-  public Mono<Submission> submitValid(
-      @ValidUserId final String userId, @ValidModuleId final String moduleId) {
-    SubmissionBuilder submissionBuilder = Submission.builder();
-
-    submissionBuilder.userId(userId);
-    submissionBuilder.moduleId(moduleId);
-    submissionBuilder.isValid(true);
-    submissionBuilder.time(LocalDateTime.now(clock));
-
-    return Mono.just(submissionBuilder)
-        .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleId))
+        .zipWith(moduleService.getById(moduleId))
+        .filter(tuple -> tuple.getT2().isOpen())
         .switchIfEmpty(
             Mono.error(
-                new ModuleAlreadySolvedException(
-                    String.format("User %s has already finished module %s", userId, moduleId))))
-        // Otherwise, build a submission and save it in db
+                new ModuleClosedException(
+                    String.format("Module %s is closed for submissions", moduleId))))
+        .map(tuple -> tuple.getT1().moduleId(moduleId))
+        .zipWith(userService.getById(userId))
+        .map(tuple -> tuple.getT1().userId(userId).teamId(tuple.getT2().getTeamId()))
         .map(SubmissionBuilder::build)
         .flatMap(submissionRepository::save);
   }
 
   private Mono<Boolean> validSubmissionDoesNotExistByUserIdAndModuleId(
-      @ValidUserId final String userId, @ValidModuleName final String moduleName) {
+      @ValidUserId final String userId, @ValidModuleName final String moduleId) {
     return submissionRepository
-        .existsByUserIdAndModuleIdAndIsValidTrue(userId, moduleName)
+        .existsByUserIdAndModuleIdAndIsValidTrue(userId, moduleId)
         .map(exists -> !exists);
   }
 }

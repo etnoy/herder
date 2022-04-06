@@ -25,13 +25,17 @@ import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
 public interface SubmissionRepository extends ReactiveMongoRepository<Submission, String> {
+  @Aggregation({"{$match:{'module._id':?0}}"})
   public Flux<Submission> findAllByModuleId(String moduleId);
+
+  public Flux<Submission> findAllByTeamId(String teamId);
+
+  public Flux<Submission> findAllByUserId(String userId);
 
   public Flux<Submission> findAllByUserIdAndIsValidTrue(String userId);
 
@@ -42,54 +46,22 @@ public interface SubmissionRepository extends ReactiveMongoRepository<Submission
 
   @Aggregation({
     "{$match:{isValid:true}}",
+    "{$facet:{team:[{$match:{teamId:{$ne:null}}},{$group:{_id:{id:'$teamId',moduleId:'$moduleId'},userId:{$first:'$userId'},teamId:{$first:'$teamId'},moduleId:{$first:'$moduleId'},flag:{$first:'$flag'},time:{$min:'$time'}}}],user:[{$match:{teamId:{$eq:null}}}]}}",
+    "{$project:{data:['$team','$user']}}",
+    "{$unwind:{path:'$data'}}",
+    "{$unwind:{path:'$data'}}",
+    "{$replaceRoot:{newRoot:'$data'}}",
     "{$setWindowFields:{partitionBy:'$moduleId',sortBy:{time:1},output:{rank:{$rank:{}}}}}",
-    "{$lookup:{from:'modulePoint',localField:'moduleId',foreignField:'moduleId',as:'points'}}",
-    "{$addFields:{baseScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank',0]}}},bonusScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank','$rank']}}}}}",
-    "{$addFields:{baseScore:{$ifNull:[{$arrayElemAt:['$baseScoreArray.points',0]},0]},bonusScore:{$ifNull:[{$arrayElemAt:['$bonusScoreArray.points',0]},0]}}}",
-    "{$project:{userId:1,rank:1,moduleId:1,time:1,flag:1,baseScore:1,bonusScore:1,score:{$add:['$baseScore','$bonusScore']}}}",
-    "{$group:{_id:'$userId',score:{$sum:'$score'},goldMedals:{$sum:{$cond:[{$eq:['$rank',1]},1,0]}},silverMedals:{$sum:{$cond:[{$eq:['$rank',2]},1,0]}},bronzeMedals:{$sum:{$cond:[{$eq:['$rank',3]},1,0]}}}}",
-    "{$unionWith:{coll:'user',pipeline:[{$set:{_id:{$toString:'$_id'},score:0,goldMedals:0,silverMedals:0,bronzeMedals:0}},{$project:{score:1,goldMedals:1,silverMedals:1,bronzeMedals:1,displayName:1}}]}}",
-    "{$unionWith:{coll:'correction',pipeline:[{$set:{_id:'$userId',score:'$amount',goldMedals:0,silverMedals:0,bronzeMedals:0}},{$project:{score:1,goldMedals:1,silverMedals:1,bronzeMedals:1,displayName:1}}]}}",
-    "{$group:{_id:'$_id',displayName:{$max:'$displayName'},score:{$sum:'$score'},goldMedals:{$sum:'$goldMedals'},silverMedals:{$sum:'$silverMedals'},bronzeMedals:{$sum:'$bronzeMedals'}}}",
-    "{$setWindowFields:{sortBy:{score:-1},output:{rank:{$rank:{}}}}}",
-    "{$project:{_id:0,userId:'$_id',rank:1,score:1,goldMedals:1,silverMedals:1,bronzeMedals:1,displayName:1}}",
-    "{$sort: {rank: 1, goldMedals:-1, silverMedals:-1, bronzeMedals:-1, displayName: 1}}"
+    "{$lookup:{from:'team','let':{teamObjectId:{$toObjectId:'$teamId'}},pipeline:[{$match:{$expr:{$eq:['$_id','$$teamObjectId']}}}],as:'team'}}",
+    "{$lookup:{from:'user','let':{userObjectId:{$toObjectId:'$userId'}},pipeline:[{$match:{$expr:{$eq:['$_id','$$userObjectId']}}}],as:'user'}}",
+    "{$lookup:{from:'module','let':{moduleObjectId:{$toObjectId:'$moduleId'}},pipeline:[{$match:{$expr:{$eq:['$_id','$$moduleObjectId']}}}],as:'module'}}",
+    "{$unwind:{path:'$module'}}",
+    "{$unwind:{path:'$team',preserveNullAndEmptyArrays:true}}",
+    "{$unwind:{path:'$user'}}",
+    "{$addFields:{baseScore:'$module.baseScore',bonusScore:{$ifNull:[{$arrayElemAt:['$module.bonusScores',{$sum:['$rank',-1]}]},0]}}}",
+    "{$addFields:{score:{$sum:['$baseScore','$bonusScore']}}}",
+    "{$project:{user:1,team:1,module:1,score:1,baseScore:1,bonusScore:1,time:1,flag:1,rank:1}}",
+    "{$out:'submissionRank'}"
   })
-  public Flux<ScoreboardEntry> getScoreboard();
-
-  @Aggregation({
-    "{$match:{isValid:true}}",
-    "{$project: {moduleIdObject: {$toObjectId: '$moduleId'},moduleId:1,userId:1,time:1,isValid:1,flag:1}}",
-    "{$setWindowFields:{partitionBy:'$moduleId',sortBy:{time:1},output:{rank:{$rank:{}}}}}",
-    "{$lookup:{from:'modulePoint',localField:'moduleId',foreignField:'moduleId',as:'points'}}",
-    "{$lookup:{from:'module',localField:'moduleIdObject',foreignField:'_id',as:'modules'}}",
-    "{$addFields:{moduleName:{$ifNull:[{$arrayElemAt:['$modules.name',0]},0]},moduleLocator:{$ifNull:[{$arrayElemAt:['$modules.locator',0]},0]}}}",
-    "{$addFields:{baseScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank',0]}}},bonusScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank','$rank']}}}}}",
-    "{$addFields:{baseScore:{$ifNull:[{$arrayElemAt:['$baseScoreArray.points',0]},0]},bonusScore:{$ifNull:[{$arrayElemAt:['$bonusScoreArray.points',0]},0]}}}",
-    "{$project:{userId:{$toObjectId:'$userId'},rank:1,moduleId:1,moduleName:1,moduleLocator:1,time:1,flag:1,baseScore:1,bonusScore:1,score:{$add:['$baseScore','$bonusScore']}}}",
-    "{$lookup:{from:'user',localField:'userId',foreignField:'_id',as:'user'}}",
-    "{$addFields:{displayName:{$ifNull:[{$arrayElemAt:['$user.displayName',0]},0]}}}",
-    "{$project:{userId:{$toString:'$userId'},rank:1,moduleId:1,moduleName:1,moduleLocator:1,displayName:1,time:1,flag:1,baseScore:1,bonusScore:1,score:1}}",
-    "{$match:{'userId': ?0 }}",
-    "{$sort: {time: -1}}"
-  })
-  public Flux<RankedSubmission> findAllRankedByUserId(String userId);
-
-  @Aggregation({
-    "{$match:{isValid:true}}",
-    "{$project: {moduleIdObject: {$toObjectId: '$moduleId'},moduleId:1,userId:1,time:1,isValid:1,flag:1}}",
-    "{$setWindowFields:{partitionBy:'$moduleId',sortBy:{time:1},output:{rank:{$rank:{}}}}}",
-    "{$lookup:{from:'module',localField:'moduleIdObject',foreignField:'_id',as:'modules'}}",
-    "{$lookup:{from:'modulePoint',localField:'moduleId',foreignField:'moduleId',as:'points'}}",
-    "{$addFields:{moduleName:{$ifNull:[{$arrayElemAt:['$modules.name',0]},0]},moduleLocator:{$ifNull:[{$arrayElemAt:['$modules.locator',0]},0]}}}",
-    "{$match:{'moduleLocator': ?0 }}",
-    "{$addFields:{baseScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank',0]}}},bonusScoreArray:{$filter:{input:'$points',as:'item',cond:{$eq:['$$item.rank','$rank']}}}}}",
-    "{$addFields:{baseScore:{$ifNull:[{$arrayElemAt:['$baseScoreArray.points',0]},0]},bonusScore:{$ifNull:[{$arrayElemAt:['$bonusScoreArray.points',0]},0]}}}",
-    "{$project:{_id:0,userId:{$toObjectId:'$userId'},rank:1,moduleId:1,moduleName:1,moduleLocator:1,time:1,flag:1,baseScore:1,bonusScore:1,score:{$add:['$baseScore','$bonusScore']}}}",
-    "{$lookup:{from:'user',localField:'userId',foreignField:'_id',as:'user'}}",
-    "{$addFields:{displayName:{$ifNull:[{$arrayElemAt:['$user.displayName',0]},0]}}}",
-    "{$project:{userId:{$toString:'$userId'},rank:1,moduleId:1,moduleName:1,moduleLocator:1,displayName:1,time:1,flag:1,baseScore:1,bonusScore:1,score:1}}",
-    "{$sort: {time: 1}}"
-  })
-  public Flux<RankedSubmission> findAllRankedByModuleLocator(String moduleLocator);
+  public Flux<RankedSubmission> refreshSubmissionRanks();
 }

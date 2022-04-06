@@ -1,6 +1,6 @@
 import { UrlSegment } from '@angular/router';
 import { NameValueTag } from './name-value-tag';
-export class Module {
+export class ModuleListItem {
   locator: string;
   name: string;
   tags: NameValueTag[];

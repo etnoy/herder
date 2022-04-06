@@ -23,16 +23,14 @@ package org.owasp.herder.configuration;
 
 import org.owasp.herder.model.Configuration;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import reactor.core.publisher.Mono;
 
 @Repository
 public interface ConfigurationRepository extends ReactiveMongoRepository<Configuration, String> {
-  public void deleteByKey(@Param("key") final String key);
+  public void deleteByKey(final String key);
 
-  public Mono<Boolean> existsByKey(@Param("key") final String key);
+  public Mono<Boolean> existsByKey(final String key);
 
-  public Mono<Configuration> findByKey(@Param("key") final String key);
+  public Mono<Configuration> findByKey(final String key);
 }

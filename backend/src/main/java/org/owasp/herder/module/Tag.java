@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Repeatable(Tags.class)
 public @interface Tag {
-  String name();
+  String key();
 
   String value();
 }

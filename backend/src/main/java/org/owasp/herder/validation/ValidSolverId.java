@@ -19,14 +19,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.scoring;
+package org.owasp.herder.validation;
 
-import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.stereotype.Repository;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
-import reactor.core.publisher.Flux;
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = {})
+@NotNull(message = "{org.owasp.herder.ValidSolverId.NullMessage}")
+@Size(min = 24, max = 24, message = "{org.owasp.herder.ValidSolverId.WrongLengthMessage}")
+@Pattern(regexp = "^[a-f0-9]*$", message = "{org.owasp.herder.ValidSolverId.PatternMessage}")
+public @interface ValidSolverId {
+  String message() default "{org.owasp.herder.ValidSolverId.message}";
 
-@Repository
-public interface ModulePointRepository extends ReactiveMongoRepository<ModulePoint, Long> {
-  public Flux<ModulePoint> findAllByModuleId(final String moduleId);
+  Class<?>[] groups() default {};
+
+  Class<? extends Payload>[] payload() default {};
 }

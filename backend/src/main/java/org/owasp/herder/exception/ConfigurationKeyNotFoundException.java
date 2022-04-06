@@ -21,7 +21,7 @@
  */
 package org.owasp.herder.exception;
 
-public class ConfigurationKeyNotFoundException extends Exception {
+public class ConfigurationKeyNotFoundException extends RuntimeException {
   private static final long serialVersionUID = -761777268031129302L;
 
   public ConfigurationKeyNotFoundException(String message) {

@@ -28,6 +28,7 @@ import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.validation.ValidModuleLocator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,6 +52,8 @@ public class FlagController {
 
   private final SubmissionService submissionService;
 
+  private final RefresherService refresherService;
+
   @PostMapping(path = "flag/submit/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Mono<ResponseEntity<Submission>> submitFlag(
@@ -59,7 +62,14 @@ public class FlagController {
     return controllerAuthentication
         .getUserId()
         .zipWith(moduleService.findByLocator(moduleLocator).map(ModuleEntity::getId))
-        .flatMap(tuple -> submissionService.submit(tuple.getT1(), tuple.getT2(), flag))
+        .flatMap(tuple -> submissionService.submitFlag(tuple.getT1(), tuple.getT2(), flag))
+        .flatMap(
+            u ->
+                refresherService
+                    .refreshModuleLists()
+                    .then(refresherService.refreshSubmissionRanks())
+                    .then(refresherService.refreshScoreboard())
+                    .then(Mono.just(u)))
         .map(submission -> new ResponseEntity<>(submission, HttpStatus.OK))
         .onErrorResume(
             RateLimitException.class,

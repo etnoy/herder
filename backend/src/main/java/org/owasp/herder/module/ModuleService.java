@@ -21,6 +21,8 @@
  */
 package org.owasp.herder.module;
 
+import com.google.common.collect.Multimap;
+import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.KeyService;
@@ -28,9 +30,11 @@ import org.owasp.herder.exception.DuplicateModuleLocatorException;
 import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.exception.ModuleNotFoundException;
+import org.owasp.herder.user.ModuleListRepository;
 import org.owasp.herder.validation.ValidModuleId;
 import org.owasp.herder.validation.ValidModuleLocator;
 import org.owasp.herder.validation.ValidModuleName;
+import org.owasp.herder.validation.ValidTeamId;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -44,15 +48,12 @@ import reactor.core.publisher.Mono;
 public class ModuleService {
   private final ModuleRepository moduleRepository;
 
-  private final ModuleTagRepository moduleTagRepository;
-
   private final KeyService keyService;
 
+  private final ModuleListRepository moduleListRepository;
+
   public Mono<ModuleEntity> close(@ValidModuleId final String moduleId) {
-    return findById(moduleId)
-        .switchIfEmpty(Mono.error(new ModuleNotFoundException()))
-        .map(module -> module.withOpen(false))
-        .flatMap(moduleRepository::save);
+    return getById(moduleId).map(module -> module.withOpen(false)).flatMap(moduleRepository::save);
   }
 
   public Mono<Long> count() {
@@ -91,13 +92,6 @@ public class ModuleService {
                     .build())
         // Persist the module in the database
         .flatMap(moduleRepository::save)
-        .doOnSuccess(
-            module ->
-                log.trace(
-                    "Created module with name "
-                        + module.getName()
-                        + " and locator "
-                        + module.getLocator()))
         // Return the created module id
         .map(ModuleEntity::getId);
   }
@@ -122,77 +116,122 @@ public class ModuleService {
     return moduleRepository.findAll();
   }
 
+  public Flux<ModuleList> findAllModuleLists() {
+    return moduleListRepository.findAll();
+  }
+
   public Flux<ModuleEntity> findAllOpen() {
     return moduleRepository.findAllOpen();
   }
 
-  public Flux<ModuleListItem> findAllOpenWithSolutionStatus(@ValidUserId final String userId) {
-    return moduleRepository.findAllOpenWithSolutionStatus(userId);
-  }
-
-  public Flux<ModuleTag> findAllTagsByModuleId(@ValidModuleId final String moduleId) {
-    return findById(moduleId)
-        .switchIfEmpty(
-            Mono.error(new ModuleNotFoundException("Could not find module with id " + moduleId)))
-        .flatMapMany(m -> moduleTagRepository.findAllByModuleId(moduleId));
-  }
-
-  // TODO: validate tagname
-  public Flux<ModuleTag> findAllTagsByModuleNameAndTagName(
-      @ValidModuleName final String moduleName, final String tagName) {
-    return moduleTagRepository.findAllByModuleIdAndName(moduleName, tagName);
-  }
-
+  /**
+   * Finds the specific module given by the module id. If the module id isn't found, it returns an
+   * empty mono
+   *
+   * @param moduleId
+   * @return the corresponding module entity
+   */
   public Mono<ModuleEntity> findById(@ValidModuleId final String moduleId) {
-    log.trace("Finding module with id " + moduleId);
     return moduleRepository.findById(moduleId);
   }
 
   public Mono<ModuleEntity> findByLocator(@ValidModuleLocator final String moduleLocator) {
-    log.trace("Finding module with id " + moduleLocator);
     return moduleRepository.findByLocator(moduleLocator);
   }
 
-  public Mono<ModuleListItem> findByLocatorWithSolutionStatus(
-      @ValidUserId final String userId, @ValidModuleLocator final String moduleLocator) {
-    return moduleRepository.findByLocatorWithSolutionStatus(userId, moduleLocator);
-  }
-
   public Mono<ModuleEntity> findByName(final String moduleName) {
-    log.trace("Find module with name " + moduleName);
     return moduleRepository.findByName(moduleName);
   }
 
-  public Mono<ModuleEntity> open(@ValidModuleId final String moduleId) {
-    return findById(moduleId)
-        .switchIfEmpty(Mono.error(new ModuleNotFoundException()))
-        .map(module -> module.withOpen(true))
-        .flatMap(moduleRepository::save);
+  public Mono<ModuleListItem> findListItemByLocator(
+      @ValidUserId final String userId, @ValidModuleLocator final String moduleLocator) {
+    return moduleListRepository.findListItemByLocator(userId, moduleLocator);
   }
 
-  public Flux<ModuleTag> saveTags(final Flux<ModuleTag> tags) {
-    return moduleTagRepository.saveAll(tags);
+  public Mono<ModuleList> findModuleListByTeamId(@ValidTeamId final String teamId) {
+    return moduleListRepository.findByTeamId(teamId);
+  }
+
+  public Mono<ModuleList> findModuleListByUserId(@ValidUserId final String userId) {
+    return moduleListRepository.findById(userId);
+  }
+
+  /**
+   * Finds the specific module given by the module id. If the module id isn't found, it returns a
+   * mono exception
+   *
+   * @param moduleId
+   * @return the corresponding module entity
+   */
+  public Mono<ModuleEntity> getById(@ValidModuleId final String moduleId) {
+    return moduleRepository
+        .findById(moduleId)
+        .switchIfEmpty(
+            Mono.error(new ModuleNotFoundException("Module id " + moduleId + " not found")));
+  }
+
+  public Mono<ModuleEntity> open(@ValidModuleId final String moduleId) {
+    return getById(moduleId).map(module -> module.withOpen(true)).flatMap(moduleRepository::save);
+  }
+
+  public Mono<Void> setBaseScore(@ValidModuleId final String moduleId, final int baseScore) {
+    // TODO: validation of score
+    return getById(moduleId)
+        .map(module -> module.withBaseScore(baseScore))
+        .flatMap(moduleRepository::save)
+        .then();
+  }
+
+  public Mono<Void> setBonusScores(
+      @ValidModuleId final String moduleId, final ArrayList<Integer> scores) {
+    // TODO: validation of scores
+    return getById(moduleId)
+        .map(module -> module.withBonusScores(scores))
+        .flatMap(moduleRepository::save)
+        .then();
   }
 
   public Mono<ModuleEntity> setDynamicFlag(@ValidModuleId final String moduleId) {
-    return findById(moduleId)
-        .switchIfEmpty(Mono.error(new ModuleNotFoundException()))
+    return getById(moduleId)
         .map(module -> module.withFlagStatic(false))
         .flatMap(moduleRepository::save);
   }
 
+  public Mono<Void> setModuleLocator(
+      @ValidModuleId final String moduleId, @ValidModuleName final String locator) {
+    return getById(moduleId)
+        .map(module -> module.withLocator(locator))
+        .flatMap(moduleRepository::save)
+        .then();
+  }
+
+  public Mono<Void> setModuleName(
+      @ValidModuleId final String moduleId, @ValidModuleName final String name) {
+    return getById(moduleId)
+        .map(module -> module.withName(name))
+        .flatMap(moduleRepository::save)
+        .then();
+  }
+
   public Mono<ModuleEntity> setStaticFlag(
       @ValidModuleId final String moduleId, final String staticFlag) {
-    // TODO: validate flag
+    // TODO: validate flag argument
     if (staticFlag == null) {
       return Mono.error(new NullPointerException("Flag cannot be null"));
     } else if (staticFlag.isEmpty()) {
       return Mono.error(new InvalidFlagException("Flag cannot be empty"));
     }
 
-    return findById(moduleId)
-        .switchIfEmpty(Mono.error(new ModuleNotFoundException()))
+    return getById(moduleId)
         .map(module -> module.withFlagStatic(true).withStaticFlag(staticFlag))
         .flatMap(moduleRepository::save);
+  }
+
+  public Mono<Void> setTags(
+      @ValidModuleId final String moduleId, final Multimap<String, String> tags) {
+    return getById(moduleId)
+        .map(module -> module.withTags(tags))
+        .flatMap(moduleRepository::save)
+        .then();
   }
 }

@@ -19,38 +19,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.test.model;
+package org.owasp.herder.validation;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.validation.Constraint;
+import javax.validation.Payload;
 import javax.validation.constraints.NotNull;
-import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.owasp.herder.scoring.SubmissionDto;
-import org.owasp.herder.test.util.TestConstants;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
-@DisplayName("SubmissionDto unit tests")
-class SubmissionDtoTest {
-  @Test
-  void buildComment_ValidComment_Builds() {
-    for (final long moduleName : TestConstants.LONGS) {
-      for (final String flag : TestConstants.STRINGS) {
-        final SubmissionDto submissionDto = new SubmissionDto(moduleName, flag);
-        assertThat(submissionDto.getModuleName()).isEqualTo(moduleName);
-        assertThat(submissionDto.getFlag()).isEqualTo(flag);
-      }
-    }
-  }
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = {})
+@NotNull(message = "{org.owasp.herder.ValidSubmissionId.NullMessage}")
+@Size(min = 24, max = 24, message = "{org.owasp.herder.ValidSubmissionId.WrongLengthMessage}")
+@Pattern(regexp = "^[a-f0-9]*$", message = "{org.owasp.herder.ValidSubmissionId.PatternMessage}")
+public @interface ValidSubmissionId {
+  String message() default "{org.owasp.herder.ValidSubmissionId.message}";
 
-  @Test
-  void equals_EqualsVerifier_AsExpected() {
-    EqualsVerifier.forClass(SubmissionDto.class).withIgnoredAnnotations(NotNull.class).verify();
-  }
+  Class<?>[] groups() default {};
 
-  @Test
-  void toString_ValidData_AsExpected() {
-    final SubmissionDto submissionDto = new SubmissionDto(16L, "flag");
-    assertThat(submissionDto).hasToString("SubmissionDto(moduleName=16, flag=flag)");
-  }
+  Class<? extends Payload>[] payload() default {};
 }

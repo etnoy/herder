@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { ApiService } from '../../service/api.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { Module } from 'src/app/model/module';
+import { ModuleListItem } from 'src/app/model/module-list-item';
 import { AlertService } from 'src/app/service/alert.service';
 import { FlagTutorialResult } from 'src/app/model/flag-tutorial-result';
 
@@ -16,7 +16,7 @@ export class FlagTutorialComponent {
   submitted = false;
   loading = true;
 
-  @Input() module: Module;
+  @Input() module: ModuleListItem;
 
   constructor(
     private apiService: ApiService,

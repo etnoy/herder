@@ -72,26 +72,10 @@ class EntityIdValidationIT extends BaseIT {
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
-  @DisplayName("in moduleService.findAllOpenWithSolutionStatus()")
-  void findAllOpenWithSolutionStatus(final String userId, final String containingMessage) {
-    integrationTestUtils.checkConstraintViolation(
-        () -> moduleService.findAllOpenWithSolutionStatus(userId), containingMessage);
-  }
-
-  @ParameterizedTest
-  @MethodSource("invalidIdSource")
   @DisplayName("in moduleService.close()")
   void moduleService_create(final String moduleId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
         () -> moduleService.close(moduleId), containingMessage);
-  }
-
-  @ParameterizedTest
-  @MethodSource("invalidIdSource")
-  @DisplayName("in moduleService.findAllTagsByModuleId()")
-  void moduleService_findAllTagsByModuleId(final String moduleId, final String containingMessage) {
-    integrationTestUtils.checkConstraintViolation(
-        () -> moduleService.findAllTagsByModuleId(moduleId), containingMessage);
   }
 
   @ParameterizedTest
@@ -108,9 +92,7 @@ class EntityIdValidationIT extends BaseIT {
   void moduleService_findByLocatorWithSolutionStatus(
       final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-        () ->
-            moduleService.findByLocatorWithSolutionStatus(
-                userId, TestConstants.TEST_MODULE_LOCATOR),
+        () -> moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR),
         containingMessage);
   }
 
@@ -177,14 +159,6 @@ class EntityIdValidationIT extends BaseIT {
   void userService_findById(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
         () -> userService.findById(userId), containingMessage);
-  }
-
-  @ParameterizedTest
-  @MethodSource("invalidIdSource")
-  @DisplayName("in userService.findDisplayNameById()")
-  void userService_findDisplayNameById(final String userId, final String containingMessage) {
-    integrationTestUtils.checkConstraintViolation(
-        () -> userService.findDisplayNameById(userId), containingMessage);
   }
 
   @ParameterizedTest

@@ -25,6 +25,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashSet;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.authentication.AuthResponse;
 import org.owasp.herder.authentication.AuthResponse.AuthResponseBuilder;
@@ -34,13 +36,18 @@ import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.exception.ClassIdNotFoundException;
+import org.owasp.herder.exception.DuplicateTeamDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
+import org.owasp.herder.exception.TeamNotFoundException;
 import org.owasp.herder.exception.UserNotFoundException;
+import org.owasp.herder.scoring.PrincipalType;
+import org.owasp.herder.user.SolverEntity.SolverEntityBuilder;
 import org.owasp.herder.validation.ValidClassId;
 import org.owasp.herder.validation.ValidDisplayName;
 import org.owasp.herder.validation.ValidLoginName;
 import org.owasp.herder.validation.ValidPassword;
+import org.owasp.herder.validation.ValidTeamId;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -51,11 +58,14 @@ import org.springframework.validation.annotation.Validated;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/** Class that manages user entities and interacts with the user repository */
 @Slf4j
 @Service
 @Validated
 public class UserService {
   private final UserRepository userRepository;
+
+  private final TeamRepository teamRepository;
 
   private final PasswordAuthRepository passwordAuthRepository;
 
@@ -69,11 +79,13 @@ public class UserService {
 
   public UserService(
       UserRepository userRepository,
+      TeamRepository teamRepository,
       PasswordAuthRepository passwordAuthRepository,
       ClassService classService,
       KeyService keyService,
       WebTokenKeyManager webTokenKeyManager) {
     this.userRepository = userRepository;
+    this.teamRepository = teamRepository;
     this.passwordAuthRepository = passwordAuthRepository;
     this.classService = classService;
     this.keyService = keyService;
@@ -81,6 +93,34 @@ public class UserService {
     resetClock();
   }
 
+  public Mono<Void> addUserToTeam(
+      @ValidUserId final String userId, @ValidTeamId final String teamId) {
+    log.debug("Adding user with id " + userId + " to team with id " + teamId);
+    final Mono<UserEntity> userMono =
+        getById(userId)
+            .filter(user -> user.getTeamId() == null)
+            .switchIfEmpty(Mono.error(new IllegalStateException("User already belongs to a team")));
+
+    return Mono.zip(userMono, getTeamById(teamId))
+        .flatMap(
+            tuple -> {
+              final UserEntity user = tuple.getT1().withTeamId(teamId);
+              TeamEntity team = tuple.getT2();
+              ArrayList<UserEntity> members = team.getMembers();
+              members.add(user);
+              team.withMembers(members);
+              return userRepository.save(user).then(teamRepository.save(team));
+            })
+        .then();
+  }
+
+  /**
+   * Verifies if the given usernames and password is valid
+   *
+   * @param loginName the supplied username used to log in
+   * @param password the supplied password
+   * @return an AuthResponse Mono that shows whether login was successful or not
+   */
   public Mono<AuthResponse> authenticate(
       @ValidLoginName final String loginName, @ValidPassword final String password) {
     // Initialize the encoder
@@ -92,7 +132,7 @@ public class UserService {
             .switchIfEmpty(Mono.error(new BadCredentialsException("Invalid username or password")));
 
     final Mono<UserEntity> userMono =
-        passwordAuthMono.map(PasswordAuth::getUserId).flatMap(this::findById);
+        passwordAuthMono.map(PasswordAuth::getUserId).flatMap(this::getById);
 
     final AuthResponseBuilder authResponseBuilder = AuthResponse.builder();
 
@@ -128,27 +168,63 @@ public class UserService {
             });
   }
 
+  /**
+   * Removes the given user from its team. If the user id doesn't exist an exception will be
+   * returned
+   *
+   * @param userId
+   * @return the modified UserEntity Mono with team id set to null
+   */
+  public Mono<UserEntity> clearTeamForUser(@ValidUserId final String userId) {
+    return findById(userId)
+        .switchIfEmpty(Mono.error(new UserNotFoundException()))
+        .map(user -> user.withTeamId(null))
+        .flatMap(userRepository::save);
+  }
+
+  /**
+   * Count the number of users in the database
+   *
+   * @return number of users
+   */
   public Mono<Long> count() {
     return userRepository.count();
   }
 
+  /**
+   * Creates a new user
+   *
+   * @param displayName The display name of the user
+   * @return The created user id
+   */
   public Mono<String> create(@ValidDisplayName final String displayName) {
     log.info("Creating new user with display name " + displayName);
 
+    final UserEntity userEntity =
+        UserEntity.builder()
+            .displayName(displayName)
+            .key(keyService.generateRandomBytes(16))
+            .creationTime(LocalDateTime.now())
+            .build();
+
     return Mono.just(displayName)
         .filterWhen(this::doesNotExistByDisplayName)
-        .switchIfEmpty(displayNameAlreadyExists(displayName))
-        .flatMap(
-            name ->
-                userRepository.save(
-                    UserEntity.builder()
-                        .displayName(name)
-                        .key(keyService.generateRandomBytes(16))
-                        .accountCreated(LocalDateTime.now())
-                        .build()))
+        .switchIfEmpty(
+            Mono.error(
+                new DuplicateUserDisplayNameException(
+                    "Display name " + displayName + " already exists")))
+        .flatMap(u -> userRepository.save(userEntity))
         .map(UserEntity::getId);
   }
 
+  /**
+   * Creates a new user that can log in with username and password
+   *
+   * @param displayName the display name for the user
+   * @param loginName the login name for the user
+   * @param passwordHash the password hash for the user
+   * @return The created user id
+   */
   public Mono<String> createPasswordUser(
       @ValidDisplayName final String displayName,
       @ValidLoginName final String loginName,
@@ -167,20 +243,24 @@ public class UserService {
     final Mono<String> displayNameMono =
         Mono.just(displayName)
             .filterWhen(this::doesNotExistByDisplayName)
-            .switchIfEmpty(displayNameAlreadyExists(displayName));
+            .switchIfEmpty(
+                Mono.error(
+                    new DuplicateUserDisplayNameException(
+                        "Display name " + displayName + " already exists")));
 
     return Mono.zip(displayNameMono, loginNameMono)
         .flatMap(
             tuple -> {
-              final UserEntity newUser =
+              final UserEntity userEntity =
                   UserEntity.builder()
                       .displayName(tuple.getT1())
                       .key(keyService.generateRandomBytes(16))
                       .isEnabled(true)
-                      .accountCreated(LocalDateTime.now())
+                      .creationTime(LocalDateTime.now())
                       .build();
 
-              final Mono<String> userIdMono = userRepository.save(newUser).map(UserEntity::getId);
+              final Mono<String> userIdMono =
+                  userRepository.save(userEntity).map(UserEntity::getId);
 
               final PasswordAuthBuilder passwordAuthBuilder = PasswordAuth.builder();
               passwordAuthBuilder.loginName(tuple.getT2());
@@ -192,6 +272,38 @@ public class UserService {
             });
   }
 
+  /**
+   * Creates a new team
+   *
+   * @param displayName The display name of the team
+   * @return The created team id
+   */
+  public Mono<String> createTeam(@ValidDisplayName final String displayName) {
+    log.info("Creating new team with display name " + displayName);
+
+    return Mono.just(displayName)
+        .filterWhen(this::teamDoesNotExistByDisplayName)
+        .switchIfEmpty(
+            Mono.error(
+                new DuplicateTeamDisplayNameException(
+                    "Team display name " + displayName + " already exists")))
+        .flatMap(
+            name ->
+                teamRepository.save(
+                    TeamEntity.builder()
+                        .displayName(name)
+                        .creationTime(LocalDateTime.now())
+                        .members(new ArrayList<>())
+                        .build()))
+        .map(TeamEntity::getId);
+  }
+
+  /**
+   * Deletes a given user
+   *
+   * @param userId
+   * @return
+   */
   public Mono<Void> deleteById(@ValidUserId final String userId) {
     return passwordAuthRepository
         .deleteByUserId(userId)
@@ -199,6 +311,12 @@ public class UserService {
         .doOnSuccess(u -> kick(userId));
   }
 
+  /**
+   * Removes admin access from user
+   *
+   * @param userId
+   * @return
+   */
   public Mono<Void> demote(@ValidUserId final String userId) {
     log.info("Demoting user with id " + userId + " to user");
 
@@ -209,31 +327,58 @@ public class UserService {
         .then();
   }
 
-  public Mono<Void> disable(@ValidUserId final String userId) {
-    log.info("Disabling user with id " + userId);
+  /**
+   * Deletes a user. In the database, the corresponding document is set to deleted, and all fields
+   * are cleared
+   *
+   * @param userId
+   * @return
+   */
+  public Mono<Void> delete(@ValidUserId final String userId) {
+    log.info("Deleting user with id " + userId);
 
-    return findById(userId)
-        .map(user -> user.withEnabled(false))
+    kick(userId);
+
+    return getById(userId)
+        .map(
+            user ->
+                user.withTeamId(null)
+                    .withEnabled(false)
+                    .withDeleted(true)
+                    .withDisplayName("")
+                    .withSuspensionMessage("")
+                    .withAdmin(false))
         .flatMap(userRepository::save)
-        .doOnSuccess(u -> kick(userId))
+        .flatMap(u -> passwordAuthRepository.deleteByUserId(userId))
         .then();
   }
 
-  private Mono<String> displayNameAlreadyExists(@ValidDisplayName final String displayName) {
-    return Mono.error(
-        new DuplicateUserDisplayNameException("Display name " + displayName + " already exists"));
+  /**
+   * Deletes a team
+   *
+   * @param teamId
+   * @return
+   */
+  public Mono<Void> deleteTeam(@ValidTeamId final String teamId) {
+    log.info("Deleting team with id " + teamId);
+
+    return teamRepository.deleteById(teamId).then();
   }
 
-  public Mono<Boolean> existsByDisplayName(@ValidDisplayName final String displayName) {
-    return userRepository.findByDisplayName(displayName).map(u -> true).defaultIfEmpty(false);
-  }
+  /**
+   * Disables a user
+   *
+   * @param userId
+   * @return
+   */
+  public Mono<Void> disable(@ValidUserId final String userId) {
+    log.info("Disabling user with id " + userId);
 
-  public Mono<Boolean> existsById(@ValidUserId final String userId) {
-    return userRepository.findById(userId).map(u -> true).defaultIfEmpty(false);
-  }
-
-  public Mono<Boolean> existsByLoginName(@ValidLoginName final String loginName) {
-    return passwordAuthRepository.findByLoginName(loginName).map(u -> true).defaultIfEmpty(false);
+    return getById(userId)
+        .map(user -> user.withEnabled(false))
+        .flatMap(userRepository::save)
+        .doOnNext(u -> kick(userId))
+        .then();
   }
 
   private Mono<Boolean> doesNotExistByDisplayName(@ValidDisplayName final String displayName) {
@@ -244,6 +389,12 @@ public class UserService {
     return passwordAuthRepository.findByLoginName(loginName).map(u -> false).defaultIfEmpty(true);
   }
 
+  /**
+   * Enables a specific user
+   *
+   * @param userId
+   * @return
+   */
   public Mono<Void> enable(@ValidUserId final String userId) {
     log.info("Enabling user with id " + userId);
 
@@ -254,23 +405,117 @@ public class UserService {
         .then();
   }
 
-  public Flux<UserEntity> findAll() {
+  /**
+   * Checks whether a given display name exists
+   *
+   * @param displayName
+   * @return
+   */
+  public Mono<Boolean> existsByDisplayName(@ValidDisplayName final String displayName) {
+    return userRepository.findByDisplayName(displayName).map(u -> true).defaultIfEmpty(false);
+  }
+
+  /**
+   * Checks whether a given user id exists
+   *
+   * @param userId
+   * @return
+   */
+  public Mono<Boolean> existsById(@ValidUserId final String userId) {
+    return userRepository.findById(userId).map(u -> true).defaultIfEmpty(false);
+  }
+
+  /**
+   * Checks whether a given login name exists
+   *
+   * @param loginName
+   * @return
+   */
+  public Mono<Boolean> existsByLoginName(@ValidLoginName final String loginName) {
+    return passwordAuthRepository.findByLoginName(loginName).map(u -> true).defaultIfEmpty(false);
+  }
+
+  /**
+   * Find all teams
+   *
+   * @return
+   */
+  public Flux<TeamEntity> findAllTeams() {
+    return teamRepository.findAll();
+  }
+
+  /**
+   * Find all users (ignores teams)
+   *
+   * @return
+   */
+  public Flux<UserEntity> findAllUsers() {
     return userRepository.findAll();
   }
 
+  /**
+   * Find all users and teams
+   *
+   * @return
+   */
+  public Flux<SolverEntity> findAllWithTeams() {
+    Flux<UserEntity> userFlux = userRepository.findAllByTeamId(null);
+
+    final Flux<SolverEntity> teamFlux =
+        teamRepository
+            .findAll()
+            .flatMap(
+                team -> {
+                  final String teamId = team.getId();
+                  SolverEntityBuilder solverEntityBuilder = SolverEntity.builder();
+
+                  solverEntityBuilder.principalType(PrincipalType.TEAM);
+                  solverEntityBuilder.principalId(teamId);
+                  solverEntityBuilder.displayName(team.getDisplayName());
+                  solverEntityBuilder.creationTime(team.getCreationTime());
+
+                  return userRepository
+                      .findAllByTeamId(teamId)
+                      .collectList()
+                      .map(HashSet<UserEntity>::new)
+                      .map(solverEntityBuilder::members)
+                      .map(SolverEntityBuilder::build);
+                });
+
+    return Flux.concat(
+        teamFlux,
+        userFlux.map(
+            user -> {
+              final String userId = user.getId();
+              SolverEntityBuilder solverEntityBuilder = SolverEntity.builder();
+
+              solverEntityBuilder.principalType(PrincipalType.USER);
+              solverEntityBuilder.principalId(userId);
+              solverEntityBuilder.displayName(user.getDisplayName());
+              solverEntityBuilder.creationTime(user.getCreationTime());
+
+              return solverEntityBuilder.build();
+            }));
+  }
+
+  /**
+   * Find a user by id
+   *
+   * @param userId
+   * @return The UserEntity if it exists, or an empty mono if it doesn't
+   */
   public Mono<UserEntity> findById(@ValidUserId final String userId) {
-    return userRepository.findById(userId);
+    return userRepository.findByIdAndIsDeletedFalse(userId);
   }
 
-  public Mono<String> findDisplayNameById(@ValidUserId final String userId) {
-    return userRepository.findById(userId).map(UserEntity::getDisplayName);
-  }
-
+  /**
+   * Finds the key for a given user id
+   *
+   * @param userId
+   * @return The key if the user exists, otherwise UserNotFoundException
+   */
   public Mono<byte[]> findKeyById(@ValidUserId final String userId) {
-    return Mono.just(userId)
-        .filterWhen(userRepository::existsById)
-        .switchIfEmpty(Mono.error(new UserNotFoundException()))
-        .flatMap(userRepository::findById)
+    return getById(userId)
         .flatMap(
             user -> {
               final byte[] key = user.getKey();
@@ -291,8 +536,48 @@ public class UserService {
     return passwordAuthRepository.findByUserId(userId);
   }
 
+  /**
+   * Find a team by id
+   *
+   * @param teamId
+   * @return The TeamEntity if it exists, or an empty mono if it doesn't
+   */
+  public Mono<TeamEntity> findTeamById(@ValidTeamId final String teamId) {
+    return teamRepository.findById(teamId);
+  }
+
   public Mono<String> findUserIdByLoginName(@ValidLoginName final String loginName) {
     return passwordAuthRepository.findByLoginName(loginName).map(PasswordAuth::getUserId);
+  }
+
+  /**
+   * Finds a user for a given user id. Throws exception if user id is not found
+   *
+   * @param userId
+   * @return the UserEntity if found. Throws a mono exception if not found
+   */
+  public Mono<UserEntity> getById(@ValidUserId final String userId) {
+    return findById(userId)
+        .switchIfEmpty(Mono.error(new UserNotFoundException("User id " + userId + " not found")));
+  }
+
+  public Mono<TeamEntity> getTeamByUserId(@ValidUserId final String userId) {
+    return getById(userId)
+        .flatMap(
+            user -> {
+              final String teamId = user.getTeamId();
+              if (teamId == null) {
+                return Mono.empty();
+              } else {
+                return getTeamById(teamId);
+              }
+            });
+  }
+
+  public Mono<TeamEntity> getTeamById(@ValidTeamId final String teamId) {
+    return teamRepository
+        .findById(teamId)
+        .switchIfEmpty(Mono.error(new TeamNotFoundException("Team id " + teamId + " not found")));
   }
 
   public void kick(@ValidUserId final String userId) {
@@ -346,12 +631,12 @@ public class UserService {
     final Mono<String> displayNameMono =
         Mono.just(displayName)
             .filterWhen(this::doesNotExistByDisplayName)
-            .switchIfEmpty(displayNameAlreadyExists(displayName));
+            .switchIfEmpty(
+                Mono.error(
+                    new DuplicateUserDisplayNameException(
+                        "Display name " + displayName + " already exists")));
 
-    return Mono.just(userId)
-        .filterWhen(userRepository::existsById)
-        .switchIfEmpty(Mono.error(new UserNotFoundException()))
-        .flatMap(this::findById)
+    return getById(userId)
         .zipWith(displayNameMono)
         .map(tuple -> tuple.getT1().withDisplayName(tuple.getT2()))
         .flatMap(userRepository::save);
@@ -382,12 +667,36 @@ public class UserService {
 
     log.info("Suspending user with id " + userId + " until " + suspensionDate.toString());
 
-    return findById(userId)
+    return getById(userId)
         .map(
             user ->
                 user.withSuspendedUntil(suspensionDate).withSuspensionMessage(suspensionMessage))
         .flatMap(userRepository::save)
         .doOnSuccess(u -> kick(userId))
         .then();
+  }
+
+  private Mono<Boolean> teamDoesNotExistByDisplayName(@ValidDisplayName final String displayName) {
+    return teamRepository.findByDisplayName(displayName).map(u -> false).defaultIfEmpty(true);
+  }
+
+  /**
+   * Checks whether a given display name exists
+   *
+   * @param displayName
+   * @return
+   */
+  public Mono<Boolean> teamExistsByDisplayName(@ValidDisplayName final String displayName) {
+    return teamRepository.findByDisplayName(displayName).map(u -> true).defaultIfEmpty(false);
+  }
+
+  /**
+   * Checks whether a given display name exists
+   *
+   * @param displayName
+   * @return
+   */
+  public Mono<Boolean> teamExistsById(@ValidTeamId final String teamId) {
+    return teamRepository.findById(teamId).map(u -> true).defaultIfEmpty(false);
   }
 }

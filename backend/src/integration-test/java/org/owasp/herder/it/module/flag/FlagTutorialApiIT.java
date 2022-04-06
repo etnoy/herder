@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.it.module.flag;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,7 +32,6 @@ import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleInitializer;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.flag.FlagTutorial;
-import org.owasp.herder.scoring.ScoreService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
@@ -40,9 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
-
-import com.jayway.jsonpath.JsonPath;
-
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -64,8 +61,6 @@ class FlagTutorialApiIT extends BaseIT {
 
   @Autowired SubmissionService submissionService;
 
-  @Autowired ScoreService scoreService;
-
   @Autowired WebTestClient webTestClient;
 
   @Autowired FlagHandler flagHandler;
@@ -78,7 +73,7 @@ class FlagTutorialApiIT extends BaseIT {
   private void setUp() {
     integrationTestUtils.resetState();
 
-    moduleInitializer = new ModuleInitializer(applicationContext, moduleService, scoreService);
+    moduleInitializer = new ModuleInitializer(applicationContext, moduleService);
 
     flagTutorial = new FlagTutorial(flagHandler);
 

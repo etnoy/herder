@@ -22,16 +22,14 @@
 package org.owasp.herder.authentication;
 
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import reactor.core.publisher.Mono;
 
 @Repository
 public interface PasswordAuthRepository extends ReactiveMongoRepository<PasswordAuth, String> {
-  public Mono<PasswordAuth> findByLoginName(@Param("login_name") final String loginName);
+  public Mono<PasswordAuth> findByLoginName(final String loginName);
 
-  public Mono<PasswordAuth> findByUserId(@Param("user_id") final String userId);
+  public Mono<PasswordAuth> findByUserId(final String userId);
 
-  public Mono<PasswordAuth> deleteByUserId(@Param("user_id") final String userId);
+  public Mono<PasswordAuth> deleteByUserId(final String userId);
 }

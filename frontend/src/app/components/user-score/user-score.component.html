@@ -1,5 +1,5 @@
 <div class="auth-wrapper">
-  <p *ngIf="!userFound">User {{ this.userId }} not found</p>
+  <p *ngIf="!userFound">Solver {{ this.solverId }} not found</p>
 
   <div class="row" *ngIf="userFound">
     <div class="inner-main">
@@ -7,12 +7,12 @@
         <ng-container *ngFor="let submission of submissions">
           <li>
             <p>
-              {{submission.time.toLocaleString() | amTimeAgo }}:<a href="/scoreboard/module/{{submission.moduleLocator}}">{{ submission.moduleName }}</a> <app-rank [rank]=submission.rank></app-rank>{{submission.score}} points.
+              {{submission.time.toLocaleString() | amTimeAgo }}: <a href="/scoreboard/module/{{submission.moduleLocator}}">{{ submission.moduleName }}</a> <app-rank [rank]=submission.rank></app-rank>{{submission.score}} points.
             </p>
           </li>
         </ng-container>
       </ul>
-      <p *ngIf="submissions.length === 0">No submissions for {{ userId }}</p>
+      <p *ngIf="submissions.length === 0">No submissions for {{ solverId }}</p>
     </div>
   </div>
 </div>

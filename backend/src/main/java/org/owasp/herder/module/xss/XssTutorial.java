@@ -22,28 +22,27 @@
 package org.owasp.herder.module.xss;
 
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
 import org.owasp.herder.module.Locator;
+import org.owasp.herder.module.Score;
 import org.owasp.herder.module.Tag;
 import org.owasp.herder.module.xss.XssTutorialResponse.XssTutorialResponseBuilder;
-
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 @HerderModule("XSS Tutorial")
 @Locator("xss-tutorial")
-@Tag(name = "topic", value = "xss")
+@Tag(key = "topic", value = "xss")
+@Score(baseScore = 80, goldBonus = 10, silverBonus = 5, bronzeBonus = 3)
 public class XssTutorial implements BaseModule {
   private final FlagHandler flagHandler;
 
   private final XssService xssService;
 
   public Mono<XssTutorialResponse> submitQuery(final String userId, final String query) {
-
     final String htmlTarget =
         String.format(
             "<html><head><title>Alert</title></head><body><p>Result: %s</p></body></html>", query);

@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,8 +40,7 @@ import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.xss.XssService;
 import org.owasp.herder.module.xss.XssTutorial;
-import org.owasp.herder.scoring.ScoreService;
-
+import org.owasp.herder.scoring.ScoreboardService;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -64,7 +62,7 @@ class XssTutorialTest {
 
   @Mock XssService xssService;
 
-  @Mock ScoreService scoreService;
+  @Mock ScoreboardService scoreboardService;
 
   @Mock FlagHandler flagHandler;
 

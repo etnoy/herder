@@ -21,27 +21,23 @@
  */
 package org.owasp.herder.module;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.PostConstruct;
-
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.InvalidHerderModuleTypeException;
 import org.owasp.herder.exception.ModuleInitializationException;
-import org.owasp.herder.module.ModuleTag.ModuleTagBuilder;
-import org.owasp.herder.scoring.ModulePoint;
-import org.owasp.herder.scoring.ScoreService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
-
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @ConditionalOnProperty(
@@ -56,8 +52,6 @@ public final class ModuleInitializer implements ApplicationContextAware {
   private ApplicationContext applicationContext;
 
   private final ModuleService moduleService;
-
-  private final ScoreService scoreService;
 
   @PostConstruct
   public void initializeModules() {
@@ -115,10 +109,8 @@ public final class ModuleInitializer implements ApplicationContextAware {
     log.debug("Initializing module " + moduleName);
 
     // Find all tag annotations
-    final Flux<ModuleTagBuilder> tagBuilders =
-        Flux.fromArray(module.getClass().getAnnotationsByType(Tag.class))
-            // Create a ModuleTag entity for each tag
-            .map(tag -> ModuleTag.builder().name(tag.name()).value(tag.value()));
+
+    final Set<Tag> tagAnnotations = Set.of(module.getClass().getAnnotationsByType(Tag.class));
 
     if (Boolean.TRUE.equals(moduleService.existsByLocator(moduleLocator).block())) {
       // If the module already exists in the database, do nothing.
@@ -131,26 +123,33 @@ public final class ModuleInitializer implements ApplicationContextAware {
         .create(moduleName, moduleLocator)
         .flatMap(
             moduleId -> {
-              Mono<ModulePoint> scoreMono = Mono.empty();
+              Mono<Void> scoreMono = Mono.empty();
               // Persist the default scores (if any)
               if (scoreAnnotation != null) {
-                final int baseScore = scoreAnnotation.baseScore();
-                final int goldBonus = scoreAnnotation.goldBonus();
-                final int silverBonus = scoreAnnotation.silverBonus();
-                final int bronzeBonus = scoreAnnotation.bronzeBonus();
+                final ArrayList<Integer> bonusScores = new ArrayList<>();
+
+                bonusScores.add(scoreAnnotation.goldBonus());
+                bonusScores.add(scoreAnnotation.silverBonus());
+                bonusScores.add(scoreAnnotation.bronzeBonus());
+
                 scoreMono =
-                    scoreService
-                        .setModuleScore(moduleId, 0, baseScore)
-                        .then(scoreService.setModuleScore(moduleId, 1, goldBonus))
-                        .then(scoreService.setModuleScore(moduleId, 2, silverBonus))
-                        .then(scoreService.setModuleScore(moduleId, 3, bronzeBonus));
+                    moduleService
+                        .setBaseScore(moduleId, scoreAnnotation.baseScore())
+                        .then(moduleService.setBonusScores(moduleId, bonusScores));
               }
 
-              return scoreMono
-                  .thenMany(
-                      moduleService.saveTags(
-                          tagBuilders.map(tagBuilder -> tagBuilder.moduleId(moduleId).build())))
-                  .then(Mono.just(moduleId));
+              Mono<Void> tagMono = Mono.empty();
+              if (tagAnnotations != null) {
+                final Multimap<String, String> tags = ArrayListMultimap.create();
+                final Iterator<Tag> tagIterator = tagAnnotations.iterator();
+                while (tagIterator.hasNext()) {
+                  final Tag currentTag = tagIterator.next();
+                  tags.put(currentTag.key(), currentTag.value());
+                }
+                tagMono = moduleService.setTags(moduleId, tags);
+              }
+
+              return scoreMono.then(tagMono).then(Mono.just(moduleId));
             });
   }
 

@@ -23,31 +23,31 @@ package org.owasp.herder.scoring;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
+import org.owasp.herder.module.ModuleEntity;
+import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.UserEntity;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
 @Builder
 @AllArgsConstructor
 @With
+@Document("submissionRank")
 public class RankedSubmission implements Serializable {
   static final long serialVersionUID = -5485881248601955741L;
 
-  @NonNull String userId;
+  UserEntity user;
 
-  @NonNull String displayName;
+  @NonNull ModuleEntity module;
 
-  Long rank;
+  TeamEntity team;
 
-  @NonNull String moduleId;
-
-  @NonNull String moduleName;
-
-  @NonNull String moduleLocator;
+  @NonNull Long rank;
 
   @NonNull LocalDateTime time;
 

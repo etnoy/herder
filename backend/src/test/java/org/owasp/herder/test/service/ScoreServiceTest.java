@@ -21,8 +21,6 @@
  */
 package org.owasp.herder.test.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -33,18 +31,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.scoring.ModulePoint;
-import org.owasp.herder.scoring.ModulePointRepository;
-import org.owasp.herder.scoring.ScoreService;
 import org.owasp.herder.scoring.ScoreboardEntry;
-import org.owasp.herder.scoring.SubmissionRepository;
+import org.owasp.herder.scoring.ScoreboardRepository;
+import org.owasp.herder.scoring.ScoreboardService;
+import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("ScoreService unit tests")
+@DisplayName("scoreboardService unit tests")
 class ScoreServiceTest {
 
   @BeforeAll
@@ -53,47 +50,31 @@ class ScoreServiceTest {
     Hooks.onOperatorDebug();
   }
 
-  private ScoreService scoreService;
+  ScoreboardService scoreboardService;
 
-  @Mock ModulePointRepository modulePointRepository;
+  @Mock SubmissionService submissionService;
 
-  @Mock SubmissionRepository submissionRepository;
+  @Mock ScoreboardRepository scoreboardRepository;
+
+  @Mock UserService userService;
 
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    scoreService = new ScoreService(modulePointRepository, submissionRepository);
+    scoreboardService = new ScoreboardService(scoreboardRepository);
   }
 
   @Test
-  void setModuleScore_ValidModuleNameAndRank_ReturnsScore() throws Exception {
-    final String mockModuleId = "id";
-    final int rank = 3;
-    final int points = 1000;
-
-    when(modulePointRepository.save(any(ModulePoint.class)))
-        .thenAnswer(args -> Mono.just(args.getArgument(0, ModulePoint.class)));
-
-    StepVerifier.create(scoreService.setModuleScore(mockModuleId, rank, points))
-        .assertNext(
-            modulePoint -> {
-              assertThat(modulePoint.getModuleId()).isEqualTo(mockModuleId);
-              assertThat(modulePoint.getRank()).isEqualTo(rank);
-              assertThat(modulePoint.getPoints()).isEqualTo(points);
-            })
-        .verifyComplete();
-  }
-
-  @Test
-  void getScoreboard_NoArguments_CallsRepository() throws Exception {
+  @DisplayName("Can rank users in the scoreboard")
+  void getScoreboard_ThreeUsersToScore_CallsRepository() {
     final ScoreboardEntry mockScoreboardEntry1 = mock(ScoreboardEntry.class);
     final ScoreboardEntry mockScoreboardEntry2 = mock(ScoreboardEntry.class);
     final ScoreboardEntry mockScoreboardEntry3 = mock(ScoreboardEntry.class);
 
-    when(submissionRepository.getScoreboard())
+    when(scoreboardRepository.findAll())
         .thenReturn(Flux.just(mockScoreboardEntry1, mockScoreboardEntry2, mockScoreboardEntry3));
 
-    StepVerifier.create(scoreService.getScoreboard())
+    StepVerifier.create(scoreboardService.getScoreboard())
         .expectNext(mockScoreboardEntry1)
         .expectNext(mockScoreboardEntry2)
         .expectNext(mockScoreboardEntry3)

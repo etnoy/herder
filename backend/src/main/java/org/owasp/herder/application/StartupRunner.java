@@ -21,13 +21,21 @@
  */
 package org.owasp.herder.application;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import lombok.RequiredArgsConstructor;
+import org.owasp.herder.module.ModuleEntity;
+import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.module.flag.FlagTutorial;
+import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.UserService;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-
-import lombok.RequiredArgsConstructor;
 
 @ConditionalOnProperty(
     prefix = "application.runner",
@@ -38,6 +46,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class StartupRunner implements ApplicationRunner {
   private final UserService userService;
+
+  private final ModuleService moduleService;
+
+  private final SubmissionService submissionService;
+
+  private final RefresherService refresherService;
+
+  private final FlagTutorial flagTutorial;
 
   @Override
   public void run(ApplicationArguments args) {
@@ -53,16 +69,65 @@ public class StartupRunner implements ApplicationRunner {
       userService.promote(adminId).block();
     }
 
+    String userId1 = "";
+    String userId2 = "";
+    String userId3 = "";
+
     if (Boolean.FALSE.equals(userService.existsByDisplayName("Test user").block())) {
-      userService.create("Test user").block();
+      userId1 = userService.create("Test user").block();
     }
 
     if (Boolean.FALSE.equals(userService.existsByDisplayName("Test user 2").block())) {
-      userService.create("Test user 2").block();
+      userId2 = userService.create("Test user 2").block();
     }
 
     if (Boolean.FALSE.equals(userService.existsByDisplayName("Test user 3").block())) {
-      userService.create("Test user 3").block();
+      userId3 = userService.create("Test user 3").block();
     }
+
+    if (Boolean.FALSE.equals(userService.teamExistsByDisplayName("Team 1").block())) {
+      String teamId1 = userService.createTeam("Team 1").block();
+      String teamId2 = userService.createTeam("Team 2").block();
+
+      final ModuleEntity flagTutorialModule = moduleService.findByLocator("flag-tutorial").block();
+      if (flagTutorialModule != null) {
+        final String flagTutorialId = flagTutorialModule.getId();
+
+        Clock testClock =
+            Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
+
+        submissionService.setClock(testClock);
+
+        submissionService
+            .submitFlag(userId1, flagTutorialId, flagTutorial.getFlag(userId1).block())
+            .block();
+
+        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+        submissionService.setClock(testClock);
+
+        submissionService
+            .submitFlag(userId2, flagTutorialId, flagTutorial.getFlag(userId2).block())
+            .block();
+        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+        submissionService.setClock(testClock);
+
+        submissionService
+            .submitFlag(userId3, flagTutorialId, flagTutorial.getFlag(userId3).block())
+            .block();
+
+        submissionService.resetClock();
+      }
+
+      userService.addUserToTeam(userId1, teamId1).block();
+      userService.addUserToTeam(userId2, teamId1).block();
+      userService.addUserToTeam(userId3, teamId2).block();
+
+      refresherService.afterUserUpdate(userId1).block();
+      refresherService.afterUserUpdate(userId2).block();
+      refresherService.afterUserUpdate(userId3).block();
+    }
+    refresherService.refreshModuleLists().block();
+    refresherService.refreshSubmissionRanks().block();
+    refresherService.refreshScoreboard().block();
   }
 }

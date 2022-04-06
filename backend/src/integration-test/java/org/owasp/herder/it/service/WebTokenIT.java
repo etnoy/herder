@@ -28,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.Collection;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,7 +59,7 @@ class WebTokenIT extends BaseIT {
   void canAcceptTokensThatHaveNotExpiredYet() {
     integrationTestUtils.createTestUser();
 
-    setClock(TestConstants.longAgoClock);
+    setClock(TestConstants.year2000Clock);
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
@@ -68,7 +67,7 @@ class WebTokenIT extends BaseIT {
 
     final Clock rightBeforeTheTokenExpires =
         Clock.fixed(
-            TestConstants.longAgoClock
+            TestConstants.year2000Clock
                 .instant()
                 .plusMillis(webTokenService.getExpirationTime() - 1),
             ZoneId.systemDefault());
@@ -181,7 +180,7 @@ class WebTokenIT extends BaseIT {
   void canRejectTokensThatHaveExpired() {
     integrationTestUtils.createTestUser();
 
-    setClock(TestConstants.longAgoClock);
+    setClock(TestConstants.year2000Clock);
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
@@ -189,7 +188,7 @@ class WebTokenIT extends BaseIT {
 
     final Clock rightAfterTheTokenExpires =
         Clock.fixed(
-            TestConstants.longAgoClock
+            TestConstants.year2000Clock
                 .instant()
                 .plusMillis(webTokenService.getExpirationTime() + 1),
             ZoneId.systemDefault());

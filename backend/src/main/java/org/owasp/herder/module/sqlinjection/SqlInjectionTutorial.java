@@ -21,23 +21,22 @@
  */
 package org.owasp.herder.module.sqlinjection;
 
+import io.r2dbc.spi.Row;
+import io.r2dbc.spi.RowMetadata;
 import java.util.Base64;
 import java.util.function.BiFunction;
-
+import lombok.RequiredArgsConstructor;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
 import org.owasp.herder.module.Locator;
+import org.owasp.herder.module.Score;
 import org.owasp.herder.module.Tag;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.r2dbc.BadSqlGrammarException;
 import org.springframework.r2dbc.UncategorizedR2dbcException;
 import org.springframework.r2dbc.core.DatabaseClient;
-
-import io.r2dbc.spi.Row;
-import io.r2dbc.spi.RowMetadata;
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -45,7 +44,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @HerderModule("SQL Injection Tutorial")
 @Locator("sql-injection-tutorial")
-@Tag(name = "topic", value = "sql-injection")
+@Score(baseScore = 100, goldBonus = 50, silverBonus = 20, bronzeBonus = 10)
+@Tag(key = "topic", value = "sql-injection")
 public class SqlInjectionTutorial implements BaseModule {
 
   private final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;

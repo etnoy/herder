@@ -21,28 +21,8 @@
  */
 package org.owasp.herder.scoring;
 
-import java.io.Serializable;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.stereotype.Repository;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
-import lombok.With;
-
-@Value
-@Builder
-@With
-@Document
-public class ModulePoint implements Serializable {
-  private static final long serialVersionUID = 4548877736126023113L;
-
-  @Id private String id;
-
-  @NonNull private String moduleId;
-
-  @NonNull private Long rank;
-
-  @NonNull private Long points;
-}
+@Repository
+public interface ScoreboardRepository extends ReactiveMongoRepository<ScoreboardEntry, String> {}

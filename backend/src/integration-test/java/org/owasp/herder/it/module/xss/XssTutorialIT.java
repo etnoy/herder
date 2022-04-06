@@ -35,12 +35,11 @@ import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.xss.XssService;
 import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.module.xss.XssTutorialResponse;
-import org.owasp.herder.scoring.ScoreService;
+import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -61,7 +60,7 @@ class XssTutorialIT extends BaseIT {
 
   @Autowired SubmissionService submissionService;
 
-  @Autowired ScoreService scoreService;
+  @Autowired ScoreboardService scoreboardService;
 
   @Autowired XssService xssService;
 
@@ -77,7 +76,7 @@ class XssTutorialIT extends BaseIT {
   private void setUp() {
     integrationTestUtils.resetState();
 
-    moduleInitializer = new ModuleInitializer(null, moduleService, scoreService);
+    moduleInitializer = new ModuleInitializer(null, moduleService);
 
     xssTutorial = new XssTutorial(flagHandler, xssService);
 
@@ -103,7 +102,7 @@ class XssTutorialIT extends BaseIT {
     // Submit the flag we got from the sql injection and make sure it validates
     StepVerifier.create(
             flagMono
-                .flatMap(flag -> submissionService.submit(userId, moduleId, flag))
+                .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag))
                 .map(Submission::isValid))
         .expectNext(true)
         .verifyComplete();
@@ -121,7 +120,7 @@ class XssTutorialIT extends BaseIT {
     // Take the flag we got from the tutorial, modify it, and expect validation to fail
     StepVerifier.create(
             flagMono
-                .flatMap(flag -> submissionService.submit(userId, moduleId, flag + "wrong"))
+                .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag + "wrong"))
                 .map(Submission::isValid))
         .expectNext(false)
         .verifyComplete();

@@ -44,6 +44,11 @@ const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'scoreboard/team/:teamId',
+    component: UserScoreComponent,
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'scoreboard/module/:moduleLocator',
     component: ModuleSolvesComponent,
     canActivate: [AuthGuard],

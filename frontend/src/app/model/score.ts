@@ -1,6 +1,7 @@
 export class Score {
   rank: number;
-  userId: number;
+  principalId: string;
+  principalType: string;
   displayName: string;
   score: number;
   goldMedals: number;

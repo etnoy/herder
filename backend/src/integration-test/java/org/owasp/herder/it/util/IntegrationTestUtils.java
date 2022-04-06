@@ -34,15 +34,17 @@ import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
-import org.owasp.herder.module.ModuleTagRepository;
 import org.owasp.herder.module.csrf.CsrfAttackRepository;
-import org.owasp.herder.scoring.CorrectionRepository;
-import org.owasp.herder.scoring.ModulePointRepository;
+import org.owasp.herder.scoring.RankedSubmissionRepository;
+import org.owasp.herder.scoring.ScoreAdjustmentRepository;
+import org.owasp.herder.scoring.ScoreboardRepository;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.ClassRepository;
+import org.owasp.herder.user.ModuleListRepository;
+import org.owasp.herder.user.TeamRepository;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,21 +80,32 @@ public final class IntegrationTestUtils {
 
   @Autowired ClassRepository classRepository;
 
+  @Autowired TeamRepository teamRepository;
+
   @Autowired ModuleRepository moduleRepository;
+
+  @Autowired ModuleListRepository moduleListRepository;
 
   @Autowired CsrfAttackRepository csrfAttackRepository;
 
   @Autowired SubmissionRepository submissionRepository;
 
-  @Autowired CorrectionRepository correctionRepository;
+  @Autowired ScoreAdjustmentRepository scoreAdjustmentRepository;
 
-  @Autowired ModulePointRepository modulePointRepository;
+  @Autowired ScoreboardRepository scoreboardRepository;
 
-  @Autowired ModuleTagRepository moduleTagRepository;
+  @Autowired RankedSubmissionRepository rankedSubmissionRepository;
 
   @Autowired WebTokenService webTokenService;
 
   String moduleId;
+
+  public void checkConstraintViolation(
+      final ThrowingCallable shouldRaiseThrowable, final String containedMessage) {
+    assertThatThrownBy(shouldRaiseThrowable)
+        .isInstanceOf(ConstraintViolationException.class)
+        .hasMessageContaining(containedMessage);
+  }
 
   public String createDynamicTestModule() {
     final String moduleId =
@@ -114,6 +127,10 @@ public final class IntegrationTestUtils {
     return moduleId;
   }
 
+  public String createTestTeam() {
+    return userService.createTeam(TestConstants.TEST_TEAM_DISPLAY_NAME).block();
+  }
+
   public String createTestAdmin() {
     final String userId =
         userService
@@ -125,25 +142,6 @@ public final class IntegrationTestUtils {
 
     userService.promote(userId).block();
     return userId;
-  }
-
-  public Submission submitValidFlag(final String userId, final String moduleId) {
-
-    final ModuleEntity moduleEntity = moduleService.findById(moduleId).block();
-
-    String validFlag;
-
-    if (moduleEntity.isFlagStatic()) {
-      validFlag = moduleEntity.getStaticFlag();
-    } else {
-      validFlag = flagHandler.getDynamicFlag(userId, moduleEntity.getLocator()).block();
-    }
-
-    return submissionService.submit(userId, moduleId, validFlag).block();
-  }
-
-  public Submission submitInvalidFlag(final String userId, final String moduleId) {
-    return submissionService.submit(userId, moduleId, "an-invalid-flag-cant-be-right").block();
   }
 
   public String createTestUser() {
@@ -184,24 +182,26 @@ public final class IntegrationTestUtils {
     // The special nature of the web token clock means it must be reset between tests
     webTokenService.resetClock();
 
-    // Deleting data must be done in the right order due to db constraints
-    // Delete all score corrections
-    correctionRepository
+    scoreAdjustmentRepository
         .deleteAll()
         // Delete all csrf attacks
         .then(csrfAttackRepository.deleteAll())
-        // Delete all module scoring rules
-        .then(modulePointRepository.deleteAll())
-        // Delete all module tags
-        .then(moduleTagRepository.deleteAll())
         // Delete all submissions
         .then(submissionRepository.deleteAll())
+        // Delete all ranked scoreboard entries
+        .then(rankedSubmissionRepository.deleteAll())
+        // Delete all scoreboard entries
+        .then(scoreboardRepository.deleteAll())
         // Delete all classes
         .then(classRepository.deleteAll())
         // Delete all modules
         .then(moduleRepository.deleteAll())
+        // Delete all module lists
+        .then(moduleListRepository.deleteAll())
         // Delete all configurations
         .then(configurationRepository.deleteAll())
+        // Delete all teams
+        .then(teamRepository.deleteAll())
         // Delete all password auth data
         .then(passwordAuthRepository.deleteAll())
         // Delete all users
@@ -245,10 +245,22 @@ public final class IntegrationTestUtils {
         .getResponseBody();
   }
 
-  public void checkConstraintViolation(
-      final ThrowingCallable shouldRaiseThrowable, final String containedMessage) {
-    assertThatThrownBy(shouldRaiseThrowable)
-        .isInstanceOf(ConstraintViolationException.class)
-        .hasMessageContaining(containedMessage);
+  public Submission submitInvalidFlag(final String userId, final String moduleId) {
+    return submissionService.submitFlag(userId, moduleId, "an-invalid-flag-cant-be-right").block();
+  }
+
+  public Submission submitValidFlag(final String userId, final String moduleId) {
+
+    final ModuleEntity moduleEntity = moduleService.findById(moduleId).block();
+
+    String validFlag;
+
+    if (moduleEntity.isFlagStatic()) {
+      validFlag = moduleEntity.getStaticFlag();
+    } else {
+      validFlag = flagHandler.getDynamicFlag(userId, moduleEntity.getLocator()).block();
+    }
+
+    return submissionService.submitFlag(userId, moduleId, validFlag).block();
   }
 }

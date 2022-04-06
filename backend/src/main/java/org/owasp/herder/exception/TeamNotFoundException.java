@@ -19,16 +19,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.module;
+package org.owasp.herder.exception;
 
-import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.stereotype.Repository;
+import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-import reactor.core.publisher.Flux;
+@NoArgsConstructor
+@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "User not found")
+public class TeamNotFoundException extends RuntimeException {
+  private static final long serialVersionUID = -3636814620490480615L;
 
-@Repository
-public interface ModuleTagRepository extends ReactiveMongoRepository<ModuleTag, String> {
-  public Flux<ModuleTag> findAllByModuleId(final String moduleId);
-
-  public Flux<ModuleTag> findAllByModuleIdAndName(final String moduleId, final String tagName);
+  public TeamNotFoundException(final String message) {
+    super(message);
+  }
 }

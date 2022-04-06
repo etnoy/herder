@@ -21,19 +21,19 @@
  */
 package org.owasp.herder.user;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.Value;
 import lombok.With;
+import org.owasp.herder.validation.ValidClassId;
+import org.owasp.herder.validation.ValidTeamId;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
 @AllArgsConstructor
@@ -41,25 +41,31 @@ import lombok.With;
 @With
 @Document("user")
 public final class UserEntity implements Serializable {
-  private static final long serialVersionUID = 3097353498257801154L;
+  static final long serialVersionUID = 3097353498257801154L;
 
-  @Id private String id;
+  @Id String id;
 
-  @NonNull private String displayName;
+  @NonNull String displayName;
 
-  private String classId;
+  @ValidClassId String classId;
 
-  private LocalDateTime accountCreated;
+  @ValidTeamId String teamId;
+
+  LocalDateTime creationTime;
 
   @JsonProperty("isEnabled")
-  private boolean isEnabled;
+  boolean isEnabled;
 
   @JsonProperty("isAdmin")
-  private boolean isAdmin;
+  boolean isAdmin;
 
-  private LocalDateTime suspendedUntil;
+  @JsonProperty("isDeleted")
+  @Builder.Default
+  boolean isDeleted = false;
 
-  private String suspensionMessage;
+  LocalDateTime suspendedUntil;
 
-  @NonNull private byte[] key;
+  String suspensionMessage;
+
+  @ToString.Exclude @NonNull byte[] key;
 }

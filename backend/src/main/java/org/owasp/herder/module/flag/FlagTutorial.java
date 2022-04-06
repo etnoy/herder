@@ -21,21 +21,20 @@
  */
 package org.owasp.herder.module.flag;
 
+import lombok.RequiredArgsConstructor;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
 import org.owasp.herder.module.Locator;
 import org.owasp.herder.module.Score;
 import org.owasp.herder.module.Tag;
-
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 @HerderModule("Flag Tutorial")
 @Locator("flag-tutorial")
-@Score(baseScore = 100, goldBonus = 50)
-@Tag(name = "type", value = "tutorial")
+@Score(baseScore = 10, goldBonus = 5, silverBonus = 2, bronzeBonus = 1)
+@Tag(key = "type", value = "tutorial")
 public class FlagTutorial implements BaseModule {
   private final FlagHandler flagHandler;
 

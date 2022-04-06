@@ -22,29 +22,39 @@
 package org.owasp.herder.scoring;
 
 import java.io.Serializable;
-
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
 @Builder
 @With
+@Document("scoreboard")
 public class ScoreboardEntry implements Serializable {
-  private static final long serialVersionUID = 902640084501001329L;
+  private static final long serialVersionUID = 5300850744874749678L;
 
-  @NonNull private Long rank;
+  @Id String id;
 
-  @NonNull private String userId;
+  @NonNull Long rank;
 
-  @NonNull private String displayName;
+  @NonNull String principalId;
 
-  @NonNull private Long score;
+  @NonNull PrincipalType principalType;
 
-  @NonNull private Long goldMedals;
+  @NonNull String displayName;
 
-  @NonNull private Long silverMedals;
+  @NonNull Long score;
 
-  @NonNull private Long bronzeMedals;
+  @NonNull Long bonusScore;
+
+  @NonNull Long baseScore;
+
+  @NonNull Long goldMedals;
+
+  @NonNull Long silverMedals;
+
+  @NonNull Long bronzeMedals;
 }

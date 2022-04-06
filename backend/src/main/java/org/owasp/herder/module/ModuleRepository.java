@@ -21,11 +21,9 @@
  */
 package org.owasp.herder.module;
 
-import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -33,38 +31,6 @@ import reactor.core.publisher.Mono;
 public interface ModuleRepository extends ReactiveMongoRepository<ModuleEntity, String> {
   @Query("{ 'isOpen' : true }")
   public Flux<ModuleEntity> findAllOpen();
-
-  @Aggregation({
-    // Find module by locator
-    "{$match:{'locator': ?1 }}",
-    // Convert id to moduleId string
-    "{$project:{moduleId:{$toString: '$_id'},locator: 1,name:1}}",
-    // Include all submissions per module
-    "{$lookup:{from:'submission',localField:'moduleId',foreignField:'moduleId',as:'submissions'}}",
-    // Include all tabs per module
-    "{$lookup:{from:'moduleTag',localField:'moduleId',foreignField:'moduleId',as:'tags'}}",
-    // Check if current user has solved the module
-    "{$addFields:{isSolved: {$and: [{$in: [true, '$submissions.isValid']}, {$in: [ ?0 , '$submissions.userId']}]}}}",
-    // Project only the required values
-    "{$project:{name:1, locator:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
-  })
-  public Mono<ModuleListItem> findByLocatorWithSolutionStatus(String userId, String moduleLocator);
-
-  @Aggregation({
-    // Only show open modules
-    "{$match:{'isOpen': true }}",
-    // Convert id to moduleId string
-    "{$project:{moduleId:{$toString: '$_id'},locator:1,name:1}}",
-    // Include all submissions per module
-    "{$lookup:{from:'submission',localField:'moduleId',foreignField:'moduleId',as:'submissions'}}",
-    // Include all tags per module
-    "{$lookup:{from:'moduleTag',localField:'moduleId',foreignField:'moduleId',as:'tags'}}",
-    // Check if current user has solved the module
-    "{$addFields:{isSolved: {$and: [{$in: [true, '$submissions.isValid']}, {$in: [ ?0 , '$submissions.userId']}]}}}",
-    // Project only the required values
-    "{$project:{name:1, locator:1, isSolved:1, tags:{ $map: { 'input': '$tags', 'as': 'tag', in: { 'name': '$$tag.name', 'value': '$$tag.value'}}}}}"
-  })
-  public Flux<ModuleListItem> findAllOpenWithSolutionStatus(String userId);
 
   public Mono<ModuleEntity> findByName(String moduleId);
 

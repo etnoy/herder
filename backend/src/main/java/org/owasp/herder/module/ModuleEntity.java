@@ -21,19 +21,19 @@
  */
 package org.owasp.herder.module;
 
-import java.io.Serializable;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import java.io.Serializable;
+import java.util.ArrayList;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.Value;
 import lombok.With;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
 @AllArgsConstructor
@@ -45,17 +45,23 @@ public class ModuleEntity implements Serializable {
 
   @Id private String id;
 
-  @Indexed @NonNull private String name;
+  @NonNull private String name;
 
-  @Indexed @NonNull private String locator;
+  @NonNull private String locator;
 
-  @JsonProperty("hasStaticFlag")
+  @JsonProperty("isFlagStatic")
   private boolean isFlagStatic;
 
-  private String staticFlag;
+  @ToString.Exclude private String staticFlag;
 
-  @NonNull private byte[] key;
+  @ToString.Exclude @NonNull private byte[] key;
 
   @JsonProperty("isOpen")
   private boolean isOpen;
+
+  private int baseScore;
+
+  private ArrayList<Integer> bonusScores;
+
+  @Builder.Default private Multimap<String, String> tags = ArrayListMultimap.create();
 }

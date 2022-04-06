@@ -36,11 +36,10 @@ import org.owasp.herder.module.csrf.CsrfAttackRepository;
 import org.owasp.herder.module.csrf.CsrfService;
 import org.owasp.herder.module.csrf.CsrfTutorial;
 import org.owasp.herder.module.csrf.CsrfTutorialResult;
-import org.owasp.herder.scoring.ScoreService;
+import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -59,7 +58,7 @@ class CsrfTutorialIT extends BaseIT {
 
   @Autowired SubmissionService submissionService;
 
-  @Autowired ScoreService scoreService;
+  @Autowired ScoreboardService scoreboardService;
 
   @Autowired FlagHandler flagHandler;
 
@@ -108,7 +107,7 @@ class CsrfTutorialIT extends BaseIT {
   private void setUp() {
     integrationTestUtils.resetState();
 
-    moduleInitializer = new ModuleInitializer(null, moduleService, scoreService);
+    moduleInitializer = new ModuleInitializer(null, moduleService);
 
     csrfTutorial = new CsrfTutorial(csrfService, flagHandler);
 

@@ -19,15 +19,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.scoring;
+package org.owasp.herder.exception;
 
-import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-import reactor.core.publisher.Flux;
+@NoArgsConstructor
+@ResponseStatus(value = HttpStatus.NOT_ACCEPTABLE, reason = "Module not open for submissions")
+public class ModuleClosedException extends RuntimeException {
+  private static final long serialVersionUID = 828102966411821839L;
 
-@Repository
-public interface CorrectionRepository extends ReactiveMongoRepository<Correction, Long> {
-  public Flux<Correction> findAllByUserId(@Param("user_id") final String userId);
+  public ModuleClosedException(final String message) {
+    super(message);
+  }
 }

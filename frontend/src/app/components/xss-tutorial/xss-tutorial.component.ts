@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { ApiService } from '../../service/api.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { Module } from 'src/app/model/module';
+import { ModuleListItem } from 'src/app/model/module-list-item';
 import { AlertService } from 'src/app/service/alert.service';
 import { XssTutorialResult } from 'src/app/model/xss-tutorial-result';
 
@@ -14,7 +14,7 @@ export class XssTutorialComponent {
   result: XssTutorialResult;
   loading = false;
 
-  @Input() module: Module;
+  @Input() module: ModuleListItem;
 
   constructor(
     private apiService: ApiService,
@@ -36,7 +36,7 @@ export class XssTutorialComponent {
 
     return this.apiService
       .modulePostRequest(
-        this.module.name,
+        this.module.locator,
         'search',
         this.queryForm.controls.query.value
       )

@@ -7,9 +7,9 @@
           <li>
             <p>
               {{ submission.time.toLocaleString() | amTimeAgo }}:
-              <a href="/scoreboard/user/{{ submission.userId }}">{{
-                submission.displayName
-              }}</a>
+              <a href="scoreboard/{{ submission.principalType |lowercase }}/{{ submission.id }}">
+                {{ submission.displayName }}
+              </a>
               <app-rank [rank]="submission.rank"></app-rank
               >{{ submission.score }} points.
             </p>

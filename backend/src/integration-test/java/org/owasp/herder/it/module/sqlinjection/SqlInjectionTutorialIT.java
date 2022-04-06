@@ -34,12 +34,11 @@ import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.sqlinjection.SqlInjectionDatabaseClientFactory;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow;
-import org.owasp.herder.scoring.ScoreService;
+import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -61,7 +60,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
   @Autowired SubmissionService submissionService;
 
-  @Autowired ScoreService scoreService;
+  @Autowired ScoreboardService scoreboardService;
 
   @Autowired SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
 
@@ -79,7 +78,7 @@ class SqlInjectionTutorialIT extends BaseIT {
   private void setUp() {
     integrationTestUtils.resetState();
 
-    moduleInitializer = new ModuleInitializer(null, moduleService, scoreService);
+    moduleInitializer = new ModuleInitializer(null, moduleService);
 
     sqlInjectionTutorial =
         new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
@@ -105,7 +104,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     // Take the flag we got from the tutorial, modify it, and expect validation to fail
     StepVerifier.create(
             flagVerificationMono
-                .flatMap(flag -> submissionService.submit(userId, moduleId, flag + "wrong"))
+                .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag + "wrong"))
                 .map(Submission::isValid))
         .expectNext(false)
         .verifyComplete();
@@ -125,7 +124,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     // Submit the flag we got from the sql injection and make sure it validates
     StepVerifier.create(
             flagMono
-                .flatMap(flag -> submissionService.submit(userId, moduleId, flag))
+                .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag))
                 .map(Submission::isValid))
         .expectNext(true)
         .verifyComplete();
@@ -184,8 +183,8 @@ class SqlInjectionTutorialIT extends BaseIT {
 
     final String errorMessage =
         "Syntax error in SQL statement \"SELECT * FROM sqlinjection.users "
-            + "WHERE name = ''[*]'\"; SQL statement:\n"
-            + "SELECT * FROM sqlinjection.users WHERE name = ''' [42000-200]";
+            + "WHERE name = [*]'''\"; SQL statement:\n"
+            + "SELECT * FROM sqlinjection.users WHERE name = ''' [42000-210]";
 
     StepVerifier.create(
             sqlInjectionTutorial.submitQuery(userId, "'").map(SqlInjectionTutorialRow::getError))
@@ -198,8 +197,8 @@ class SqlInjectionTutorialIT extends BaseIT {
     final String userId = userService.create("TestUser1").block();
 
     final String errorMessage =
-        "Data conversion error converting \"1=1\"; SQL statement:\n"
-            + "SELECT * FROM sqlinjection.users WHERE name = '' OR '1=1' [22018-200]";
+        "Data conversion error converting \"CHARACTER VARYING to BOOLEAN\"; SQL statement:\n"
+            + "SELECT * FROM sqlinjection.users WHERE name = '' OR '1=1' [22018-210]";
 
     StepVerifier.create(
             sqlInjectionTutorial

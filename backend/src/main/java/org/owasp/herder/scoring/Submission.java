@@ -21,19 +21,17 @@
  */
 package org.owasp.herder.scoring;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.Value;
 import lombok.With;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
 @Builder
@@ -43,16 +41,18 @@ import lombok.With;
 public class Submission implements Serializable {
   private static final long serialVersionUID = -5485881248601955741L;
 
-  @Id private String id;
+  @Id String id;
 
-  @NonNull private String userId;
+  @NonNull String userId;
 
-  @NonNull private String moduleId;
+  String teamId;
 
-  @NonNull private LocalDateTime time;
+  @NonNull String moduleId;
+
+  @NonNull LocalDateTime time;
 
   @JsonProperty("isValid")
-  private boolean isValid;
+  boolean isValid;
 
-  private String flag;
+  @ToString.Exclude String flag;
 }

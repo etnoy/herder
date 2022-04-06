@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from 'src/app/service/api.service';
 import { UserScore } from 'src/app/model/user-score';
-import { catchError, of, throwError } from 'rxjs';
+import { catchError, Observable, of, throwError } from 'rxjs';
 
 @Component({
   selector: 'app-user-score',
@@ -10,7 +10,8 @@ import { catchError, of, throwError } from 'rxjs';
 })
 export class UserScoreComponent implements OnInit {
   submissions: UserScore[];
-  userId: string;
+  solverId: string;
+  solver: string;
   userFound: boolean;
 
   constructor(private route: ActivatedRoute, public apiService: ApiService) {
@@ -20,23 +21,35 @@ export class UserScoreComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
-      this.userId = params.get('userId');
-      this.apiService
-        .getScoresByUserId(this.userId)
-        .pipe(
-          catchError((error) => {
-            if (error.status === 404) {
-              this.userFound = false;
-              return of();
-            } else {
-              return throwError(() => error);
-            }
-          })
-        )
-        .subscribe((submissions: UserScore[]) => {
-          this.userFound = true;
-          this.submissions = submissions;
-        });
+      const userId = params.get('userId');
+      const teamId = params.get('teamId');
+
+      let response: Observable<any>;
+
+      if (userId != null) {
+        response = this.apiService.getScoresByUserId(userId);
+      } else if (teamId != null) {
+        response = this.apiService.getScoresByTeamId(teamId);
+      } else {
+        return;
+      }
+
+      if (userId != null || teamId != null)
+        response
+          .pipe(
+            catchError((error) => {
+              if (error.status === 404) {
+                this.userFound = false;
+                return of();
+              } else {
+                return throwError(() => error);
+              }
+            })
+          )
+          .subscribe((submissions: UserScore[]) => {
+            this.userFound = true;
+            this.submissions = submissions;
+          });
     });
   }
 }

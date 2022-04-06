@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, UrlSegment } from '@angular/router';
-import { Module } from '../../model/module';
+import { ModuleListItem } from '../../model/module-list-item';
 import { throwError } from 'rxjs';
 import { AlertService } from 'src/app/service/alert.service';
 import { Submission } from 'src/app/model/submission';
@@ -29,11 +29,11 @@ export class ModuleItemComponent implements OnInit {
   userId: string;
   solved = false;
 
-  @Input() modules: Module[];
+  @Input() modules: ModuleListItem[];
 
   @ViewChild(ModuleDirective) moduleDirective: ModuleDirective;
 
-  module: Module;
+  module: ModuleListItem;
 
   constructor(
     private fb: FormBuilder,
@@ -57,7 +57,7 @@ export class ModuleItemComponent implements OnInit {
       const locator = segments[0].path;
       this.apiService
         .getModuleByLocator(locator)
-        .subscribe((module: Module) => {
+        .subscribe((module: ModuleListItem) => {
           this.module = module;
           if (segments.length > 1) {
             this.module.parameters = segments;

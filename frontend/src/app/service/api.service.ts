@@ -6,8 +6,9 @@ import {
   HttpErrorResponse,
 } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, tap } from 'rxjs/operators';
 import { User } from '../model/user';
+import { ModuleList } from '../model/module-list';
 
 @Injectable({
   providedIn: 'root',
@@ -106,14 +107,11 @@ export class ApiService {
     );
   }
 
-  getUsers(): Observable<any> {
-    const api = `${this.endpoint}/users/`;
-    return this.http.get(api, { headers: this.headers }).pipe(
-      map((res: Response) => {
-        return res || {};
-      }),
-      catchError(this.handleError)
-    );
+  getSolvers(): Observable<any> {
+    const api = `${this.endpoint}/solvers/`;
+    return this.http
+      .get(api, { headers: this.headers })
+      .pipe(catchError(this.handleError));
   }
 
   getModuleByLocator(locator: string): Observable<any> {
@@ -136,14 +134,14 @@ export class ApiService {
     return this.http.get(api).pipe(catchError(this.handleError));
   }
 
-  getModules(): Observable<any> {
+  getScoresByTeamId(teamId: string): Observable<any> {
+    const api = `${this.endpoint}/scoreboard/team/${teamId}`;
+    return this.http.get(api).pipe(catchError(this.handleError));
+  }
+
+  getModuleList(): Observable<ModuleList> {
     const api = `${this.endpoint}/modules/`;
-    return this.http.get(api, { headers: this.headers }).pipe(
-      map((res: Response) => {
-        return res || {};
-      }),
-      catchError(this.handleError)
-    );
+    return this.http.get<ModuleList>(api).pipe(catchError(this.handleError));
   }
 
   // Error

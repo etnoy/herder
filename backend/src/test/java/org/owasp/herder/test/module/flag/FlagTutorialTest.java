@@ -33,8 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.flag.FlagTutorial;
-import org.owasp.herder.scoring.ScoreService;
-
+import org.owasp.herder.scoring.ScoreboardService;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -54,7 +53,7 @@ class FlagTutorialTest {
 
   @Mock ModuleService moduleService;
 
-  @Mock ScoreService scoreService;
+  @Mock ScoreboardService scoreboardService;
 
   @Mock FlagHandler flagHandler;
 

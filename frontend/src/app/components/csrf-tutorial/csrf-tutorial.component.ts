@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { ApiService } from '../../service/api.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { Module } from 'src/app/model/module';
+import { ModuleListItem } from 'src/app/model/module-list-item';
 import { AlertService } from 'src/app/service/alert.service';
 import { CsrfTutorialResult } from 'src/app/model/csrf-tutorial-result';
 
@@ -17,7 +17,7 @@ export class CsrfTutorialComponent implements OnInit {
   submitted = false;
   loading = true;
 
-  @Input() module: Module;
+  @Input() module: ModuleListItem;
 
   constructor(
     private apiService: ApiService,
@@ -49,7 +49,7 @@ export class CsrfTutorialComponent implements OnInit {
 
   public activate(pseudonym: string): void {
     this.apiService
-      .moduleGetRequest(this.module.name, 'activate/' + pseudonym)
+      .moduleGetRequest(this.module.locator, 'activate/' + pseudonym)
       .subscribe({
         next: (data) => {
           this.alertService.clear();
@@ -77,7 +77,7 @@ export class CsrfTutorialComponent implements OnInit {
 
   public loadTutorial(): void {
     this.loading = true;
-    this.apiService.moduleGetRequest(this.module.name, '').subscribe({
+    this.apiService.moduleGetRequest(this.module.locator, '').subscribe({
       next: (data) => {
         this.alertService.clear();
         this.loading = false;

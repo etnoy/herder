@@ -19,31 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.module;
+package org.owasp.herder.scoring;
 
-import java.io.Serializable;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
-import lombok.With;
-
-@Value
-@Builder
-@With
-@Document
-public class ModuleTag implements Serializable {
-  private static final long serialVersionUID = -1467010304152602335L;
-
-  @Id private String id;
-
-  @Indexed @NonNull private String moduleId;
-
-  @NonNull private String name;
-
-  @NonNull private String value;
+public enum PrincipalType {
+  USER,
+  TEAM
 }

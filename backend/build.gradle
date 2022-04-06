@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '2.6.2'
+    id "org.springframework.boot" version "2.6.6"
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'eclipse'
     id 'jacoco'
@@ -40,30 +40,33 @@ sourceSets {
 }
 
 dependencies {
-    implementation 'com.google.guava:guava:28.2-jre'
-    implementation 'org.springframework.data:spring-data-commons'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.13.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
+    implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'org.springframework.data:spring-data-commons:2.6.3'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'io.r2dbc:r2dbc-h2'
-    implementation 'com.github.spotbugs:spotbugs:4.0.1'
-    implementation 'org.apache.httpcomponents:httpclient:4.5.12'
-    implementation 'org.apache.commons:commons-lang3:3.11'
-    implementation 'net.sourceforge.htmlunit:htmlunit:2.39.0'
-    implementation 'org.passay:passay:1.0'
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
-    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
-    implementation 'org.springframework.data:spring-data-mongodb'
+    implementation 'io.r2dbc:r2dbc-h2:0.9.1.RELEASE'
+    implementation 'com.h2database:h2:2.1.210'
+    implementation 'io.r2dbc:r2dbc-spi:0.9.1.RELEASE'
 
-    implementation 'javax.validation:validation-api'
+    implementation 'com.github.spotbugs:spotbugs:4.6.0'
+    implementation 'org.apache.commons:commons-lang3:3.11'
+    implementation 'commons-io:commons-io:2.11.0'
+    implementation 'net.sourceforge.htmlunit:htmlunit:2.60.0'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux:2.6.6'
+    implementation 'org.springframework.boot:spring-boot-starter-validation:2.6.6'
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc:2.6.6'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive:2.6.6'
+    implementation 'org.springframework.data:spring-data-mongodb:3.3.3'
+
+    testImplementation 'org.assertj:assertj-guava:3.4.0'
 
     implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.1.0'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.11.1'
-    implementation 'com.fasterxml.jackson:jackson-bom:2.10.3'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.10.3'
+    implementation 'com.fasterxml.jackson:jackson-bom:2.13.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2'
     runtimeOnly 'mysql:mysql-connector-java'
-    runtimeOnly 'org.hsqldb:hsqldb:2.5.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.1'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.1'
 
@@ -77,7 +80,6 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
-
 
     testImplementation "org.testcontainers:mongodb:1.16.3"
 
@@ -105,8 +107,6 @@ dependencies {
     integrationTestImplementation 'io.projectreactor:reactor-test:3.4.14'
     integrationTestImplementation 'org.apache.commons:commons-lang3:3.11'
 }
-
-
 
 configurations {
     compileOnly {

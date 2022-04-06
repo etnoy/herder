@@ -67,9 +67,9 @@ class UserControllerTest {
 
   @Test
   void findAll_NoUsersExist_ReturnsEmpty() {
-    when(userService.findAll()).thenReturn(Flux.empty());
+    when(userService.findAllUsers()).thenReturn(Flux.empty());
     StepVerifier.create(userController.findAll()).verifyComplete();
-    verify(userService, times(1)).findAll();
+    verify(userService, times(1)).findAllUsers();
   }
 
   @Test
@@ -79,14 +79,14 @@ class UserControllerTest {
     final UserEntity user3 = mock(UserEntity.class);
     final UserEntity user4 = mock(UserEntity.class);
 
-    when(userService.findAll()).thenReturn(Flux.just(user1, user2, user3, user4));
+    when(userService.findAllUsers()).thenReturn(Flux.just(user1, user2, user3, user4));
     StepVerifier.create(userController.findAll())
         .expectNext(user1)
         .expectNext(user2)
         .expectNext(user3)
         .expectNext(user4)
         .verifyComplete();
-    verify(userService, times(1)).findAll();
+    verify(userService, times(1)).findAllUsers();
   }
 
   @Test

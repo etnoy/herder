@@ -19,19 +19,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.module;
+package org.owasp.herder.exception;
 
-import java.io.Serializable;
+import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
+@NoArgsConstructor
+@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "User not found")
+public class SubmissionNotFoundException extends RuntimeException {
+  private static final long serialVersionUID = 1142246154205845718L;
 
-@Value
-@Builder
-public class NameValueTag implements Serializable {
-  private static final long serialVersionUID = -2028498831072391318L;
-
-  @NonNull String name;
-  @NonNull String value;
+  public SubmissionNotFoundException(final String message) {
+    super(message);
+  }
 }

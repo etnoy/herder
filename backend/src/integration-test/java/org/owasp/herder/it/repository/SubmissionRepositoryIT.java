@@ -19,89 +19,97 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.it.service;
+package org.owasp.herder.it.repository;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import io.github.bucket4j.Bucket;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.owasp.herder.exception.ModuleAlreadySolvedException;
+import org.owasp.herder.crypto.CryptoService;
+import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
-import org.owasp.herder.scoring.CorrectionRepository;
-import org.owasp.herder.scoring.Submission;
+import org.owasp.herder.scoring.ScoreAdjustmentRepository;
+import org.owasp.herder.scoring.ScoreboardController;
+import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
-import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.UserRepository;
+import org.owasp.herder.service.ConfigurationService;
+import org.owasp.herder.service.FlagSubmissionRateLimiter;
+import org.owasp.herder.service.InvalidFlagRateLimiter;
+import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.boot.test.mock.mockito.MockBean;
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
-@DisplayName("Flag submission integration tests")
-class FlagSubmissionIT extends BaseIT {
+@DisplayName("SubmissionRepository integration tests")
+class SubmissionRepositoryIT extends BaseIT {
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages
     Hooks.onOperatorDebug();
   }
 
-  @Autowired SubmissionService submissionService;
+  @Autowired RefresherService refresherService;
+
+  @Autowired ModuleService moduleService;
 
   @Autowired UserService userService;
 
-  @Autowired ModuleService moduleService;
+  @Autowired SubmissionService submissionService;
+
+  @Autowired ScoreboardService scoreboardService;
+
+  @Autowired ScoreboardController scoreboardController;
+
+  @Autowired ScoreAdjustmentRepository scoreAdjustmentRepository;
 
   @Autowired ModuleRepository moduleRepository;
 
   @Autowired SubmissionRepository submissionRepository;
 
-  @Autowired CorrectionRepository correctionRepository;
-
-  @Autowired UserRepository userRepository;
-
   @Autowired FlagHandler flagHandler;
+
+  @Autowired ConfigurationService configurationService;
+
+  @Autowired KeyService keyService;
+
+  @Autowired CryptoService cryptoService;
 
   @Autowired IntegrationTestUtils integrationTestUtils;
 
-  private String userId;
+  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
 
-  private String moduleId;
+  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+
+  @Test
+  @DisplayName("Can return an empty list if only invalid submissions exist for user")
+  void canFindNoSubmissionsForUserIfOnlyInvalidExist() {
+    integrationTestUtils.createStaticTestModule();
+    final String userId = integrationTestUtils.createTestUser();
+
+    StepVerifier.create(submissionRepository.findAllByUserIdAndIsValidTrue(userId))
+        .verifyComplete();
+  }
 
   @BeforeEach
   private void setUp() {
     integrationTestUtils.resetState();
 
-    userId = integrationTestUtils.createTestUser();
-    moduleId = integrationTestUtils.createStaticTestModule();
-  }
-
-  @Test
-  @DisplayName("Duplicate submission of a static flag should throw an exception")
-  void canRejectDuplicateSubmissionsOfValidStaticFlags() {
-    StepVerifier.create(
-            submissionService
-                .submit(userId, moduleId, TestConstants.TEST_STATIC_FLAG)
-                .repeat(1)
-                .map(Submission::isValid))
-        .expectNext(true)
-        .expectError(ModuleAlreadySolvedException.class)
-        .verify();
-  }
-
-  @Test
-  @DisplayName("Valid submission of a static flag should be accepted")
-  void canAcceptValidStaticFlagSubmission() {
-    StepVerifier.create(
-            submissionService
-                .submit(userId, moduleId, TestConstants.TEST_STATIC_FLAG)
-                .map(Submission::isValid))
-        .expectNext(true)
-        .verifyComplete();
+    // Bypass the rate limiter
+    final Bucket mockBucket = mock(Bucket.class);
+    when(mockBucket.tryConsume(1)).thenReturn(true);
+    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
   }
 }

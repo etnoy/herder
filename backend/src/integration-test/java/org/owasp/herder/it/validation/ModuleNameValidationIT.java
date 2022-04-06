@@ -71,16 +71,4 @@ class ModuleNameValidationIT extends BaseIT {
     integrationTestUtils.checkConstraintViolation(
         () -> moduleService.existsByName(moduleName), containingMessage);
   }
-
-  @ParameterizedTest
-  @MethodSource("invalidModuleNameSource")
-  @DisplayName("in moduleService.findAllTagsByModuleNameAndTagName()")
-  void moduleService_findAllTagsByModuleNameAndTagName(
-      final String moduleName, final String containingMessage) {
-    integrationTestUtils.checkConstraintViolation(
-        () ->
-            moduleService.findAllTagsByModuleNameAndTagName(
-                moduleName, TestConstants.TEST_MODULE_TAG_NAME),
-        containingMessage);
-  }
 }

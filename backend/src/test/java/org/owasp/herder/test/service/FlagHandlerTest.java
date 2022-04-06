@@ -44,6 +44,7 @@ import org.owasp.herder.service.ConfigurationService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.test.util.TestConstants;
+import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -168,6 +169,7 @@ class FlagHandlerTest {
   @Test
   void verifyFlag_CorrectDynamicFlag_ReturnsTrue() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     final byte[] mockedServerKey = {
       -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29
@@ -194,8 +196,8 @@ class FlagHandlerTest {
     when(mockModule.isFlagStatic()).thenReturn(false);
     when(mockModule.getKey()).thenReturn(mockedModuleKey);
 
-    when(userService.findDisplayNameById(TestConstants.TEST_USER_ID))
-        .thenReturn(Mono.just("MockUser"));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getDisplayName()).thenReturn("MockUser");
 
     when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
     when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
@@ -232,6 +234,7 @@ class FlagHandlerTest {
   @Test
   void verifyFlag_CorrectDynamicFlagWithSpacesInTheMiddle_ReturnsFalse() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     final byte[] mockedServerKey = {
       -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29
@@ -259,8 +262,8 @@ class FlagHandlerTest {
     when(mockModule.getKey()).thenReturn(mockedModuleKey);
     when(mockModule.getLocator()).thenReturn(TestConstants.TEST_MODULE_LOCATOR);
 
-    when(userService.findDisplayNameById(TestConstants.TEST_USER_ID))
-        .thenReturn(Mono.just("MockUser"));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getDisplayName()).thenReturn("MockUser");
 
     when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
     when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
@@ -300,11 +303,12 @@ class FlagHandlerTest {
     final String validStaticFlag = "validFlagWithUPPERCASEandlowercase";
 
     final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
 
-    when(userService.findDisplayNameById(TestConstants.TEST_USER_ID))
-        .thenReturn(Mono.just("MockUser"));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getDisplayName()).thenReturn("MockUser");
 
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
@@ -333,11 +337,12 @@ class FlagHandlerTest {
     final String validStaticFlag = "validFlag";
 
     final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
 
-    when(userService.findDisplayNameById(TestConstants.TEST_USER_ID))
-        .thenReturn(Mono.just("MockUser"));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getDisplayName()).thenReturn("MockUser");
 
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
@@ -366,11 +371,12 @@ class FlagHandlerTest {
     final String validStaticFlagWithSpaces = "valid   Flag";
 
     final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
 
-    when(userService.findDisplayNameById(TestConstants.TEST_USER_ID))
-        .thenReturn(Mono.just("MockUser"));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getDisplayName()).thenReturn("MockUser");
 
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
@@ -398,6 +404,7 @@ class FlagHandlerTest {
   @Test
   void verifyFlag_CorrectUpperCaseDynamicFlag_ReturnsTrue() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     final byte[] mockedServerKey = {
       -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29
@@ -425,8 +432,8 @@ class FlagHandlerTest {
     when(mockModule.getKey()).thenReturn(mockedModuleKey);
     when(mockModule.getLocator()).thenReturn(TestConstants.TEST_MODULE_LOCATOR);
 
-    when(userService.findDisplayNameById(TestConstants.TEST_USER_ID))
-        .thenReturn(Mono.just("MockUser"));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getDisplayName()).thenReturn("MockUser");
 
     when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
     when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
@@ -463,13 +470,14 @@ class FlagHandlerTest {
   void verifyFlag_CorrectUpperCaseStaticFlag_ReturnsTrue() {
     final String mockModuleId = "module-id";
     final String validStaticFlag = "validFlagWithUPPERCASEandlowercase";
+    final UserEntity mockUser = mock(UserEntity.class);
 
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(moduleService.findById(mockModuleId)).thenReturn(Mono.just(mockModule));
 
-    when(userService.findDisplayNameById(TestConstants.TEST_USER_ID))
-        .thenReturn(Mono.just("MockUser"));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getDisplayName()).thenReturn("MockUser");
 
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
@@ -494,6 +502,7 @@ class FlagHandlerTest {
   @Test
   void verifyFlag_EmptyDynamicFlag_ReturnsFalse() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     final byte[] mockedServerKey = {
       -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29
@@ -521,8 +530,8 @@ class FlagHandlerTest {
 
     when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockedUserKey));
 
-    when(userService.findDisplayNameById(TestConstants.TEST_USER_ID))
-        .thenReturn(Mono.just("MockUser"));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getDisplayName()).thenReturn("MockUser");
 
     when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
     when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
@@ -557,6 +566,7 @@ class FlagHandlerTest {
   @Test
   void verifyFlag_EmptyStaticFlag_ReturnsFalse() {
     final String validStaticFlag = "validFlag";
+    final UserEntity mockUser = mock(UserEntity.class);
 
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
@@ -565,8 +575,8 @@ class FlagHandlerTest {
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
 
-    when(userService.findDisplayNameById(TestConstants.TEST_USER_ID))
-        .thenReturn(Mono.just("MockUser"));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getDisplayName()).thenReturn("MockUser");
 
     final Bucket mockBucket = mock(Bucket.class);
     when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID))
@@ -588,6 +598,7 @@ class FlagHandlerTest {
   @Test
   void verifyFlag_WrongDynamicFlag_ReturnsFalse() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     final byte[] mockedServerKey = {
       -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29
@@ -613,8 +624,8 @@ class FlagHandlerTest {
     when(mockModule.getKey()).thenReturn(mockedModuleKey);
     when(mockModule.getLocator()).thenReturn(TestConstants.TEST_MODULE_LOCATOR);
 
-    when(userService.findDisplayNameById(TestConstants.TEST_USER_ID))
-        .thenReturn(Mono.just("MockUser"));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getDisplayName()).thenReturn("MockUser");
 
     when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
     when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
@@ -652,14 +663,15 @@ class FlagHandlerTest {
     final String validStaticFlag = "validFlag";
 
     final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final UserEntity mockUser = mock(UserEntity.class);
 
     when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
 
     when(mockModule.isFlagStatic()).thenReturn(true);
     when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
 
-    when(userService.findDisplayNameById(TestConstants.TEST_USER_ID))
-        .thenReturn(Mono.just("MockUser"));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getDisplayName()).thenReturn("MockUser");
 
     final Bucket mockBucket = mock(Bucket.class);
     when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID))

@@ -65,9 +65,7 @@ class ModuleLocatorValidationIT extends BaseIT {
   @DisplayName("in moduleService.findByLocatorWithSolutionStatus()")
   void findByLocatorWithSolutionStatus(final String moduleLocator, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-        () ->
-            moduleService.findByLocatorWithSolutionStatus(
-                TestConstants.TEST_USER_ID, moduleLocator),
+        () -> moduleService.findListItemByLocator(TestConstants.TEST_USER_ID, moduleLocator),
         containingMessage);
   }
 

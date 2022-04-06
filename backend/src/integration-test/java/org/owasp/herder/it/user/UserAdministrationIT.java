@@ -23,15 +23,22 @@ package org.owasp.herder.it.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
+import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.test.util.TestConstants;
+import org.owasp.herder.user.SolverEntity;
+import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
+import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Hooks;
@@ -47,10 +54,87 @@ class UserAdministrationIT extends BaseIT {
 
   @Autowired UserService userService;
 
+  @Autowired UserRepository userRepository;
+
+  @Autowired PasswordAuthRepository passwordAuthRepository;
+
+  @Autowired SubmissionService submissionService;
+
   @Autowired IntegrationTestUtils integrationTestUtils;
 
   @Test
-  @DisplayName("Creating a password user should succeed")
+  @DisplayName("Can update team id field when adding user to team")
+  void canAddUserToTeam() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    userService.getById(userId).block();
+
+    userService.addUserToTeam(userId, teamId).block();
+
+    StepVerifier.create(userService.findById(userId).map(UserEntity::getTeamId))
+        .expectNext(teamId)
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can update members field when adding user to team")
+  void canAddUserToTeamMembers() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    final UserEntity user = userService.getById(userId).block();
+
+    userService.addUserToTeam(userId, teamId).block();
+
+    StepVerifier.create(userService.findTeamById(teamId).map(TeamEntity::getMembers))
+        .assertNext(members -> assertThat(members).containsExactly(user.withTeamId(teamId)))
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can clear teams from user")
+  void canClearTeamsFromUser() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    userService.addUserToTeam(userId, teamId).block();
+
+    userService.clearTeamForUser(userId).block();
+
+    StepVerifier.create(userService.findById(userId))
+        .assertNext(user -> assertThat(user.getTeamId()).isNull())
+        .verifyComplete();
+  }
+
+  @ParameterizedTest
+  @MethodSource("org.owasp.herder.test.util.TestConstants#validDisplayNameProvider")
+  @DisplayName("Can create team with display name")
+  void canCreateTeam(final String displayName) {
+    StepVerifier.create(
+            userService
+                .createTeam(displayName)
+                .flatMap(userService::findTeamById)
+                .map(TeamEntity::getDisplayName))
+        .expectNext(displayName)
+        .verifyComplete();
+  }
+
+  @ParameterizedTest
+  @MethodSource("org.owasp.herder.test.util.TestConstants#validDisplayNameProvider")
+  @DisplayName("Can create user with display name")
+  void canCreateUser(final String displayName) {
+    StepVerifier.create(
+            userService
+                .create(displayName)
+                .flatMap(userService::findById)
+                .map(UserEntity::getDisplayName))
+        .expectNext(displayName)
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can create a password user")
   void canCreateValidUserWithCreatePasswordUser() {
     final String displayName = "Test user";
     final String loginName = "testUser";
@@ -67,18 +151,184 @@ class UserAdministrationIT extends BaseIT {
         .verifyComplete();
   }
 
-  @ParameterizedTest
-  @MethodSource("org.owasp.herder.test.util.TestConstants#validDisplayNameProvider")
-  @DisplayName("The database must handle non-latin display names")
-  void canHandleNonLatinUsernames(final String displayName) {
-    StepVerifier.create(
-            userService
-                .create(displayName)
-                .flatMap(userService::findById)
-                .map(UserEntity::getDisplayName))
-        .expectNext(displayName)
+  @Test
+  @DisplayName("Can delete password auth when deleting password user")
+  void canDeletePasswordAuthWhenDeletingPasswordAuth() {
+    final String userId =
+        userService
+            .createPasswordUser(
+                TestConstants.TEST_USER_DISPLAY_NAME,
+                TestConstants.TEST_LOGIN_NAME,
+                TestConstants.HASHED_TEST_PASSWORD)
+            .block();
+
+    userService.delete(userId).block();
+    StepVerifier.create(passwordAuthRepository.findByUserId(userId)).verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can delete password user")
+  void canDeletePasswordUser() {
+    final String userId =
+        userService
+            .createPasswordUser(
+                TestConstants.TEST_USER_DISPLAY_NAME,
+                TestConstants.TEST_LOGIN_NAME,
+                TestConstants.HASHED_TEST_PASSWORD)
+            .block();
+
+    userService.delete(userId).block();
+    StepVerifier.create(userRepository.findById(userId))
+        .assertNext(
+            user -> {
+              assertThat(user.isDeleted()).isTrue();
+              assertThat(user.getDisplayName()).isEmpty();
+              assertThat(user.isEnabled()).isFalse();
+            })
         .verifyComplete();
-    integrationTestUtils.resetState();
+  }
+
+  @Test
+  @DisplayName("Can delete user")
+  void canDeleteUser() {
+    final String userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
+    userService.delete(userId).block();
+    StepVerifier.create(userRepository.findById(userId))
+        .assertNext(
+            user -> {
+              assertThat(user.isDeleted()).isTrue();
+              assertThat(user.getDisplayName()).isEmpty();
+              assertThat(user.isEnabled()).isFalse();
+              assertThat(user.getTeamId()).isNull();
+            })
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can error when adding user to new team")
+  void canErrorWhenAddingUserToNewTeam() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    userService.addUserToTeam(userId, teamId).block();
+
+    final String teamId2 = userService.createTeam("Test team 2").block();
+
+    StepVerifier.create(userService.addUserToTeam(userId, teamId2))
+        .expectError(IllegalStateException.class)
+        .verify();
+  }
+
+  @Test
+  @DisplayName("Can list solvers consisting of teams and users")
+  void canListSolversContainingUsersAndTeams() {
+    final String userId1 = userService.create("Test 1").block();
+    final String userId2 = userService.create("Test 2").block();
+    final String userId3 = userService.create("Test 3").block();
+    final String userId4 = userService.create("Test 4").block();
+
+    final String teamId1 = userService.createTeam("Team 1").block();
+    final String teamId2 = userService.createTeam("Team 2").block();
+    final String teamId3 = userService.createTeam("Team 3").block();
+    final String teamId4 = userService.createTeam("Team 4").block();
+
+    userService.addUserToTeam(userId1, teamId1).block();
+    userService.addUserToTeam(userId2, teamId1).block();
+    userService.addUserToTeam(userId3, teamId2).block();
+
+    StepVerifier.create(userService.findAllWithTeams())
+        .recordWith(HashSet::new)
+        .expectNextCount(5)
+        .consumeRecordedWith(
+            solvers -> {
+              assertThat(solvers)
+                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId1))
+                  .hasSize(1);
+              assertThat(solvers)
+                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId2))
+                  .hasSize(1);
+              assertThat(solvers)
+                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId3))
+                  .hasSize(1);
+              assertThat(solvers)
+                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId4))
+                  .hasSize(1);
+              assertThat(solvers)
+                  .filteredOn(solver -> solver.getPrincipalId().equals(userId4))
+                  .hasSize(1);
+
+              assertThat(solvers)
+                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId1))
+                  .flatExtracting(SolverEntity::getMembers)
+                  .hasSize(2);
+              assertThat(solvers)
+                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId2))
+                  .flatExtracting(SolverEntity::getMembers)
+                  .hasSize(1);
+              assertThat(solvers)
+                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId3))
+                  .flatExtracting(SolverEntity::getMembers)
+                  .isEmpty();
+              assertThat(solvers)
+                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId4))
+                  .flatExtracting(SolverEntity::getMembers)
+                  .isEmpty();
+              assertThat(solvers)
+                  .filteredOn(solver -> solver.getPrincipalId().equals(userId1))
+                  .flatExtracting(SolverEntity::getMembers)
+                  .isEmpty();
+            })
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can list solvers consisting of a single team with a single user")
+  void canListSolversWithOneTeamAndUser() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String teamId = integrationTestUtils.createTestTeam();
+    userService.addUserToTeam(userId, teamId).block();
+    StepVerifier.create(userService.findAllWithTeams())
+        .assertNext(
+            team -> {
+              assertThat(team.getMembers()).hasAtLeastOneElementOfType(UserEntity.class);
+              assertThat(team.getMembers().iterator().next().getDisplayName())
+                  .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+              assertThat(team.getDisplayName()).isEqualTo(TestConstants.TEST_TEAM_DISPLAY_NAME);
+            })
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can list solvers consisting of a single user")
+  void canListSolversWithOneUser() {
+    integrationTestUtils.createTestUser();
+    StepVerifier.create(userService.findAllWithTeams())
+        .assertNext(
+            user -> {
+              assertThat(user.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+            })
+        .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can remove user from team when deleting user")
+  void canRemoveUserFromTeamWhenDeletingUser() {
+    final String userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    userService.addUserToTeam(userId, teamId).block();
+
+    userService.delete(userId).block();
+
+    StepVerifier.create(userRepository.findById(userId))
+        .assertNext(
+            user -> {
+              assertThat(user.isDeleted()).isTrue();
+              assertThat(user.getDisplayName()).isEmpty();
+              assertThat(user.isEnabled()).isFalse();
+              assertThat(user.getTeamId()).isNull();
+            })
+        .verifyComplete();
   }
 
   @BeforeEach

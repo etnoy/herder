@@ -19,25 +19,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.scoring;
+package org.owasp.herder.validation;
 
-import java.io.Serializable;
-import javax.validation.constraints.Min;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.validation.Constraint;
+import javax.validation.Payload;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Value;
 
-@Value
-@AllArgsConstructor
-public class SubmissionDto implements Serializable {
-  private static final long serialVersionUID = 8425777966286079418L;
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = {})
+@NotNull(message = "{org.owasp.herder.ValidTeamId.NullMessage}")
+@Size(min = 24, max = 24, message = "{org.owasp.herder.ValidTeamId.WrongLengthMessage}")
+@Pattern(regexp = "^[a-f0-9]*$", message = "{org.owasp.herder.ValidTeamId.PatternMessage}")
+public @interface ValidTeamId {
+  String message() default "{org.owasp.herder.ValidTeamId.message}";
 
-  @NotNull
-  @Min(value = 1, message = "{Size.submissionDto.userName}")
-  private Long moduleName;
+  Class<?>[] groups() default {};
 
-  @NotNull
-  @Size(min = 1, message = "{Size.submissionDto.userName}")
-  private String flag;
+  Class<? extends Payload>[] payload() default {};
 }

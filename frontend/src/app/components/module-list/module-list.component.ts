@@ -1,20 +1,21 @@
-import { Module } from '../../model/module';
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from 'src/app/service/api.service';
+import { ModuleList } from 'src/app/model/module-list';
 
 @Component({
   selector: 'app-module-list',
   templateUrl: './module-list.component.html',
 })
 export class ModuleListComponent implements OnInit {
-  modules: Module[];
+  moduleList: ModuleList;
 
   constructor(public apiService: ApiService) {
-    this.modules = [];
+    this.moduleList = null;
   }
+
   ngOnInit(): void {
-    this.apiService.getModules().subscribe((modules: Module[]) => {
-      this.modules = modules;
+    this.apiService.getModuleList().subscribe((moduleList: ModuleList) => {
+      this.moduleList = moduleList;
     });
   }
 }

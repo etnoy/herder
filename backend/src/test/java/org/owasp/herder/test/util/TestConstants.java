@@ -126,6 +126,8 @@ public final class TestConstants {
 
   public static final String[] STRINGS_WITH_NULL = ArrayUtils.addAll(STRINGS, (String) null);
 
+  public static final String TEST_TEAM_DISPLAY_NAME = "Test Team";
+
   public static final String TEST_USER_DISPLAY_NAME = "Test User";
   public static final String TEST_LOGIN_NAME = "test";
   public static final String TEST_PASSWORD = "test";
@@ -149,9 +151,9 @@ public final class TestConstants {
   public static final String VERY_LONG_STRING =
       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-  public static final Clock longAgoClock =
+  public static final Clock year2000Clock =
       Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
-  public static final WebTokenClock year2000WebTokenClock = new WebTokenClock(longAgoClock);
+  public static final WebTokenClock year2000WebTokenClock = new WebTokenClock(year2000Clock);
 
   public static final Clock year2100Clock =
       Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.systemDefault());

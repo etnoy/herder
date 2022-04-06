@@ -6,7 +6,7 @@
           <li>
             <p>
               {{ score.rank }} :
-              <a href="scoreboard/user/{{ score.userId }}">
+              <a href="scoreboard/{{ score.principalType | lowercase }}/{{ score.principalId }}">
                 {{ score.displayName }} has {{ score.score }} points
                 <span *ngIf="score.goldMedals > 0">
                   <ng-container

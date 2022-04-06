@@ -21,7 +21,7 @@
  */
 package org.owasp.herder.exception;
 
-public class DuplicateClassNameException extends Exception {
+public class DuplicateClassNameException extends RuntimeException {
 
   private static final long serialVersionUID = 4254881749730515445L;
 

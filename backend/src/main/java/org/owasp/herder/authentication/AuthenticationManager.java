@@ -22,7 +22,6 @@
 package org.owasp.herder.authentication;
 
 import lombok.RequiredArgsConstructor;
-
 import org.owasp.herder.crypto.WebTokenService;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -37,7 +36,6 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
   @Override
   public Mono<Authentication> authenticate(Authentication authentication) {
     String authToken = authentication.getCredentials().toString();
-
     try {
       return Mono.just(webTokenService.parseToken(authToken));
     } catch (Exception e) {

@@ -2,11 +2,19 @@
   <div class="row">
     <div class="inner-main">
       <ul>
-        <ng-container *ngFor="let user of users">
+        <ng-container *ngFor="let solver of solvers">
           <li>
-            <p>
-              {{ user.id }}: {{ user.displayName }}
-            </p>
+            
+              {{ solver.id }}: {{ solver.solver }}: {{ solver.displayName }}
+              <span *ngIf="solver.members">
+                <ul>
+                <ng-container *ngFor="let user of solver.members">
+                  <li>              {{ user.id }}: {{ user.displayName }}
+                  </li>
+                </ng-container>
+                </ul>
+              </span>
+              
           </li>
         </ng-container>
       </ul>
