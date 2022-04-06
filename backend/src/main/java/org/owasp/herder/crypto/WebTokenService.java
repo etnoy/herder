@@ -87,6 +87,33 @@ public class WebTokenService {
         .compact();
   }
 
+  public String generateImpersonationToken(
+      @ValidUserId final String impersonatorUserId,
+      @ValidUserId final String impersonatedUserId,
+      final boolean impersonateAnAdmin) {
+    final Date creationTime = webTokenClock.now();
+    final Date expirationTime = new Date(creationTime.getTime() + getExpirationTime());
+    final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(impersonatorUserId);
+
+    String role;
+
+    if (impersonateAnAdmin) {
+      role = "admin";
+    } else {
+      role = "user";
+    }
+
+    return Jwts.builder()
+        .claim("role", role)
+        .claim("impersonator", impersonatorUserId)
+        .setIssuer("herder")
+        .setSubject(impersonatedUserId)
+        .setIssuedAt(creationTime)
+        .setExpiration(expirationTime)
+        .signWith(userKey)
+        .compact();
+  }
+
   public Authentication parseToken(@NotNull @NotEmpty String token) throws AuthenticationException {
     final Claims parsedClaims;
 
@@ -98,13 +125,17 @@ public class WebTokenService {
                     @Override
                     public Key resolveSigningKey(
                         @SuppressWarnings("rawtypes") JwsHeader header, Claims claims) {
-                      final String userIdString = claims.getSubject();
+                      String subjectId;
 
-                      if (userIdString == null || userIdString.isEmpty())
+                      if (claims.containsKey("impersonator")) {
+                        subjectId = claims.get("impersonator", String.class);
+                      } else {
+                        subjectId = claims.getSubject();
+                      }
+                      if (subjectId == null || subjectId.isEmpty())
                         throw new MissingClaimException(
                             header, claims, "Subject is not provided in token");
-
-                      return webTokenKeyManager.getKeyForUser(userIdString);
+                      return webTokenKeyManager.getKeyForUser(subjectId);
                     }
                   })
               .requireIssuer("herder")
@@ -118,18 +149,11 @@ public class WebTokenService {
       throw new BadCredentialsException("Invalid token", e);
     }
 
-    final String userIdErrorMessage =
-        "Invalid userid " + parsedClaims.getSubject() + " found in token";
+    final String userId = parsedClaims.getSubject();
 
-    String userId;
-    try {
-      userId = parsedClaims.getSubject();
-    } catch (NumberFormatException e) {
-      log.debug(userIdErrorMessage);
-      throw new BadCredentialsException(userIdErrorMessage, e);
-    }
+    if (userId == null || userId.isEmpty()) {
+      final String userIdErrorMessage = "Invalid userid " + userId + " found in token";
 
-    if (userId.isEmpty()) {
       log.debug(userIdErrorMessage);
       throw new BadCredentialsException(userIdErrorMessage);
     }

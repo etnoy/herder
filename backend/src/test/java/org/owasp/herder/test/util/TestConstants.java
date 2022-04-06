@@ -128,6 +128,10 @@ public final class TestConstants {
 
   public static final String TEST_TEAM_DISPLAY_NAME = "Test Team";
 
+  public static final String TEST_ADMIN_DISPLAY_NAME = "Test Admin";
+  public static final String TEST_ADMIN_LOGIN_NAME = "test-admin-name";
+  public static final String TEST_ADMIN_PASSWORD = "test";
+
   public static final String TEST_USER_DISPLAY_NAME = "Test User";
   public static final String TEST_USER_LOGIN_NAME = "test-login-name";
   public static final String TEST_USER_PASSWORD = "test";

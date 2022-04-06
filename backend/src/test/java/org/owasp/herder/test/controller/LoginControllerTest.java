@@ -31,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.authentication.AuthResponse;
+import org.owasp.herder.authentication.ControllerAuthentication;
 import org.owasp.herder.authentication.LoginController;
 import org.owasp.herder.authentication.LoginResponse;
 import org.owasp.herder.authentication.PasswordLoginDto;
@@ -41,7 +42,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -63,6 +63,8 @@ class LoginControllerTest {
   @Mock WebTokenService webTokenService;
 
   @Mock PasswordEncoder passwordEncoder;
+
+  @Mock ControllerAuthentication controllerAuthentication;
 
   @Test
   void login_InvalidCredentials_Returns401() {
@@ -127,6 +129,8 @@ class LoginControllerTest {
   @BeforeEach
   private void setUp() {
     // Set up the system under test
-    loginController = new LoginController(userService, webTokenService, passwordEncoder);
+    loginController =
+        new LoginController(
+            userService, webTokenService, passwordEncoder, controllerAuthentication);
   }
 }

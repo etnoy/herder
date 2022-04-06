@@ -106,7 +106,7 @@ class UserApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+            TestConstants.TEST_ADMIN_LOGIN_NAME, TestConstants.TEST_ADMIN_PASSWORD);
 
     StepVerifier.create(
             webTestClient
@@ -118,11 +118,9 @@ class UserApiIT extends BaseIT {
                 .expectStatus()
                 .isOk()
                 .returnResult(UserEntity.class)
-                .getResponseBody())
-        .assertNext(
-            user -> {
-              assertThat(user.getDisplayName()).isEqualTo("User2");
-            })
+                .getResponseBody()
+                .map(UserEntity::getDisplayName))
+        .expectNext("User2")
         .verifyComplete();
   }
 
@@ -163,7 +161,7 @@ class UserApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+            TestConstants.TEST_ADMIN_LOGIN_NAME, TestConstants.TEST_ADMIN_PASSWORD);
 
     StepVerifier.create(
             webTestClient
@@ -192,7 +190,7 @@ class UserApiIT extends BaseIT {
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+            TestConstants.TEST_ADMIN_LOGIN_NAME, TestConstants.TEST_ADMIN_PASSWORD);
 
     final String invalidUserId = "XYZ";
 
@@ -207,15 +205,15 @@ class UserApiIT extends BaseIT {
   }
 
   @Test
-  @DisplayName("Can return HTTP 400 for a nonexistent user id")
+  @DisplayName("Can return HTTP 404 for a nonexistent user id")
   void canReturn404ForNonExistentUserId() {
     integrationTestUtils.createTestAdmin();
 
     final String token =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+            TestConstants.TEST_ADMIN_LOGIN_NAME, TestConstants.TEST_ADMIN_PASSWORD);
 
-    final String invalidUserId = TestConstants.TEST_USER_ID;
+    final String invalidUserId = "fbcdef123456789012345678";
 
     webTestClient
         .get()

@@ -28,6 +28,7 @@ import org.owasp.herder.crypto.WebTokenService;
 import org.owasp.herder.user.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
@@ -48,6 +49,8 @@ public class LoginController {
   private final WebTokenService webTokenService;
 
   private final PasswordEncoder passwordEncoder;
+
+  private final ControllerAuthentication controllerAuthentication;
 
   @PostMapping(value = "/login")
   public Mono<ResponseEntity<LoginResponse>> login(@RequestBody @Valid PasswordLoginDto loginDto) {
@@ -71,6 +74,29 @@ public class LoginController {
               final LoginResponse loginResponse =
                   loginResponseBuilder.errorMessage(throwable.getMessage()).build();
               return Mono.just(new ResponseEntity<>(loginResponse, HttpStatus.UNAUTHORIZED));
+            });
+  }
+
+  @PostMapping(path = "/impersonate")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  public Mono<ResponseEntity<LoginResponse>> impersonate(
+      @Valid @RequestBody final ImpersonationDto impersonatedUserId) {
+    final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
+    return controllerAuthentication
+        .getUserId()
+        .map(
+            userId ->
+                webTokenService.generateImpersonationToken(
+                    userId, impersonatedUserId.getImpersonatedId(), false))
+        .zipWith(userService.getById(impersonatedUserId.getImpersonatedId()))
+        .map(
+            tuple -> {
+              final LoginResponse loginResponse =
+                  loginResponseBuilder
+                      .accessToken(tuple.getT1())
+                      .displayName(tuple.getT2().getDisplayName())
+                      .build();
+              return new ResponseEntity<>(loginResponse, HttpStatus.OK);
             });
   }
 

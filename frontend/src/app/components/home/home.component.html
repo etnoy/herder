@@ -1,2 +1,5 @@
 <h1>Hi, {{ currentUser.displayName }}!</h1>
+<p *ngIf="impersonatedUser">Impersonating {{impersonatedUser.displayName}}
+    <button type="button" (click)="clearImpersonation()">Stop impersonating</button>
+</p>
 <app-module-list></app-module-list>

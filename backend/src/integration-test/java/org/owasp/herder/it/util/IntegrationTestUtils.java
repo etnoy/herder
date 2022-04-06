@@ -135,8 +135,8 @@ public final class IntegrationTestUtils {
     final String userId =
         userService
             .createPasswordUser(
-                TestConstants.TEST_USER_DISPLAY_NAME,
-                TestConstants.TEST_USER_LOGIN_NAME,
+                TestConstants.TEST_ADMIN_DISPLAY_NAME,
+                TestConstants.TEST_ADMIN_LOGIN_NAME,
                 TestConstants.HASHED_TEST_PASSWORD)
             .block();
 
@@ -166,11 +166,10 @@ public final class IntegrationTestUtils {
         .exchange();
   }
 
-  public String performAPILoginWithToken(String username, String password) {
+  public String performAPILoginWithToken(final String username, final String password) {
     return JsonPath.parse(
             new String(
-                performAPILogin(
-                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD)
+                performAPILogin(username, password)
                     .expectStatus()
                     .isOk()
                     .expectBody(String.class)
@@ -180,7 +179,6 @@ public final class IntegrationTestUtils {
   }
 
   public void resetState() {
-
     scoreAdjustmentRepository
         .deleteAll()
         // Delete all csrf attacks

@@ -9,7 +9,7 @@
               <span *ngIf="solver.members">
                 <ul>
                 <ng-container *ngFor="let user of solver.members">
-                  <li>              {{ user.id }}: {{ user.displayName }}
+                  <li>             <a href="/impersonate/{{user.id}}">{{ user.id }}: {{ user.displayName }}</a>
                   </li>
                 </ng-container>
                 </ul>

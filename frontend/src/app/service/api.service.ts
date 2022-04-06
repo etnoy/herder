@@ -6,7 +6,7 @@ import {
   HttpErrorResponse,
 } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { map, catchError, tap } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { User } from '../model/user';
 import { ModuleList } from '../model/module-list';
 
@@ -17,13 +17,20 @@ export class ApiService {
   endpoint = 'http://localhost:8080/api/v1';
   headers = new HttpHeaders().set('Content-Type', 'application/json');
   private currentUserSubject: BehaviorSubject<User>;
+  private impersonatedUserSubject: BehaviorSubject<User>;
   public currentUser: Observable<User>;
+  public impersonatedUser: Observable<User>;
 
   constructor(private http: HttpClient, public router: Router) {
     this.currentUserSubject = new BehaviorSubject<User>(
       JSON.parse(localStorage.getItem('currentUser'))
     );
     this.currentUser = this.currentUserSubject.asObservable();
+
+    this.impersonatedUserSubject = new BehaviorSubject<User>(
+      JSON.parse(localStorage.getItem('impersonatedUser'))
+    );
+    this.impersonatedUser = this.impersonatedUserSubject.asObservable();
   }
 
   submitFlag(moduleLocator: string, flag: string): Observable<any> {
@@ -60,6 +67,10 @@ export class ApiService {
     );
   }
 
+  public get impersonatedUserValue(): User {
+    return this.impersonatedUserSubject.value;
+  }
+
   public get currentUserValue(): User {
     return this.currentUserSubject.value;
   }
@@ -80,6 +91,27 @@ export class ApiService {
         return loginResponse;
       })
     );
+  }
+
+  // Impersonate
+  impersonate(userId: String) {
+    const api = `${this.endpoint}/impersonate`;
+
+    return this.http.post<any>(api, { impersonatedId: userId }).pipe(
+      map((response) => {
+        // store user details and jwt token in local storage to keep user logged in between page refreshes
+        localStorage.setItem('impersonatedUser', JSON.stringify(response));
+        console.log(response);
+        this.impersonatedUserSubject.next(response);
+        return response;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  clearImpersonation() {
+    localStorage.removeItem('impersonatedUser');
+    this.impersonatedUserSubject.next(null);
   }
 
   getToken() {

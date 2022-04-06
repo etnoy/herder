@@ -48,9 +48,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-@DisplayName("Web Token integration tests")
-class WebTokenIT extends BaseIT {
-
+@DisplayName("WebTokenService integration tests")
+class WebTokenServiceIT extends BaseIT {
   @Autowired WebTokenService webTokenService;
 
   @Autowired WebTokenKeyManager webTokenKeyManager;
@@ -125,7 +124,7 @@ class WebTokenIT extends BaseIT {
 
     final String accessToken =
         integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+            TestConstants.TEST_ADMIN_LOGIN_NAME, TestConstants.TEST_ADMIN_PASSWORD);
     Authentication authentication = webTokenService.parseToken(accessToken);
 
     assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
@@ -229,5 +228,26 @@ class WebTokenIT extends BaseIT {
                 LocalDateTime.now(Clock.systemDefaultZone())
                     .atZone(ZoneId.systemDefault())
                     .toInstant()));
+  }
+
+  @Test
+  @DisplayName("An admin can create an impersonation access token")
+  void canGenerateValidImpersonationAccessToken() {
+    final String adminId = integrationTestUtils.createTestAdmin();
+    final String userId = integrationTestUtils.createTestUser();
+
+    final String accessToken = webTokenService.generateImpersonationToken(adminId, userId, false);
+
+    Authentication authentication = webTokenService.parseToken(accessToken);
+
+    assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
+    assertThat(authentication.getPrincipal()).isEqualTo(userId);
+    assertThat(authentication.getCredentials()).isEqualTo(accessToken);
+
+    // AssertJ cannot do list asserts on Collection<? extends ... >
+    @SuppressWarnings("unchecked")
+    Collection<SimpleGrantedAuthority> authorityList =
+        (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
+    assertThat(authorityList).containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
   }
 }
