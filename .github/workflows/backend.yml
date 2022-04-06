@@ -1,7 +1,5 @@
 name: backend
 
-on: [push, pull_request]
-
 on:
   push:
     paths:
