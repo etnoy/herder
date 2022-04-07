@@ -26,6 +26,7 @@ export class ErrorInterceptor implements HttpInterceptor {
             if (this.router.url == '/login') {
               return throwError(() => err);
             } else {
+              this.apiService.logout();
               this.router.navigate(['login']);
             }
             return;

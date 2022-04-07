@@ -35,7 +35,7 @@ import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.SolverEntity;
+import org.owasp.herder.user.PrincipalEntity;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
@@ -220,8 +220,8 @@ class UserAdministrationIT extends BaseIT {
   }
 
   @Test
-  @DisplayName("Can list solvers consisting of teams and users")
-  void canListSolversContainingUsersAndTeams() {
+  @DisplayName("Can list principals consisting of teams and users")
+  void canListPrincipalsContainingUsersAndTeams() {
     final String userId1 = userService.create("Test 1").block();
     final String userId2 = userService.create("Test 2").block();
     final String userId3 = userService.create("Test 3").block();
@@ -236,58 +236,58 @@ class UserAdministrationIT extends BaseIT {
     userService.addUserToTeam(userId2, teamId1).block();
     userService.addUserToTeam(userId3, teamId2).block();
 
-    StepVerifier.create(userService.findAllWithTeams())
+    StepVerifier.create(userService.findAllPrincipals())
         .recordWith(HashSet::new)
         .expectNextCount(5)
         .consumeRecordedWith(
-            solvers -> {
-              assertThat(solvers)
-                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId1))
+            principals -> {
+              assertThat(principals)
+                  .filteredOn(principal -> principal.getId().equals(teamId1))
                   .hasSize(1);
-              assertThat(solvers)
-                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId2))
+              assertThat(principals)
+                  .filteredOn(principal -> principal.getId().equals(teamId2))
                   .hasSize(1);
-              assertThat(solvers)
-                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId3))
+              assertThat(principals)
+                  .filteredOn(principal -> principal.getId().equals(teamId3))
                   .hasSize(1);
-              assertThat(solvers)
-                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId4))
+              assertThat(principals)
+                  .filteredOn(principal -> principal.getId().equals(teamId4))
                   .hasSize(1);
-              assertThat(solvers)
-                  .filteredOn(solver -> solver.getPrincipalId().equals(userId4))
+              assertThat(principals)
+                  .filteredOn(principal -> principal.getId().equals(userId4))
                   .hasSize(1);
 
-              assertThat(solvers)
-                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId1))
-                  .flatExtracting(SolverEntity::getMembers)
+              assertThat(principals)
+                  .filteredOn(principal -> principal.getId().equals(teamId1))
+                  .flatExtracting(PrincipalEntity::getMembers)
                   .hasSize(2);
-              assertThat(solvers)
-                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId2))
-                  .flatExtracting(SolverEntity::getMembers)
+              assertThat(principals)
+                  .filteredOn(principal -> principal.getId().equals(teamId2))
+                  .flatExtracting(PrincipalEntity::getMembers)
                   .hasSize(1);
-              assertThat(solvers)
-                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId3))
-                  .flatExtracting(SolverEntity::getMembers)
+              assertThat(principals)
+                  .filteredOn(principal -> principal.getId().equals(teamId3))
+                  .flatExtracting(PrincipalEntity::getMembers)
                   .isEmpty();
-              assertThat(solvers)
-                  .filteredOn(solver -> solver.getPrincipalId().equals(teamId4))
-                  .flatExtracting(SolverEntity::getMembers)
+              assertThat(principals)
+                  .filteredOn(principal -> principal.getId().equals(teamId4))
+                  .flatExtracting(PrincipalEntity::getMembers)
                   .isEmpty();
-              assertThat(solvers)
-                  .filteredOn(solver -> solver.getPrincipalId().equals(userId1))
-                  .flatExtracting(SolverEntity::getMembers)
+              assertThat(principals)
+                  .filteredOn(principal -> principal.getId().equals(userId1))
+                  .flatExtracting(PrincipalEntity::getMembers)
                   .isEmpty();
             })
         .verifyComplete();
   }
 
   @Test
-  @DisplayName("Can list solvers consisting of a single team with a single user")
-  void canListSolversWithOneTeamAndUser() {
+  @DisplayName("Can list principals consisting of a single team with a single user")
+  void canListPrincipalsWithOneTeamAndUser() {
     final String userId = integrationTestUtils.createTestUser();
     final String teamId = integrationTestUtils.createTestTeam();
     userService.addUserToTeam(userId, teamId).block();
-    StepVerifier.create(userService.findAllWithTeams())
+    StepVerifier.create(userService.findAllPrincipals())
         .assertNext(
             team -> {
               assertThat(team.getMembers()).hasAtLeastOneElementOfType(UserEntity.class);
@@ -299,10 +299,10 @@ class UserAdministrationIT extends BaseIT {
   }
 
   @Test
-  @DisplayName("Can list solvers consisting of a single user")
-  void canListSolversWithOneUser() {
+  @DisplayName("Can list principals consisting of a single user")
+  void canListPrincipalsWithOneUser() {
     integrationTestUtils.createTestUser();
-    StepVerifier.create(userService.findAllWithTeams())
+    StepVerifier.create(userService.findAllPrincipals())
         .assertNext(
             user -> {
               assertThat(user.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);

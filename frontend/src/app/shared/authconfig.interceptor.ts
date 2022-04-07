@@ -19,14 +19,7 @@ export class AuthInterceptor implements HttpInterceptor {
     // add authorization header with jwt token if available
     const currentUser = this.apiService.currentUserValue;
 
-    const impersonatedUser = this.apiService.impersonatedUserValue;
-    if (impersonatedUser && impersonatedUser.accessToken) {
-      request = request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${impersonatedUser.accessToken}`,
-        },
-      });
-    } else if (currentUser && currentUser.accessToken) {
+    if (currentUser && currentUser.accessToken) {
       request = request.clone({
         setHeaders: {
           Authorization: `Bearer ${currentUser.accessToken}`,

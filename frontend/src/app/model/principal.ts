@@ -1,8 +1,8 @@
 import { User } from './user';
 
-export class Solver {
+export class Principal {
   id: string;
-  solver: string;
+  principalType: string;
   members: User[];
   displayName: string;
 }

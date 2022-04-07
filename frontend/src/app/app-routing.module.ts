@@ -10,15 +10,13 @@ import { AuthGuard } from './shared/auth.guard';
 import { HomeComponent } from './components/home/home.component';
 import { ScoreboardComponent } from './components/scoreboard/scoreboard.component';
 import { UserScoreComponent } from './components/user-score/user-score.component';
-import { UserListComponent } from './components/userlist/userlist.component';
+import { UserListComponent } from './components/user-list/user-list.component';
 import { ModuleSolvesComponent } from './components/module-solves/module-solves.component';
-import { ImpersonatorComponent } from './components/impersonator/impersonator.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent, canActivate: [AuthGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: SignupComponent },
-  { path: 'impersonate/:userId', component: ImpersonatorComponent },
   {
     path: 'users',
     component: UserListComponent,

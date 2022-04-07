@@ -1,4 +1,4 @@
-import { Observable, throwError, BehaviorSubject } from 'rxjs';
+import { Observable, throwError, BehaviorSubject, EMPTY } from 'rxjs';
 import { Injectable } from '@angular/core';
 import {
   HttpClient,
@@ -17,20 +17,19 @@ export class ApiService {
   endpoint = 'http://localhost:8080/api/v1';
   headers = new HttpHeaders().set('Content-Type', 'application/json');
   private currentUserSubject: BehaviorSubject<User>;
-  private impersonatedUserSubject: BehaviorSubject<User>;
+  private impersonatingUserSubject: BehaviorSubject<User>;
   public currentUser: Observable<User>;
-  public impersonatedUser: Observable<User>;
+  public impersonatingUser: Observable<User>;
 
   constructor(private http: HttpClient, public router: Router) {
     this.currentUserSubject = new BehaviorSubject<User>(
       JSON.parse(localStorage.getItem('currentUser'))
     );
     this.currentUser = this.currentUserSubject.asObservable();
-
-    this.impersonatedUserSubject = new BehaviorSubject<User>(
-      JSON.parse(localStorage.getItem('impersonatedUser'))
+    this.impersonatingUserSubject = new BehaviorSubject<User>(
+      JSON.parse(localStorage.getItem('impersonatingUser'))
     );
-    this.impersonatedUser = this.impersonatedUserSubject.asObservable();
+    this.impersonatingUser = this.impersonatingUserSubject.asObservable();
   }
 
   submitFlag(moduleLocator: string, flag: string): Observable<any> {
@@ -67,8 +66,8 @@ export class ApiService {
     );
   }
 
-  public get impersonatedUserValue(): User {
-    return this.impersonatedUserSubject.value;
+  public get impersonatingUserValue(): User {
+    return this.impersonatingUserSubject.value;
   }
 
   public get currentUserValue(): User {
@@ -88,6 +87,7 @@ export class ApiService {
         // store user details and jwt token in local storage to keep user logged in between page refreshes
         localStorage.setItem('currentUser', JSON.stringify(loginResponse));
         this.currentUserSubject.next(loginResponse);
+        this.impersonatingUserSubject.next(null);
         return loginResponse;
       })
     );
@@ -95,14 +95,26 @@ export class ApiService {
 
   // Impersonate
   impersonate(userId: String) {
-    const api = `${this.endpoint}/impersonate`;
+    if (this.impersonatingUserValue) {
+      // Already impersonating, must clear it first
+      this.clearImpersonation();
+    }
+    if (userId === this.currentUserValue.id) {
+      return EMPTY;
+    }
 
+    const api = `${this.endpoint}/impersonate`;
     return this.http.post<any>(api, { impersonatedId: userId }).pipe(
       map((response) => {
-        // store user details and jwt token in local storage to keep user logged in between page refreshes
-        localStorage.setItem('impersonatedUser', JSON.stringify(response));
-        console.log(response);
-        this.impersonatedUserSubject.next(response);
+        this.impersonatingUserSubject.next(
+          JSON.parse(localStorage.getItem('currentUser'))
+        );
+        localStorage.setItem(
+          'impersonatingUser',
+          JSON.stringify(this.currentUserValue)
+        );
+        localStorage.setItem('currentUser', JSON.stringify(response));
+        this.currentUserSubject.next(response);
         return response;
       }),
       catchError(this.handleError)
@@ -110,8 +122,12 @@ export class ApiService {
   }
 
   clearImpersonation() {
-    localStorage.removeItem('impersonatedUser');
-    this.impersonatedUserSubject.next(null);
+    localStorage.setItem(
+      'currentUser',
+      JSON.stringify(this.impersonatingUserValue)
+    );
+    this.currentUserSubject.next(this.impersonatingUserValue);
+    this.impersonatingUserSubject.next(null);
   }
 
   getToken() {
@@ -125,6 +141,7 @@ export class ApiService {
 
   logout() {
     // remove user from local storage and set current user to null
+    this.clearImpersonation();
     localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
   }

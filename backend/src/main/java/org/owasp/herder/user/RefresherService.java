@@ -26,7 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.scoring.PrincipalType;
 import org.owasp.herder.scoring.RankedSubmissionRepository;
 import org.owasp.herder.scoring.ScoreboardEntry;
@@ -39,9 +40,6 @@ import org.owasp.herder.validation.ValidTeamId;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -80,14 +78,14 @@ public class RefresherService {
         // Transform the flux to a mono list
         .collectList()
         // Get the complete list of all users and teams
-        .zipWith(userService.findAllWithTeams().collectList())
+        .zipWith(userService.findAllPrincipals().collectList())
         .map(
             tuple -> {
               final List<UnrankedScoreboardEntry> unrankedScoreboard = tuple.getT1();
 
               // The complete list of users and teams. We need this here because we want users
               // without submissions to be listed on the scoreboard with zero score and medals
-              Stream<SolverEntity> principals = tuple.getT2().stream();
+              Stream<PrincipalEntity> principals = tuple.getT2().stream();
 
               long currentScore = 0;
               long currentGoldMedals = 0;
@@ -193,7 +191,7 @@ public class RefresherService {
                 principals =
                     principals.filter(
                         principal -> {
-                          return !principal.getPrincipalId().equals(principalId)
+                          return !principal.getId().equals(principalId)
                               || !principal.getPrincipalType().equals(principalType);
                         });
 
@@ -235,7 +233,7 @@ public class RefresherService {
                   principals.map(
                       principal -> {
                         zeroScoreboardEntryBuilder.displayName(principal.getDisplayName());
-                        zeroScoreboardEntryBuilder.principalId(principal.getPrincipalId());
+                        zeroScoreboardEntryBuilder.principalId(principal.getId());
                         zeroScoreboardEntryBuilder.principalType(principal.getPrincipalType());
                         return zeroScoreboardEntryBuilder.build();
                       });

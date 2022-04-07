@@ -43,7 +43,7 @@ import org.owasp.herder.exception.DuplicateUserLoginNameException;
 import org.owasp.herder.exception.TeamNotFoundException;
 import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.scoring.PrincipalType;
-import org.owasp.herder.user.SolverEntity.SolverEntityBuilder;
+import org.owasp.herder.user.PrincipalEntity.PrincipalEntityBuilder;
 import org.owasp.herder.validation.ValidClassId;
 import org.owasp.herder.validation.ValidDisplayName;
 import org.owasp.herder.validation.ValidLoginName;
@@ -423,28 +423,28 @@ public class UserService {
    *
    * @return
    */
-  public Flux<SolverEntity> findAllWithTeams() {
+  public Flux<PrincipalEntity> findAllPrincipals() {
     Flux<UserEntity> userFlux = userRepository.findAllByTeamId(null);
 
-    final Flux<SolverEntity> teamFlux =
+    final Flux<PrincipalEntity> teamFlux =
         teamRepository
             .findAll()
             .flatMap(
                 team -> {
                   final String teamId = team.getId();
-                  SolverEntityBuilder solverEntityBuilder = SolverEntity.builder();
+                  PrincipalEntityBuilder teamEntityBuilder = PrincipalEntity.builder();
 
-                  solverEntityBuilder.principalType(PrincipalType.TEAM);
-                  solverEntityBuilder.principalId(teamId);
-                  solverEntityBuilder.displayName(team.getDisplayName());
-                  solverEntityBuilder.creationTime(team.getCreationTime());
+                  teamEntityBuilder.principalType(PrincipalType.TEAM);
+                  teamEntityBuilder.id(teamId);
+                  teamEntityBuilder.displayName(team.getDisplayName());
+                  teamEntityBuilder.creationTime(team.getCreationTime());
 
                   return userRepository
                       .findAllByTeamId(teamId)
                       .collectList()
                       .map(HashSet<UserEntity>::new)
-                      .map(solverEntityBuilder::members)
-                      .map(SolverEntityBuilder::build);
+                      .map(teamEntityBuilder::members)
+                      .map(PrincipalEntityBuilder::build);
                 });
 
     return Flux.concat(
@@ -452,14 +452,14 @@ public class UserService {
         userFlux.map(
             user -> {
               final String userId = user.getId();
-              SolverEntityBuilder solverEntityBuilder = SolverEntity.builder();
+              PrincipalEntityBuilder userEntityBuilder = PrincipalEntity.builder();
 
-              solverEntityBuilder.principalType(PrincipalType.USER);
-              solverEntityBuilder.principalId(userId);
-              solverEntityBuilder.displayName(user.getDisplayName());
-              solverEntityBuilder.creationTime(user.getCreationTime());
+              userEntityBuilder.principalType(PrincipalType.USER);
+              userEntityBuilder.id(userId);
+              userEntityBuilder.displayName(user.getDisplayName());
+              userEntityBuilder.creationTime(user.getCreationTime());
 
-              return solverEntityBuilder.build();
+              return userEntityBuilder.build();
             }));
   }
 

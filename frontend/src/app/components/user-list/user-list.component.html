@@ -1,0 +1,50 @@
+<div class="auth-wrapper">
+  <div class="row">
+    <div class="inner-main">
+      <ul>
+        <ng-container *ngFor="let principal of principals">
+          <ng-container *ngIf="principal.principalType === 'TEAM'">
+            <li>
+              {{ principal.displayName }}
+              <ng-container *ngIf="principal.members">
+                <ul>
+                  <ng-container *ngFor="let user of principal.members">
+                    <li>
+                      <a
+                        *ngIf="user.id !== currentUser.id"
+                        role="button"
+                        (click)="impersonate(user.id)"
+                        >{{ user.displayName }}</a
+                      >
+                      <span *ngIf="!impersonatingUser && currentUser.id === user.id">{{
+                        user.displayName
+                      }}</span>
+                      <span
+                        *ngIf="impersonatingUser && currentUser.id === user.id"
+                        >{{ user.displayName }} (Impersonating)</span
+                      >
+                    </li>
+                  </ng-container>
+                </ul>
+              </ng-container>
+            </li>
+          </ng-container>
+          <li *ngIf="principal.principalType === 'USER'">
+            <a
+              *ngIf="principal.id !== currentUser.id"
+              role="button"
+              (click)="impersonate(principal.id)"
+              >{{ principal.displayName }}</a
+            >
+            <span *ngIf="!impersonatingUser">{{
+              principal.displayName
+            }}</span>
+            <span *ngIf="impersonatingUser && currentUser.id === principal.id"
+              >{{ principal.displayName }} (Impersonating)</span
+            >
+          </li>
+        </ng-container>
+      </ul>
+    </div>
+  </div>
+</div>

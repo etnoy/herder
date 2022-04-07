@@ -19,28 +19,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.validation;
+package org.owasp.herder.user;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import javax.validation.Constraint;
-import javax.validation.Payload;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Value;
+import lombok.With;
+import org.owasp.herder.scoring.PrincipalType;
+import org.owasp.herder.validation.ValidDisplayName;
+import org.owasp.herder.validation.ValidPrincipalId;
 
-@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
-@Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = {})
-@NotNull(message = "{org.owasp.herder.ValidSolverId.NullMessage}")
-@Size(min = 24, max = 24, message = "{org.owasp.herder.ValidSolverId.WrongLengthMessage}")
-@Pattern(regexp = "^[a-f0-9]*$", message = "{org.owasp.herder.ValidSolverId.PatternMessage}")
-public @interface ValidSolverId {
-  String message() default "{org.owasp.herder.ValidSolverId.message}";
+@Value
+@AllArgsConstructor
+@Builder
+@With
+public final class PrincipalEntity implements Serializable {
+  private static final long serialVersionUID = 8843939402741609352L;
 
-  Class<?>[] groups() default {};
+  @NonNull @ValidDisplayName String displayName;
 
-  Class<? extends Payload>[] payload() default {};
+  @ValidPrincipalId String id;
+
+  @NonNull PrincipalType principalType;
+
+  @NonNull LocalDateTime creationTime;
+
+  @Builder.Default HashSet<UserEntity> members = new HashSet<>();
 }

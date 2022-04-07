@@ -5,13 +5,8 @@ import { User } from 'src/app/model/user';
 @Component({ templateUrl: 'home.component.html' })
 export class HomeComponent {
   currentUser: User;
-  impersonatedUser: User;
 
   constructor(private apiService: ApiService) {
-    this.currentUser = this.apiService.currentUserValue;
-    this.impersonatedUser = this.apiService.impersonatedUserValue;
-  }
-  clearImpersonation() {
-    this.apiService.clearImpersonation();
+    this.apiService.currentUser.subscribe((user) => (this.currentUser = user));
   }
 }

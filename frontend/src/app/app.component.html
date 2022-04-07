@@ -49,6 +49,8 @@
 </div>
 <div class="container">
   <app-alert></app-alert>
-
+  <p *ngIf="impersonatingUser">Impersonating {{currentUser.displayName}}
+    <button type="button" (click)="clearImpersonation()">Stop impersonating</button>
+</p>
   <router-outlet></router-outlet>
 </div>

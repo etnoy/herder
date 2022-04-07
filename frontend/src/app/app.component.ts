@@ -9,12 +9,20 @@ import { User } from './model/user';
 })
 export class AppComponent {
   currentUser: User;
+  impersonatingUser: User;
 
   constructor(private router: Router, private apiService: ApiService) {
-    this.apiService.currentUser.subscribe((x) => (this.currentUser = x));
+    this.apiService.currentUser.subscribe((user) => (this.currentUser = user));
+    this.apiService.impersonatingUser.subscribe(
+      (x) => (this.impersonatingUser = x)
+    );
   }
   logout() {
     this.apiService.logout();
     this.router.navigate(['/login']);
+  }
+
+  clearImpersonation() {
+    this.apiService.clearImpersonation();
   }
 }

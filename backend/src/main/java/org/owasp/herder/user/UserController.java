@@ -59,9 +59,9 @@ public class UserController {
   }
 
   @GetMapping(path = "solvers")
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
-  public Flux<SolverEntity> findAllSolvers() {
-    return userService.findAllWithTeams();
+  @PreAuthorize("hasRole('ROLE_USER')")
+  public Flux<PrincipalEntity> findAllPrincipals() {
+    return userService.findAllPrincipals();
   }
 
   @GetMapping(path = "user/{userId}")

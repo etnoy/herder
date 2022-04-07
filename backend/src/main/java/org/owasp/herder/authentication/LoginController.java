@@ -65,6 +65,7 @@ public class LoginController {
                   loginResponseBuilder
                       .accessToken(accessToken)
                       .displayName(authResponse.getDisplayName())
+                      .id(authResponse.getUserId())
                       .build();
               return new ResponseEntity<>(loginResponse, HttpStatus.OK);
             })
@@ -95,6 +96,7 @@ public class LoginController {
                   loginResponseBuilder
                       .accessToken(tuple.getT1())
                       .displayName(tuple.getT2().getDisplayName())
+                      .id(tuple.getT2().getId())
                       .build();
               return new ResponseEntity<>(loginResponse, HttpStatus.OK);
             });
