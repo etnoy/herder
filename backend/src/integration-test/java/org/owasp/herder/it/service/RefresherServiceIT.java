@@ -54,33 +54,45 @@ import reactor.test.StepVerifier;
 
 @DisplayName("RefresherService integration tests")
 class RefresherServiceIT extends BaseIT {
+
   @BeforeAll
   private static void reactorVerbose() {
     // Tell Reactor to print verbose error messages
     Hooks.onOperatorDebug();
   }
 
-  @Autowired SubmissionService submissionService;
+  @Autowired
+  SubmissionService submissionService;
 
-  @Autowired SubmissionRepository submissionRepository;
+  @Autowired
+  SubmissionRepository submissionRepository;
 
-  @Autowired UserService userService;
+  @Autowired
+  UserService userService;
 
-  @Autowired ModuleService moduleService;
+  @Autowired
+  ModuleService moduleService;
 
-  @Autowired RefresherService refresherService;
+  @Autowired
+  RefresherService refresherService;
 
-  @Autowired TeamRepository teamRepository;
+  @Autowired
+  TeamRepository teamRepository;
 
-  @Autowired UserRepository userRepository;
+  @Autowired
+  UserRepository userRepository;
 
-  @Autowired FlagHandler flagHandler;
+  @Autowired
+  FlagHandler flagHandler;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+  @Autowired
+  IntegrationTestUtils integrationTestUtils;
 
-  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+  @MockBean
+  FlagSubmissionRateLimiter flagSubmissionRateLimiter;
 
-  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+  @MockBean
+  InvalidFlagRateLimiter invalidFlagRateLimiter;
 
   @Test
   @DisplayName("Can do nothing if nothing changed for a single user")
@@ -94,8 +106,14 @@ class RefresherServiceIT extends BaseIT {
 
     refresherService.afterUserUpdate(userId).block();
 
-    StepVerifier.create(userService.findAllUsers()).expectNext(user).verifyComplete();
-    StepVerifier.create(userService.findAllTeams()).expectNext(team).verifyComplete();
+    StepVerifier
+      .create(userService.findAllUsers())
+      .expectNext(user)
+      .verifyComplete();
+    StepVerifier
+      .create(userService.findAllTeams())
+      .expectNext(team)
+      .verifyComplete();
   }
 
   @Test
@@ -124,16 +142,16 @@ class RefresherServiceIT extends BaseIT {
     userService.clearTeamForUser(userId).block();
     refresherService.afterUserUpdate(userId).block();
 
-    Consumer<Submission> asserter =
-        (submission) -> {
-          assertThat(submission.getUserId()).isEqualTo(userId);
-          assertThat(submission.getTeamId()).isNull();
-        };
+    Consumer<Submission> asserter = submission -> {
+      assertThat(submission.getUserId()).isEqualTo(userId);
+      assertThat(submission.getTeamId()).isNull();
+    };
 
-    StepVerifier.create(submissionService.findAllSubmissions())
-        .assertNext(asserter)
-        .assertNext(asserter)
-        .verifyComplete();
+    StepVerifier
+      .create(submissionService.findAllSubmissions())
+      .assertNext(asserter)
+      .assertNext(asserter)
+      .verifyComplete();
   }
 
   @Test
@@ -148,10 +166,13 @@ class RefresherServiceIT extends BaseIT {
 
     moduleService.setModuleName(moduleId, newModuleName).block();
 
-    StepVerifier.create(submissionService.findAllSubmissions().map(Submission::getModuleId))
-        .expectNext(moduleId)
-        .expectNext(moduleId)
-        .verifyComplete();
+    StepVerifier
+      .create(
+        submissionService.findAllSubmissions().map(Submission::getModuleId)
+      )
+      .expectNext(moduleId)
+      .expectNext(moduleId)
+      .verifyComplete();
   }
 
   @DisplayName("Can refresh a submission with user added to team")
@@ -166,16 +187,16 @@ class RefresherServiceIT extends BaseIT {
     userService.addUserToTeam(userId, teamId).block();
     refresherService.afterUserUpdate(userId).block();
 
-    Consumer<Submission> asserter =
-        (submission) -> {
-          assertThat(submission.getUserId()).isEqualTo(userId);
-          assertThat(submission.getTeamId()).isEqualTo(teamId);
-        };
+    Consumer<Submission> asserter = submission -> {
+      assertThat(submission.getUserId()).isEqualTo(userId);
+      assertThat(submission.getTeamId()).isEqualTo(teamId);
+    };
 
-    StepVerifier.create(submissionService.findAllSubmissions())
-        .assertNext(asserter)
-        .assertNext(asserter)
-        .verifyComplete();
+    StepVerifier
+      .create(submissionService.findAllSubmissions())
+      .assertNext(asserter)
+      .assertNext(asserter)
+      .verifyComplete();
   }
 
   @Test
@@ -187,12 +208,15 @@ class RefresherServiceIT extends BaseIT {
     userService.addUserToTeam(userId, teamId).block();
     userService.setDisplayName(userId, newDisplayName).block();
     refresherService.afterUserUpdate(userId).block();
-    StepVerifier.create(teamRepository.findAll())
-        .assertNext(
-            team -> {
-              assertThat(team.getMembers().get(0).getDisplayName()).isEqualTo(newDisplayName);
-            })
-        .verifyComplete();
+    StepVerifier
+      .create(teamRepository.findAll())
+      .assertNext(
+        team -> {
+          assertThat(team.getMembers().get(0).getDisplayName())
+            .isEqualTo(newDisplayName);
+        }
+      )
+      .verifyComplete();
   }
 
   @Test
@@ -221,12 +245,14 @@ class RefresherServiceIT extends BaseIT {
 
     userService.clearTeamForUser(userId1).block();
     refresherService.afterUserUpdate(userId1).block();
-    StepVerifier.create(userService.getTeamById(teamId))
-        .assertNext(
-            team -> {
-              assertThat(team.getMembers()).containsExactly(user2);
-            })
-        .verifyComplete();
+    StepVerifier
+      .create(userService.getTeamById(teamId))
+      .assertNext(
+        team -> {
+          assertThat(team.getMembers()).containsExactly(user2);
+        }
+      )
+      .verifyComplete();
   }
 
   @Test
@@ -253,7 +279,9 @@ class RefresherServiceIT extends BaseIT {
     // Bypass the rate limiter
     final Bucket mockBucket = mock(Bucket.class);
     when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    when(flagSubmissionRateLimiter.resolveBucket(any(String.class)))
+      .thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(String.class)))
+      .thenReturn(mockBucket);
   }
 }
