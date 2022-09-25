@@ -1,10 +1,10 @@
 plugins {
     id 'java'
-    id "org.springframework.boot" version "2.6.6"
+    id "org.springframework.boot" version "2.7.4"
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'eclipse'
     id 'jacoco'
-    id "io.freefair.lombok" version "6.4.0"
+    id "io.freefair.lombok" version "6.5.1"
     id "org.sonarqube" version "3.3"
     id "com.diffplug.spotless" version "6.1.2"
     id 'com.adarshr.test-logger' version '3.1.0'
@@ -14,9 +14,6 @@ group = 'org.owasp.herder'
 version = '0.0.1'
 description = 'Herder'
 sourceCompatibility = '11'
-
-// Require a log4j version not vulnerable to log4shell
-ext['log4j2.version'] = '2.17.1'
 
 repositories {
     mavenCentral()
@@ -49,21 +46,21 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.13.2'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
     implementation 'com.google.guava:guava:31.1-jre'
-    implementation 'org.springframework.data:spring-data-commons:2.6.3'
+    implementation 'org.springframework.data:spring-data-commons:2.7.3'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'io.r2dbc:r2dbc-h2:0.9.1.RELEASE'
     implementation 'com.h2database:h2:2.1.210'
-    implementation 'io.r2dbc:r2dbc-spi:0.9.1.RELEASE'
+    implementation 'io.r2dbc:r2dbc-spi:1.0.0.RELEASE'
 
     implementation 'com.github.spotbugs:spotbugs:4.6.0'
     implementation 'org.apache.commons:commons-lang3:3.11'
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'net.sourceforge.htmlunit:htmlunit:2.60.0'
-    implementation 'org.springframework.boot:spring-boot-starter-webflux:2.6.6'
-    implementation 'org.springframework.boot:spring-boot-starter-validation:2.6.6'
-    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc:2.6.6'
-    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive:2.6.6'
-    implementation 'org.springframework.data:spring-data-mongodb:3.3.3'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux:2.7.4'
+    implementation 'org.springframework.boot:spring-boot-starter-validation:2.7.4'
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc:2.7.4'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive:2.7.4'
+    implementation 'org.springframework.data:spring-data-mongodb:3.4.3'
 
     testImplementation 'org.assertj:assertj-guava:3.4.0'
 
@@ -87,9 +84,9 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
 
-    testImplementation "org.testcontainers:mongodb:1.16.3"
+    testImplementation "org.testcontainers:mongodb:1.17.3"
 
-    testImplementation "org.testcontainers:junit-jupiter:1.16.3"
+    testImplementation "org.testcontainers:junit-jupiter:1.17.3"
 
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 
