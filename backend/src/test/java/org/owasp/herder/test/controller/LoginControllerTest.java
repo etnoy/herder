@@ -58,79 +58,112 @@ class LoginControllerTest {
 
   LoginController loginController;
 
-  @Mock UserService userService;
+  @Mock
+  UserService userService;
 
-  @Mock WebTokenService webTokenService;
+  @Mock
+  WebTokenService webTokenService;
 
-  @Mock PasswordEncoder passwordEncoder;
+  @Mock
+  PasswordEncoder passwordEncoder;
 
-  @Mock ControllerAuthentication controllerAuthentication;
+  @Mock
+  ControllerAuthentication controllerAuthentication;
 
   @Test
   void login_InvalidCredentials_Returns401() {
     final String userName = "user";
     final String password = "password";
     final String badCredentials = "Invalid username or password";
-    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(userName, password);
-    final LoginResponse loginResponse =
-        LoginResponse.builder().errorMessage(badCredentials).build();
+    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(
+      userName,
+      password
+    );
+    final LoginResponse loginResponse = LoginResponse
+      .builder()
+      .errorMessage(badCredentials)
+      .build();
 
-    final ResponseEntity<LoginResponse> badCredentialsResponse =
-        new ResponseEntity<>(loginResponse, HttpStatus.UNAUTHORIZED);
+    final ResponseEntity<LoginResponse> badCredentialsResponse = new ResponseEntity<>(
+      loginResponse,
+      HttpStatus.UNAUTHORIZED
+    );
 
     when(userService.authenticate(userName, password))
-        .thenReturn(Mono.error(new BadCredentialsException(badCredentials)));
-    StepVerifier.create(loginController.login(passwordLoginDto))
-        .expectNext(badCredentialsResponse)
-        .verifyComplete();
+      .thenReturn(Mono.error(new BadCredentialsException(badCredentials)));
+    StepVerifier
+      .create(loginController.login(passwordLoginDto))
+      .expectNext(badCredentialsResponse)
+      .verifyComplete();
   }
 
   @Test
   void login_ValidCredentials_ReturnsToken() {
     final String userName = "user";
     final String password = "password";
-    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(userName, password);
+    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(
+      userName,
+      password
+    );
     final String mockJwt = "token";
     final Boolean mockUserIsAdmin = false;
     final String mockUserId = "id";
-    final AuthResponse mockAuthResponse =
-        AuthResponse.builder()
-            .isAdmin(mockUserIsAdmin)
-            .displayName(userName)
-            .userId(mockUserId)
-            .build();
-    final LoginResponse loginResponse =
-        LoginResponse.builder().accessToken(mockJwt).displayName(userName).build();
-    final ResponseEntity<LoginResponse> tokenResponse =
-        new ResponseEntity<>(loginResponse, HttpStatus.OK);
+    final AuthResponse mockAuthResponse = AuthResponse
+      .builder()
+      .isAdmin(mockUserIsAdmin)
+      .displayName(userName)
+      .userId(mockUserId)
+      .build();
+    final LoginResponse loginResponse = LoginResponse
+      .builder()
+      .id(mockUserId)
+      .accessToken(mockJwt)
+      .displayName(userName)
+      .build();
+    final ResponseEntity<LoginResponse> tokenResponse = new ResponseEntity<>(
+      loginResponse,
+      HttpStatus.OK
+    );
 
-    when(userService.authenticate(userName, password)).thenReturn(Mono.just(mockAuthResponse));
-    when(webTokenService.generateToken(mockUserId, mockUserIsAdmin)).thenReturn(mockJwt);
-    StepVerifier.create(loginController.login(passwordLoginDto))
-        .expectNext(tokenResponse)
-        .verifyComplete();
+    when(userService.authenticate(userName, password))
+      .thenReturn(Mono.just(mockAuthResponse));
+    when(webTokenService.generateToken(mockUserId, mockUserIsAdmin))
+      .thenReturn(mockJwt);
+    StepVerifier
+      .create(loginController.login(passwordLoginDto))
+      .expectNext(tokenResponse)
+      .verifyComplete();
   }
 
   @Test
-  void register_ValidData_ReturnsUserid() {
+  void register_ValidData_NoError() {
     final String displayName = "displayName";
     final String userName = "user";
     final String password = "password";
     final String encodedPassword = "encoded";
-    final PasswordRegistrationDto passwordRegistrationDto =
-        new PasswordRegistrationDto(displayName, userName, password);
+    final PasswordRegistrationDto passwordRegistrationDto = new PasswordRegistrationDto(
+      displayName,
+      userName,
+      password
+    );
     final String mockUserId = "id";
     when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
     when(userService.createPasswordUser(displayName, userName, encodedPassword))
-        .thenReturn(Mono.just(mockUserId));
-    StepVerifier.create(loginController.register(passwordRegistrationDto)).verifyComplete();
+      .thenReturn(Mono.just(mockUserId));
+    StepVerifier
+      .create(loginController.register(passwordRegistrationDto))
+      .verifyComplete();
   }
 
   @BeforeEach
   private void setUp() {
     // Set up the system under test
     loginController =
-        new LoginController(
-            userService, webTokenService, passwordEncoder, controllerAuthentication);
+      new LoginController(
+        userService,
+        webTokenService,
+        passwordEncoder,
+        controllerAuthentication
+      );
   }
 }

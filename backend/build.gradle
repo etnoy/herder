@@ -30,6 +30,12 @@ jacocoTestReport {
 }
 
 sourceSets {
+    test {
+        java {
+            srcDirs = ["src/test/java"] 
+        }
+    }
+
     integrationTest {
         compileClasspath += sourceSets.main.output + sourceSets.test.output
         runtimeClasspath += sourceSets.main.output + sourceSets.test.output
@@ -122,7 +128,7 @@ tasks.withType(JavaCompile) {
 }
 
 task integrationTest(type: Test) {
-    description = 'Runs integration tests.'
+    description = 'Runs integration tests'
     group = 'verification'
 
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
@@ -175,12 +181,7 @@ spotless {
     endWithNewline()
   }
   java {
-    trimTrailingWhitespace()
-    indentWithSpaces()
-    endWithNewline()
-    removeUnusedImports()
-
-    googleJavaFormat()
+    prettier().config(['parser': 'java'])
 
     licenseHeaderFile "${project.rootDir}/license.template"
   }

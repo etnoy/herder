@@ -38,7 +38,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.TestSecurityContextHolder;
 import org.springframework.security.test.context.support.ReactorContextTestExecutionListener;
 import org.springframework.test.context.TestExecutionListener;
-
 import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
@@ -55,10 +54,10 @@ class ControllerAuthenticationTest {
 
   private ControllerAuthentication controllerAuthentication;
 
-  @Mock private Authentication authentication;
+  @Mock
+  private Authentication authentication;
 
-  private TestExecutionListener reactorContextTestExecutionListener =
-      new ReactorContextTestExecutionListener();
+  private TestExecutionListener reactorContextTestExecutionListener = new ReactorContextTestExecutionListener();
 
   @BeforeEach
   private void authenticate() throws Exception {
@@ -72,15 +71,17 @@ class ControllerAuthenticationTest {
   void getUserId_UserAuthenticated_ReturnsUserId() {
     final String mockUserId = "id";
     when(authentication.getPrincipal()).thenReturn(mockUserId);
-    StepVerifier.create(controllerAuthentication.getUserId())
-        .expectNext(mockUserId)
-        .verifyComplete();
+    StepVerifier
+      .create(controllerAuthentication.getUserId())
+      .expectNext(mockUserId)
+      .verifyComplete();
   }
 
   @Test
   void getUserId_UserNotAuthenticated_ReturnsNotAuthenticatedException() {
-    StepVerifier.create(controllerAuthentication.getUserId())
-        .expectError(NotAuthenticatedException.class)
-        .verify();
+    StepVerifier
+      .create(controllerAuthentication.getUserId())
+      .expectError(NotAuthenticatedException.class)
+      .verify();
   }
 }
