@@ -55,4 +55,4 @@ jobs:
           push: true
           tags: etnoy/herder-frontend:latest
           context: .
-          file: ./frontend/Dockerfile
+          file: Dockerfile
