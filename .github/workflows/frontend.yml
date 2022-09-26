@@ -9,11 +9,11 @@ on:
   push:
     paths:
       - "frontend/**"
-      - ".github/**"
+      - ".github/frontend.yml"
   pull_request:
     paths:
       - "frontend/**"
-      - ".github/**"
+      - ".github/frontend.yml"
 
 jobs:
   build:
@@ -49,10 +49,16 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-20.04
     steps:
-      - name: Docker build
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: herder-frontend
+
+      - name: Docker deploy
         uses: docker/build-push-action@v2
         with:
           push: true
           tags: etnoy/herder-frontend:latest
-          context: .
-          file: Dockerfile
+          context: ./frontend
+          file: ./frontend/Dockerfile

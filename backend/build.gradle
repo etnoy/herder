@@ -51,7 +51,6 @@ dependencies {
     implementation 'io.r2dbc:r2dbc-h2:0.9.1.RELEASE'
     implementation 'com.h2database:h2:2.1.210'
     implementation 'io.r2dbc:r2dbc-spi:1.0.0.RELEASE'
-
     implementation 'com.github.spotbugs:spotbugs:4.6.0'
     implementation 'org.apache.commons:commons-lang3:3.11'
     implementation 'commons-io:commons-io:2.11.0'
@@ -61,51 +60,41 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc:2.7.4'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive:2.7.4'
     implementation 'org.springframework.data:spring-data-mongodb:3.4.3'
-
-    testImplementation 'org.assertj:assertj-guava:3.4.0'
-
     implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.1.0'
-
     implementation 'io.jsonwebtoken:jjwt-api:0.11.1'
     implementation 'com.fasterxml.jackson:jackson-bom:2.13.2'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2'
+    implementation 'org.yaml:snakeyaml:1.32'
+    implementation 'org.projectlombok:lombok'
+
+    annotationProcessor 'org.projectlombok:lombok'
+
     runtimeOnly 'mysql:mysql-connector-java'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.1'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.1'
 
-    implementation 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-
-    testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testImplementation 'org.assertj:assertj-guava:3.4.0'
     testImplementation "org.projectlombok:lombok"
-
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
-
     testImplementation "org.testcontainers:mongodb:1.17.3"
-
     testImplementation "org.testcontainers:junit-jupiter:1.17.3"
-
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-
     testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.8.2'
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.apache.commons:commons-lang3'
-
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.5.13'
 
     integrationTestCompileOnly 'org.projectlombok:lombok'
-
     integrationTestAnnotationProcessor "org.projectlombok:lombok"
     integrationTestImplementation "org.projectlombok:lombok"
-
     integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
     integrationTestImplementation 'org.springframework.security:spring-security-test'
     integrationTestImplementation 'org.junit.jupiter:junit-jupiter-api'
     integrationTestRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-
     integrationTestImplementation 'nl.jqno.equalsverifier:equalsverifier:3.4.2'
     integrationTestImplementation 'io.projectreactor:reactor-test:3.4.14'
     integrationTestImplementation 'org.apache.commons:commons-lang3:3.11'
