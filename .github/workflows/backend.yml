@@ -95,7 +95,7 @@ jobs:
         with:
           name: herder-backend
 
-      - name: Build Docker
+      - name: Docker deploy
         uses: docker/build-push-action@v2
         with:
           context: ./backend
