@@ -44,6 +44,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: herder-frontend
+          path: frontend/
+
   deploy:
     needs: build
     if: github.ref == 'refs/heads/master'
