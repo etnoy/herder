@@ -95,6 +95,11 @@ jobs:
         with:
           name: herder-backend
 
+      - name: pwd
+        run: pwd
+      - name: File list
+        run: ls -lrt
+
       - name: Docker deploy
         uses: docker/build-push-action@v2
         with:
