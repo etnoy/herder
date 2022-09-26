@@ -4,11 +4,11 @@ on:
   push:
     paths:
       - "backend/**"
-      - ".github/backend.yml"
+      - ".github/workflows/backend.yml"
   pull_request:
     paths:
       - "backend/**"
-      - ".github/backend.yml"
+      - ".github/workflows/backend.yml"
 
 defaults:
   run:

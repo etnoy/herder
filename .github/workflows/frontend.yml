@@ -9,11 +9,11 @@ on:
   push:
     paths:
       - "frontend/**"
-      - ".github/frontend.yml"
+      - ".github/workflows/frontend.yml"
   pull_request:
     paths:
       - "frontend/**"
-      - ".github/frontend.yml"
+      - ".github/workflows/frontend.yml"
 
 jobs:
   build:
