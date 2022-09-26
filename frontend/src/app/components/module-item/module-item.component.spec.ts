@@ -1,9 +1,8 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ModuleItemComponent } from './module-item.component';
 import { RouterTestingModule } from '@angular/router/testing';
-import { HttpClientModule } from '@angular/common/http';
 
 describe('ModuleItemComponent', () => {
   let component: ModuleItemComponent;
@@ -13,7 +12,7 @@ describe('ModuleItemComponent', () => {
     TestBed.configureTestingModule({
       declarations: [ModuleItemComponent],
       imports: [
-        HttpClientModule,
+        HttpClientTestingModule,
         RouterTestingModule,
         FormsModule,
         ReactiveFormsModule,

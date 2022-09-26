@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-
 import { XssTutorialComponent } from './xss-tutorial.component';
 import { RouterTestingModule } from '@angular/router/testing';
 
@@ -13,7 +12,7 @@ describe('XssTutorialComponent', () => {
     TestBed.configureTestingModule({
       declarations: [XssTutorialComponent],
       imports: [
-        HttpClientModule,
+        HttpClientTestingModule,
         RouterTestingModule,
         FormsModule,
         ReactiveFormsModule,

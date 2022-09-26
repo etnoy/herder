@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { CsrfTutorialComponent } from './csrf-tutorial.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -14,7 +14,7 @@ describe('CsrfTutorialComponent', () => {
       declarations: [CsrfTutorialComponent],
       imports: [
         RouterTestingModule,
-        HttpClientModule,
+        HttpClientTestingModule,
         FormsModule,
         ReactiveFormsModule,
       ],
