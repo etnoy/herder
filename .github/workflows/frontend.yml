@@ -9,9 +9,11 @@ on:
   push:
     paths:
       - "frontend/**"
+      - ".github/**"
   pull_request:
     paths:
       - "frontend/**"
+      - ".github/**"
 
 jobs:
   build:
