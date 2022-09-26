@@ -78,7 +78,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: herder-backend
-          path: backend/
+          path: backend/build/libs/herder-backend.jar
 
   deploy:
     needs: build
@@ -90,6 +90,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: herder-backend
+          path: backend/build/libs/
 
       - name: pwd
         run: pwd
