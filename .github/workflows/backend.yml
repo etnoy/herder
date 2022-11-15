@@ -70,11 +70,6 @@ jobs:
       - name: Lint
         run: ./gradlew spotlessCheck
 
-      - name: pwd
-        run: pwd
-      - name: File list
-        run: ls -lrt
-
       - uses: actions/upload-artifact@v3
         with:
           name: herder-backend
