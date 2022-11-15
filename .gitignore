@@ -4,8 +4,7 @@ server/.factorypath
 .project
 .settings
 /.gradle/
-.vscode/
-!.vscode/settings.json
+.vscode/*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
