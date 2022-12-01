@@ -5,43 +5,40 @@
 [![Frontend](https://github.com/etnoy/herder/actions/workflows/frontend.yml/badge.svg)](https://github.com/etnoy/herder/actions/workflows/frontend.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=etnoy_herder_frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=etnoy_herder_frontend)
 
-# A rewrite of Security Shepherd
-I have used Shepherd for many years as a teaching tool in our infosec courses at Linköping University. In this setting, we run a CTF as part of the courses, resulting in >200 users in a CTF running over several months. Lately, I've become tired of running into bugs and issues due to a codebase that has outgrown its initial design. I have contributed a bit to the github repository, but now I'm taking a fresh look at everything.
+# herder
+Herder is an integrated CTF/security training platform focused on web exploits. It is heavily inspired by [OWASP Security Shepherd](https://github.com/OWASP/SecurityShepherd) but is a complete rewrite with the following aims:
+* Decently written and tested code
+* Flags are uniquely generated for each user, making cheating harder
+* Easy to customize or to write new challenges
+* Full support for users playing together in teams
+* Broad coverage of the OWASP Top 10
+* SSO support
 
-Right now, this is my playground to test some new tech and practice my Java coding. If you are interested in contributing, be aware that nothing in terms of API or design is decided upon.
+Herder is for **students**. Herder can be run standalone for someone who wants to improve their knowledge about web exploits (CSRF, SQL injections, XSS).
 
-# Issues with Security Shepherd 3.1
-- Bad exception handling. Errors are often ignored, causing undefined behavior
-- No connection pooling
-- Lack of database connection pooling
-- Lack of SSO support
-- Code duplication
-- Direct Object Reference Bank challenge runs out of money
-- Hard to make custom categories
-- Hard to customize
-- Lack of code testing
+Herder is for **teachers**. We aim for the following:
+* Multi-user support. Each user has their own account
+* A scoreboard spurs friendly competition which encourages learning
+* Multi-team support. Users can collaborate within teams, and allowed team sizes are configurable
+* Flags are unique for each user (or team) whenever possible. This ensures that students can't cheat by copying flags.
 
-# Key ideas for this rewrite
-- Reactive programming paradigm
-- Java backend based on Spring Boot
-- REST api for backend<->frontend communication
-- Angular 10 for the frontend
-- MySQL database for the platform
-- Java 11
-- Spring R2DBC manages the persistence layer in a reactive way
-- Auditable scoreboard. All scores are computed as a sum of the user's scores
-- Flags can be static (i.e. reverse engineering challenges) or dynamic (i.e. for web challenges)
-- High test coverage is a goal (>95%)
-- JUnit5 is used as test runner
+# Quick start
+* Start the MongoDB server
+* Start the Spring Boot backend
+* Start the Angular frontend
+* Login in using admin/password
+
+# Background
+We have extensively used OWASP Security Shepherd as a teaching tool in our infosec courses at Linköping University. With hundreds of students doing a CTF spanning over several months it has been very successful. However, as of 2022 Security Shepherd is essentially abandoned resulting in severe stability issues and bugs. We tried improving the code but ultimately realized that a full rewrite was needed. 
 
 # For developers
 This Security Shepherd rewrite is in an early state. We have a long way to go before non-developers will find it useful. For developers, however, here's a quick guide to getting started. Note that all of this is subject to change.
 
 ## Backend
-The backend is written in Java and uses Maven and Spring Boot. Backend code is located in the /server folder. We use Eclipse as the editor. You will need to install the Lombok extension jar for code generation to work. Please install the google java style of code formatting for beautiful code. Unit tests are found in src/main/java and are started with the JUnit5 test runner. For integration testing, you need a MySQL 8 server running on localhost with an empty root password. The MySQL server currently requires you to create a database called "core" manually, otherwise the application won't start. Note that MySQL versions older than 8 are currently not supported.
+The backend is written in Java and uses Gradle and Spring Boot. Backend code is located in the /backend folder and the primary editor we used so far is VS Code although Eclipse should work as well. Please follow the Google Java style.
 
 ## Frontend
-The frontend code uses Angular and can be found in the /client folder. We recommend Visual Studio Code for frontend development.
+The frontend code uses Angular and can be found in the /frontend folder. We recommend Visual Studio Code for frontend development.
 
 The frontend code was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.0.3.
 
@@ -56,4 +53,4 @@ Run `ng test` to execute the frontend unit tests via [Karma](https://karma-runne
 Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
 
 ## Continuous integration
-We use Travis CI for continuous integration. Sonarcloud is used as a static code analysis tool for the backend.
+We use Github Actions for continuous integration. Sonarcloud is used as a static code analysis tool for the backend.
