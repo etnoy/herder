@@ -24,7 +24,6 @@ package org.owasp.herder.test.service;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,18 +36,11 @@ import org.owasp.herder.user.UserService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 
-import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthenticationManager unit tests")
 class AuthenticationManagerTest {
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
-
   private AuthenticationManager authenticationManager;
 
   @Mock private WebTokenService webTokenService;

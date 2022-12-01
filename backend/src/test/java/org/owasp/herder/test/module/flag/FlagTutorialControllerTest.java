@@ -37,21 +37,14 @@ import org.owasp.herder.exception.NotAuthenticatedException;
 import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.flag.FlagTutorialController;
 import org.owasp.herder.module.flag.FlagTutorialResult;
+import org.owasp.herder.test.BaseTest;
 
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlagTutorialController unit tests")
-class FlagTutorialControllerTest {
-
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
-
+class FlagTutorialControllerTest extends BaseTest {
   private FlagTutorialController flagTutorialController;
 
   @Mock private FlagTutorial flagTutorial;

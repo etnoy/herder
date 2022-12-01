@@ -24,6 +24,7 @@ package org.owasp.herder.it;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.owasp.herder.test.BaseTest;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -41,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfigureWebTestClient
 @Slf4j
 @Execution(ExecutionMode.SAME_THREAD)
-public abstract class BaseIT {
+public abstract class BaseIT extends BaseTest {
   static final MongoDBContainer mongoDBContainer;
 
   static {
