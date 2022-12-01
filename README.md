@@ -5,7 +5,7 @@
 [![Frontend](https://github.com/etnoy/herder/actions/workflows/frontend.yml/badge.svg)](https://github.com/etnoy/herder/actions/workflows/frontend.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=etnoy_herder_frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=etnoy_herder_frontend)
 
-# herder
+# Herder 🐑
 Herder is an integrated CTF/security training platform focused on web exploits. It is heavily inspired by [OWASP Security Shepherd](https://github.com/OWASP/SecurityShepherd) but is a complete rewrite with the following aims:
 * Decently written and tested code
 * Flags are uniquely generated for each user, making cheating harder
@@ -14,9 +14,11 @@ Herder is an integrated CTF/security training platform focused on web exploits. 
 * Broad coverage of the OWASP Top 10
 * SSO support
 
-Herder is for **students**. Herder can be run standalone for someone who wants to improve their knowledge about web exploits (CSRF, SQL injections, XSS).
+## Herder is for students
+Herder can be run standalone for someone who wants to improve their knowledge about web exploits (CSRF, SQL injections, XSS).
 
-Herder is for **teachers**. We aim for the following:
+## Herder is for teachers
+We aim for the following:
 * Multi-user support. Each user has their own account
 * A scoreboard spurs friendly competition which encourages learning
 * Multi-team support. Users can collaborate within teams, and allowed team sizes are configurable
@@ -27,6 +29,27 @@ Herder is for **teachers**. We aim for the following:
 * Start the Spring Boot backend
 * Start the Angular frontend
 * Login in using admin/password
+
+# Features
+List of completed and future features
+## Platform
+* User-specific flags ✅
+* Scoreboard ✅
+* Team support ✅
+* External challenges ❌
+* Admin panel ❌
+* User/Team Profile page ❌
+* Reverse engineering tutorial ❌
+* SSO support ❌
+
+## Challenges
+* Basic flag submission tutorial ✅
+* XSS tutorial ✅
+* CSRF tutorial ✅
+* SQL Injection tutorial ✅
+* Reverse engineering tutorial ❌
+* IDOR tutorial ❌
+* Broken cryptography ❌
 
 # Background
 We have extensively used OWASP Security Shepherd as a teaching tool in our infosec courses at Linköping University. With hundreds of students doing a CTF spanning over several months it has been very successful. However, as of 2022 Security Shepherd is essentially abandoned resulting in severe stability issues and bugs. We tried improving the code but ultimately realized that a full rewrite was needed. 
