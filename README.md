@@ -15,7 +15,7 @@ Herder is an integrated CTF/security training platform focused on web exploits. 
 * SSO support
 
 ## Herder is for students
-Herder can be run standalone for someone who wants to improve their knowledge about web exploits (CSRF, SQL injections, XSS).
+Herder can be run standalone for someone who wants to improve their knowledge about web exploits (CSRF, SQL injections, XSS) without having to setup a full multi-user system. However, do check out the great [OWASP Juice Shop](https://github.com/juice-shop/juice-shop) project first!
 
 ## Herder is for teachers
 We aim for the following:
@@ -25,10 +25,10 @@ We aim for the following:
 * Flags are unique for each user (or team) whenever possible. This ensures that students can't cheat by copying flags.
 
 # Quick start
-* Start the MongoDB server
-* Start the Spring Boot backend
-* Start the Angular frontend
-* Login in using admin/password
+* Start a MongoDB server
+* Start the Spring Boot backend (defaul port is 8080)
+* Start the Angular frontend (default port is 4200)
+* Login in using [default credentials](https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/) admin/password
 
 # Features
 List of completed and future features
@@ -41,6 +41,7 @@ List of completed and future features
 * User/Team Profile page ❌
 * Reverse engineering tutorial ❌
 * SSO support ❌
+* Slimmed-down standalone version ❌
 
 ## Challenges
 * Basic flag submission tutorial ✅
