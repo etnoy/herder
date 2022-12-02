@@ -13,7 +13,6 @@ plugins {
 group = 'org.owasp.herder'
 version = '0.0.1'
 description = 'Herder'
-sourceCompatibility = '17'
 
 repositories {
     mavenCentral()
