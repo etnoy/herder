@@ -14,6 +14,12 @@
 		}
 	],
 	"settings": {
-		"java.configuration.updateBuildConfiguration": "automatic"
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"java.format.enabled": true,
+		"[java]": {
+			"editor.defaultFormatter": "mwpb.java-prettier-formatter"
+		},
+		"java.compile.nullAnalysis.mode": "automatic"
 	}
 }

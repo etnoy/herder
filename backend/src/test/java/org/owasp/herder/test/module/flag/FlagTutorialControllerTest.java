@@ -25,7 +25,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +37,6 @@ import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.flag.FlagTutorialController;
 import org.owasp.herder.module.flag.FlagTutorialResult;
 import org.owasp.herder.test.BaseTest;
-
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 

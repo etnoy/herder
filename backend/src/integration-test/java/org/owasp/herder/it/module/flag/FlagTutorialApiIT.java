@@ -22,7 +22,6 @@
 package org.owasp.herder.it.module.flag;
 
 import com.jayway.jsonpath.JsonPath;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,17 +39,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @DisplayName("Flag Tutorial API integration tests")
 class FlagTutorialApiIT extends BaseIT {
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
-
   @Autowired ApplicationContext applicationContext;
 
   FlagTutorial flagTutorial;

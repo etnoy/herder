@@ -21,10 +21,11 @@
  */
 package org.owasp.herder.it;
 
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.owasp.herder.test.BaseTest;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -32,8 +33,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.MongoDBContainer;
-
-import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Hooks;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
@@ -42,7 +42,13 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfigureWebTestClient
 @Slf4j
 @Execution(ExecutionMode.SAME_THREAD)
-public abstract class BaseIT extends BaseTest {
+public abstract class BaseIT {
+  @BeforeAll
+  private static void reactorVerbose() {
+    // Tell Reactor to print verbose error messages
+    Hooks.onOperatorDebug();
+  }
+
   static final MongoDBContainer mongoDBContainer;
 
   static {

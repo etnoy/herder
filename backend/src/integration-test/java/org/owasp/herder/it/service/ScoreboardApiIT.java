@@ -21,7 +21,6 @@
  */
 package org.owasp.herder.it.service;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,17 +31,10 @@ import org.owasp.herder.test.util.TestConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @DisplayName("Scoreboard API integration tests")
 class ScoreboardApiIT extends BaseIT {
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
-
   @Autowired WebTestClient webTestClient;
 
   @Autowired IntegrationTestUtils integrationTestUtils;

@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,21 +39,14 @@ import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.UserService;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("StartupRunner unit tests")
-class StartupRunnerTest {
-
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
-
+class StartupRunnerTest extends BaseTest {
   private StartupRunner startupRunner;
 
   @Mock private UserService userService;

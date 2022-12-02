@@ -23,7 +23,6 @@ package org.owasp.herder.it.module.csrf;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,7 +39,6 @@ import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @DisplayName("CsrfTutorial integration tests")
@@ -65,12 +63,6 @@ class CsrfTutorialIT extends BaseIT {
   @Autowired IntegrationTestUtils integrationTestUtils;
 
   ModuleInitializer moduleInitializer;
-
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
 
   @Test
   void activate_NonExistentPseudonym_ReturnsError() {

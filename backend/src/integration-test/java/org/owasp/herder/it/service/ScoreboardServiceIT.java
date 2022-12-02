@@ -26,10 +26,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.github.bucket4j.Bucket;
 import java.time.Clock;
 import java.time.Duration;
-
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -50,16 +49,15 @@ import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-
-import io.github.bucket4j.Bucket;
-import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @DisplayName("ScoreboardService integration tests")
 class ScoreboardServiceIT extends BaseIT {
+
   @Nested
   @DisplayName("Can get scoreboard")
   class canGetScoreboard {
+
     String userId1;
     String userId2;
     String userId3;
@@ -787,12 +785,6 @@ class ScoreboardServiceIT extends BaseIT {
       module1 = moduleService.getById(moduleId1).block();
       module1 = moduleService.getById(moduleId2).block();
     }
-  }
-
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
   }
 
   @Autowired RefresherService refresherService;
