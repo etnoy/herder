@@ -167,7 +167,7 @@ class SqlInjectionTutorialTest extends BaseTest {
                             assertThat(row.getComment()).isNull();
                             assertThat(row.getError())
                                     .isEqualTo(
-                                            "Data integrity violation, yo; nested exception is java.lang.RuntimeException");
+                                            "Data integrity violation, yo");
                         })
                 .verifyComplete();
     }
