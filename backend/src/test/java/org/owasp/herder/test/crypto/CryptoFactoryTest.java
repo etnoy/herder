@@ -27,54 +27,44 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-
 import javax.crypto.Mac;
-
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.CryptoFactory;
-
-import reactor.core.publisher.Hooks;
+import org.owasp.herder.test.BaseTest;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CryptoFactory unit tests")
-class CryptoFactoryTest {
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+class CryptoFactoryTest extends BaseTest {
+    CryptoFactory cryptoFactory;
 
-  CryptoFactory cryptoFactory;
+    @Test
+    void getPrng_ReturnsSecureRandomInstance() throws NoSuchAlgorithmException {
+        assertThat(cryptoFactory.getPrng()).isInstanceOf(SecureRandom.class);
+    }
 
-  @Test
-  void getPrng_ReturnsSecureRandomInstance() throws NoSuchAlgorithmException {
-    assertThat(cryptoFactory.getPrng()).isInstanceOf(SecureRandom.class);
-  }
+    @Test
+    void getHmac_ReturnsMacInstance() throws NoSuchAlgorithmException {
+        assertThat(cryptoFactory.getHmac()).isInstanceOf(Mac.class);
+    }
 
-  @Test
-  void getHmac_ReturnsMacInstance() throws NoSuchAlgorithmException {
-    assertThat(cryptoFactory.getHmac()).isInstanceOf(Mac.class);
-  }
+    @Test
+    void getHmacKey_ValidKey_ReturnsMacInstance() {
+        final byte[] key = {-91, -79, 67};
+        assertThat(cryptoFactory.getSecretKeySpec(key)).isInstanceOf(Key.class);
+    }
 
-  @Test
-  void getHmacKey_ValidKey_ReturnsMacInstance() {
-    final byte[] key = {-91, -79, 67};
-    assertThat(cryptoFactory.getSecretKeySpec(key)).isInstanceOf(Key.class);
-  }
+    @Test
+    void getHmacKey_NullKey_ThrowsIllegalArgumentException() {
+        assertThatExceptionOfType(IllegalArgumentException.class)
+                .isThrownBy(() -> cryptoFactory.getSecretKeySpec(null));
+    }
 
-  @Test
-  void getHmacKey_NullKey_ThrowsIllegalArgumentException() {
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> cryptoFactory.getSecretKeySpec(null));
-  }
-
-  @BeforeEach
-  private void setUp() {
-    cryptoFactory = new CryptoFactory();
-  }
+    @BeforeEach
+    void setup() {
+        cryptoFactory = new CryptoFactory();
+    }
 }

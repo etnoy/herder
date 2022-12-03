@@ -24,7 +24,6 @@ package org.owasp.herder.test.service;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,49 +34,45 @@ import org.owasp.herder.scoring.ScoreboardEntry;
 import org.owasp.herder.scoring.ScoreboardRepository;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("scoreboardService unit tests")
-class ScoreServiceTest {
+class ScoreServiceTest extends BaseTest {
 
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+    ScoreboardService scoreboardService;
 
-  ScoreboardService scoreboardService;
+    @Mock SubmissionService submissionService;
 
-  @Mock SubmissionService submissionService;
+    @Mock ScoreboardRepository scoreboardRepository;
 
-  @Mock ScoreboardRepository scoreboardRepository;
+    @Mock UserService userService;
 
-  @Mock UserService userService;
+    @BeforeEach
+    void setup() {
+        // Set up the system under test
+        scoreboardService = new ScoreboardService(scoreboardRepository);
+    }
 
-  @BeforeEach
-  private void setUp() {
-    // Set up the system under test
-    scoreboardService = new ScoreboardService(scoreboardRepository);
-  }
+    @Test
+    @DisplayName("Can rank users in the scoreboard")
+    void getScoreboard_ThreeUsersToScore_CallsRepository() {
+        final ScoreboardEntry mockScoreboardEntry1 = mock(ScoreboardEntry.class);
+        final ScoreboardEntry mockScoreboardEntry2 = mock(ScoreboardEntry.class);
+        final ScoreboardEntry mockScoreboardEntry3 = mock(ScoreboardEntry.class);
 
-  @Test
-  @DisplayName("Can rank users in the scoreboard")
-  void getScoreboard_ThreeUsersToScore_CallsRepository() {
-    final ScoreboardEntry mockScoreboardEntry1 = mock(ScoreboardEntry.class);
-    final ScoreboardEntry mockScoreboardEntry2 = mock(ScoreboardEntry.class);
-    final ScoreboardEntry mockScoreboardEntry3 = mock(ScoreboardEntry.class);
+        when(scoreboardRepository.findAll())
+                .thenReturn(
+                        Flux.just(
+                                mockScoreboardEntry1, mockScoreboardEntry2, mockScoreboardEntry3));
 
-    when(scoreboardRepository.findAll())
-        .thenReturn(Flux.just(mockScoreboardEntry1, mockScoreboardEntry2, mockScoreboardEntry3));
-
-    StepVerifier.create(scoreboardService.getScoreboard())
-        .expectNext(mockScoreboardEntry1)
-        .expectNext(mockScoreboardEntry2)
-        .expectNext(mockScoreboardEntry3)
-        .verifyComplete();
-  }
+        StepVerifier.create(scoreboardService.getScoreboard())
+                .expectNext(mockScoreboardEntry1)
+                .expectNext(mockScoreboardEntry2)
+                .expectNext(mockScoreboardEntry3)
+                .verifyComplete();
+    }
 }

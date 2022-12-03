@@ -27,8 +27,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
-
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,98 +40,95 @@ import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.RefresherService;
 import org.springframework.http.ResponseEntity;
-
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlagController unit tests")
-class FlagControllerTest {
+class FlagControllerTest extends BaseTest {
 
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+    private FlagController flagController;
 
-  private FlagController flagController;
+    @Mock private ControllerAuthentication controllerAuthentication;
 
-  @Mock private ControllerAuthentication controllerAuthentication;
+    @Mock private ModuleService moduleService;
 
-  @Mock private ModuleService moduleService;
+    @Mock private SubmissionService submissionService;
 
-  @Mock private SubmissionService submissionService;
+    @Mock private RefresherService refresherService;
 
-  @Mock private RefresherService refresherService;
+    @BeforeEach
+    void setup() {
+        // Set up the system under test
+        flagController =
+                new FlagController(
+                        controllerAuthentication,
+                        moduleService,
+                        submissionService,
+                        refresherService);
+    }
 
-  @BeforeEach
-  private void setUp() {
-    // Set up the system under test
-    flagController =
-        new FlagController(
-            controllerAuthentication, moduleService, submissionService, refresherService);
-  }
+    @Test
+    void submitFlag_UserNotAuthenticated_ReturnsException() {
+        final String flag = "validflag";
+        final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-  @Test
-  void submitFlag_UserNotAuthenticated_ReturnsException() {
-    final String flag = "validflag";
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
+        when(controllerAuthentication.getUserId())
+                .thenReturn(Mono.error(new NotAuthenticatedException()));
 
-    when(controllerAuthentication.getUserId())
-        .thenReturn(Mono.error(new NotAuthenticatedException()));
+        when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+                .thenReturn(Mono.just(mockModule));
 
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
-        .thenReturn(Mono.just(mockModule));
+        StepVerifier.create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag))
+                .expectError(NotAuthenticatedException.class)
+                .verify();
 
-    StepVerifier.create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag))
-        .expectError(NotAuthenticatedException.class)
-        .verify();
+        verify(controllerAuthentication, times(1)).getUserId();
+    }
 
-    verify(controllerAuthentication, times(1)).getUserId();
-  }
+    @Test
+    void submitFlag_UserAuthenticatedAndValidFlagSubmitted_ReturnsValidSubmission() {
+        final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-  @Test
-  void submitFlag_UserAuthenticatedAndValidFlagSubmitted_ReturnsValidSubmission() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
+        final String flag = "validflag";
 
-    final String flag = "validflag";
+        when(controllerAuthentication.getUserId())
+                .thenReturn(Mono.just(TestConstants.TEST_USER_ID));
 
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
+        final Submission submission =
+                Submission.builder()
+                        .userId(TestConstants.TEST_USER_ID)
+                        .moduleId(TestConstants.TEST_MODULE_ID)
+                        .flag(flag)
+                        .isValid(true)
+                        .time(LocalDateTime.now(TestConstants.year2000Clock))
+                        .build();
 
-    final Submission submission =
-        Submission.builder()
-            .userId(TestConstants.TEST_USER_ID)
-            .moduleId(TestConstants.TEST_MODULE_ID)
-            .flag(flag)
-            .isValid(true)
-            .time(LocalDateTime.now(TestConstants.year2000Clock))
-            .build();
+        when(submissionService.submitFlag(
+                        TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
+                .thenReturn(Mono.just(submission));
 
-    when(submissionService.submitFlag(
-            TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
-        .thenReturn(Mono.just(submission));
+        when(mockModule.getId()).thenReturn(TestConstants.TEST_MODULE_ID);
 
-    when(mockModule.getId()).thenReturn(TestConstants.TEST_MODULE_ID);
+        when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+                .thenReturn(Mono.just(mockModule));
 
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
-        .thenReturn(Mono.just(mockModule));
+        when(refresherService.refreshModuleLists()).thenReturn(Mono.empty());
+        when(refresherService.refreshSubmissionRanks()).thenReturn(Mono.empty());
+        when(refresherService.refreshScoreboard()).thenReturn(Mono.empty());
 
-    when(refresherService.refreshModuleLists()).thenReturn(Mono.empty());
-    when(refresherService.refreshSubmissionRanks()).thenReturn(Mono.empty());
-    when(refresherService.refreshScoreboard()).thenReturn(Mono.empty());
+        StepVerifier.create(
+                        flagController
+                                .submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag)
+                                .map(ResponseEntity::getBody))
+                .expectNext(submission)
+                .verifyComplete();
 
-    StepVerifier.create(
-            flagController
-                .submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag)
-                .map(ResponseEntity::getBody))
-        .expectNext(submission)
-        .verifyComplete();
-
-    verify(submissionService, times(1))
-        .submitFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag);
-  }
+        verify(submissionService, times(1))
+                .submitFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag);
+    }
 }

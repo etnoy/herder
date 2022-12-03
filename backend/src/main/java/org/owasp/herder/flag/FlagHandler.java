@@ -24,8 +24,8 @@ package org.owasp.herder.flag;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import io.github.bucket4j.Bucket;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.CryptoService;
@@ -52,134 +52,140 @@ import reactor.core.publisher.Mono;
 @Validated
 @Service
 public class FlagHandler {
-  private static final String DYNAMIC_FLAG_FORMAT = "flag{%s}";
+    private static final String DYNAMIC_FLAG_FORMAT = "flag{%s}";
 
-  private final ModuleService moduleService;
+    private final ModuleService moduleService;
 
-  private final UserService userService;
+    private final UserService userService;
 
-  private final ConfigurationService configurationService;
+    private final ConfigurationService configurationService;
 
-  private final CryptoService cryptoService;
+    private final CryptoService cryptoService;
 
-  private final FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+    private final FlagSubmissionRateLimiter flagSubmissionRateLimiter;
 
-  private final InvalidFlagRateLimiter invalidFlagRateLimiter;
+    private final InvalidFlagRateLimiter invalidFlagRateLimiter;
 
-  public Mono<String> getDynamicFlag(
-      @ValidUserId final String userId, @ValidModuleLocator final String moduleLocator) {
-    return getSaltedHmac(userId, moduleLocator, "flag")
-        .map(flag -> String.format(DYNAMIC_FLAG_FORMAT, flag));
-  }
-
-  public Mono<String> getSaltedHmac(
-      @ValidUserId final String userId,
-      @ValidModuleLocator final String moduleLocator,
-      @NotNull @NotEmpty final String prefix) {
-    final Mono<byte[]> moduleKey =
-        // Find the module in the repo
-        moduleService
-            .findByLocator(moduleLocator)
-            // Return error if module wasn't found
-            .switchIfEmpty(
-                Mono.error(
-                    new ModuleNotFoundException(
-                        "Could not find module with locator " + moduleLocator)))
-            // Make sure that the flag isn't static
-            .filter(foundModule -> !foundModule.isFlagStatic())
-            .switchIfEmpty(
-                Mono.error(
-                    new InvalidFlagStateException("Cannot get dynamic flag if flag is static")))
-            // Get module key and convert to bytes
-            .map(ModuleEntity::getKey);
-
-    final Mono<byte[]> userKey = userService.findKeyById(userId);
-
-    final Mono<byte[]> serverKey = configurationService.getServerKey();
-
-    return userKey
-        .zipWith(moduleKey)
-        .map(tuple -> Bytes.concat(tuple.getT1(), tuple.getT2(), prefix.getBytes()))
-        .zipWith(serverKey)
-        .map(tuple -> cryptoService.hmac(tuple.getT2(), tuple.getT1()))
-        .map(BaseEncoding.base32().lowerCase().omitPadding()::encode);
-  }
-
-  public Mono<Boolean> verifyFlag(
-      @ValidUserId final String userId,
-      @ValidModuleId final String moduleId,
-      @NotEmpty @NotNull final String submittedFlag) {
-    log.trace(
-        "Verifying flag "
-            + submittedFlag
-            + " submitted by userId "
-            + userId
-            + " to moduleId "
-            + moduleId);
-
-    // Check the rate limiter for flag submissions
-    Bucket submissionBucket = flagSubmissionRateLimiter.resolveBucket(userId);
-    if (!submissionBucket.tryConsume(1)) {
-      // limit is exceeded
-      return Mono.error(new FlagSubmissionRateLimitException());
+    public Mono<String> getDynamicFlag(
+            @ValidUserId final String userId, @ValidModuleLocator final String moduleLocator) {
+        return getSaltedHmac(userId, moduleLocator, "flag")
+                .map(flag -> String.format(DYNAMIC_FLAG_FORMAT, flag));
     }
 
-    // Get the module from the repository
-    final Mono<ModuleEntity> moduleMono = moduleService.findById(moduleId);
+    public Mono<String> getSaltedHmac(
+            @ValidUserId final String userId,
+            @ValidModuleLocator final String moduleLocator,
+            @NotNull @NotEmpty final String prefix) {
+        final Mono<byte[]> moduleKey =
+                // Find the module in the repo
+                moduleService
+                        .findByLocator(moduleLocator)
+                        // Return error if module wasn't found
+                        .switchIfEmpty(
+                                Mono.error(
+                                        new ModuleNotFoundException(
+                                                "Could not find module with locator "
+                                                        + moduleLocator)))
+                        // Make sure that the flag isn't static
+                        .filter(foundModule -> !foundModule.isFlagStatic())
+                        .switchIfEmpty(
+                                Mono.error(
+                                        new InvalidFlagStateException(
+                                                "Cannot get dynamic flag if flag is static")))
+                        // Get module key and convert to bytes
+                        .map(ModuleEntity::getKey);
 
-    final Mono<Boolean> isValid =
-        moduleMono
-            // If the module wasn't found, return exception
-            .switchIfEmpty(
-                Mono.error(new ModuleNotFoundException("Module id " + moduleId + " not found")))
-            // Check if the flag is valid
-            .flatMap(
-                module -> {
-                  if (module.isFlagStatic()) {
-                    // Verifying a static flag
-                    return Mono.just(module.getStaticFlag().equalsIgnoreCase(submittedFlag));
-                  } else {
-                    // Verifying a dynamic flag
-                    return getDynamicFlag(userId, module.getLocator())
-                        .map(submittedFlag::equalsIgnoreCase);
-                  }
-                })
-            .flatMap(
-                validationResult -> {
-                  // Check the rate limiter if the flag was invalid
-                  if (!Boolean.TRUE.equals(validationResult)) {
-                    // flag is invalid
-                    Bucket invalidFlagBucket = invalidFlagRateLimiter.resolveBucket(userId);
-                    if (!invalidFlagBucket.tryConsume(1)) {
-                      // limit is exceeded
-                      return Mono.error(new InvalidFlagSubmissionRateLimitException());
-                    }
-                  }
-                  return Mono.just(validationResult);
-                });
+        final Mono<byte[]> userKey = userService.findKeyById(userId);
 
-    // Do some logging. First, check if error occurred and then print logs
-    final Mono<String> validText =
-        isValid
-            .onErrorReturn(false)
-            .map(validFlag -> Boolean.TRUE.equals(validFlag) ? "valid" : "invalid");
+        final Mono<byte[]> serverKey = configurationService.getServerKey();
 
-    Mono.zip(
-            userService.getById(userId).map(UserEntity::getDisplayName),
-            validText,
-            moduleMono.map(ModuleEntity::getId))
-        .map(
-            tuple ->
-                "User "
-                    + tuple.getT1()
-                    + " submitted "
-                    + tuple.getT2()
-                    + " flag "
-                    + submittedFlag
-                    + " to module "
-                    + tuple.getT3())
-        .subscribe(log::debug);
+        return userKey.zipWith(moduleKey)
+                .map(tuple -> Bytes.concat(tuple.getT1(), tuple.getT2(), prefix.getBytes()))
+                .zipWith(serverKey)
+                .map(tuple -> cryptoService.hmac(tuple.getT2(), tuple.getT1()))
+                .map(BaseEncoding.base32().lowerCase().omitPadding()::encode);
+    }
 
-    return isValid;
-  }
+    public Mono<Boolean> verifyFlag(
+            @ValidUserId final String userId,
+            @ValidModuleId final String moduleId,
+            @NotEmpty @NotNull final String submittedFlag) {
+        log.trace(
+                "Verifying flag "
+                        + submittedFlag
+                        + " submitted by userId "
+                        + userId
+                        + " to moduleId "
+                        + moduleId);
+
+        // Check the rate limiter for flag submissions
+        Bucket submissionBucket = flagSubmissionRateLimiter.resolveBucket(userId);
+        if (!submissionBucket.tryConsume(1)) {
+            // limit is exceeded
+            return Mono.error(new FlagSubmissionRateLimitException());
+        }
+
+        // Get the module from the repository
+        final Mono<ModuleEntity> moduleMono = moduleService.findById(moduleId);
+
+        final Mono<Boolean> isValid =
+                moduleMono
+                        // If the module wasn't found, return exception
+                        .switchIfEmpty(
+                                Mono.error(
+                                        new ModuleNotFoundException(
+                                                "Module id " + moduleId + " not found")))
+                        // Check if the flag is valid
+                        .flatMap(
+                                module -> {
+                                    if (module.isFlagStatic()) {
+                                        // Verifying a static flag
+                                        return Mono.just(
+                                                module.getStaticFlag()
+                                                        .equalsIgnoreCase(submittedFlag));
+                                    } else {
+                                        // Verifying a dynamic flag
+                                        return getDynamicFlag(userId, module.getLocator())
+                                                .map(submittedFlag::equalsIgnoreCase);
+                                    }
+                                })
+                        .flatMap(
+                                validationResult -> {
+                                    // Check the rate limiter if the flag was invalid
+                                    if (!Boolean.TRUE.equals(validationResult)) {
+                                        // flag is invalid
+                                        Bucket invalidFlagBucket =
+                                                invalidFlagRateLimiter.resolveBucket(userId);
+                                        if (!invalidFlagBucket.tryConsume(1)) {
+                                            // limit is exceeded
+                                            return Mono.error(
+                                                    new InvalidFlagSubmissionRateLimitException());
+                                        }
+                                    }
+                                    return Mono.just(validationResult);
+                                });
+
+        // Do some logging. First, check if error occurred and then print logs
+        final Mono<String> validText =
+                isValid.onErrorReturn(false)
+                        .map(validFlag -> Boolean.TRUE.equals(validFlag) ? "valid" : "invalid");
+
+        Mono.zip(
+                        userService.getById(userId).map(UserEntity::getDisplayName),
+                        validText,
+                        moduleMono.map(ModuleEntity::getId))
+                .map(
+                        tuple ->
+                                "User "
+                                        + tuple.getT1()
+                                        + " submitted "
+                                        + tuple.getT2()
+                                        + " flag "
+                                        + submittedFlag
+                                        + " to module "
+                                        + tuple.getT3())
+                .subscribe(log::debug);
+
+        return isValid;
+    }
 }

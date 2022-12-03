@@ -43,56 +43,56 @@ import reactor.test.StepVerifier;
 
 @DisplayName("ModuleRepository integration tests")
 class ModuleRepositoryIT extends BaseIT {
-  @Autowired IntegrationTestUtils integrationTestUtils;
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-  @Autowired ModuleService moduleService;
+    @Autowired ModuleService moduleService;
 
-  @Autowired ModuleRepository moduleRepository;
+    @Autowired ModuleRepository moduleRepository;
 
-  @Autowired UserService userService;
+    @Autowired UserService userService;
 
-  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+    @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
 
-  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+    @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
 
-  @Autowired SubmissionService submissionService;
+    @Autowired SubmissionService submissionService;
 
-  @Test
-  @DisplayName("Can show a module list without closed modules")
-  void canFindAllOpenModulesWithClosedModules() {
-    final String moduleId = integrationTestUtils.createStaticTestModule();
+    @Test
+    @DisplayName("Can show a module list without closed modules")
+    void canFindAllOpenModulesWithClosedModules() {
+        final String moduleId = integrationTestUtils.createStaticTestModule();
 
-    moduleService.close(moduleId).block();
+        moduleService.close(moduleId).block();
 
-    StepVerifier.create(moduleRepository.findAllOpen()).verifyComplete();
-  }
+        StepVerifier.create(moduleRepository.findAllOpen()).verifyComplete();
+    }
 
-  @Test
-  @DisplayName("Can show an empty module list")
-  void canFindAllOpenModulesWithoutModules() {
-    StepVerifier.create(moduleRepository.findAllOpen()).verifyComplete();
-  }
+    @Test
+    @DisplayName("Can show an empty module list")
+    void canFindAllOpenModulesWithoutModules() {
+        StepVerifier.create(moduleRepository.findAllOpen()).verifyComplete();
+    }
 
-  @Test
-  @DisplayName("Can find a single open module")
-  void canFindAllOpenWithSingleOpenModule() {
-    final String moduleId = integrationTestUtils.createStaticTestModule();
+    @Test
+    @DisplayName("Can find a single open module")
+    void canFindAllOpenWithSingleOpenModule() {
+        final String moduleId = integrationTestUtils.createStaticTestModule();
 
-    moduleService.open(moduleId).block();
+        moduleService.open(moduleId).block();
 
-    StepVerifier.create(moduleRepository.findAllOpen())
-        .expectNextMatches(module -> module.getId().equals(moduleId))
-        .verifyComplete();
-  }
+        StepVerifier.create(moduleRepository.findAllOpen())
+                .expectNextMatches(module -> module.getId().equals(moduleId))
+                .verifyComplete();
+    }
 
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
+    @BeforeEach
+    void setup() {
+        integrationTestUtils.resetState();
 
-    // Bypass the rate limiter
-    final Bucket mockBucket = mock(Bucket.class);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-  }
+        // Bypass the rate limiter
+        final Bucket mockBucket = mock(Bucket.class);
+        when(mockBucket.tryConsume(1)).thenReturn(true);
+        when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+        when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    }
 }

@@ -24,7 +24,6 @@ package org.owasp.herder.it.user;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashSet;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,298 +40,294 @@ import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @DisplayName("User administration integration tests")
 class UserAdministrationIT extends BaseIT {
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+    @Autowired UserService userService;
 
-  @Autowired UserService userService;
+    @Autowired UserRepository userRepository;
 
-  @Autowired UserRepository userRepository;
+    @Autowired PasswordAuthRepository passwordAuthRepository;
 
-  @Autowired PasswordAuthRepository passwordAuthRepository;
+    @Autowired SubmissionService submissionService;
 
-  @Autowired SubmissionService submissionService;
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+    @Test
+    @DisplayName("Can update team id field when adding user to team")
+    void canAddUserToTeam() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String teamId = integrationTestUtils.createTestTeam();
 
-  @Test
-  @DisplayName("Can update team id field when adding user to team")
-  void canAddUserToTeam() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String teamId = integrationTestUtils.createTestTeam();
+        userService.getById(userId).block();
 
-    userService.getById(userId).block();
+        userService.addUserToTeam(userId, teamId).block();
 
-    userService.addUserToTeam(userId, teamId).block();
+        StepVerifier.create(userService.findById(userId).map(UserEntity::getTeamId))
+                .expectNext(teamId)
+                .verifyComplete();
+    }
 
-    StepVerifier.create(userService.findById(userId).map(UserEntity::getTeamId))
-        .expectNext(teamId)
-        .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can update members field when adding user to team")
+    void canAddUserToTeamMembers() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String teamId = integrationTestUtils.createTestTeam();
 
-  @Test
-  @DisplayName("Can update members field when adding user to team")
-  void canAddUserToTeamMembers() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String teamId = integrationTestUtils.createTestTeam();
+        final UserEntity user = userService.getById(userId).block();
 
-    final UserEntity user = userService.getById(userId).block();
+        userService.addUserToTeam(userId, teamId).block();
 
-    userService.addUserToTeam(userId, teamId).block();
+        StepVerifier.create(userService.findTeamById(teamId).map(TeamEntity::getMembers))
+                .assertNext(members -> assertThat(members).containsExactly(user.withTeamId(teamId)))
+                .verifyComplete();
+    }
 
-    StepVerifier.create(userService.findTeamById(teamId).map(TeamEntity::getMembers))
-        .assertNext(members -> assertThat(members).containsExactly(user.withTeamId(teamId)))
-        .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can clear teams from user")
+    void canClearTeamsFromUser() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String teamId = integrationTestUtils.createTestTeam();
 
-  @Test
-  @DisplayName("Can clear teams from user")
-  void canClearTeamsFromUser() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String teamId = integrationTestUtils.createTestTeam();
+        userService.addUserToTeam(userId, teamId).block();
 
-    userService.addUserToTeam(userId, teamId).block();
+        userService.clearTeamForUser(userId).block();
 
-    userService.clearTeamForUser(userId).block();
+        StepVerifier.create(userService.findById(userId))
+                .assertNext(user -> assertThat(user.getTeamId()).isNull())
+                .verifyComplete();
+    }
 
-    StepVerifier.create(userService.findById(userId))
-        .assertNext(user -> assertThat(user.getTeamId()).isNull())
-        .verifyComplete();
-  }
+    @ParameterizedTest
+    @MethodSource("org.owasp.herder.test.util.TestConstants#validDisplayNameProvider")
+    @DisplayName("Can create team with display name")
+    void canCreateTeam(final String displayName) {
+        StepVerifier.create(
+                        userService
+                                .createTeam(displayName)
+                                .flatMap(userService::findTeamById)
+                                .map(TeamEntity::getDisplayName))
+                .expectNext(displayName)
+                .verifyComplete();
+    }
 
-  @ParameterizedTest
-  @MethodSource("org.owasp.herder.test.util.TestConstants#validDisplayNameProvider")
-  @DisplayName("Can create team with display name")
-  void canCreateTeam(final String displayName) {
-    StepVerifier.create(
-            userService
-                .createTeam(displayName)
-                .flatMap(userService::findTeamById)
-                .map(TeamEntity::getDisplayName))
-        .expectNext(displayName)
-        .verifyComplete();
-  }
+    @ParameterizedTest
+    @MethodSource("org.owasp.herder.test.util.TestConstants#validDisplayNameProvider")
+    @DisplayName("Can create user with display name")
+    void canCreateUser(final String displayName) {
+        StepVerifier.create(
+                        userService
+                                .create(displayName)
+                                .flatMap(userService::findById)
+                                .map(UserEntity::getDisplayName))
+                .expectNext(displayName)
+                .verifyComplete();
+    }
 
-  @ParameterizedTest
-  @MethodSource("org.owasp.herder.test.util.TestConstants#validDisplayNameProvider")
-  @DisplayName("Can create user with display name")
-  void canCreateUser(final String displayName) {
-    StepVerifier.create(
-            userService
-                .create(displayName)
-                .flatMap(userService::findById)
-                .map(UserEntity::getDisplayName))
-        .expectNext(displayName)
-        .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can create a password user")
+    void canCreateValidUserWithCreatePasswordUser() {
+        final String displayName = "Test user";
+        final String loginName = "testUser";
+        final String passwordHash = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
+        final String userId =
+                userService.createPasswordUser(displayName, loginName, passwordHash).block();
 
-  @Test
-  @DisplayName("Can create a password user")
-  void canCreateValidUserWithCreatePasswordUser() {
-    final String displayName = "Test user";
-    final String loginName = "testUser";
-    final String passwordHash = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
-    final String userId =
-        userService.createPasswordUser(displayName, loginName, passwordHash).block();
+        StepVerifier.create(userService.findById(userId))
+                .assertNext(
+                        user -> {
+                            assertThat(user.getDisplayName()).isEqualTo(displayName);
+                            assertThat(user.getId()).isEqualTo(userId);
+                        })
+                .verifyComplete();
+    }
 
-    StepVerifier.create(userService.findById(userId))
-        .assertNext(
-            user -> {
-              assertThat(user.getDisplayName()).isEqualTo(displayName);
-              assertThat(user.getId()).isEqualTo(userId);
-            })
-        .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can delete password auth when deleting password user")
+    void canDeletePasswordAuthWhenDeletingPasswordAuth() {
+        final String userId =
+                userService
+                        .createPasswordUser(
+                                TestConstants.TEST_USER_DISPLAY_NAME,
+                                TestConstants.TEST_USER_LOGIN_NAME,
+                                TestConstants.HASHED_TEST_PASSWORD)
+                        .block();
 
-  @Test
-  @DisplayName("Can delete password auth when deleting password user")
-  void canDeletePasswordAuthWhenDeletingPasswordAuth() {
-    final String userId =
-        userService
-            .createPasswordUser(
-                TestConstants.TEST_USER_DISPLAY_NAME,
-                TestConstants.TEST_USER_LOGIN_NAME,
-                TestConstants.HASHED_TEST_PASSWORD)
-            .block();
+        userService.delete(userId).block();
+        StepVerifier.create(passwordAuthRepository.findByUserId(userId)).verifyComplete();
+    }
 
-    userService.delete(userId).block();
-    StepVerifier.create(passwordAuthRepository.findByUserId(userId)).verifyComplete();
-  }
+    @Test
+    @DisplayName("Can delete password user")
+    void canDeletePasswordUser() {
+        final String userId =
+                userService
+                        .createPasswordUser(
+                                TestConstants.TEST_USER_DISPLAY_NAME,
+                                TestConstants.TEST_USER_LOGIN_NAME,
+                                TestConstants.HASHED_TEST_PASSWORD)
+                        .block();
 
-  @Test
-  @DisplayName("Can delete password user")
-  void canDeletePasswordUser() {
-    final String userId =
-        userService
-            .createPasswordUser(
-                TestConstants.TEST_USER_DISPLAY_NAME,
-                TestConstants.TEST_USER_LOGIN_NAME,
-                TestConstants.HASHED_TEST_PASSWORD)
-            .block();
+        userService.delete(userId).block();
+        StepVerifier.create(userRepository.findById(userId))
+                .assertNext(
+                        user -> {
+                            assertThat(user.isDeleted()).isTrue();
+                            assertThat(user.getDisplayName()).isEmpty();
+                            assertThat(user.isEnabled()).isFalse();
+                        })
+                .verifyComplete();
+    }
 
-    userService.delete(userId).block();
-    StepVerifier.create(userRepository.findById(userId))
-        .assertNext(
-            user -> {
-              assertThat(user.isDeleted()).isTrue();
-              assertThat(user.getDisplayName()).isEmpty();
-              assertThat(user.isEnabled()).isFalse();
-            })
-        .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can delete user")
+    void canDeleteUser() {
+        final String userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
+        userService.delete(userId).block();
+        StepVerifier.create(userRepository.findById(userId))
+                .assertNext(
+                        user -> {
+                            assertThat(user.isDeleted()).isTrue();
+                            assertThat(user.getDisplayName()).isEmpty();
+                            assertThat(user.isEnabled()).isFalse();
+                            assertThat(user.getTeamId()).isNull();
+                        })
+                .verifyComplete();
+    }
 
-  @Test
-  @DisplayName("Can delete user")
-  void canDeleteUser() {
-    final String userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
-    userService.delete(userId).block();
-    StepVerifier.create(userRepository.findById(userId))
-        .assertNext(
-            user -> {
-              assertThat(user.isDeleted()).isTrue();
-              assertThat(user.getDisplayName()).isEmpty();
-              assertThat(user.isEnabled()).isFalse();
-              assertThat(user.getTeamId()).isNull();
-            })
-        .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can error when adding user to new team")
+    void canErrorWhenAddingUserToNewTeam() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String teamId = integrationTestUtils.createTestTeam();
 
-  @Test
-  @DisplayName("Can error when adding user to new team")
-  void canErrorWhenAddingUserToNewTeam() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String teamId = integrationTestUtils.createTestTeam();
+        userService.addUserToTeam(userId, teamId).block();
 
-    userService.addUserToTeam(userId, teamId).block();
+        final String teamId2 = userService.createTeam("Test team 2").block();
 
-    final String teamId2 = userService.createTeam("Test team 2").block();
+        StepVerifier.create(userService.addUserToTeam(userId, teamId2))
+                .expectError(IllegalStateException.class)
+                .verify();
+    }
 
-    StepVerifier.create(userService.addUserToTeam(userId, teamId2))
-        .expectError(IllegalStateException.class)
-        .verify();
-  }
+    @Test
+    @DisplayName("Can list principals consisting of teams and users")
+    void canListPrincipalsContainingUsersAndTeams() {
+        final String userId1 = userService.create("Test 1").block();
+        final String userId2 = userService.create("Test 2").block();
+        final String userId3 = userService.create("Test 3").block();
+        final String userId4 = userService.create("Test 4").block();
 
-  @Test
-  @DisplayName("Can list principals consisting of teams and users")
-  void canListPrincipalsContainingUsersAndTeams() {
-    final String userId1 = userService.create("Test 1").block();
-    final String userId2 = userService.create("Test 2").block();
-    final String userId3 = userService.create("Test 3").block();
-    final String userId4 = userService.create("Test 4").block();
+        final String teamId1 = userService.createTeam("Team 1").block();
+        final String teamId2 = userService.createTeam("Team 2").block();
+        final String teamId3 = userService.createTeam("Team 3").block();
+        final String teamId4 = userService.createTeam("Team 4").block();
 
-    final String teamId1 = userService.createTeam("Team 1").block();
-    final String teamId2 = userService.createTeam("Team 2").block();
-    final String teamId3 = userService.createTeam("Team 3").block();
-    final String teamId4 = userService.createTeam("Team 4").block();
+        userService.addUserToTeam(userId1, teamId1).block();
+        userService.addUserToTeam(userId2, teamId1).block();
+        userService.addUserToTeam(userId3, teamId2).block();
 
-    userService.addUserToTeam(userId1, teamId1).block();
-    userService.addUserToTeam(userId2, teamId1).block();
-    userService.addUserToTeam(userId3, teamId2).block();
+        StepVerifier.create(userService.findAllPrincipals())
+                .recordWith(HashSet::new)
+                .expectNextCount(5)
+                .consumeRecordedWith(
+                        principals -> {
+                            assertThat(principals)
+                                    .filteredOn(principal -> principal.getId().equals(teamId1))
+                                    .hasSize(1);
+                            assertThat(principals)
+                                    .filteredOn(principal -> principal.getId().equals(teamId2))
+                                    .hasSize(1);
+                            assertThat(principals)
+                                    .filteredOn(principal -> principal.getId().equals(teamId3))
+                                    .hasSize(1);
+                            assertThat(principals)
+                                    .filteredOn(principal -> principal.getId().equals(teamId4))
+                                    .hasSize(1);
+                            assertThat(principals)
+                                    .filteredOn(principal -> principal.getId().equals(userId4))
+                                    .hasSize(1);
 
-    StepVerifier.create(userService.findAllPrincipals())
-        .recordWith(HashSet::new)
-        .expectNextCount(5)
-        .consumeRecordedWith(
-            principals -> {
-              assertThat(principals)
-                  .filteredOn(principal -> principal.getId().equals(teamId1))
-                  .hasSize(1);
-              assertThat(principals)
-                  .filteredOn(principal -> principal.getId().equals(teamId2))
-                  .hasSize(1);
-              assertThat(principals)
-                  .filteredOn(principal -> principal.getId().equals(teamId3))
-                  .hasSize(1);
-              assertThat(principals)
-                  .filteredOn(principal -> principal.getId().equals(teamId4))
-                  .hasSize(1);
-              assertThat(principals)
-                  .filteredOn(principal -> principal.getId().equals(userId4))
-                  .hasSize(1);
+                            assertThat(principals)
+                                    .filteredOn(principal -> principal.getId().equals(teamId1))
+                                    .flatExtracting(PrincipalEntity::getMembers)
+                                    .hasSize(2);
+                            assertThat(principals)
+                                    .filteredOn(principal -> principal.getId().equals(teamId2))
+                                    .flatExtracting(PrincipalEntity::getMembers)
+                                    .hasSize(1);
+                            assertThat(principals)
+                                    .filteredOn(principal -> principal.getId().equals(teamId3))
+                                    .flatExtracting(PrincipalEntity::getMembers)
+                                    .isEmpty();
+                            assertThat(principals)
+                                    .filteredOn(principal -> principal.getId().equals(teamId4))
+                                    .flatExtracting(PrincipalEntity::getMembers)
+                                    .isEmpty();
+                            assertThat(principals)
+                                    .filteredOn(principal -> principal.getId().equals(userId1))
+                                    .flatExtracting(PrincipalEntity::getMembers)
+                                    .isEmpty();
+                        })
+                .verifyComplete();
+    }
 
-              assertThat(principals)
-                  .filteredOn(principal -> principal.getId().equals(teamId1))
-                  .flatExtracting(PrincipalEntity::getMembers)
-                  .hasSize(2);
-              assertThat(principals)
-                  .filteredOn(principal -> principal.getId().equals(teamId2))
-                  .flatExtracting(PrincipalEntity::getMembers)
-                  .hasSize(1);
-              assertThat(principals)
-                  .filteredOn(principal -> principal.getId().equals(teamId3))
-                  .flatExtracting(PrincipalEntity::getMembers)
-                  .isEmpty();
-              assertThat(principals)
-                  .filteredOn(principal -> principal.getId().equals(teamId4))
-                  .flatExtracting(PrincipalEntity::getMembers)
-                  .isEmpty();
-              assertThat(principals)
-                  .filteredOn(principal -> principal.getId().equals(userId1))
-                  .flatExtracting(PrincipalEntity::getMembers)
-                  .isEmpty();
-            })
-        .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can list principals consisting of a single team with a single user")
+    void canListPrincipalsWithOneTeamAndUser() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String teamId = integrationTestUtils.createTestTeam();
+        userService.addUserToTeam(userId, teamId).block();
+        StepVerifier.create(userService.findAllPrincipals())
+                .assertNext(
+                        team -> {
+                            assertThat(team.getMembers())
+                                    .hasAtLeastOneElementOfType(UserEntity.class);
+                            assertThat(team.getMembers().iterator().next().getDisplayName())
+                                    .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+                            assertThat(team.getDisplayName())
+                                    .isEqualTo(TestConstants.TEST_TEAM_DISPLAY_NAME);
+                        })
+                .verifyComplete();
+    }
 
-  @Test
-  @DisplayName("Can list principals consisting of a single team with a single user")
-  void canListPrincipalsWithOneTeamAndUser() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String teamId = integrationTestUtils.createTestTeam();
-    userService.addUserToTeam(userId, teamId).block();
-    StepVerifier.create(userService.findAllPrincipals())
-        .assertNext(
-            team -> {
-              assertThat(team.getMembers()).hasAtLeastOneElementOfType(UserEntity.class);
-              assertThat(team.getMembers().iterator().next().getDisplayName())
-                  .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
-              assertThat(team.getDisplayName()).isEqualTo(TestConstants.TEST_TEAM_DISPLAY_NAME);
-            })
-        .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can list principals consisting of a single user")
+    void canListPrincipalsWithOneUser() {
+        integrationTestUtils.createTestUser();
+        StepVerifier.create(userService.findAllPrincipals())
+                .assertNext(
+                        user -> {
+                            assertThat(user.getDisplayName())
+                                    .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+                        })
+                .verifyComplete();
+    }
 
-  @Test
-  @DisplayName("Can list principals consisting of a single user")
-  void canListPrincipalsWithOneUser() {
-    integrationTestUtils.createTestUser();
-    StepVerifier.create(userService.findAllPrincipals())
-        .assertNext(
-            user -> {
-              assertThat(user.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
-            })
-        .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can remove user from team when deleting user")
+    void canRemoveUserFromTeamWhenDeletingUser() {
+        final String userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
+        final String teamId = integrationTestUtils.createTestTeam();
 
-  @Test
-  @DisplayName("Can remove user from team when deleting user")
-  void canRemoveUserFromTeamWhenDeletingUser() {
-    final String userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
-    final String teamId = integrationTestUtils.createTestTeam();
+        userService.addUserToTeam(userId, teamId).block();
 
-    userService.addUserToTeam(userId, teamId).block();
+        userService.delete(userId).block();
 
-    userService.delete(userId).block();
+        StepVerifier.create(userRepository.findById(userId))
+                .assertNext(
+                        user -> {
+                            assertThat(user.isDeleted()).isTrue();
+                            assertThat(user.getDisplayName()).isEmpty();
+                            assertThat(user.isEnabled()).isFalse();
+                            assertThat(user.getTeamId()).isNull();
+                        })
+                .verifyComplete();
+    }
 
-    StepVerifier.create(userRepository.findById(userId))
-        .assertNext(
-            user -> {
-              assertThat(user.isDeleted()).isTrue();
-              assertThat(user.getDisplayName()).isEmpty();
-              assertThat(user.isEnabled()).isFalse();
-              assertThat(user.getTeamId()).isNull();
-            })
-        .verifyComplete();
-  }
-
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
-  }
+    @BeforeEach
+    void setUp() {
+        integrationTestUtils.resetState();
+    }
 }

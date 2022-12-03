@@ -43,297 +43,302 @@ import reactor.test.StepVerifier;
 
 @DisplayName("UserController API integration tests")
 class UserControllerApiIT extends BaseIT {
-  @Autowired UserService userService;
+    @Autowired UserService userService;
 
-  @Autowired WebTestClient webTestClient;
+    @Autowired WebTestClient webTestClient;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-  @Test
-  void getUserList_AuthenticatedUser_Forbidden() {
-    final String loginName = "test";
-    final String hashedPassword = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
+    @Test
+    void getUserList_AuthenticatedUser_Forbidden() {
+        final String loginName = "test";
+        final String hashedPassword =
+                "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
 
-    userService.createPasswordUser("Test User", loginName, hashedPassword).block();
-
-    String token =
-        JsonPath.parse(
-                new String(
-                    webTestClient
-                        .post()
-                        .uri("/api/v1/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(
-                            BodyInserters.fromPublisher(
-                                Mono.just(
-                                    "{\"userName\": \""
-                                        + loginName
-                                        + "\", \"password\": \"test\"}"),
-                                String.class))
-                        .exchange()
-                        .expectStatus()
-                        .isOk()
-                        .expectBody()
-                        .returnResult()
-                        .getResponseBody()))
-            .read("$.accessToken");
-
-    webTestClient
-        .get()
-        .uri("/api/v1/users")
-        .header("Authorization", "Bearer " + token)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isForbidden();
-  }
-
-  @Test
-  void getUserList_UserPromotedToAdmin_Success() {
-    final String loginName = "test";
-    final String hashedPassword = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
-
-    final String userId =
         userService.createPasswordUser("Test User", loginName, hashedPassword).block();
 
-    final String token =
-        JsonPath.parse(
-                new String(
-                    webTestClient
-                        .post()
-                        .uri("/api/v1/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(
-                            BodyInserters.fromPublisher(
-                                Mono.just(
-                                    "{\"userName\": \""
-                                        + loginName
-                                        + "\", \"password\": \"test\"}"),
-                                String.class))
-                        .exchange()
-                        .expectStatus()
-                        .isOk()
-                        .expectBody()
-                        .returnResult()
-                        .getResponseBody()))
-            .read("$.accessToken");
+        String token =
+                JsonPath.parse(
+                                new String(
+                                        webTestClient
+                                                .post()
+                                                .uri("/api/v1/login")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .body(
+                                                        BodyInserters.fromPublisher(
+                                                                Mono.just(
+                                                                        "{\"userName\": \""
+                                                                                + loginName
+                                                                                + "\", \"password\": \"test\"}"),
+                                                                String.class))
+                                                .exchange()
+                                                .expectStatus()
+                                                .isOk()
+                                                .expectBody()
+                                                .returnResult()
+                                                .getResponseBody()))
+                        .read("$.accessToken");
 
-    webTestClient
-        .get()
-        .uri("/api/v1/users")
-        .header("Authorization", "Bearer " + token)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isForbidden();
-
-    // Promote user to admin
-    userService.promote(userId).block();
-
-    String newToken =
-        JsonPath.parse(
-                new String(
-                    webTestClient
-                        .post()
-                        .uri("/api/v1/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(
-                            BodyInserters.fromPublisher(
-                                Mono.just(
-                                    "{\"userName\": \""
-                                        + loginName
-                                        + "\", \"password\": \"test\"}"),
-                                String.class))
-                        .exchange()
-                        .expectStatus()
-                        .isOk()
-                        .expectBody()
-                        .returnResult()
-                        .getResponseBody()))
-            .read("$.accessToken");
-
-    // Now the user should be able to see user list
-    webTestClient
-        .get()
-        .uri("/api/v1/users")
-        .header("Authorization", "Bearer " + newToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isOk();
-  }
-
-  @Test
-  void listUsers_UsersExist_ReturnsUserList() {
-    final String loginName = "test";
-    final String password = "paLswOrdha17£@£sh";
-
-    HashSet<String> userIdSet = new HashSet<>();
-
-    webTestClient
-        .post()
-        .uri("/api/v1/register")
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(
-            BodyInserters.fromValue(
-                new PasswordRegistrationDto("TestUserDisplayName", loginName, password)))
-        .exchange()
-        .expectStatus()
-        .isCreated();
-
-    final String userId = userService.findUserIdByLoginName(loginName).block();
-
-    // Promote this user to admin
-    userService.promote(userId).block();
-
-    userIdSet.add(userId);
-
-    String token =
-        JsonPath.parse(
-                new String(
-                    webTestClient
-                        .post()
-                        .uri("/api/v1/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(
-                            BodyInserters.fromPublisher(
-                                Mono.just(
-                                    "{\"userName\": \""
-                                        + loginName
-                                        + "\", \"password\": \""
-                                        + password
-                                        + "\"}"),
-                                String.class))
-                        .exchange()
-                        .expectStatus()
-                        .isOk()
-                        .expectBody()
-                        .returnResult()
-                        .getResponseBody()))
-            .read("$.accessToken");
-
-    webTestClient
-        .post()
-        .uri("/api/v1/register")
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(
-            BodyInserters.fromValue(
-                new PasswordRegistrationDto("TestUser2", "loginName2", "paLswOrdha17£@£sh")))
-        .exchange()
-        .expectStatus()
-        .isCreated();
-
-    userIdSet.add(userService.findUserIdByLoginName("loginName2").block());
-
-    webTestClient
-        .post()
-        .uri("/api/v1/register")
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(
-            BodyInserters.fromValue(
-                new PasswordRegistrationDto("TestUser3", "loginName3", "paLswOrdha17£@£sh")))
-        .exchange()
-        .expectStatus()
-        .isCreated();
-
-    userIdSet.add(userService.findUserIdByLoginName("loginName3").block());
-
-    StepVerifier.create(
-            webTestClient
+        webTestClient
                 .get()
                 .uri("/api/v1/users")
                 .header("Authorization", "Bearer " + token)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus()
-                .isOk()
-                .expectHeader()
+                .isForbidden();
+    }
+
+    @Test
+    void getUserList_UserPromotedToAdmin_Success() {
+        final String loginName = "test";
+        final String hashedPassword =
+                "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
+
+        final String userId =
+                userService.createPasswordUser("Test User", loginName, hashedPassword).block();
+
+        final String token =
+                JsonPath.parse(
+                                new String(
+                                        webTestClient
+                                                .post()
+                                                .uri("/api/v1/login")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .body(
+                                                        BodyInserters.fromPublisher(
+                                                                Mono.just(
+                                                                        "{\"userName\": \""
+                                                                                + loginName
+                                                                                + "\", \"password\": \"test\"}"),
+                                                                String.class))
+                                                .exchange()
+                                                .expectStatus()
+                                                .isOk()
+                                                .expectBody()
+                                                .returnResult()
+                                                .getResponseBody()))
+                        .read("$.accessToken");
+
+        webTestClient
+                .get()
+                .uri("/api/v1/users")
+                .header("Authorization", "Bearer " + token)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isForbidden();
+
+        // Promote user to admin
+        userService.promote(userId).block();
+
+        String newToken =
+                JsonPath.parse(
+                                new String(
+                                        webTestClient
+                                                .post()
+                                                .uri("/api/v1/login")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .body(
+                                                        BodyInserters.fromPublisher(
+                                                                Mono.just(
+                                                                        "{\"userName\": \""
+                                                                                + loginName
+                                                                                + "\", \"password\": \"test\"}"),
+                                                                String.class))
+                                                .exchange()
+                                                .expectStatus()
+                                                .isOk()
+                                                .expectBody()
+                                                .returnResult()
+                                                .getResponseBody()))
+                        .read("$.accessToken");
+
+        // Now the user should be able to see user list
+        webTestClient
+                .get()
+                .uri("/api/v1/users")
+                .header("Authorization", "Bearer " + newToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isOk();
+    }
+
+    @Test
+    void listUsers_UsersExist_ReturnsUserList() {
+        final String loginName = "test";
+        final String password = "paLswOrdha17£@£sh";
+
+        HashSet<String> userIdSet = new HashSet<>();
+
+        webTestClient
+                .post()
+                .uri("/api/v1/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .returnResult(UserEntity.class)
-                .getResponseBody()
-                .map(UserEntity::getId))
-        .recordWith(HashSet::new)
-        .thenConsumeWhile(__ -> true)
-        .expectRecordedMatches(x -> x.equals(userIdSet))
-        .verifyComplete();
-  }
+                .body(
+                        BodyInserters.fromValue(
+                                new PasswordRegistrationDto(
+                                        "TestUserDisplayName", loginName, password)))
+                .exchange()
+                .expectStatus()
+                .isCreated();
 
-  @Test
-  void register_ValidData_ReturnsValidUser() {
-    final String loginName = "test";
-    final String password = "paLswOrdha17£@£sh";
+        final String userId = userService.findUserIdByLoginName(loginName).block();
 
-    webTestClient
-        .post()
-        .uri("/api/v1/register")
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(
-            BodyInserters.fromPublisher(
-                Mono.just(
-                    "{\"displayName\": \""
-                        + loginName
-                        + "\", \"userName\": \""
-                        + loginName
-                        + "\",  \"password\": \""
-                        + password
-                        + "\"}"),
-                String.class))
-        .exchange()
-        .expectStatus()
-        .isCreated();
+        // Promote this user to admin
+        userService.promote(userId).block();
 
-    final String userId = userService.findUserIdByLoginName("test").block();
+        userIdSet.add(userId);
 
-    // Promote this user to admin
-    userService.promote(userId).block();
+        String token =
+                JsonPath.parse(
+                                new String(
+                                        webTestClient
+                                                .post()
+                                                .uri("/api/v1/login")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .body(
+                                                        BodyInserters.fromPublisher(
+                                                                Mono.just(
+                                                                        "{\"userName\": \""
+                                                                                + loginName
+                                                                                + "\", \"password\": \""
+                                                                                + password
+                                                                                + "\"}"),
+                                                                String.class))
+                                                .exchange()
+                                                .expectStatus()
+                                                .isOk()
+                                                .expectBody()
+                                                .returnResult()
+                                                .getResponseBody()))
+                        .read("$.accessToken");
 
-    String token =
-        JsonPath.parse(
-                new String(
-                    webTestClient
-                        .post()
-                        .uri("/api/v1/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(
-                            BodyInserters.fromPublisher(
+        webTestClient
+                .post()
+                .uri("/api/v1/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                        BodyInserters.fromValue(
+                                new PasswordRegistrationDto(
+                                        "TestUser2", "loginName2", "paLswOrdha17£@£sh")))
+                .exchange()
+                .expectStatus()
+                .isCreated();
+
+        userIdSet.add(userService.findUserIdByLoginName("loginName2").block());
+
+        webTestClient
+                .post()
+                .uri("/api/v1/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                        BodyInserters.fromValue(
+                                new PasswordRegistrationDto(
+                                        "TestUser3", "loginName3", "paLswOrdha17£@£sh")))
+                .exchange()
+                .expectStatus()
+                .isCreated();
+
+        userIdSet.add(userService.findUserIdByLoginName("loginName3").block());
+
+        StepVerifier.create(
+                        webTestClient
+                                .get()
+                                .uri("/api/v1/users")
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .exchange()
+                                .expectStatus()
+                                .isOk()
+                                .expectHeader()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .returnResult(UserEntity.class)
+                                .getResponseBody()
+                                .map(UserEntity::getId))
+                .recordWith(HashSet::new)
+                .thenConsumeWhile(__ -> true)
+                .expectRecordedMatches(x -> x.equals(userIdSet))
+                .verifyComplete();
+    }
+
+    @Test
+    void register_ValidData_ReturnsValidUser() {
+        final String loginName = "test";
+        final String password = "paLswOrdha17£@£sh";
+
+        webTestClient
+                .post()
+                .uri("/api/v1/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                        BodyInserters.fromPublisher(
                                 Mono.just(
-                                    "{\"userName\": \""
-                                        + loginName
-                                        + "\", \"password\": \""
-                                        + password
-                                        + "\"}"),
+                                        "{\"displayName\": \""
+                                                + loginName
+                                                + "\", \"userName\": \""
+                                                + loginName
+                                                + "\",  \"password\": \""
+                                                + password
+                                                + "\"}"),
                                 String.class))
+                .exchange()
+                .expectStatus()
+                .isCreated();
+
+        final String userId = userService.findUserIdByLoginName("test").block();
+
+        // Promote this user to admin
+        userService.promote(userId).block();
+
+        String token =
+                JsonPath.parse(
+                                new String(
+                                        webTestClient
+                                                .post()
+                                                .uri("/api/v1/login")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .body(
+                                                        BodyInserters.fromPublisher(
+                                                                Mono.just(
+                                                                        "{\"userName\": \""
+                                                                                + loginName
+                                                                                + "\", \"password\": \""
+                                                                                + password
+                                                                                + "\"}"),
+                                                                String.class))
+                                                .exchange()
+                                                .expectStatus()
+                                                .isOk()
+                                                .expectBody()
+                                                .returnResult()
+                                                .getResponseBody()))
+                        .read("$.accessToken");
+
+        FluxExchangeResult<UserEntity> getResult =
+                webTestClient
+                        .get()
+                        .uri("/api/v1/user/" + userId)
+                        .header("Authorization", "Bearer " + token)
+                        .accept(MediaType.APPLICATION_JSON)
                         .exchange()
                         .expectStatus()
                         .isOk()
-                        .expectBody()
-                        .returnResult()
-                        .getResponseBody()))
-            .read("$.accessToken");
+                        .expectHeader()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .returnResult(UserEntity.class);
 
-    FluxExchangeResult<UserEntity> getResult =
-        webTestClient
-            .get()
-            .uri("/api/v1/user/" + userId)
-            .header("Authorization", "Bearer " + token)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentType(MediaType.APPLICATION_JSON)
-            .returnResult(UserEntity.class);
+        StepVerifier.create(getResult.getResponseBody())
+                .assertNext(
+                        getData -> {
+                            assertThat(getData).isEqualTo(userService.findById(userId).block());
+                        })
+                .verifyComplete();
+    }
 
-    StepVerifier.create(getResult.getResponseBody())
-        .assertNext(
-            getData -> {
-              assertThat(getData).isEqualTo(userService.findById(userId).block());
-            })
-        .verifyComplete();
-  }
-
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
-  }
+    @BeforeEach
+    void setup() {
+        integrationTestUtils.resetState();
+    }
 }

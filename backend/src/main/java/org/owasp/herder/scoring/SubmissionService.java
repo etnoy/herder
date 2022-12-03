@@ -21,12 +21,11 @@
  */
 package org.owasp.herder.scoring;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.time.Clock;
 import java.time.LocalDateTime;
-
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-
+import lombok.RequiredArgsConstructor;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.exception.ModuleClosedException;
 import org.owasp.herder.flag.FlagHandler;
@@ -43,8 +42,6 @@ import org.owasp.herder.validation.ValidTeamId;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -52,120 +49,126 @@ import reactor.core.publisher.Mono;
 @Validated
 @RequiredArgsConstructor
 public class SubmissionService {
-  private final SubmissionRepository submissionRepository;
+    private final SubmissionRepository submissionRepository;
 
-  private final RankedSubmissionRepository rankedSubmissionRepository;
+    private final RankedSubmissionRepository rankedSubmissionRepository;
 
-  private final FlagHandler flagHandler;
+    private final FlagHandler flagHandler;
 
-  private final UserService userService;
+    private final UserService userService;
 
-  private final ModuleService moduleService;
+    private final ModuleService moduleService;
 
-  private final Clock clock;
+    private final Clock clock;
 
-  public Flux<SanitizedRankedSubmission> findAllRankedByModuleLocator(
-      @ValidModuleLocator final String moduleLocator) {
-    return rankedSubmissionRepository
-        .findAllByModuleLocator(moduleLocator)
-        .map(this::sanitizeRankedSubmission);
-  }
-
-  public Flux<SanitizedRankedSubmission> findAllRankedByTeamId(@ValidTeamId final String teamId) {
-    return rankedSubmissionRepository.findAllByTeamId(teamId).map(this::sanitizeRankedSubmission);
-  }
-
-  public Flux<SanitizedRankedSubmission> findAllRankedByUserId(@ValidUserId final String userId) {
-    return rankedSubmissionRepository.findAllByUserId(userId).map(this::sanitizeRankedSubmission);
-  }
-
-  public Flux<Submission> findAllSubmissions() {
-    return submissionRepository.findAll();
-  }
-
-  public Flux<Submission> findAllValidByUserId(@ValidUserId final String userId) {
-    return submissionRepository.findAllByUserIdAndIsValidTrue(userId);
-  }
-
-  public Mono<Submission> findAllValidByUserIdAndModuleName(
-      @ValidUserId final String userId, @ValidModuleName final String moduleName) {
-    return submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(userId, moduleName);
-  }
-
-  public Flux<UnrankedScoreboardEntry> getUnrankedScoreboard() {
-    return rankedSubmissionRepository.getUnrankedScoreboard();
-  }
-
-  private SanitizedRankedSubmission sanitizeRankedSubmission(
-      final RankedSubmission rankedSubmission) {
-    final SanitizedRankedSubmissionBuilder builder = SanitizedRankedSubmission.builder();
-
-    if (rankedSubmission.getTeam() != null) {
-      final TeamEntity team = rankedSubmission.getTeam();
-      builder.id(team.getId());
-      builder.displayName(team.getDisplayName());
-      builder.principalType(PrincipalType.TEAM);
-    } else {
-      final UserEntity user = rankedSubmission.getUser();
-      builder.id(user.getId());
-      builder.displayName(user.getDisplayName());
-      builder.principalType(PrincipalType.USER);
+    public Flux<SanitizedRankedSubmission> findAllRankedByModuleLocator(
+            @ValidModuleLocator final String moduleLocator) {
+        return rankedSubmissionRepository
+                .findAllByModuleLocator(moduleLocator)
+                .map(this::sanitizeRankedSubmission);
     }
-    builder.baseScore(rankedSubmission.getBaseScore());
-    builder.bonusScore(rankedSubmission.getBonusScore());
-    builder.score(rankedSubmission.getScore());
-    builder.time(rankedSubmission.getTime());
-    builder.flag(rankedSubmission.getFlag());
-    builder.rank(rankedSubmission.getRank());
 
-    builder.moduleLocator(rankedSubmission.getModule().getLocator());
-    builder.moduleName(rankedSubmission.getModule().getName());
-
-    return builder.build();
-  }
-
-  // TODO: validate flag
-  public Mono<Submission> submitFlag(
-      @ValidUserId final String userId,
-      @ValidModuleId final String moduleId,
-      @NotEmpty @NotNull final String flag) {
-    final SubmissionBuilder submissionBuilder = Submission.builder();
-
-    if (flag != null) {
-      submissionBuilder.flag(flag);
+    public Flux<SanitizedRankedSubmission> findAllRankedByTeamId(@ValidTeamId final String teamId) {
+        return rankedSubmissionRepository
+                .findAllByTeamId(teamId)
+                .map(this::sanitizeRankedSubmission);
     }
-    submissionBuilder.time(LocalDateTime.now(clock));
 
-    return // Check if flag is correct
-    flagHandler
-        .verifyFlag(userId, moduleId, flag)
-        // Get isValid field
-        .map(submissionBuilder::isValid)
-        // Has this module been solved by this user? In that case, throw exception.
-        .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleId))
-        .switchIfEmpty(
-            Mono.error(
-                new ModuleAlreadySolvedException(
-                    String.format(
-                        "User %s has already finished module with id %s", userId, moduleId))))
-        // Otherwise, build a submission and save it in db
-        .zipWith(moduleService.getById(moduleId))
-        .filter(tuple -> tuple.getT2().isOpen())
-        .switchIfEmpty(
-            Mono.error(
-                new ModuleClosedException(
-                    String.format("Module %s is closed for submissions", moduleId))))
-        .map(tuple -> tuple.getT1().moduleId(moduleId))
-        .zipWith(userService.getById(userId))
-        .map(tuple -> tuple.getT1().userId(userId).teamId(tuple.getT2().getTeamId()))
-        .map(SubmissionBuilder::build)
-        .flatMap(submissionRepository::save);
-  }
+    public Flux<SanitizedRankedSubmission> findAllRankedByUserId(@ValidUserId final String userId) {
+        return rankedSubmissionRepository
+                .findAllByUserId(userId)
+                .map(this::sanitizeRankedSubmission);
+    }
 
-  private Mono<Boolean> validSubmissionDoesNotExistByUserIdAndModuleId(
-      @ValidUserId final String userId, @ValidModuleName final String moduleId) {
-    return submissionRepository
-        .existsByUserIdAndModuleIdAndIsValidTrue(userId, moduleId)
-        .map(exists -> !exists);
-  }
+    public Flux<Submission> findAllSubmissions() {
+        return submissionRepository.findAll();
+    }
+
+    public Flux<Submission> findAllValidByUserId(@ValidUserId final String userId) {
+        return submissionRepository.findAllByUserIdAndIsValidTrue(userId);
+    }
+
+    public Mono<Submission> findAllValidByUserIdAndModuleName(
+            @ValidUserId final String userId, @ValidModuleName final String moduleName) {
+        return submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(userId, moduleName);
+    }
+
+    public Flux<UnrankedScoreboardEntry> getUnrankedScoreboard() {
+        return rankedSubmissionRepository.getUnrankedScoreboard();
+    }
+
+    private SanitizedRankedSubmission sanitizeRankedSubmission(
+            final RankedSubmission rankedSubmission) {
+        final SanitizedRankedSubmissionBuilder builder = SanitizedRankedSubmission.builder();
+
+        if (rankedSubmission.getTeam() != null) {
+            final TeamEntity team = rankedSubmission.getTeam();
+            builder.id(team.getId());
+            builder.displayName(team.getDisplayName());
+            builder.principalType(PrincipalType.TEAM);
+        } else {
+            final UserEntity user = rankedSubmission.getUser();
+            builder.id(user.getId());
+            builder.displayName(user.getDisplayName());
+            builder.principalType(PrincipalType.USER);
+        }
+        builder.baseScore(rankedSubmission.getBaseScore());
+        builder.bonusScore(rankedSubmission.getBonusScore());
+        builder.score(rankedSubmission.getScore());
+        builder.time(rankedSubmission.getTime());
+        builder.flag(rankedSubmission.getFlag());
+        builder.rank(rankedSubmission.getRank());
+
+        builder.moduleLocator(rankedSubmission.getModule().getLocator());
+        builder.moduleName(rankedSubmission.getModule().getName());
+
+        return builder.build();
+    }
+
+    // TODO: validate flag
+    public Mono<Submission> submitFlag(
+            @ValidUserId final String userId,
+            @ValidModuleId final String moduleId,
+            @NotEmpty @NotNull final String flag) {
+        final SubmissionBuilder submissionBuilder = Submission.builder();
+
+        if (flag != null) {
+            submissionBuilder.flag(flag);
+        }
+        submissionBuilder.time(LocalDateTime.now(clock));
+
+        return // Check if flag is correct
+        flagHandler
+                .verifyFlag(userId, moduleId, flag)
+                // Get isValid field
+                .map(submissionBuilder::isValid)
+                // Has this module been solved by this user? In that case, throw exception.
+                .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleId))
+                .switchIfEmpty(
+                        Mono.error(
+                                new ModuleAlreadySolvedException(
+                                        String.format(
+                                                "User %s has already finished module with id %s",
+                                                userId, moduleId))))
+                // Otherwise, build a submission and save it in db
+                .zipWith(moduleService.getById(moduleId))
+                .filter(tuple -> tuple.getT2().isOpen())
+                .switchIfEmpty(
+                        Mono.error(
+                                new ModuleClosedException(
+                                        String.format(
+                                                "Module %s is closed for submissions", moduleId))))
+                .map(tuple -> tuple.getT1().moduleId(moduleId))
+                .zipWith(userService.getById(userId))
+                .map(tuple -> tuple.getT1().userId(userId).teamId(tuple.getT2().getTeamId()))
+                .map(SubmissionBuilder::build)
+                .flatMap(submissionRepository::save);
+    }
+
+    private Mono<Boolean> validSubmissionDoesNotExistByUserIdAndModuleId(
+            @ValidUserId final String userId, @ValidModuleName final String moduleId) {
+        return submissionRepository
+                .existsByUserIdAndModuleIdAndIsValidTrue(userId, moduleId)
+                .map(exists -> !exists);
+    }
 }

@@ -26,9 +26,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.r2dbc.spi.R2dbcBadGrammarException;
 import java.util.function.BiFunction;
-
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,223 +39,211 @@ import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.sqlinjection.SqlInjectionDatabaseClientFactory;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow;
+import org.owasp.herder.test.BaseTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.r2dbc.BadSqlGrammarException;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec;
 import org.springframework.r2dbc.core.FetchSpec;
-
-import io.r2dbc.spi.R2dbcBadGrammarException;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SqlInjectionTutorial unit tests")
-class SqlInjectionTutorialTest {
+class SqlInjectionTutorialTest extends BaseTest {
 
-  private String moduleLocator;
+    private String moduleLocator;
 
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+    SqlInjectionTutorial sqlInjectionTutorial;
 
-  SqlInjectionTutorial sqlInjectionTutorial;
+    @Mock SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
 
-  @Mock SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
+    @Mock FlagHandler flagHandler;
 
-  @Mock FlagHandler flagHandler;
+    @Mock KeyService keyService;
 
-  @Mock KeyService keyService;
+    @SuppressWarnings("unchecked")
+    @Test
+    void submitQuery_BadSqlGrammarException_ReturnsErrorToUser() {
+        final String mockUserId = "id";
+        final String mockFlag = "mockedflag";
+        final String query = "username";
 
-  @SuppressWarnings("unchecked")
-  @Test
-  void submitQuery_BadSqlGrammarException_ReturnsErrorToUser() {
-    final String mockUserId = "id";
-    final String mockFlag = "mockedflag";
-    final String query = "username";
+        sqlInjectionTutorial =
+                new SqlInjectionTutorial(
+                        sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
-    sqlInjectionTutorial =
-        new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
+        final byte[] randomBytes = {120, 56, 111};
+        when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
+        when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
-    final byte[] randomBytes = {120, 56, 111};
-    when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
+        final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
+        when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
+                .thenReturn(mockDatabaseClient);
 
-    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
+        final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
-    final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
-    when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
-        .thenReturn(mockDatabaseClient);
+        when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
+        when(mockExecuteSpec.then()).thenReturn(Mono.empty());
 
-    final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
+        final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
 
-    when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
+        when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
+        when(fetchSpec.all())
+                .thenReturn(
+                        Flux.error(
+                                new BadSqlGrammarException(
+                                        "Error",
+                                        query,
+                                        new R2dbcBadGrammarException(
+                                                new R2dbcBadGrammarException(
+                                                        "Syntax error, yo",
+                                                        new RuntimeException())))));
 
-    when(mockExecuteSpec.then()).thenReturn(Mono.empty());
+        StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
+                .assertNext(
+                        row -> {
+                            assertThat(row.getName()).isNull();
+                            assertThat(row.getComment()).isNull();
+                            assertThat(row.getError()).isEqualTo("Syntax error, yo");
+                        })
+                .verifyComplete();
+    }
 
-    final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
+    @BeforeEach
+    void setup() {
+        // Set up the system under test
+        sqlInjectionTutorial =
+                new SqlInjectionTutorial(
+                        sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
-    when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
+        moduleLocator = sqlInjectionTutorial.getLocator();
+    }
 
-    when(fetchSpec.all())
-        .thenReturn(
-            Flux.error(
-                new BadSqlGrammarException(
-                    "Error",
-                    query,
-                    new R2dbcBadGrammarException(
-                        new R2dbcBadGrammarException(
-                            "Syntax error, yo", new RuntimeException())))));
+    @SuppressWarnings("unchecked")
+    @Test
+    void submitQuery_DataIntegrityViolationException_ReturnsErrorToUser() {
+        final String mockUserId = "id";
+        final String mockFlag = "mockedflag";
+        final String query = "username";
 
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
-        .assertNext(
-            row -> {
-              assertThat(row.getName()).isNull();
-              assertThat(row.getComment()).isNull();
-              assertThat(row.getError()).isEqualTo("Syntax error, yo");
-            })
-        .verifyComplete();
-  }
+        sqlInjectionTutorial =
+                new SqlInjectionTutorial(
+                        sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
-  @BeforeEach
-  private void setUp() {
-    // Set up the system under test
-    sqlInjectionTutorial =
-        new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
+        final byte[] randomBytes = {120, 56, 111};
+        when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
+        when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
-    moduleLocator = sqlInjectionTutorial.getLocator();
-  }
+        final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
+        when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
+                .thenReturn(mockDatabaseClient);
 
-  @SuppressWarnings("unchecked")
-  @Test
-  void submitQuery_DataIntegrityViolationException_ReturnsErrorToUser() {
-    final String mockUserId = "id";
-    final String mockFlag = "mockedflag";
-    final String query = "username";
+        final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
-    sqlInjectionTutorial =
-        new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
+        when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
 
-    final byte[] randomBytes = {120, 56, 111};
-    when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
+        final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
 
-    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
+        when(mockExecuteSpec.then()).thenReturn(Mono.empty());
+        when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
 
-    final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
-    when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
-        .thenReturn(mockDatabaseClient);
+        when(fetchSpec.all())
+                .thenReturn(
+                        Flux.error(
+                                new DataIntegrityViolationException(
+                                        "Error",
+                                        new DataIntegrityViolationException(
+                                                "Error",
+                                                new DataIntegrityViolationException(
+                                                        "Data integrity violation, yo",
+                                                        new RuntimeException())))));
 
-    final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
+        StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
+                .assertNext(
+                        row -> {
+                            assertThat(row.getName()).isNull();
+                            assertThat(row.getComment()).isNull();
+                            assertThat(row.getError())
+                                    .isEqualTo(
+                                            "Data integrity violation, yo; nested exception is java.lang.RuntimeException");
+                        })
+                .verifyComplete();
+    }
 
-    when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
+    @SuppressWarnings("unchecked")
+    @Test
+    void submitQuery_RuntimeException_ThrowsException() {
+        final String mockUserId = "id";
+        final String mockFlag = "mockedflag";
+        final String query = "username";
+        final byte[] randomBytes = {120, 56, 111};
 
-    final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
+        when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
+        when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
-    when(mockExecuteSpec.then()).thenReturn(Mono.empty());
+        sqlInjectionTutorial =
+                new SqlInjectionTutorial(
+                        sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
-    when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
+        final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
+        when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
+                .thenReturn(mockDatabaseClient);
 
-    when(fetchSpec.all())
-        .thenReturn(
-            Flux.error(
-                new DataIntegrityViolationException(
-                    "Error",
-                    new DataIntegrityViolationException(
-                        "Error",
-                        new DataIntegrityViolationException(
-                            "Data integrity violation, yo", new RuntimeException())))));
+        final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
-        .assertNext(
-            row -> {
-              assertThat(row.getName()).isNull();
-              assertThat(row.getComment()).isNull();
-              assertThat(row.getError())
-                  .isEqualTo(
-                      "Data integrity violation, yo; nested exception is java.lang.RuntimeException");
-            })
-        .verifyComplete();
-  }
+        when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
+        when(mockExecuteSpec.then()).thenReturn(Mono.empty());
 
-  @SuppressWarnings("unchecked")
-  @Test
-  void submitQuery_RuntimeException_ThrowsException() {
-    final String mockUserId = "id";
-    final String mockFlag = "mockedflag";
-    final String query = "username";
+        final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
 
-    final byte[] randomBytes = {120, 56, 111};
-    when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
+        when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
+        when(fetchSpec.all()).thenReturn(Flux.error(new IllegalArgumentException()));
 
-    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
+        StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
+                .expectError(IllegalArgumentException.class)
+                .verify();
+    }
 
-    sqlInjectionTutorial =
-        new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
+    @SuppressWarnings("unchecked")
+    @Test
+    void submitQuery_ValidQuery_ReturnsSqlInjectionTutorialRow() {
+        final String mockUserId = "id";
+        final String mockFlag = "mockedflag";
+        final String query = "username";
 
-    final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
-    when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
-        .thenReturn(mockDatabaseClient);
+        when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
-    final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
+        sqlInjectionTutorial =
+                new SqlInjectionTutorial(
+                        sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
-    when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
+        final byte[] randomBytes = {120, 56, 111, 95, 6, 3};
+        when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
 
-    when(mockExecuteSpec.then()).thenReturn(Mono.empty());
+        final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
+        when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
+                .thenReturn(mockDatabaseClient);
 
-    final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
+        final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
-    when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
+        when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
+        when(mockExecuteSpec.then()).thenReturn(Mono.empty());
 
-    when(fetchSpec.all()).thenReturn(Flux.error(new IllegalArgumentException()));
+        final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
+        final SqlInjectionTutorialRow mockSqlInjectionTutorialRow1 =
+                mock(SqlInjectionTutorialRow.class);
+        final SqlInjectionTutorialRow mockSqlInjectionTutorialRow2 =
+                mock(SqlInjectionTutorialRow.class);
 
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
-        .expectError(IllegalArgumentException.class)
-        .verify();
-  }
+        when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
+        when(fetchSpec.all())
+                .thenReturn(Flux.just(mockSqlInjectionTutorialRow1, mockSqlInjectionTutorialRow2));
 
-  @SuppressWarnings("unchecked")
-  @Test
-  void submitQuery_ValidQuery_ReturnsSqlInjectionTutorialRow() {
-    final String mockUserId = "id";
-    final String mockFlag = "mockedflag";
-    final String query = "username";
-
-    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
-
-    sqlInjectionTutorial =
-        new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
-
-    final byte[] randomBytes = {120, 56, 111, 95, 6, 3};
-    when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
-
-    final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
-    when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
-        .thenReturn(mockDatabaseClient);
-
-    final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
-
-    when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
-
-    when(mockExecuteSpec.then()).thenReturn(Mono.empty());
-
-    final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
-
-    final SqlInjectionTutorialRow mockSqlInjectionTutorialRow1 =
-        mock(SqlInjectionTutorialRow.class);
-    final SqlInjectionTutorialRow mockSqlInjectionTutorialRow2 =
-        mock(SqlInjectionTutorialRow.class);
-
-    when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
-
-    when(fetchSpec.all())
-        .thenReturn(Flux.just(mockSqlInjectionTutorialRow1, mockSqlInjectionTutorialRow2));
-
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
-        .expectNext(mockSqlInjectionTutorialRow1)
-        .expectNext(mockSqlInjectionTutorialRow2)
-        .verifyComplete();
-  }
+        StepVerifier.create(sqlInjectionTutorial.submitQuery(mockUserId, query))
+                .expectNext(mockSqlInjectionTutorialRow1)
+                .expectNext(mockSqlInjectionTutorialRow2)
+                .verifyComplete();
+    }
 }

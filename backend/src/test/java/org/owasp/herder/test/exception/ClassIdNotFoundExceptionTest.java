@@ -23,30 +23,23 @@ package org.owasp.herder.test.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.exception.ClassIdNotFoundException;
+import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
-
-import reactor.core.publisher.Hooks;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ClassIdNotFoundException unit tests")
-class ClassIdNotFoundExceptionTest {
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+class ClassIdNotFoundExceptionTest extends BaseTest {
 
-  @Test
-  void messageConstructor_ValidMessage_MessageIncluded() {
-    for (final String message : TestConstants.STRINGS) {
-      ClassIdNotFoundException exception = new ClassIdNotFoundException(message);
-      assertThat(exception.getMessage()).isEqualTo(message);
+    @Test
+    void messageConstructor_ValidMessage_MessageIncluded() {
+        for (final String message : TestConstants.STRINGS) {
+            ClassIdNotFoundException exception = new ClassIdNotFoundException(message);
+            assertThat(exception.getMessage()).isEqualTo(message);
+        }
     }
-  }
 }

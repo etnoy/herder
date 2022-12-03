@@ -56,65 +56,67 @@ import reactor.test.StepVerifier;
 
 @DisplayName("FlagController integration tests")
 class FlagControllerIT extends BaseIT {
-  @Autowired ModuleService moduleService;
+    @Autowired ModuleService moduleService;
 
-  @Autowired UserService userService;
+    @Autowired UserService userService;
 
-  @Autowired SubmissionService submissionService;
+    @Autowired SubmissionService submissionService;
 
-  @Autowired ScoreAdjustmentService scoreAdjustmentService;
+    @Autowired ScoreAdjustmentService scoreAdjustmentService;
 
-  @Autowired ScoreboardService scoreboardService;
+    @Autowired ScoreboardService scoreboardService;
 
-  @Autowired FlagController flagController;
+    @Autowired FlagController flagController;
 
-  @Autowired ModuleRepository moduleRepository;
+    @Autowired ModuleRepository moduleRepository;
 
-  @Autowired SubmissionRepository submissionRepository;
+    @Autowired SubmissionRepository submissionRepository;
 
-  @Autowired FlagHandler flagHandler;
+    @Autowired FlagHandler flagHandler;
 
-  @Autowired ConfigurationService configurationService;
+    @Autowired ConfigurationService configurationService;
 
-  @Autowired KeyService keyService;
+    @Autowired KeyService keyService;
 
-  @Autowired CryptoService cryptoService;
+    @Autowired CryptoService cryptoService;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+    @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
 
-  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+    @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
 
-  @MockBean ControllerAuthentication controllerAuthentication;
+    @MockBean ControllerAuthentication controllerAuthentication;
 
-  @Test
-  @WithMockUser
-  @DisplayName("Can refresh module lists after successful flag submission")
-  void canRefreshModuleListsAfterFlagSubmission() {
-    integrationTestUtils.createStaticTestModule();
+    @Test
+    @WithMockUser
+    @DisplayName("Can refresh module lists after successful flag submission")
+    void canRefreshModuleListsAfterFlagSubmission() {
+        integrationTestUtils.createStaticTestModule();
 
-    final String userId = integrationTestUtils.createTestUser();
+        final String userId = integrationTestUtils.createTestUser();
 
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(userId));
+        when(controllerAuthentication.getUserId()).thenReturn(Mono.just(userId));
 
-    flagController
-        .submitFlag(TestConstants.TEST_MODULE_LOCATOR, TestConstants.TEST_STATIC_FLAG)
-        .block();
+        flagController
+                .submitFlag(TestConstants.TEST_MODULE_LOCATOR, TestConstants.TEST_STATIC_FLAG)
+                .block();
 
-    StepVerifier.create(moduleService.findAllModuleLists())
-        .assertNext(moduleList -> assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue())
-        .verifyComplete();
-  }
+        StepVerifier.create(moduleService.findAllModuleLists())
+                .assertNext(
+                        moduleList ->
+                                assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue())
+                .verifyComplete();
+    }
 
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
+    @BeforeEach
+    void setup() {
+        integrationTestUtils.resetState();
 
-    // Bypass the rate limiter
-    final Bucket mockBucket = mock(Bucket.class);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-  }
+        // Bypass the rate limiter
+        final Bucket mockBucket = mock(Bucket.class);
+        when(mockBucket.tryConsume(1)).thenReturn(true);
+        when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+        when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    }
 }

@@ -52,140 +52,143 @@ import reactor.test.StepVerifier;
 
 @DisplayName("SubmissionService integration tests")
 class SubmissionServiceIT extends BaseIT {
-  @Autowired SubmissionService submissionService;
+    @Autowired SubmissionService submissionService;
 
-  @Autowired UserService userService;
+    @Autowired UserService userService;
 
-  @Autowired ModuleService moduleService;
+    @Autowired ModuleService moduleService;
 
-  @Autowired RefresherService refresherService;
+    @Autowired RefresherService refresherService;
 
-  @Autowired ModuleRepository moduleRepository;
+    @Autowired ModuleRepository moduleRepository;
 
-  @Autowired SubmissionRepository submissionRepository;
+    @Autowired SubmissionRepository submissionRepository;
 
-  @Autowired UserRepository userRepository;
+    @Autowired UserRepository userRepository;
 
-  @Autowired FlagHandler flagHandler;
+    @Autowired FlagHandler flagHandler;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-  @MockBean Clock clock;
+    @MockBean Clock clock;
 
-  private String userId;
+    private String userId;
 
-  private String moduleId;
+    private String moduleId;
 
-  @Test
-  @DisplayName("Valid submission of a static flag should be accepted")
-  void canAcceptValidStaticFlagSubmission() {
-    userId = integrationTestUtils.createTestUser();
-    moduleId = integrationTestUtils.createStaticTestModule();
-    StepVerifier.create(
-            submissionService.submitFlag(userId, moduleId, TestConstants.TEST_STATIC_FLAG))
-        .assertNext(
-            submission -> {
-              assertThat(submission.getUserId()).isEqualTo(userId);
-              assertThat(submission.getModuleId()).isEqualTo(moduleId);
-              assertThat(submission.getTeamId()).isNull();
-              assertThat(submission.isValid()).isTrue();
-            })
-        .verifyComplete();
-  }
+    @Test
+    @DisplayName("Valid submission of a static flag should be accepted")
+    void canAcceptValidStaticFlagSubmission() {
+        userId = integrationTestUtils.createTestUser();
+        moduleId = integrationTestUtils.createStaticTestModule();
+        StepVerifier.create(
+                        submissionService.submitFlag(
+                                userId, moduleId, TestConstants.TEST_STATIC_FLAG))
+                .assertNext(
+                        submission -> {
+                            assertThat(submission.getUserId()).isEqualTo(userId);
+                            assertThat(submission.getModuleId()).isEqualTo(moduleId);
+                            assertThat(submission.getTeamId()).isNull();
+                            assertThat(submission.isValid()).isTrue();
+                        })
+                .verifyComplete();
+    }
 
-  @Test
-  @DisplayName("Can combine submissions for users in a team")
-  void canCombineSubmissionsForTeam() {
-    final String userId1 = userService.create("User 1").block();
-    final String userId2 = userService.create("User 2").block();
-    final String userId3 = userService.create("User 3").block();
+    @Test
+    @DisplayName("Can combine submissions for users in a team")
+    void canCombineSubmissionsForTeam() {
+        final String userId1 = userService.create("User 1").block();
+        final String userId2 = userService.create("User 2").block();
+        final String userId3 = userService.create("User 3").block();
 
-    final String teamId = integrationTestUtils.createTestTeam();
-    final String moduleId = integrationTestUtils.createStaticTestModule();
+        final String teamId = integrationTestUtils.createTestTeam();
+        final String moduleId = integrationTestUtils.createStaticTestModule();
 
-    Clock testClock = TestConstants.year2000Clock;
+        Clock testClock = TestConstants.year2000Clock;
 
-    setClock(testClock);
-    integrationTestUtils.submitValidFlag(userId1, moduleId);
+        setClock(testClock);
+        integrationTestUtils.submitValidFlag(userId1, moduleId);
 
-    testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-    setClock(testClock);
+        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+        setClock(testClock);
 
-    integrationTestUtils.submitValidFlag(userId2, moduleId);
-    testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-    setClock(testClock);
+        integrationTestUtils.submitValidFlag(userId2, moduleId);
+        testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+        setClock(testClock);
 
-    integrationTestUtils.submitValidFlag(userId3, moduleId);
+        integrationTestUtils.submitValidFlag(userId3, moduleId);
 
-    userService.addUserToTeam(userId1, teamId).block();
-    userService.addUserToTeam(userId3, teamId).block();
+        userService.addUserToTeam(userId1, teamId).block();
+        userService.addUserToTeam(userId3, teamId).block();
 
-    refresherService.afterUserUpdate(userId1).block();
-    refresherService.afterUserUpdate(userId3).block();
+        refresherService.afterUserUpdate(userId1).block();
+        refresherService.afterUserUpdate(userId3).block();
 
-    final TeamEntity team = userService.getTeamById(teamId).block();
+        final TeamEntity team = userService.getTeamById(teamId).block();
 
-    refresherService.refreshSubmissionRanks().block();
+        refresherService.refreshSubmissionRanks().block();
 
-    StepVerifier.create(submissionService.findAllRankedByTeamId(teamId))
-        .assertNext(
-            rankedSubmission -> {
-              assertThat(rankedSubmission.getId()).isEqualTo(team.getId());
-              assertThat(rankedSubmission.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
-              assertThat(rankedSubmission.getRank()).isEqualTo(1L);
-            })
-        .verifyComplete();
-  }
+        StepVerifier.create(submissionService.findAllRankedByTeamId(teamId))
+                .assertNext(
+                        rankedSubmission -> {
+                            assertThat(rankedSubmission.getId()).isEqualTo(team.getId());
+                            assertThat(rankedSubmission.getPrincipalType())
+                                    .isEqualTo(PrincipalType.TEAM);
+                            assertThat(rankedSubmission.getRank()).isEqualTo(1L);
+                        })
+                .verifyComplete();
+    }
 
-  @Test
-  @DisplayName("Can find a single ranked submission")
-  void canFindASingleRankedSubmission() {
-    userId = integrationTestUtils.createTestUser();
-    moduleId = integrationTestUtils.createStaticTestModule();
-    integrationTestUtils.submitValidFlag(userId, moduleId);
+    @Test
+    @DisplayName("Can find a single ranked submission")
+    void canFindASingleRankedSubmission() {
+        userId = integrationTestUtils.createTestUser();
+        moduleId = integrationTestUtils.createStaticTestModule();
+        integrationTestUtils.submitValidFlag(userId, moduleId);
 
-    final UserEntity user = userService.getById(userId).block();
-    final ModuleEntity module = moduleService.getById(moduleId).block();
+        final UserEntity user = userService.getById(userId).block();
+        final ModuleEntity module = moduleService.getById(moduleId).block();
 
-    refresherService.refreshSubmissionRanks().block();
+        refresherService.refreshSubmissionRanks().block();
 
-    StepVerifier.create(submissionService.findAllRankedByUserId(userId))
-        .assertNext(
-            submission -> {
-              assertThat(submission.getRank()).isEqualTo(1);
-              assertThat(submission.getId()).isEqualTo(user.getId());
-              assertThat(submission.getModuleLocator()).isEqualTo(module.getLocator());
-            })
-        .verifyComplete();
-  }
+        StepVerifier.create(submissionService.findAllRankedByUserId(userId))
+                .assertNext(
+                        submission -> {
+                            assertThat(submission.getRank()).isEqualTo(1);
+                            assertThat(submission.getId()).isEqualTo(user.getId());
+                            assertThat(submission.getModuleLocator())
+                                    .isEqualTo(module.getLocator());
+                        })
+                .verifyComplete();
+    }
 
-  @Test
-  @DisplayName("Duplicate submission of a static flag should throw an exception")
-  void canRejectDuplicateSubmissionsOfValidStaticFlags() {
-    userId = integrationTestUtils.createTestUser();
-    moduleId = integrationTestUtils.createStaticTestModule();
-    StepVerifier.create(
-            submissionService
-                .submitFlag(userId, moduleId, TestConstants.TEST_STATIC_FLAG)
-                .repeat(1)
-                .map(Submission::isValid))
-        .expectNext(true)
-        .expectError(ModuleAlreadySolvedException.class)
-        .verify();
-  }
+    @Test
+    @DisplayName("Duplicate submission of a static flag should throw an exception")
+    void canRejectDuplicateSubmissionsOfValidStaticFlags() {
+        userId = integrationTestUtils.createTestUser();
+        moduleId = integrationTestUtils.createStaticTestModule();
+        StepVerifier.create(
+                        submissionService
+                                .submitFlag(userId, moduleId, TestConstants.TEST_STATIC_FLAG)
+                                .repeat(1)
+                                .map(Submission::isValid))
+                .expectNext(true)
+                .expectError(ModuleAlreadySolvedException.class)
+                .verify();
+    }
 
-  private void resetClock() {
-    setClock(Clock.systemDefaultZone());
-  }
+    private void resetClock() {
+        setClock(Clock.systemDefaultZone());
+    }
 
-  private void setClock(final Clock testClock) {
-    when(clock.instant()).thenReturn(testClock.instant());
-    when(clock.getZone()).thenReturn(testClock.getZone());
-  }
+    private void setClock(final Clock testClock) {
+        when(clock.instant()).thenReturn(testClock.instant());
+        when(clock.getZone()).thenReturn(testClock.getZone());
+    }
 
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
-    resetClock();
-  }
+    @BeforeEach
+    void setup() {
+        integrationTestUtils.resetState();
+        resetClock();
+    }
 }

@@ -56,98 +56,99 @@ import reactor.test.StepVerifier;
 
 @DisplayName("ScoreboardController integration tests")
 class ScoreboardControllerIT extends BaseIT {
-  @Autowired ModuleService moduleService;
+    @Autowired ModuleService moduleService;
 
-  @Autowired UserService userService;
+    @Autowired UserService userService;
 
-  @Autowired SubmissionService submissionService;
+    @Autowired SubmissionService submissionService;
 
-  @Autowired ScoreAdjustmentService scoreAdjustmentService;
+    @Autowired ScoreAdjustmentService scoreAdjustmentService;
 
-  @Autowired ScoreboardService scoreboardService;
+    @Autowired ScoreboardService scoreboardService;
 
-  @Autowired ScoreboardController scoreboardController;
+    @Autowired ScoreboardController scoreboardController;
 
-  @Autowired ModuleRepository moduleRepository;
+    @Autowired ModuleRepository moduleRepository;
 
-  @Autowired SubmissionRepository submissionRepository;
+    @Autowired SubmissionRepository submissionRepository;
 
-  @Autowired FlagHandler flagHandler;
+    @Autowired FlagHandler flagHandler;
 
-  @Autowired ConfigurationService configurationService;
+    @Autowired ConfigurationService configurationService;
 
-  @Autowired KeyService keyService;
+    @Autowired KeyService keyService;
 
-  @Autowired CryptoService cryptoService;
+    @Autowired CryptoService cryptoService;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+    @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
 
-  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+    @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
 
-  @Test
-  @WithMockUser
-  @DisplayName("Can return error if invalid module locator is given")
-  void canReturnErrorForInvalidModuleLocator() {
-    StepVerifier.create(scoreboardController.getSubmissionsByModuleLocator("XYZ"))
-        .expectError(ResponseStatusException.class)
-        .verify();
-  }
+    @Test
+    @WithMockUser
+    @DisplayName("Can return error if invalid module locator is given")
+    void canReturnErrorForInvalidModuleLocator() {
+        StepVerifier.create(scoreboardController.getSubmissionsByModuleLocator("XYZ"))
+                .expectError(ResponseStatusException.class)
+                .verify();
+    }
 
-  @Test
-  @WithMockUser
-  @DisplayName("Can return error for invalid user id")
-  void canReturnErrorForInvalidUserId() {
-    StepVerifier.create(scoreboardController.getSubmissionsByUserId("xyz"))
-        .expectError(ResponseStatusException.class)
-        .verify();
-  }
+    @Test
+    @WithMockUser
+    @DisplayName("Can return error for invalid user id")
+    void canReturnErrorForInvalidUserId() {
+        StepVerifier.create(scoreboardController.getSubmissionsByUserId("xyz"))
+                .expectError(ResponseStatusException.class)
+                .verify();
+    }
 
-  @Test
-  @WithMockUser
-  @DisplayName("Can return error if nonexistent module locator is given")
-  void canReturnErrorForNonExistentModuleLocator() {
-    StepVerifier.create(scoreboardController.getSubmissionsByModuleLocator("non-existent"))
-        .expectError(ModuleNotFoundException.class)
-        .verify();
-  }
+    @Test
+    @WithMockUser
+    @DisplayName("Can return error if nonexistent module locator is given")
+    void canReturnErrorForNonExistentModuleLocator() {
+        StepVerifier.create(scoreboardController.getSubmissionsByModuleLocator("non-existent"))
+                .expectError(ModuleNotFoundException.class)
+                .verify();
+    }
 
-  @Test
-  @WithMockUser
-  @DisplayName("Can return error for nonexistent user id")
-  void canReturnErrorForNonExistentUserId() {
-    StepVerifier.create(scoreboardController.getSubmissionsByUserId(TestConstants.TEST_USER_ID))
-        .expectError(UserNotFoundException.class)
-        .verify();
-  }
+    @Test
+    @WithMockUser
+    @DisplayName("Can return error for nonexistent user id")
+    void canReturnErrorForNonExistentUserId() {
+        StepVerifier.create(scoreboardController.getSubmissionsByUserId(TestConstants.TEST_USER_ID))
+                .expectError(UserNotFoundException.class)
+                .verify();
+    }
 
-  @Test
-  @WithMockUser
-  @DisplayName("Can return zero submissions for module without submissions")
-  void canReturnZeroSubmissionsForModuleWithoutSubmissions() {
-    integrationTestUtils.createStaticTestModule();
-    StepVerifier.create(
-            scoreboardController.getSubmissionsByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
-        .verifyComplete();
-  }
+    @Test
+    @WithMockUser
+    @DisplayName("Can return zero submissions for module without submissions")
+    void canReturnZeroSubmissionsForModuleWithoutSubmissions() {
+        integrationTestUtils.createStaticTestModule();
+        StepVerifier.create(
+                        scoreboardController.getSubmissionsByModuleLocator(
+                                TestConstants.TEST_MODULE_LOCATOR))
+                .verifyComplete();
+    }
 
-  @Test
-  @WithMockUser
-  @DisplayName("Can return zero submissions for user without submissions")
-  void canReturnZeroSubmissionsForUserWithoutSubmissions() {
-    final String userId = integrationTestUtils.createTestUser();
-    StepVerifier.create(scoreboardController.getSubmissionsByUserId(userId)).verifyComplete();
-  }
+    @Test
+    @WithMockUser
+    @DisplayName("Can return zero submissions for user without submissions")
+    void canReturnZeroSubmissionsForUserWithoutSubmissions() {
+        final String userId = integrationTestUtils.createTestUser();
+        StepVerifier.create(scoreboardController.getSubmissionsByUserId(userId)).verifyComplete();
+    }
 
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
+    @BeforeEach
+    void setup() {
+        integrationTestUtils.resetState();
 
-    // Bypass the rate limiter
-    final Bucket mockBucket = mock(Bucket.class);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-  }
+        // Bypass the rate limiter
+        final Bucket mockBucket = mock(Bucket.class);
+        when(mockBucket.tryConsume(1)).thenReturn(true);
+        when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+        when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    }
 }

@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,144 +35,138 @@ import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.csrf.CsrfService;
 import org.owasp.herder.module.csrf.CsrfTutorial;
-
-import reactor.core.publisher.Hooks;
+import org.owasp.herder.test.BaseTest;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CsrfTutorial unit tests")
-class CsrfTutorialTest {
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+class CsrfTutorialTest extends BaseTest {
 
-  String locator;
+    String locator;
 
-  CsrfTutorial csrfTutorial;
+    CsrfTutorial csrfTutorial;
 
-  @Mock CsrfService csrfService;
+    @Mock CsrfService csrfService;
 
-  @Mock FlagHandler flagHandler;
+    @Mock FlagHandler flagHandler;
 
-  final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-  @BeforeEach
-  private void setUp() {
-    // Set up the system under test
-    csrfTutorial = new CsrfTutorial(csrfService, flagHandler);
-    locator = csrfTutorial.getLocator();
-  }
+    @BeforeEach
+    void setup() {
+        // Set up the system under test
+        csrfTutorial = new CsrfTutorial(csrfService, flagHandler);
+        locator = csrfTutorial.getLocator();
+    }
 
-  @Test
-  void attack_InvalidTarget_ReturnsError() {
-    final String attackerUserId = "id";
+    @Test
+    void attack_InvalidTarget_ReturnsError() {
+        final String attackerUserId = "id";
 
-    final String mockTarget = "abcd123";
+        final String mockTarget = "abcd123";
 
-    when(csrfService.validatePseudonym(mockTarget, locator)).thenReturn(Mono.just(false));
-    when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getLocator()).thenReturn(locator);
+        when(csrfService.validatePseudonym(mockTarget, locator)).thenReturn(Mono.just(false));
+        when(mockModule.isFlagStatic()).thenReturn(false);
+        when(mockModule.getLocator()).thenReturn(locator);
 
-    StepVerifier.create(csrfTutorial.attack(attackerUserId, mockTarget))
-        .assertNext(
-            result -> {
-              assertThat(result.getPseudonym()).isNull();
-              assertThat(result.getFlag()).isNull();
-              assertThat(result.getError()).isNotNull();
-              assertThat(result.getMessage()).isNull();
-            })
-        .verifyComplete();
-  }
+        StepVerifier.create(csrfTutorial.attack(attackerUserId, mockTarget))
+                .assertNext(
+                        result -> {
+                            assertThat(result.getPseudonym()).isNull();
+                            assertThat(result.getFlag()).isNull();
+                            assertThat(result.getError()).isNotNull();
+                            assertThat(result.getMessage()).isNull();
+                        })
+                .verifyComplete();
+    }
 
-  @Test
-  void attack_ValidTarget_Activates() {
-    final String attackerUserId = "id";
+    @Test
+    void attack_ValidTarget_Activates() {
+        final String attackerUserId = "id";
 
-    final String mockTarget = "abcd123";
-    final String mockAttacker = "xyz789";
+        final String mockTarget = "abcd123";
+        final String mockAttacker = "xyz789";
 
-    when(csrfService.getPseudonym(attackerUserId, locator)).thenReturn(Mono.just(mockAttacker));
-    when(csrfService.validatePseudonym(mockTarget, locator)).thenReturn(Mono.just(true));
-    when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getLocator()).thenReturn(locator);
-    when(csrfService.attack(mockTarget, locator)).thenReturn(Mono.empty());
+        when(csrfService.getPseudonym(attackerUserId, locator)).thenReturn(Mono.just(mockAttacker));
+        when(csrfService.validatePseudonym(mockTarget, locator)).thenReturn(Mono.just(true));
+        when(mockModule.isFlagStatic()).thenReturn(false);
+        when(mockModule.getLocator()).thenReturn(locator);
+        when(csrfService.attack(mockTarget, locator)).thenReturn(Mono.empty());
 
-    StepVerifier.create(csrfTutorial.attack(attackerUserId, mockTarget))
-        .assertNext(
-            result -> {
-              assertThat(result.getPseudonym()).isNull();
-              assertThat(result.getFlag()).isNull();
-              assertThat(result.getError()).isNull();
-              assertThat(result.getMessage()).isNotNull();
-            })
-        .verifyComplete();
-  }
+        StepVerifier.create(csrfTutorial.attack(attackerUserId, mockTarget))
+                .assertNext(
+                        result -> {
+                            assertThat(result.getPseudonym()).isNull();
+                            assertThat(result.getFlag()).isNull();
+                            assertThat(result.getError()).isNull();
+                            assertThat(result.getMessage()).isNotNull();
+                        })
+                .verifyComplete();
+    }
 
-  @Test
-  void attack_TargetsSelf_DoesNotActivate() {
-    final String userId = "id";
+    @Test
+    void attack_TargetsSelf_DoesNotActivate() {
+        final String userId = "id";
 
-    final String pseudonym = "xyz789";
+        final String pseudonym = "xyz789";
 
-    when(csrfService.getPseudonym(userId, locator)).thenReturn(Mono.just(pseudonym));
-    when(csrfService.validatePseudonym(pseudonym, locator)).thenReturn(Mono.just(true));
-    when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getLocator()).thenReturn(locator);
+        when(csrfService.getPseudonym(userId, locator)).thenReturn(Mono.just(pseudonym));
+        when(csrfService.validatePseudonym(pseudonym, locator)).thenReturn(Mono.just(true));
+        when(mockModule.isFlagStatic()).thenReturn(false);
+        when(mockModule.getLocator()).thenReturn(locator);
 
-    StepVerifier.create(csrfTutorial.attack(userId, pseudonym))
-        .assertNext(
-            result -> {
-              assertThat(result.getPseudonym()).isNull();
-              assertThat(result.getFlag()).isNull();
-              assertThat(result.getError()).isNotNull();
-              assertThat(result.getMessage()).isNull();
-            })
-        .verifyComplete();
-  }
+        StepVerifier.create(csrfTutorial.attack(userId, pseudonym))
+                .assertNext(
+                        result -> {
+                            assertThat(result.getPseudonym()).isNull();
+                            assertThat(result.getFlag()).isNull();
+                            assertThat(result.getError()).isNotNull();
+                            assertThat(result.getMessage()).isNull();
+                        })
+                .verifyComplete();
+    }
 
-  @Test
-  void getTutorial_Activated_ReturnsFlag() {
-    final String mockUserId = "id";
-    final String mockPseudonym = "abcd123";
-    final String flag = "flag";
+    @Test
+    void getTutorial_Activated_ReturnsFlag() {
+        final String mockUserId = "id";
+        final String mockPseudonym = "abcd123";
+        final String flag = "flag";
 
-    when(csrfService.getPseudonym(mockUserId, locator)).thenReturn(Mono.just(mockPseudonym));
+        when(csrfService.getPseudonym(mockUserId, locator)).thenReturn(Mono.just(mockPseudonym));
 
-    when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getName()).thenReturn(locator);
+        when(mockModule.isFlagStatic()).thenReturn(false);
+        when(mockModule.getName()).thenReturn(locator);
 
-    when(flagHandler.getDynamicFlag(mockUserId, locator)).thenReturn(Mono.just(flag));
-    when(csrfService.validate(mockPseudonym, locator)).thenReturn(Mono.just(true));
+        when(flagHandler.getDynamicFlag(mockUserId, locator)).thenReturn(Mono.just(flag));
+        when(csrfService.validate(mockPseudonym, locator)).thenReturn(Mono.just(true));
 
-    StepVerifier.create(csrfTutorial.getTutorial(mockUserId))
-        .assertNext(
-            result -> {
-              assertThat(result.getPseudonym()).isEqualTo(mockPseudonym);
-              assertThat(result.getFlag()).isEqualTo(flag);
-            })
-        .verifyComplete();
-  }
+        StepVerifier.create(csrfTutorial.getTutorial(mockUserId))
+                .assertNext(
+                        result -> {
+                            assertThat(result.getPseudonym()).isEqualTo(mockPseudonym);
+                            assertThat(result.getFlag()).isEqualTo(flag);
+                        })
+                .verifyComplete();
+    }
 
-  @Test
-  void getTutorial_NotActivated_ReturnsActivationLink() {
-    final String mockUserId = "id";
-    final String mockPseudonym = "abcd123";
-    final Mono<String> flag = Mono.just("flag");
+    @Test
+    void getTutorial_NotActivated_ReturnsActivationLink() {
+        final String mockUserId = "id";
+        final String mockPseudonym = "abcd123";
+        final Mono<String> flag = Mono.just("flag");
 
-    when(csrfService.getPseudonym(mockUserId, locator)).thenReturn(Mono.just(mockPseudonym));
-    when(mockModule.isFlagStatic()).thenReturn(false);
-    when(csrfService.validate(mockPseudonym, locator)).thenReturn(Mono.just(false));
-    when(flagHandler.getDynamicFlag(mockUserId, locator)).thenReturn(flag);
+        when(csrfService.getPseudonym(mockUserId, locator)).thenReturn(Mono.just(mockPseudonym));
+        when(mockModule.isFlagStatic()).thenReturn(false);
+        when(csrfService.validate(mockPseudonym, locator)).thenReturn(Mono.just(false));
+        when(flagHandler.getDynamicFlag(mockUserId, locator)).thenReturn(flag);
 
-    StepVerifier.create(csrfTutorial.getTutorial(mockUserId))
-        .assertNext(
-            result -> {
-              assertThat(result.getPseudonym()).isEqualTo(mockPseudonym);
-              assertThat(result.getFlag()).isNull();
-            })
-        .verifyComplete();
-  }
+        StepVerifier.create(csrfTutorial.getTutorial(mockUserId))
+                .assertNext(
+                        result -> {
+                            assertThat(result.getPseudonym()).isEqualTo(mockPseudonym);
+                            assertThat(result.getFlag()).isNull();
+                        })
+                .verifyComplete();
+    }
 }

@@ -23,7 +23,6 @@ package org.owasp.herder.test.module.flag;
 
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,46 +33,41 @@ import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.scoring.ScoreboardService;
-import reactor.core.publisher.Hooks;
+import org.owasp.herder.test.BaseTest;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlagTutorial unit tests")
-class FlagTutorialTest {
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+class FlagTutorialTest extends BaseTest {
 
-  private String moduleLocator;
+    private String moduleLocator;
 
-  FlagTutorial flagTutorial;
+    FlagTutorial flagTutorial;
 
-  @Mock ModuleService moduleService;
+    @Mock ModuleService moduleService;
 
-  @Mock ScoreboardService scoreboardService;
+    @Mock ScoreboardService scoreboardService;
 
-  @Mock FlagHandler flagHandler;
+    @Mock FlagHandler flagHandler;
 
-  @BeforeEach
-  private void setUp() {
-    // Set up the system under test
+    @BeforeEach
+    void setup() {
+        // Set up the system under test
 
-    flagTutorial = new FlagTutorial(flagHandler);
+        flagTutorial = new FlagTutorial(flagHandler);
 
-    moduleLocator = flagTutorial.getLocator();
-  }
+        moduleLocator = flagTutorial.getLocator();
+    }
 
-  @Test
-  @DisplayName("getFlag can return flag")
-  void getFlag_ValidData_ReturnsFlag() {
-    final String testUserId = "id";
-    final String flag = "flag";
+    @Test
+    @DisplayName("getFlag can return flag")
+    void getFlag_ValidData_ReturnsFlag() {
+        final String testUserId = "id";
+        final String flag = "flag";
 
-    when(flagHandler.getDynamicFlag(testUserId, moduleLocator)).thenReturn(Mono.just(flag));
+        when(flagHandler.getDynamicFlag(testUserId, moduleLocator)).thenReturn(Mono.just(flag));
 
-    StepVerifier.create(flagTutorial.getFlag(testUserId)).expectNext(flag).verifyComplete();
-  }
+        StepVerifier.create(flagTutorial.getFlag(testUserId)).expectNext(flag).verifyComplete();
+    }
 }

@@ -21,7 +21,7 @@
  */
 package org.owasp.herder.user;
 
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.exception.UserNotFoundException;
@@ -42,38 +42,38 @@ import reactor.core.publisher.Mono;
 @Validated
 @RequestMapping("/api/v1/")
 public class UserController {
-  private final UserService userService;
+    private final UserService userService;
 
-  @PostMapping(path = "user/delete/{userId}")
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
-  public Mono<Void> deleteById(@PathVariable @ValidUserId final String userId) {
-    log.debug("Deleting user with id " + userId);
+    @PostMapping(path = "user/delete/{userId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public Mono<Void> deleteById(@PathVariable @ValidUserId final String userId) {
+        log.debug("Deleting user with id " + userId);
 
-    return userService.delete(userId);
-  }
-
-  @GetMapping(path = "users")
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
-  public Flux<UserEntity> findAll() {
-    return userService.findAllUsers();
-  }
-
-  @GetMapping(path = "solvers")
-  @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<PrincipalEntity> findAllPrincipals() {
-    return userService.findAllPrincipals();
-  }
-
-  @GetMapping(path = "user/{userId}")
-  @PreAuthorize(
-      "(hasRole('ROLE_USER') and #userId == authentication.principal) or hasRole('ROLE_ADMIN')")
-  public Mono<UserEntity> findById(@PathVariable final String userId) {
-    Mono<UserEntity> userMono;
-    try {
-      userMono = userService.findById(userId);
-    } catch (ConstraintViolationException e) {
-      return Mono.error(new UserNotFoundException(e.getMessage()));
+        return userService.delete(userId);
     }
-    return userMono.switchIfEmpty(Mono.error(new UserNotFoundException()));
-  }
+
+    @GetMapping(path = "users")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public Flux<UserEntity> findAll() {
+        return userService.findAllUsers();
+    }
+
+    @GetMapping(path = "solvers")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public Flux<PrincipalEntity> findAllPrincipals() {
+        return userService.findAllPrincipals();
+    }
+
+    @GetMapping(path = "user/{userId}")
+    @PreAuthorize(
+            "(hasRole('ROLE_USER') and #userId == authentication.principal) or hasRole('ROLE_ADMIN')")
+    public Mono<UserEntity> findById(@PathVariable final String userId) {
+        Mono<UserEntity> userMono;
+        try {
+            userMono = userService.findById(userId);
+        } catch (ConstraintViolationException e) {
+            return Mono.error(new UserNotFoundException(e.getMessage()));
+        }
+        return userMono.switchIfEmpty(Mono.error(new UserNotFoundException()));
+    }
 }

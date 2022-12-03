@@ -23,7 +23,6 @@ package org.owasp.herder.test.controller;
 
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,24 +36,18 @@ import org.owasp.herder.authentication.LoginResponse;
 import org.owasp.herder.authentication.PasswordLoginDto;
 import org.owasp.herder.authentication.PasswordRegistrationDto;
 import org.owasp.herder.crypto.WebTokenService;
+import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.user.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("LoginController unit tests")
-class LoginControllerTest {
-
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+class LoginControllerTest extends BaseTest {
 
   LoginController loginController;
 
@@ -156,7 +149,7 @@ class LoginControllerTest {
   }
 
   @BeforeEach
-  private void setUp() {
+  void setup() {
     // Set up the system under test
     loginController =
       new LoginController(

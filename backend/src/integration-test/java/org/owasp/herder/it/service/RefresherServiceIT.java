@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 
 import io.github.bucket4j.Bucket;
 import java.util.function.Consumer;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,239 +48,206 @@ import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @DisplayName("RefresherService integration tests")
 class RefresherServiceIT extends BaseIT {
 
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+    @Autowired SubmissionService submissionService;
 
-  @Autowired
-  SubmissionService submissionService;
+    @Autowired SubmissionRepository submissionRepository;
 
-  @Autowired
-  SubmissionRepository submissionRepository;
+    @Autowired UserService userService;
 
-  @Autowired
-  UserService userService;
+    @Autowired ModuleService moduleService;
 
-  @Autowired
-  ModuleService moduleService;
+    @Autowired RefresherService refresherService;
 
-  @Autowired
-  RefresherService refresherService;
+    @Autowired TeamRepository teamRepository;
 
-  @Autowired
-  TeamRepository teamRepository;
+    @Autowired UserRepository userRepository;
 
-  @Autowired
-  UserRepository userRepository;
+    @Autowired FlagHandler flagHandler;
 
-  @Autowired
-  FlagHandler flagHandler;
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-  @Autowired
-  IntegrationTestUtils integrationTestUtils;
+    @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
 
-  @MockBean
-  FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+    @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
 
-  @MockBean
-  InvalidFlagRateLimiter invalidFlagRateLimiter;
+    @Test
+    @DisplayName("Can do nothing if nothing changed for a single user")
+    void canBeIdempotentForTeams() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String teamId = integrationTestUtils.createTestTeam();
+        userService.addUserToTeam(userId, teamId).block();
 
-  @Test
-  @DisplayName("Can do nothing if nothing changed for a single user")
-  void canBeIdempotentForTeams() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String teamId = integrationTestUtils.createTestTeam();
-    userService.addUserToTeam(userId, teamId).block();
+        final UserEntity user = userService.getById(userId).block();
+        final TeamEntity team = userService.getTeamById(teamId).block();
 
-    final UserEntity user = userService.getById(userId).block();
-    final TeamEntity team = userService.getTeamById(teamId).block();
+        refresherService.afterUserUpdate(userId).block();
 
-    refresherService.afterUserUpdate(userId).block();
+        StepVerifier.create(userService.findAllUsers()).expectNext(user).verifyComplete();
+        StepVerifier.create(userService.findAllTeams()).expectNext(team).verifyComplete();
+    }
 
-    StepVerifier
-      .create(userService.findAllUsers())
-      .expectNext(user)
-      .verifyComplete();
-    StepVerifier
-      .create(userService.findAllTeams())
-      .expectNext(team)
-      .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can delete a team when last member is deleted")
+    void canDeleteTeamWhenLastMemberIsDeleted() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String teamId = integrationTestUtils.createTestTeam();
+        userService.addUserToTeam(userId, teamId).block();
+        userService.delete(userId).block();
+        refresherService.afterUserDeletion(userId).block();
+        StepVerifier.create(teamRepository.findAll()).verifyComplete();
+    }
 
-  @Test
-  @DisplayName("Can delete a team when last member is deleted")
-  void canDeleteTeamWhenLastMemberIsDeleted() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String teamId = integrationTestUtils.createTestTeam();
-    userService.addUserToTeam(userId, teamId).block();
-    userService.delete(userId).block();
-    refresherService.afterUserDeletion(userId).block();
-    StepVerifier.create(teamRepository.findAll()).verifyComplete();
-  }
+    @Test
+    @DisplayName("Can refresh a submission with last user removed from team")
+    void canRefreshLastUserRemovedFromTeamInSubmissions() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String moduleId = integrationTestUtils.createStaticTestModule();
+        final String teamId = integrationTestUtils.createTestTeam();
 
-  @Test
-  @DisplayName("Can refresh a submission with last user removed from team")
-  void canRefreshLastUserRemovedFromTeamInSubmissions() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String moduleId = integrationTestUtils.createStaticTestModule();
-    final String teamId = integrationTestUtils.createTestTeam();
+        userService.addUserToTeam(userId, teamId).block();
 
-    userService.addUserToTeam(userId, teamId).block();
+        submissionService.submitFlag(userId, moduleId, "asdf").block();
+        integrationTestUtils.submitValidFlag(userId, moduleId);
 
-    submissionService.submitFlag(userId, moduleId, "asdf").block();
-    integrationTestUtils.submitValidFlag(userId, moduleId);
+        userService.clearTeamForUser(userId).block();
+        refresherService.afterUserUpdate(userId).block();
 
-    userService.clearTeamForUser(userId).block();
-    refresherService.afterUserUpdate(userId).block();
+        Consumer<Submission> asserter =
+                submission -> {
+                    assertThat(submission.getUserId()).isEqualTo(userId);
+                    assertThat(submission.getTeamId()).isNull();
+                };
 
-    Consumer<Submission> asserter = submission -> {
-      assertThat(submission.getUserId()).isEqualTo(userId);
-      assertThat(submission.getTeamId()).isNull();
-    };
+        StepVerifier.create(submissionService.findAllSubmissions())
+                .assertNext(asserter)
+                .assertNext(asserter)
+                .verifyComplete();
+    }
 
-    StepVerifier
-      .create(submissionService.findAllSubmissions())
-      .assertNext(asserter)
-      .assertNext(asserter)
-      .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can refresh a submission with updated module")
+    void canRefreshUpdatedModuleInSubmissions() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String moduleId = integrationTestUtils.createStaticTestModule();
+        final String newModuleName = "Not a testing module";
 
-  @Test
-  @DisplayName("Can refresh a submission with updated module")
-  void canRefreshUpdatedModuleInSubmissions() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String moduleId = integrationTestUtils.createStaticTestModule();
-    final String newModuleName = "Not a testing module";
+        submissionService.submitFlag(userId, moduleId, "asdf").block();
+        integrationTestUtils.submitValidFlag(userId, moduleId);
 
-    submissionService.submitFlag(userId, moduleId, "asdf").block();
-    integrationTestUtils.submitValidFlag(userId, moduleId);
+        moduleService.setModuleName(moduleId, newModuleName).block();
 
-    moduleService.setModuleName(moduleId, newModuleName).block();
+        StepVerifier.create(submissionService.findAllSubmissions().map(Submission::getModuleId))
+                .expectNext(moduleId)
+                .expectNext(moduleId)
+                .verifyComplete();
+    }
 
-    StepVerifier
-      .create(
-        submissionService.findAllSubmissions().map(Submission::getModuleId)
-      )
-      .expectNext(moduleId)
-      .expectNext(moduleId)
-      .verifyComplete();
-  }
+    @DisplayName("Can refresh a submission with user added to team")
+    void canRefreshUserAddedToTeamInSubmissions() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String moduleId = integrationTestUtils.createStaticTestModule();
+        final String teamId = integrationTestUtils.createTestTeam();
 
-  @DisplayName("Can refresh a submission with user added to team")
-  void canRefreshUserAddedToTeamInSubmissions() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String moduleId = integrationTestUtils.createStaticTestModule();
-    final String teamId = integrationTestUtils.createTestTeam();
+        submissionService.submitFlag(userId, moduleId, "asdf").block();
+        integrationTestUtils.submitValidFlag(userId, moduleId);
 
-    submissionService.submitFlag(userId, moduleId, "asdf").block();
-    integrationTestUtils.submitValidFlag(userId, moduleId);
+        userService.addUserToTeam(userId, teamId).block();
+        refresherService.afterUserUpdate(userId).block();
 
-    userService.addUserToTeam(userId, teamId).block();
-    refresherService.afterUserUpdate(userId).block();
+        Consumer<Submission> asserter =
+                submission -> {
+                    assertThat(submission.getUserId()).isEqualTo(userId);
+                    assertThat(submission.getTeamId()).isEqualTo(teamId);
+                };
 
-    Consumer<Submission> asserter = submission -> {
-      assertThat(submission.getUserId()).isEqualTo(userId);
-      assertThat(submission.getTeamId()).isEqualTo(teamId);
-    };
+        StepVerifier.create(submissionService.findAllSubmissions())
+                .assertNext(asserter)
+                .assertNext(asserter)
+                .verifyComplete();
+    }
 
-    StepVerifier
-      .create(submissionService.findAllSubmissions())
-      .assertNext(asserter)
-      .assertNext(asserter)
-      .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can refresh an updated user in a team")
+    void canRefreshUserInExistingTeam() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String teamId = integrationTestUtils.createTestTeam();
+        final String newDisplayName = "New displayName";
+        userService.addUserToTeam(userId, teamId).block();
+        userService.setDisplayName(userId, newDisplayName).block();
+        refresherService.afterUserUpdate(userId).block();
+        StepVerifier.create(teamRepository.findAll())
+                .assertNext(
+                        team -> {
+                            assertThat(team.getMembers().get(0).getDisplayName())
+                                    .isEqualTo(newDisplayName);
+                        })
+                .verifyComplete();
+    }
 
-  @Test
-  @DisplayName("Can refresh an updated user in a team")
-  void canRefreshUserInExistingTeam() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String teamId = integrationTestUtils.createTestTeam();
-    final String newDisplayName = "New displayName";
-    userService.addUserToTeam(userId, teamId).block();
-    userService.setDisplayName(userId, newDisplayName).block();
-    refresherService.afterUserUpdate(userId).block();
-    StepVerifier
-      .create(teamRepository.findAll())
-      .assertNext(
-        team -> {
-          assertThat(team.getMembers().get(0).getDisplayName())
-            .isEqualTo(newDisplayName);
-        }
-      )
-      .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can delete team when last member is removed")
+    void canRefreshUserRemovedFromTeam() {
+        final String userId = integrationTestUtils.createTestUser();
+        final String teamId = integrationTestUtils.createTestTeam();
+        userService.addUserToTeam(userId, teamId).block();
+        userService.clearTeamForUser(userId).block();
+        refresherService.afterUserUpdate(userId).block();
+        StepVerifier.create(userService.findAllTeams()).verifyComplete();
+    }
 
-  @Test
-  @DisplayName("Can delete team when last member is removed")
-  void canRefreshUserRemovedFromTeam() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String teamId = integrationTestUtils.createTestTeam();
-    userService.addUserToTeam(userId, teamId).block();
-    userService.clearTeamForUser(userId).block();
-    refresherService.afterUserUpdate(userId).block();
-    StepVerifier.create(userService.findAllTeams()).verifyComplete();
-  }
+    @Test
+    @DisplayName("Can refresh a user removed from a team containing two users")
+    void canRefreshUserRemovedFromTeamWithTwoUsers() {
+        final String userId1 = userService.create("Test user 1").block();
+        final String userId2 = userService.create("Test user 2").block();
 
-  @Test
-  @DisplayName("Can refresh a user removed from a team containing two users")
-  void canRefreshUserRemovedFromTeamWithTwoUsers() {
-    final String userId1 = userService.create("Test user 1").block();
-    final String userId2 = userService.create("Test user 2").block();
+        final String teamId = integrationTestUtils.createTestTeam();
 
-    final String teamId = integrationTestUtils.createTestTeam();
+        userService.addUserToTeam(userId1, teamId).block();
+        userService.addUserToTeam(userId2, teamId).block();
 
-    userService.addUserToTeam(userId1, teamId).block();
-    userService.addUserToTeam(userId2, teamId).block();
+        final UserEntity user2 = userService.getById(userId2).block();
 
-    final UserEntity user2 = userService.getById(userId2).block();
+        userService.clearTeamForUser(userId1).block();
+        refresherService.afterUserUpdate(userId1).block();
+        StepVerifier.create(userService.getTeamById(teamId))
+                .assertNext(
+                        team -> {
+                            assertThat(team.getMembers()).containsExactly(user2);
+                        })
+                .verifyComplete();
+    }
 
-    userService.clearTeamForUser(userId1).block();
-    refresherService.afterUserUpdate(userId1).block();
-    StepVerifier
-      .create(userService.getTeamById(teamId))
-      .assertNext(
-        team -> {
-          assertThat(team.getMembers()).containsExactly(user2);
-        }
-      )
-      .verifyComplete();
-  }
+    @Test
+    @DisplayName("Can refresh a user removed from two previous teams")
+    void canRefreshUserRemovedFromTwoTeams() {
+        final String userId = integrationTestUtils.createTestUser();
 
-  @Test
-  @DisplayName("Can refresh a user removed from two previous teams")
-  void canRefreshUserRemovedFromTwoTeams() {
-    final String userId = integrationTestUtils.createTestUser();
+        final String teamId1 = userService.createTeam("Test team 1").block();
+        final String teamId2 = userService.createTeam("Test team 2").block();
 
-    final String teamId1 = userService.createTeam("Test team 1").block();
-    final String teamId2 = userService.createTeam("Test team 2").block();
+        userService.addUserToTeam(userId, teamId1).block();
+        userService.clearTeamForUser(userId).block();
+        userService.addUserToTeam(userId, teamId2).block();
+        userService.clearTeamForUser(userId).block();
 
-    userService.addUserToTeam(userId, teamId1).block();
-    userService.clearTeamForUser(userId).block();
-    userService.addUserToTeam(userId, teamId2).block();
-    userService.clearTeamForUser(userId).block();
+        refresherService.afterUserUpdate(userId).block();
+        StepVerifier.create(userService.getTeamByUserId(userId)).verifyComplete();
+    }
 
-    refresherService.afterUserUpdate(userId).block();
-    StepVerifier.create(userService.getTeamByUserId(userId)).verifyComplete();
-  }
+    @BeforeEach
+    void setup() {
+        integrationTestUtils.resetState();
 
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
-
-    // Bypass the rate limiter
-    final Bucket mockBucket = mock(Bucket.class);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
-  }
+        // Bypass the rate limiter
+        final Bucket mockBucket = mock(Bucket.class);
+        when(mockBucket.tryConsume(1)).thenReturn(true);
+        when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+        when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    }
 }

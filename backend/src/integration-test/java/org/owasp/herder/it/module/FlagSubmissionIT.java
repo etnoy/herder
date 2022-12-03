@@ -48,53 +48,54 @@ import reactor.test.StepVerifier;
 
 @DisplayName("Flag submission integration tests")
 class FlagSubmissionIT extends BaseIT {
-  @Autowired UserService userService;
+    @Autowired UserService userService;
 
-  @Autowired ModuleService moduleService;
+    @Autowired ModuleService moduleService;
 
-  @Autowired WebTestClient webTestClient;
+    @Autowired WebTestClient webTestClient;
 
-  @Autowired ObjectMapper objectMapper;
+    @Autowired ObjectMapper objectMapper;
 
-  @Autowired FlagHandler flagHandler;
+    @Autowired FlagHandler flagHandler;
 
-  @Autowired ModuleController moduleController;
+    @Autowired ModuleController moduleController;
 
-  @Autowired SubmissionService submissionService;
+    @Autowired SubmissionService submissionService;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+    @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
 
-  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+    @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
 
-  private String userId;
+    private String userId;
 
-  private String moduleId;
+    private String moduleId;
 
-  @Test
-  @DisplayName("Can reject submission to a closed module")
-  void canRejectSubmissionToClosedModule() {
-    moduleService.close(moduleId).block();
+    @Test
+    @DisplayName("Can reject submission to a closed module")
+    void canRejectSubmissionToClosedModule() {
+        moduleService.close(moduleId).block();
 
-    StepVerifier.create(
-            submissionService.submitFlag(userId, moduleId, TestConstants.TEST_STATIC_FLAG))
-        .expectError(ModuleClosedException.class)
-        .verify();
-  }
+        StepVerifier.create(
+                        submissionService.submitFlag(
+                                userId, moduleId, TestConstants.TEST_STATIC_FLAG))
+                .expectError(ModuleClosedException.class)
+                .verify();
+    }
 
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
+    @BeforeEach
+    void setup() {
+        integrationTestUtils.resetState();
 
-    userId = integrationTestUtils.createTestUser();
+        userId = integrationTestUtils.createTestUser();
 
-    moduleId = integrationTestUtils.createStaticTestModule();
+        moduleId = integrationTestUtils.createStaticTestModule();
 
-    // Bypass all rate limiters
-    final Bucket mockBucket = mock(Bucket.class);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-  }
+        // Bypass all rate limiters
+        final Bucket mockBucket = mock(Bucket.class);
+        when(mockBucket.tryConsume(1)).thenReturn(true);
+        when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+        when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    }
 }

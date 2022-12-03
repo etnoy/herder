@@ -21,25 +21,24 @@
  */
 package org.owasp.herder.validation;
 
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import javax.validation.Constraint;
-import javax.validation.Payload;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 @Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = {})
-@NotNull(message = "{org.owasp.herder.ValidClassName.NullMessage}")
-@Size(min = 2, message = "{org.owasp.herder.ValidClassName.TooShortMessage}")
+@NotNull(message = "{org.owasp.herder.ValidClassName.NullMessage}") @Size(min = 2, message = "{org.owasp.herder.ValidClassName.TooShortMessage}")
 @Size(max = 64, message = "{org.owasp.herder.ValidClassName.TooLongMessage}")
 public @interface ValidClassName {
-  String message() default "{org.owasp.herder.ValidClassName.message}";
+    String message() default "{org.owasp.herder.ValidClassName.message}";
 
-  Class<?>[] groups() default {};
+    Class<?>[] groups() default {};
 
-  Class<? extends Payload>[] payload() default {};
+    Class<? extends Payload>[] payload() default {};
 }

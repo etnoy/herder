@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bucket;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -48,238 +47,247 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Hooks;
 import reactor.test.StepVerifier;
 
 @DisplayName("Flag submission API integration tests")
 class FlagSubmissionApiIT extends BaseIT {
 
-  @Nested
-  @DisplayName("A dynamic flag")
-  class DynamicFlag {
+    @Nested
+    @DisplayName("A dynamic flag")
+    class DynamicFlag {
+
+        @Nested
+        @DisplayName("if valid")
+        class ValidDynamicFlag {
+
+            @Test
+            @DisplayName("should be accepted")
+            void canAcceptValidDynamicFlag() {
+                StepVerifier.create(
+                                integrationTestUtils
+                                        .submitFlagApiAndReturnSubmission(
+                                                TestConstants.TEST_MODULE_LOCATOR,
+                                                token,
+                                                dynamicFlag)
+                                        .map(Submission::isValid))
+                        .expectNext(true)
+                        .verifyComplete();
+            }
+
+            @Test
+            @DisplayName("should be accepted when in lowercase")
+            void canAcceptValidDynamicFlagInLowercase() {
+                StepVerifier.create(
+                                integrationTestUtils
+                                        .submitFlagApiAndReturnSubmission(
+                                                TestConstants.TEST_MODULE_LOCATOR,
+                                                token,
+                                                dynamicFlag.toLowerCase())
+                                        .map(Submission::isValid))
+                        .expectNext(true)
+                        .verifyComplete();
+            }
+
+            @Test
+            @DisplayName("should be accepted when in uppercase")
+            void canAcceptValidDynamicFlagInUppercase() {
+                StepVerifier.create(
+                                integrationTestUtils
+                                        .submitFlagApiAndReturnSubmission(
+                                                TestConstants.TEST_MODULE_LOCATOR,
+                                                token,
+                                                dynamicFlag.toUpperCase())
+                                        .map(Submission::isValid))
+                        .expectNext(true)
+                        .verifyComplete();
+            }
+        }
+
+        private String dynamicFlag;
+
+        @ParameterizedTest
+        @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
+        @DisplayName("should be rejected if invalid")
+        void canRejectInvalidDynamicFlag(final String testString) {
+            StepVerifier.create(
+                            integrationTestUtils
+                                    .submitFlagApiAndReturnSubmission(
+                                            TestConstants.TEST_MODULE_LOCATOR, token, testString)
+                                    .map(Submission::isValid))
+                    .expectNext(false)
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("should return HTTP 401 when not logged in")
+        void canRejectUnauthorizedDynamicFlag() {
+            integrationTestUtils
+                    .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, dynamicFlag)
+                    .expectStatus()
+                    .isUnauthorized();
+        }
+
+        @Test
+        @DisplayName("when empty should return HTTP 401 when not logged in")
+        void canRejectUnauthorizedEmptyDynamicFlag() {
+            integrationTestUtils
+                    .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "")
+                    .expectStatus()
+                    .isUnauthorized();
+        }
+
+        @BeforeEach
+        void setup() {
+            userId = integrationTestUtils.createTestUser();
+            token =
+                    integrationTestUtils.performAPILoginWithToken(
+                            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+
+            integrationTestUtils.createDynamicTestModule();
+            dynamicFlag =
+                    flagHandler.getDynamicFlag(userId, TestConstants.TEST_MODULE_LOCATOR).block();
+        }
+    }
 
     @Nested
-    @DisplayName("if valid")
-    class ValidDynamicFlag {
+    @DisplayName("A static flag")
+    class StaticFlagTests {
+        @Nested
+        @DisplayName("if valid")
+        class ValidStaticFlag {
 
-      @Test
-      @DisplayName("should be accepted")
-      void canAcceptValidDynamicFlag() {
-        StepVerifier.create(
-                integrationTestUtils
-                    .submitFlagApiAndReturnSubmission(
-                        TestConstants.TEST_MODULE_LOCATOR, token, dynamicFlag)
-                    .map(Submission::isValid))
-            .expectNext(true)
-            .verifyComplete();
-      }
+            @ParameterizedTest
+            @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
+            @DisplayName("should be accepted")
+            void canAcceptValidStaticFlag(final String flagToTest) {
+                moduleService.setStaticFlag(moduleId, flagToTest).block();
+                StepVerifier.create(
+                                integrationTestUtils
+                                        .submitFlagApiAndReturnSubmission(
+                                                TestConstants.TEST_MODULE_LOCATOR,
+                                                token,
+                                                flagToTest)
+                                        .map(Submission::isValid))
+                        .expectNext(true)
+                        .verifyComplete();
+            }
 
-      @Test
-      @DisplayName("should be accepted when in lowercase")
-      void canAcceptValidDynamicFlagInLowercase() {
-        StepVerifier.create(
-                integrationTestUtils
-                    .submitFlagApiAndReturnSubmission(
-                        TestConstants.TEST_MODULE_LOCATOR, token, dynamicFlag.toLowerCase())
-                    .map(Submission::isValid))
-            .expectNext(true)
-            .verifyComplete();
-      }
+            @ParameterizedTest
+            @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
+            @DisplayName("should be accepted when in lowercase")
+            void canAcceptValidStaticFlagInLowercase(final String flagToTest) {
+                moduleService.setStaticFlag(moduleId, flagToTest).block();
 
-      @Test
-      @DisplayName("should be accepted when in uppercase")
-      void canAcceptValidDynamicFlagInUppercase() {
-        StepVerifier.create(
-                integrationTestUtils
-                    .submitFlagApiAndReturnSubmission(
-                        TestConstants.TEST_MODULE_LOCATOR, token, dynamicFlag.toUpperCase())
-                    .map(Submission::isValid))
-            .expectNext(true)
-            .verifyComplete();
-      }
+                StepVerifier.create(
+                                integrationTestUtils
+                                        .submitFlagApiAndReturnSubmission(
+                                                TestConstants.TEST_MODULE_LOCATOR,
+                                                token,
+                                                flagToTest.toLowerCase())
+                                        .map(Submission::isValid))
+                        .expectNext(true)
+                        .verifyComplete();
+            }
+
+            @ParameterizedTest
+            @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
+            @DisplayName("should be accepted when in uppercase")
+            void canAcceptValidStaticFlagInUppercase(final String flagToTest) {
+                moduleService.setStaticFlag(moduleId, flagToTest).block();
+
+                StepVerifier.create(
+                                integrationTestUtils
+                                        .submitFlagApiAndReturnSubmission(
+                                                TestConstants.TEST_MODULE_LOCATOR,
+                                                token,
+                                                flagToTest.toUpperCase())
+                                        .map(Submission::isValid))
+                        .expectNext(true)
+                        .verifyComplete();
+            }
+        }
+
+        private String token;
+
+        private String moduleId;
+
+        @ParameterizedTest
+        @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
+        @DisplayName("if invalid should be rejected")
+        void canRejectInvalidStaticFlag(final String invalidStaticFlag) {
+            StepVerifier.create(
+                            integrationTestUtils
+                                    .submitFlagApiAndReturnSubmission(
+                                            TestConstants.TEST_MODULE_LOCATOR,
+                                            token,
+                                            invalidStaticFlag)
+                                    .map(Submission::isValid))
+                    .expectNext(false)
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("should return HTTP 401 when not logged in")
+        void canRejectUnauthorizedEmptyStaticFlag() {
+            integrationTestUtils
+                    .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "")
+                    .expectStatus()
+                    .isUnauthorized();
+        }
+
+        @Test
+        @DisplayName("when empty should return HTTP 401 when not logged in")
+        void canRejectUnauthorizedStaticFlag() {
+            integrationTestUtils
+                    .submitFlagApi(
+                            TestConstants.TEST_MODULE_LOCATOR, null, TestConstants.TEST_STATIC_FLAG)
+                    .expectStatus()
+                    .isUnauthorized();
+        }
+
+        @BeforeEach
+        void setup() {
+            integrationTestUtils.createTestUser();
+            token =
+                    integrationTestUtils.performAPILoginWithToken(
+                            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+
+            moduleId = integrationTestUtils.createStaticTestModule();
+        }
     }
 
-    private String dynamicFlag;
+    @Autowired UserService userService;
 
-    @ParameterizedTest
-    @MethodSource("org.owasp.herder.test.util.TestConstants#testStringProvider")
-    @DisplayName("should be rejected if invalid")
-    void canRejectInvalidDynamicFlag(final String testString) {
-      StepVerifier.create(
-              integrationTestUtils
-                  .submitFlagApiAndReturnSubmission(
-                      TestConstants.TEST_MODULE_LOCATOR, token, testString)
-                  .map(Submission::isValid))
-          .expectNext(false)
-          .verifyComplete();
-    }
+    @Autowired ModuleService moduleService;
 
-    @Test
-    @DisplayName("should return HTTP 401 when not logged in")
-    void canRejectUnauthorizedDynamicFlag() {
-      integrationTestUtils
-          .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, dynamicFlag)
-          .expectStatus()
-          .isUnauthorized();
-    }
+    @Autowired WebTestClient webTestClient;
 
-    @Test
-    @DisplayName("when empty should return HTTP 401 when not logged in")
-    void canRejectUnauthorizedEmptyDynamicFlag() {
-      integrationTestUtils
-          .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "")
-          .expectStatus()
-          .isUnauthorized();
-    }
+    @Autowired ObjectMapper objectMapper;
 
-    @BeforeEach
-    private void setUp() {
-      userId = integrationTestUtils.createTestUser();
-      token =
-          integrationTestUtils.performAPILoginWithToken(
-              TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+    @Autowired FlagHandler flagHandler;
 
-      integrationTestUtils.createDynamicTestModule();
-      dynamicFlag = flagHandler.getDynamicFlag(userId, TestConstants.TEST_MODULE_LOCATOR).block();
-    }
-  }
+    @Autowired ModuleController moduleController;
 
-  @Nested
-  @DisplayName("A static flag")
-  class StaticFlagTests {
-    @Nested
-    @DisplayName("if valid")
-    class ValidStaticFlag {
+    @Autowired PasswordEncoder passwordEncoder;
 
-      @ParameterizedTest
-      @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
-      @DisplayName("should be accepted")
-      void canAcceptValidStaticFlag(final String flagToTest) {
-        moduleService.setStaticFlag(moduleId, flagToTest).block();
-        StepVerifier.create(
-                integrationTestUtils
-                    .submitFlagApiAndReturnSubmission(
-                        TestConstants.TEST_MODULE_LOCATOR, token, flagToTest)
-                    .map(Submission::isValid))
-            .expectNext(true)
-            .verifyComplete();
-      }
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-      @ParameterizedTest
-      @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
-      @DisplayName("should be accepted when in lowercase")
-      void canAcceptValidStaticFlagInLowercase(final String flagToTest) {
-        moduleService.setStaticFlag(moduleId, flagToTest).block();
+    @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
 
-        StepVerifier.create(
-                integrationTestUtils
-                    .submitFlagApiAndReturnSubmission(
-                        TestConstants.TEST_MODULE_LOCATOR, token, flagToTest.toLowerCase())
-                    .map(Submission::isValid))
-            .expectNext(true)
-            .verifyComplete();
-      }
+    @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
 
-      @ParameterizedTest
-      @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
-      @DisplayName("should be accepted when in uppercase")
-      void canAcceptValidStaticFlagInUppercase(final String flagToTest) {
-        moduleService.setStaticFlag(moduleId, flagToTest).block();
-
-        StepVerifier.create(
-                integrationTestUtils
-                    .submitFlagApiAndReturnSubmission(
-                        TestConstants.TEST_MODULE_LOCATOR, token, flagToTest.toUpperCase())
-                    .map(Submission::isValid))
-            .expectNext(true)
-            .verifyComplete();
-      }
-    }
+    private String userId;
 
     private String token;
 
-    private String moduleId;
-
-    @ParameterizedTest
-    @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
-    @DisplayName("if invalid should be rejected")
-    void canRejectInvalidStaticFlag(final String invalidStaticFlag) {
-      StepVerifier.create(
-              integrationTestUtils
-                  .submitFlagApiAndReturnSubmission(
-                      TestConstants.TEST_MODULE_LOCATOR, token, invalidStaticFlag)
-                  .map(Submission::isValid))
-          .expectNext(false)
-          .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("should return HTTP 401 when not logged in")
-    void canRejectUnauthorizedEmptyStaticFlag() {
-      integrationTestUtils
-          .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "")
-          .expectStatus()
-          .isUnauthorized();
-    }
-
-    @Test
-    @DisplayName("when empty should return HTTP 401 when not logged in")
-    void canRejectUnauthorizedStaticFlag() {
-      integrationTestUtils
-          .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, TestConstants.TEST_STATIC_FLAG)
-          .expectStatus()
-          .isUnauthorized();
-    }
-
     @BeforeEach
-    private void setUp() {
-      integrationTestUtils.createTestUser();
-      token =
-          integrationTestUtils.performAPILoginWithToken(
-              TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+    void setup() {
+        integrationTestUtils.resetState();
 
-      moduleId = integrationTestUtils.createStaticTestModule();
+        // Bypass all rate limiters
+        final Bucket mockBucket = mock(Bucket.class);
+        when(mockBucket.tryConsume(1)).thenReturn(true);
+        when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+        when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
     }
-  }
-
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
-
-  @Autowired UserService userService;
-
-  @Autowired ModuleService moduleService;
-
-  @Autowired WebTestClient webTestClient;
-
-  @Autowired ObjectMapper objectMapper;
-
-  @Autowired FlagHandler flagHandler;
-
-  @Autowired ModuleController moduleController;
-
-  @Autowired PasswordEncoder passwordEncoder;
-
-  @Autowired IntegrationTestUtils integrationTestUtils;
-
-  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
-
-  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
-
-  private String userId;
-
-  private String token;
-
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
-
-    // Bypass all rate limiters
-    final Bucket mockBucket = mock(Bucket.class);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-  }
 }

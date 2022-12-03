@@ -21,10 +21,10 @@
  */
 package org.owasp.herder.crypto;
 
+import jakarta.validation.constraints.Min;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import javax.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -36,36 +36,36 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @Service
 public class KeyService {
-  private final CryptoFactory cryptoFactory;
+    private final CryptoFactory cryptoFactory;
 
-  private byte[] byteGenerator(final SecureRandom strongPRNG, final int numberOfBytes) {
-    byte[] randomBytes = new byte[numberOfBytes];
-    strongPRNG.nextBytes(randomBytes);
-    return randomBytes;
-  }
-
-  public String convertByteKeyToString(final byte[] keyBytes) {
-    return new String(keyBytes, StandardCharsets.US_ASCII);
-  }
-
-  public String bytesToHexString(final byte[] bytes) {
-    return Hex.encodeHexString(bytes, true);
-  }
-
-  public byte[] hexStringToBytes(final String stringFlag) throws DecoderException {
-    return Hex.decodeHex(stringFlag);
-  }
-
-  public byte[] generateRandomBytes(@Min(1) final int numberOfBytes) {
-    try {
-      final SecureRandom prng = cryptoFactory.getPrng();
-      return byteGenerator(prng, numberOfBytes);
-    } catch (NoSuchAlgorithmException e) {
-      throw new RngException("Could not initialize PRNG", e);
+    private byte[] byteGenerator(final SecureRandom strongPRNG, final int numberOfBytes) {
+        byte[] randomBytes = new byte[numberOfBytes];
+        strongPRNG.nextBytes(randomBytes);
+        return randomBytes;
     }
-  }
 
-  public String generateRandomString(@Min(1) final int numberOfBytes) {
-    return convertByteKeyToString(generateRandomBytes(numberOfBytes));
-  }
+    public String convertByteKeyToString(final byte[] keyBytes) {
+        return new String(keyBytes, StandardCharsets.US_ASCII);
+    }
+
+    public String bytesToHexString(final byte[] bytes) {
+        return Hex.encodeHexString(bytes, true);
+    }
+
+    public byte[] hexStringToBytes(final String stringFlag) throws DecoderException {
+        return Hex.decodeHex(stringFlag);
+    }
+
+    public byte[] generateRandomBytes(@Min(1) final int numberOfBytes) {
+        try {
+            final SecureRandom prng = cryptoFactory.getPrng();
+            return byteGenerator(prng, numberOfBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RngException("Could not initialize PRNG", e);
+        }
+    }
+
+    public String generateRandomString(@Min(1) final int numberOfBytes) {
+        return convertByteKeyToString(generateRandomBytes(numberOfBytes));
+    }
 }

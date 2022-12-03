@@ -52,56 +52,56 @@ import reactor.test.StepVerifier;
 
 @DisplayName("SubmissionRepository integration tests")
 class SubmissionRepositoryIT extends BaseIT {
-  @Autowired RefresherService refresherService;
+    @Autowired RefresherService refresherService;
 
-  @Autowired ModuleService moduleService;
+    @Autowired ModuleService moduleService;
 
-  @Autowired UserService userService;
+    @Autowired UserService userService;
 
-  @Autowired SubmissionService submissionService;
+    @Autowired SubmissionService submissionService;
 
-  @Autowired ScoreboardService scoreboardService;
+    @Autowired ScoreboardService scoreboardService;
 
-  @Autowired ScoreboardController scoreboardController;
+    @Autowired ScoreboardController scoreboardController;
 
-  @Autowired ScoreAdjustmentRepository scoreAdjustmentRepository;
+    @Autowired ScoreAdjustmentRepository scoreAdjustmentRepository;
 
-  @Autowired ModuleRepository moduleRepository;
+    @Autowired ModuleRepository moduleRepository;
 
-  @Autowired SubmissionRepository submissionRepository;
+    @Autowired SubmissionRepository submissionRepository;
 
-  @Autowired FlagHandler flagHandler;
+    @Autowired FlagHandler flagHandler;
 
-  @Autowired ConfigurationService configurationService;
+    @Autowired ConfigurationService configurationService;
 
-  @Autowired KeyService keyService;
+    @Autowired KeyService keyService;
 
-  @Autowired CryptoService cryptoService;
+    @Autowired CryptoService cryptoService;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-  @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+    @MockBean FlagSubmissionRateLimiter flagSubmissionRateLimiter;
 
-  @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
+    @MockBean InvalidFlagRateLimiter invalidFlagRateLimiter;
 
-  @Test
-  @DisplayName("Can return an empty list if only invalid submissions exist for user")
-  void canFindNoSubmissionsForUserIfOnlyInvalidExist() {
-    integrationTestUtils.createStaticTestModule();
-    final String userId = integrationTestUtils.createTestUser();
+    @Test
+    @DisplayName("Can return an empty list if only invalid submissions exist for user")
+    void canFindNoSubmissionsForUserIfOnlyInvalidExist() {
+        integrationTestUtils.createStaticTestModule();
+        final String userId = integrationTestUtils.createTestUser();
 
-    StepVerifier.create(submissionRepository.findAllByUserIdAndIsValidTrue(userId))
-        .verifyComplete();
-  }
+        StepVerifier.create(submissionRepository.findAllByUserIdAndIsValidTrue(userId))
+                .verifyComplete();
+    }
 
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
+    @BeforeEach
+    void setup() {
+        integrationTestUtils.resetState();
 
-    // Bypass the rate limiter
-    final Bucket mockBucket = mock(Bucket.class);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
-  }
+        // Bypass the rate limiter
+        final Bucket mockBucket = mock(Bucket.class);
+        when(mockBucket.tryConsume(1)).thenReturn(true);
+        when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+        when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    }
 }

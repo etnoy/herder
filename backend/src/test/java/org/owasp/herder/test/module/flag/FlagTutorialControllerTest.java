@@ -43,43 +43,43 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlagTutorialController unit tests")
 class FlagTutorialControllerTest extends BaseTest {
-  private FlagTutorialController flagTutorialController;
+    private FlagTutorialController flagTutorialController;
 
-  @Mock private FlagTutorial flagTutorial;
+    @Mock private FlagTutorial flagTutorial;
 
-  @Mock private ControllerAuthentication controllerAuthentication;
+    @Mock private ControllerAuthentication controllerAuthentication;
 
-  @Test
-  void getFlag_UserNotAuthenticated_ReturnsException() {
-    when(controllerAuthentication.getUserId())
-        .thenReturn(Mono.error(new NotAuthenticatedException()));
+    @Test
+    void getFlag_UserNotAuthenticated_ReturnsException() {
+        when(controllerAuthentication.getUserId())
+                .thenReturn(Mono.error(new NotAuthenticatedException()));
 
-    StepVerifier.create(flagTutorialController.getFlag())
-        .expectError(NotAuthenticatedException.class)
-        .verify();
+        StepVerifier.create(flagTutorialController.getFlag())
+                .expectError(NotAuthenticatedException.class)
+                .verify();
 
-    verify(controllerAuthentication, times(1)).getUserId();
-  }
+        verify(controllerAuthentication, times(1)).getUserId();
+    }
 
-  @BeforeEach
-  private void setUp() {
-    // Set up the system under test
-    flagTutorialController = new FlagTutorialController(flagTutorial, controllerAuthentication);
-  }
+    @BeforeEach
+    void setup() {
+        // Set up the system under test
+        flagTutorialController = new FlagTutorialController(flagTutorial, controllerAuthentication);
+    }
 
-  @Test
-  void submitFlag_UserAuthenticated_ReturnsFlag() {
-    final String mockUserId = "id";
-    final String flag = "validflag";
+    @Test
+    void submitFlag_UserAuthenticated_ReturnsFlag() {
+        final String mockUserId = "id";
+        final String flag = "validflag";
 
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
-    when(flagTutorial.getFlag(mockUserId)).thenReturn(Mono.just(flag));
+        when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
+        when(flagTutorial.getFlag(mockUserId)).thenReturn(Mono.just(flag));
 
-    FlagTutorialResult mockFlag = FlagTutorialResult.builder().flag(flag).build();
+        FlagTutorialResult mockFlag = FlagTutorialResult.builder().flag(flag).build();
 
-    StepVerifier.create(flagTutorialController.getFlag()).expectNext(mockFlag).verifyComplete();
+        StepVerifier.create(flagTutorialController.getFlag()).expectNext(mockFlag).verifyComplete();
 
-    verify(controllerAuthentication, times(1)).getUserId();
-    verify(flagTutorial, times(1)).getFlag(mockUserId);
-  }
+        verify(controllerAuthentication, times(1)).getUserId();
+        verify(flagTutorial, times(1)).getFlag(mockUserId);
+    }
 }

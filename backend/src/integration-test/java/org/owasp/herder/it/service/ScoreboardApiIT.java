@@ -35,138 +35,140 @@ import reactor.test.StepVerifier;
 
 @DisplayName("Scoreboard API integration tests")
 class ScoreboardApiIT extends BaseIT {
-  @Autowired WebTestClient webTestClient;
+    @Autowired WebTestClient webTestClient;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-  @Test
-  @DisplayName("Can return an empty submission list for module")
-  void canReturnEmptySubmissionListForModule() {
-    integrationTestUtils.createTestUser();
+    @Test
+    @DisplayName("Can return an empty submission list for module")
+    void canReturnEmptySubmissionListForModule() {
+        integrationTestUtils.createTestUser();
 
-    final String token =
-        integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+        final String token =
+                integrationTestUtils.performAPILoginWithToken(
+                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
-    integrationTestUtils.createStaticTestModule();
+        integrationTestUtils.createStaticTestModule();
 
-    StepVerifier.create(
-            webTestClient
+        StepVerifier.create(
+                        webTestClient
+                                .get()
+                                .uri(
+                                        "/api/v1/scoreboard/module/"
+                                                + TestConstants.TEST_MODULE_LOCATOR)
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .exchange()
+                                .expectStatus()
+                                .isOk()
+                                .returnResult(RankedSubmission.class)
+                                .getResponseBody())
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Can return an empty submission list for user")
+    void canReturnEmptySubmissionListForUser() {
+        final String userId = integrationTestUtils.createTestUser();
+
+        final String token =
+                integrationTestUtils.performAPILoginWithToken(
+                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+
+        integrationTestUtils.createStaticTestModule();
+
+        StepVerifier.create(
+                        webTestClient
+                                .get()
+                                .uri("/api/v1/scoreboard/user/" + userId)
+                                .header("Authorization", "Bearer " + token)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .exchange()
+                                .expectStatus()
+                                .isOk()
+                                .returnResult(RankedSubmission.class)
+                                .getResponseBody())
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Can return 404 if module does not exist")
+    void canReturn404IfModuleDoesNotExist() {
+        integrationTestUtils.createTestUser();
+
+        final String token =
+                integrationTestUtils.performAPILoginWithToken(
+                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+
+        webTestClient
                 .get()
-                .uri("/api/v1/scoreboard/module/" + TestConstants.TEST_MODULE_LOCATOR)
+                .uri("/api/v1/scoreboard/module/this-module-does-not-exist")
                 .header("Authorization", "Bearer " + token)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus()
-                .isOk()
-                .returnResult(RankedSubmission.class)
-                .getResponseBody())
-        .verifyComplete();
-  }
+                .isNotFound();
+    }
 
-  @Test
-  @DisplayName("Can return an empty submission list for user")
-  void canReturnEmptySubmissionListForUser() {
-    final String userId = integrationTestUtils.createTestUser();
+    @BeforeEach
+    void setup() {
+        integrationTestUtils.resetState();
+    }
 
-    final String token =
-        integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+    @Test
+    @DisplayName("Can return 404 if user does not exist")
+    void canReturn404IfUserDoesNotExist() {
+        integrationTestUtils.createTestUser();
 
-    integrationTestUtils.createStaticTestModule();
+        final String token =
+                integrationTestUtils.performAPILoginWithToken(
+                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
-    StepVerifier.create(
-            webTestClient
+        webTestClient
                 .get()
-                .uri("/api/v1/scoreboard/user/" + userId)
+                .uri("/api/v1/scoreboard/user/" + TestConstants.TEST_MODULE_ID)
                 .header("Authorization", "Bearer " + token)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus()
-                .isOk()
-                .returnResult(RankedSubmission.class)
-                .getResponseBody())
-        .verifyComplete();
-  }
+                .isNotFound();
+    }
 
-  @Test
-  @DisplayName("Can return 404 if module does not exist")
-  void canReturn404IfModuleDoesNotExist() {
-    integrationTestUtils.createTestUser();
+    @Test
+    @DisplayName("Can return 400 if user id is invalid")
+    void canReturn400IfUserIdIsInvalid() {
+        integrationTestUtils.createTestUser();
 
-    final String token =
-        integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+        final String token =
+                integrationTestUtils.performAPILoginWithToken(
+                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
-    webTestClient
-        .get()
-        .uri("/api/v1/scoreboard/module/this-module-does-not-exist")
-        .header("Authorization", "Bearer " + token)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isNotFound();
-  }
+        webTestClient
+                .get()
+                .uri("/api/v1/scoreboard/user/xyz")
+                .header("Authorization", "Bearer " + token)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+    }
 
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
-  }
+    @Test
+    @DisplayName("Can return 400 if module locator is invalid")
+    void canReturn400IfModuleLocatorIsInvalid() {
+        integrationTestUtils.createTestUser();
 
-  @Test
-  @DisplayName("Can return 404 if user does not exist")
-  void canReturn404IfUserDoesNotExist() {
-    integrationTestUtils.createTestUser();
+        final String token =
+                integrationTestUtils.performAPILoginWithToken(
+                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
-    final String token =
-        integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
-
-    webTestClient
-        .get()
-        .uri("/api/v1/scoreboard/user/" + TestConstants.TEST_MODULE_ID)
-        .header("Authorization", "Bearer " + token)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isNotFound();
-  }
-
-  @Test
-  @DisplayName("Can return 400 if user id is invalid")
-  void canReturn400IfUserIdIsInvalid() {
-    integrationTestUtils.createTestUser();
-
-    final String token =
-        integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
-
-    webTestClient
-        .get()
-        .uri("/api/v1/scoreboard/user/xyz")
-        .header("Authorization", "Bearer " + token)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isBadRequest();
-  }
-
-  @Test
-  @DisplayName("Can return 400 if module locator is invalid")
-  void canReturn400IfModuleLocatorIsInvalid() {
-    integrationTestUtils.createTestUser();
-
-    final String token =
-        integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
-
-    webTestClient
-        .get()
-        .uri("/api/v1/scoreboard/module/XYZ")
-        .header("Authorization", "Bearer " + token)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isBadRequest();
-  }
+        webTestClient
+                .get()
+                .uri("/api/v1/scoreboard/module/XYZ")
+                .header("Authorization", "Bearer " + token)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+    }
 }

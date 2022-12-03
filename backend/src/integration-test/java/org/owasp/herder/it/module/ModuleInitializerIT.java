@@ -52,198 +52,198 @@ import reactor.test.StepVerifier;
 @DirtiesContext
 @DisplayName("ModuleInitializer integration tests")
 class ModuleInitializerIT extends BaseIT {
-  @Autowired GenericApplicationContext applicationContext;
+    @Autowired GenericApplicationContext applicationContext;
 
-  @Autowired ModuleService moduleService;
+    @Autowired ModuleService moduleService;
 
-  @Autowired ScoreboardService scoreboardService;
+    @Autowired ScoreboardService scoreboardService;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+    @Autowired IntegrationTestUtils integrationTestUtils;
 
-  ModuleInitializer moduleInitializer;
+    ModuleInitializer moduleInitializer;
 
-  Map<String, Object> beans;
+    Map<String, Object> beans;
 
-  @Test
-  @DisplayName("Can throw error if module does not extend BaseModule")
-  void canThrowErrorIfHerderModuleIsOfWrongType() {
-    @HerderModule("wrong-base")
-    class TestModuleWrongBase {}
+    @Test
+    @DisplayName("Can throw error if module does not extend BaseModule")
+    void canThrowErrorIfHerderModuleIsOfWrongType() {
+        @HerderModule("wrong-base")
+        class TestModuleWrongBase {}
 
-    applicationContext.registerBean(TestModuleWrongBase.class, () -> new TestModuleWrongBase());
-    assertThatThrownBy(() -> moduleInitializer.initializeModules())
-        .isInstanceOf(InvalidHerderModuleTypeException.class);
-  }
-
-  // TODO: test for invalid score configurations
-
-  @Test
-  @DisplayName("Can register a Herder module with scores")
-  void canRegisterHerderModuleWithScores() {
-    final String moduleLocator = "scored-module";
-
-    @HerderModule("Scored module")
-    @Locator(moduleLocator)
-    @Score(baseScore = 100, goldBonus = 50, silverBonus = 30, bronzeBonus = 10)
-    class TestModule implements BaseModule {}
-
-    applicationContext.registerBean(TestModule.class, () -> new TestModule());
-    moduleInitializer.initializeModules();
-
-    final long baseScore = 100L;
-
-    final ArrayList<Integer> bonusScores = new ArrayList<>();
-    bonusScores.add(50);
-    bonusScores.add(30);
-    bonusScores.add(10);
-
-    StepVerifier.create(moduleService.findByLocator(moduleLocator))
-        .assertNext(
-            module -> {
-              assertThat(module.getBaseScore()).isEqualTo(baseScore);
-              assertThat(module.getBonusScores()).isEqualTo(bonusScores);
-            })
-        .verifyComplete();
-  }
-
-  @Test
-  @DisplayName("Can register a Herder module")
-  void canRegisterHerderModule() {
-    final String moduleLocator = "test-module";
-
-    @HerderModule("Test module")
-    @Locator(moduleLocator)
-    class TestModule implements BaseModule {}
-
-    applicationContext.registerBean(TestModule.class, () -> new TestModule());
-    moduleInitializer.initializeModules();
-    StepVerifier.create(moduleService.findByLocator(moduleLocator))
-        .expectNextMatches(module -> module.getLocator().equals(moduleLocator))
-        .verifyComplete();
-  }
-
-  @Test
-  @DisplayName("Can throw error if module names collide")
-  void initializeModules_NameCollision_ReturnsError() {
-    final String moduleName = "test-module";
-
-    @HerderModule(moduleName)
-    class TestModule implements BaseModule {}
-
-    @HerderModule(moduleName)
-    class TestModuleNameCollision implements BaseModule {}
-
-    applicationContext.registerBean(TestModule.class, () -> new TestModule());
-    applicationContext.registerBean(
-        TestModuleNameCollision.class, () -> new TestModuleNameCollision());
-
-    assertThatThrownBy(() -> moduleInitializer.initializeModules())
-        .isInstanceOf(DuplicateModuleNameException.class);
-  }
-
-  @Test
-  @DisplayName("Can initialize a module with multiple tags with same key")
-  void canInitializeModuleWithTagsOfSameName() {
-    final String moduleLocator = "tags-with-same-name";
-
-    @HerderModule("Tags with same name")
-    @Locator(moduleLocator)
-    @Tag(key = "topic", value = "testing")
-    @Tag(key = "topic", value = "production")
-    class MultipleTagsWithSameName implements BaseModule {}
-
-    applicationContext.registerBean(
-        MultipleTagsWithSameName.class, () -> new MultipleTagsWithSameName());
-    moduleInitializer.initializeModules();
-
-    final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
-    Multimap<String, String> expectedTags = ArrayListMultimap.create();
-
-    expectedTags.put("topic", "testing");
-    expectedTags.put("topic", "production");
-
-    StepVerifier.create(moduleService.getById(moduleId))
-        .assertNext(
-            module -> {
-              assertThat(module.getTags()).hasSameEntriesAs(expectedTags);
-            })
-        .verifyComplete();
-  }
-
-  @Test
-  @DisplayName("Can initialize a module with multiple tags")
-  void canInitializeModuleWithMultipleTags() {
-    final String moduleLocator = "multiple-tags";
-
-    @HerderModule("Multiple tags")
-    @Tag(key = "topic", value = "testing")
-    @Tag(key = "difficulty", value = "beginner")
-    @Locator(moduleLocator)
-    class MultipleTagsModule implements BaseModule {}
-
-    applicationContext.registerBean(MultipleTagsModule.class, () -> new MultipleTagsModule());
-    moduleInitializer.initializeModules();
-
-    final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
-
-    Multimap<String, String> expectedTags = ArrayListMultimap.create();
-
-    expectedTags.put("topic", "testing");
-    expectedTags.put("difficulty", "beginner");
-
-    StepVerifier.create(moduleService.getById(moduleId))
-        .assertNext(
-            module -> {
-              assertThat(module.getTags()).isEqualTo(expectedTags);
-            })
-        .verifyComplete();
-  }
-
-  @Test
-  @DisplayName("Can initialize a tagged module")
-  void canInitializeTaggedModule() {
-    final String moduleLocator = "single-tag";
-
-    @HerderModule("Single Tag Module")
-    @Locator(moduleLocator)
-    @Tag(key = "topic", value = "testing")
-    class SingleTagModule implements BaseModule {}
-
-    applicationContext.registerBean(SingleTagModule.class, () -> new SingleTagModule());
-    moduleInitializer.initializeModules();
-
-    final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
-
-    Multimap<String, String> expectedTags = ArrayListMultimap.create();
-
-    expectedTags.put("topic", "testing");
-
-    StepVerifier.create(moduleService.getById(moduleId))
-        .assertNext(
-            module -> {
-              assertThat(module.getTags()).isEqualTo(expectedTags);
-            })
-        .verifyComplete();
-  }
-
-  @Test
-  @DisplayName("Can handle zero modules")
-  void initializeModules_NoModules_ModuleInitialized() {
-    moduleInitializer.initializeModules();
-    StepVerifier.create(moduleService.findAll()).verifyComplete();
-  }
-
-  @BeforeEach
-  private void setUp() {
-    integrationTestUtils.resetState();
-
-    // Remove all other herder modules
-    for (final String beanName :
-        applicationContext.getBeansWithAnnotation(HerderModule.class).keySet()) {
-      applicationContext.removeBeanDefinition(beanName);
+        applicationContext.registerBean(TestModuleWrongBase.class, () -> new TestModuleWrongBase());
+        assertThatThrownBy(() -> moduleInitializer.initializeModules())
+                .isInstanceOf(InvalidHerderModuleTypeException.class);
     }
 
-    // Set up the system under test
-    moduleInitializer = new ModuleInitializer(applicationContext, moduleService);
-  }
+    // TODO: test for invalid score configurations
+
+    @Test
+    @DisplayName("Can register a Herder module with scores")
+    void canRegisterHerderModuleWithScores() {
+        final String moduleLocator = "scored-module";
+
+        @HerderModule("Scored module")
+        @Locator(moduleLocator)
+        @Score(baseScore = 100, goldBonus = 50, silverBonus = 30, bronzeBonus = 10)
+        class TestModule implements BaseModule {}
+
+        applicationContext.registerBean(TestModule.class, () -> new TestModule());
+        moduleInitializer.initializeModules();
+
+        final long baseScore = 100L;
+
+        final ArrayList<Integer> bonusScores = new ArrayList<>();
+        bonusScores.add(50);
+        bonusScores.add(30);
+        bonusScores.add(10);
+
+        StepVerifier.create(moduleService.findByLocator(moduleLocator))
+                .assertNext(
+                        module -> {
+                            assertThat(module.getBaseScore()).isEqualTo(baseScore);
+                            assertThat(module.getBonusScores()).isEqualTo(bonusScores);
+                        })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Can register a Herder module")
+    void canRegisterHerderModule() {
+        final String moduleLocator = "test-module";
+
+        @HerderModule("Test module")
+        @Locator(moduleLocator)
+        class TestModule implements BaseModule {}
+
+        applicationContext.registerBean(TestModule.class, () -> new TestModule());
+        moduleInitializer.initializeModules();
+        StepVerifier.create(moduleService.findByLocator(moduleLocator))
+                .expectNextMatches(module -> module.getLocator().equals(moduleLocator))
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Can throw error if module names collide")
+    void initializeModules_NameCollision_ReturnsError() {
+        final String moduleName = "test-module";
+
+        @HerderModule(moduleName)
+        class TestModule implements BaseModule {}
+
+        @HerderModule(moduleName)
+        class TestModuleNameCollision implements BaseModule {}
+
+        applicationContext.registerBean(TestModule.class, () -> new TestModule());
+        applicationContext.registerBean(
+                TestModuleNameCollision.class, () -> new TestModuleNameCollision());
+
+        assertThatThrownBy(() -> moduleInitializer.initializeModules())
+                .isInstanceOf(DuplicateModuleNameException.class);
+    }
+
+    @Test
+    @DisplayName("Can initialize a module with multiple tags with same key")
+    void canInitializeModuleWithTagsOfSameName() {
+        final String moduleLocator = "tags-with-same-name";
+
+        @HerderModule("Tags with same name")
+        @Locator(moduleLocator)
+        @Tag(key = "topic", value = "testing")
+        @Tag(key = "topic", value = "production")
+        class MultipleTagsWithSameName implements BaseModule {}
+
+        applicationContext.registerBean(
+                MultipleTagsWithSameName.class, () -> new MultipleTagsWithSameName());
+        moduleInitializer.initializeModules();
+
+        final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
+        Multimap<String, String> expectedTags = ArrayListMultimap.create();
+
+        expectedTags.put("topic", "testing");
+        expectedTags.put("topic", "production");
+
+        StepVerifier.create(moduleService.getById(moduleId))
+                .assertNext(
+                        module -> {
+                            assertThat(module.getTags()).hasSameEntriesAs(expectedTags);
+                        })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Can initialize a module with multiple tags")
+    void canInitializeModuleWithMultipleTags() {
+        final String moduleLocator = "multiple-tags";
+
+        @HerderModule("Multiple tags")
+        @Tag(key = "topic", value = "testing")
+        @Tag(key = "difficulty", value = "beginner")
+        @Locator(moduleLocator)
+        class MultipleTagsModule implements BaseModule {}
+
+        applicationContext.registerBean(MultipleTagsModule.class, () -> new MultipleTagsModule());
+        moduleInitializer.initializeModules();
+
+        final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
+
+        Multimap<String, String> expectedTags = ArrayListMultimap.create();
+
+        expectedTags.put("topic", "testing");
+        expectedTags.put("difficulty", "beginner");
+
+        StepVerifier.create(moduleService.getById(moduleId))
+                .assertNext(
+                        module -> {
+                            assertThat(module.getTags()).isEqualTo(expectedTags);
+                        })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Can initialize a tagged module")
+    void canInitializeTaggedModule() {
+        final String moduleLocator = "single-tag";
+
+        @HerderModule("Single Tag Module")
+        @Locator(moduleLocator)
+        @Tag(key = "topic", value = "testing")
+        class SingleTagModule implements BaseModule {}
+
+        applicationContext.registerBean(SingleTagModule.class, () -> new SingleTagModule());
+        moduleInitializer.initializeModules();
+
+        final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
+
+        Multimap<String, String> expectedTags = ArrayListMultimap.create();
+
+        expectedTags.put("topic", "testing");
+
+        StepVerifier.create(moduleService.getById(moduleId))
+                .assertNext(
+                        module -> {
+                            assertThat(module.getTags()).isEqualTo(expectedTags);
+                        })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Can handle zero modules")
+    void initializeModules_NoModules_ModuleInitialized() {
+        moduleInitializer.initializeModules();
+        StepVerifier.create(moduleService.findAll()).verifyComplete();
+    }
+
+    @BeforeEach
+    void setup() {
+        integrationTestUtils.resetState();
+
+        // Remove all other herder modules
+        for (final String beanName :
+                applicationContext.getBeansWithAnnotation(HerderModule.class).keySet()) {
+            applicationContext.removeBeanDefinition(beanName);
+        }
+
+        // Set up the system under test
+        moduleInitializer = new ModuleInitializer(applicationContext, moduleService);
+    }
 }

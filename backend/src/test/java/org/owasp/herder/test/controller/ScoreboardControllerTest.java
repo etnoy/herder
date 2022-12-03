@@ -26,7 +26,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,92 +37,86 @@ import org.owasp.herder.scoring.SanitizedRankedSubmission;
 import org.owasp.herder.scoring.ScoreboardController;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
+import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.user.UserService;
-
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ScoreboardController unit tests")
-class ScoreboardControllerTest {
+class ScoreboardControllerTest extends BaseTest {
 
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+    private ScoreboardController scoreboardController;
 
-  private ScoreboardController scoreboardController;
+    @Mock private ScoreboardService scoreboardService;
 
-  @Mock private ScoreboardService scoreboardService;
+    @Mock private UserService userService;
 
-  @Mock private UserService userService;
+    @Mock private ModuleService moduleService;
 
-  @Mock private ModuleService moduleService;
+    @Mock private SubmissionService submissionService;
 
-  @Mock private SubmissionService submissionService;
+    //  @Test
+    //  void getScoreboard_ValidData_ReturnsScoreboard() {
+    //    final ScoreboardEntryBuilder scoreboardEntryBuilder = ScoreboardEntry.builder();
+    //    final ScoreboardEntry scoreboardEntry1 =
+    //        scoreboardEntryBuilder
+    //            .rank(1L)
+    //            .userId("asdf")
+    //            .score(1337L)
+    //            .displayName("User1")
+    //            .goldMedals(420L)
+    //            .silverMedals(17L)
+    //            .bronzeMedals(2L)
+    //            .build();
+    //    final ScoreboardEntry scoreboardEntry2 =
+    //        scoreboardEntryBuilder
+    //            .rank(1L)
+    //            .userId("qwert")
+    //            .score(13399L)
+    //            .displayName("User2")
+    //            .goldMedals(69L)
+    //            .silverMedals(19L)
+    //            .bronzeMedals(2L)
+    //            .build();
+    //
+    //    final Flux<ScoreboardEntry> scoreboard = Flux.just(scoreboardEntry1, scoreboardEntry2);
+    //    when(scoreboardService.getScoreboard()).thenReturn(scoreboard);
+    //
+    //    StepVerifier.create(scoreboardController.getScoreboard())
+    //        .expectNext(scoreboardEntry1)
+    //        .expectNext(scoreboardEntry2)
+    //        .verifyComplete();
+    //
+    //    verify(scoreboardService, times(1)).getScoreboard();
+    //  }
 
-  //  @Test
-  //  void getScoreboard_ValidData_ReturnsScoreboard() {
-  //    final ScoreboardEntryBuilder scoreboardEntryBuilder = ScoreboardEntry.builder();
-  //    final ScoreboardEntry scoreboardEntry1 =
-  //        scoreboardEntryBuilder
-  //            .rank(1L)
-  //            .userId("asdf")
-  //            .score(1337L)
-  //            .displayName("User1")
-  //            .goldMedals(420L)
-  //            .silverMedals(17L)
-  //            .bronzeMedals(2L)
-  //            .build();
-  //    final ScoreboardEntry scoreboardEntry2 =
-  //        scoreboardEntryBuilder
-  //            .rank(1L)
-  //            .userId("qwert")
-  //            .score(13399L)
-  //            .displayName("User2")
-  //            .goldMedals(69L)
-  //            .silverMedals(19L)
-  //            .bronzeMedals(2L)
-  //            .build();
-  //
-  //    final Flux<ScoreboardEntry> scoreboard = Flux.just(scoreboardEntry1, scoreboardEntry2);
-  //    when(scoreboardService.getScoreboard()).thenReturn(scoreboard);
-  //
-  //    StepVerifier.create(scoreboardController.getScoreboard())
-  //        .expectNext(scoreboardEntry1)
-  //        .expectNext(scoreboardEntry2)
-  //        .verifyComplete();
-  //
-  //    verify(scoreboardService, times(1)).getScoreboard();
-  //  }
+    @Test
+    void getScoreboardByUserId_ValidUserId_ReturnsScoreboardForUser() {
+        final String mockUserId = "id";
 
-  @Test
-  void getScoreboardByUserId_ValidUserId_ReturnsScoreboardForUser() {
-    final String mockUserId = "id";
+        final SanitizedRankedSubmission rankedSubmission1 = mock(SanitizedRankedSubmission.class);
+        final SanitizedRankedSubmission rankedSubmission2 = mock(SanitizedRankedSubmission.class);
 
-    final SanitizedRankedSubmission rankedSubmission1 = mock(SanitizedRankedSubmission.class);
-    final SanitizedRankedSubmission rankedSubmission2 = mock(SanitizedRankedSubmission.class);
+        final Flux<SanitizedRankedSubmission> rankedSubmissions =
+                Flux.just(rankedSubmission1, rankedSubmission2);
+        when(submissionService.findAllRankedByUserId(mockUserId)).thenReturn(rankedSubmissions);
+        when(userService.existsById(mockUserId)).thenReturn(Mono.just(true));
 
-    final Flux<SanitizedRankedSubmission> rankedSubmissions =
-        Flux.just(rankedSubmission1, rankedSubmission2);
-    when(submissionService.findAllRankedByUserId(mockUserId)).thenReturn(rankedSubmissions);
-    when(userService.existsById(mockUserId)).thenReturn(Mono.just(true));
+        StepVerifier.create(scoreboardController.getSubmissionsByUserId(mockUserId))
+                .expectNext(rankedSubmission1)
+                .expectNext(rankedSubmission2)
+                .verifyComplete();
 
-    StepVerifier.create(scoreboardController.getSubmissionsByUserId(mockUserId))
-        .expectNext(rankedSubmission1)
-        .expectNext(rankedSubmission2)
-        .verifyComplete();
+        verify(submissionService, times(1)).findAllRankedByUserId(mockUserId);
+    }
 
-    verify(submissionService, times(1)).findAllRankedByUserId(mockUserId);
-  }
-
-  @BeforeEach
-  private void setUp() {
-    // Set up the system under test
-    scoreboardController =
-        new ScoreboardController(scoreboardService, userService, submissionService, moduleService);
-  }
+    @BeforeEach
+    void setup() {
+        // Set up the system under test
+        scoreboardController =
+                new ScoreboardController(
+                        scoreboardService, userService, submissionService, moduleService);
+    }
 }

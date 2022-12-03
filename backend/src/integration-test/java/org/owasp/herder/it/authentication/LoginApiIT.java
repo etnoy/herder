@@ -39,77 +39,97 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @DisplayName("Login API integration tests")
 class LoginApiIT extends BaseIT {
 
-  @Autowired UserService userService;
+  @Autowired
+  UserService userService;
 
-  @Autowired WebTestClient webTestClient;
+  @Autowired
+  WebTestClient webTestClient;
 
-  @Autowired WebTokenKeyManager webTokenKeyManager;
+  @Autowired
+  WebTokenKeyManager webTokenKeyManager;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+  @Autowired
+  IntegrationTestUtils integrationTestUtils;
 
   private String userId;
 
   @Test
-  @DisplayName("Logging in with correct credentials should return a valid token")
+  @DisplayName(
+    "Logging in with correct credentials should return a valid token"
+  )
   void canLoginWithValidCredentials() {
-    final String token =
-        integrationTestUtils.performAPILoginWithToken(
-            TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+    final String token = integrationTestUtils.performAPILoginWithToken(
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
+    );
 
-    final Claims claims =
-        Jwts.parserBuilder()
-            .setSigningKey(webTokenKeyManager.getKeyForUser(userId))
-            .build()
-            .parseClaimsJws(token)
-            .getBody();
+    final Claims claims = Jwts
+      .parserBuilder()
+      .setSigningKey(webTokenKeyManager.getKeyForUser(userId))
+      .build()
+      .parseClaimsJws(token)
+      .getBody();
 
     assertThat(claims.getSubject()).isEqualTo(userId);
   }
 
   @Test
-  @DisplayName("Logging in with an empty password should return HTTP Bad Request")
+  @DisplayName(
+    "Logging in with an empty password should return HTTP Bad Request"
+  )
   void canReturn400WhenLogginInWithEmptyPassword() {
     integrationTestUtils
-        .performAPILogin(TestConstants.TEST_USER_LOGIN_NAME, "")
-        .expectStatus()
-        .isBadRequest();
+      .performAPILogin(TestConstants.TEST_USER_LOGIN_NAME, "")
+      .expectStatus()
+      .isBadRequest();
   }
 
   @Test
-  @DisplayName("Logging in with an empty username should return HTTP Unauthorized")
+  @DisplayName(
+    "Logging in with an empty username should return HTTP Unauthorized"
+  )
   void canReturn400WhenLogginInWithEmptyUsername() {
     integrationTestUtils
-        .performAPILogin("", TestConstants.TEST_USER_PASSWORD)
-        .expectStatus()
-        .isBadRequest();
+      .performAPILogin("", TestConstants.TEST_USER_PASSWORD)
+      .expectStatus()
+      .isBadRequest();
   }
 
   @Test
-  @DisplayName("Logging in with an incorrect password should return HTTP Unauthorized")
+  @DisplayName(
+    "Logging in with an incorrect password should return HTTP Unauthorized"
+  )
   void canReturn401WhenLogginInWithWrongPassword() {
     integrationTestUtils
-        .performAPILogin(TestConstants.TEST_USER_LOGIN_NAME, "wrong")
-        .expectStatus()
-        .isUnauthorized();
+      .performAPILogin(TestConstants.TEST_USER_LOGIN_NAME, "wrong")
+      .expectStatus()
+      .isUnauthorized();
   }
 
   @Test
-  @DisplayName("Logging in with an incorrect username should return HTTP Unauthorized")
+  @DisplayName(
+    "Logging in with an incorrect username should return HTTP Unauthorized"
+  )
   void canReturn401WhenLogginInWithWrongUsername() {
     integrationTestUtils
-        .performAPILogin("wrong", TestConstants.TEST_USER_PASSWORD)
-        .expectStatus()
-        .isUnauthorized();
+      .performAPILogin("wrong", TestConstants.TEST_USER_PASSWORD)
+      .expectStatus()
+      .isUnauthorized();
   }
 
   @Test
-  @DisplayName("Logging in with an incorrect username and password should return HTTP Unauthorized")
+  @DisplayName(
+    "Logging in with an incorrect username and password should return HTTP Unauthorized"
+  )
   void canReturn401WhenLogginInWithWrongUsernameAndPassword() {
-    integrationTestUtils.performAPILogin("wrong", "still wrong").expectStatus().isUnauthorized();
+    integrationTestUtils
+      .performAPILogin("wrong", "still wrong")
+      .expectStatus()
+      .isUnauthorized();
   }
 
   @BeforeEach
-  private void setUp() {
+  void setUp() {
     integrationTestUtils.resetState();
 
     userId = integrationTestUtils.createTestUser();

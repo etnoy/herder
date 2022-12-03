@@ -24,7 +24,6 @@ package org.owasp.herder.test.module.csrf;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,61 +34,55 @@ import org.owasp.herder.authentication.ControllerAuthentication;
 import org.owasp.herder.module.csrf.CsrfTutorial;
 import org.owasp.herder.module.csrf.CsrfTutorialController;
 import org.owasp.herder.module.csrf.CsrfTutorialResult;
-
-import reactor.core.publisher.Hooks;
+import org.owasp.herder.test.BaseTest;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CsrfTutorialController unit tests")
-class CsrfTutorialControllerTest {
-  @BeforeAll
-  private static void reactorVerbose() {
-    // Tell Reactor to print verbose error messages
-    Hooks.onOperatorDebug();
-  }
+class CsrfTutorialControllerTest extends BaseTest {
 
-  CsrfTutorialController csrfTutorialController;
+    CsrfTutorialController csrfTutorialController;
 
-  @Mock CsrfTutorial csrfTutorial;
+    @Mock CsrfTutorial csrfTutorial;
 
-  @Mock ControllerAuthentication controllerAuthentication;
+    @Mock ControllerAuthentication controllerAuthentication;
 
-  @BeforeEach
-  private void setUp() {
-    // Set up the system under test
-    csrfTutorialController = new CsrfTutorialController(csrfTutorial, controllerAuthentication);
-  }
+    @BeforeEach
+    void setup() {
+        // Set up the system under test
+        csrfTutorialController = new CsrfTutorialController(csrfTutorial, controllerAuthentication);
+    }
 
-  @Test
-  void tutorial_TutorialCreated_ReturnsTutorial() {
-    final String mockUserId = "id";
+    @Test
+    void tutorial_TutorialCreated_ReturnsTutorial() {
+        final String mockUserId = "id";
 
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
+        when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
 
-    final CsrfTutorialResult mockCsrfTutorialResult = mock(CsrfTutorialResult.class);
+        final CsrfTutorialResult mockCsrfTutorialResult = mock(CsrfTutorialResult.class);
 
-    when(csrfTutorial.getTutorial(mockUserId)).thenReturn(Mono.just(mockCsrfTutorialResult));
+        when(csrfTutorial.getTutorial(mockUserId)).thenReturn(Mono.just(mockCsrfTutorialResult));
 
-    StepVerifier.create(csrfTutorialController.tutorial())
-        .expectNext(mockCsrfTutorialResult)
-        .verifyComplete();
-  }
+        StepVerifier.create(csrfTutorialController.tutorial())
+                .expectNext(mockCsrfTutorialResult)
+                .verifyComplete();
+    }
 
-  @Test
-  void activate_TutorialCreated_ReturnsTutorial() {
-    final String mockUserId = "id";
-    final String mockPseudonym = "abcd123";
+    @Test
+    void activate_TutorialCreated_ReturnsTutorial() {
+        final String mockUserId = "id";
+        final String mockPseudonym = "abcd123";
 
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
+        when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
 
-    final CsrfTutorialResult mockCsrfTutorialResult = mock(CsrfTutorialResult.class);
+        final CsrfTutorialResult mockCsrfTutorialResult = mock(CsrfTutorialResult.class);
 
-    when(csrfTutorial.attack(mockUserId, mockPseudonym))
-        .thenReturn(Mono.just(mockCsrfTutorialResult));
+        when(csrfTutorial.attack(mockUserId, mockPseudonym))
+                .thenReturn(Mono.just(mockCsrfTutorialResult));
 
-    StepVerifier.create(csrfTutorialController.attack(mockPseudonym))
-        .expectNext(mockCsrfTutorialResult)
-        .verifyComplete();
-  }
+        StepVerifier.create(csrfTutorialController.attack(mockPseudonym))
+                .expectNext(mockCsrfTutorialResult)
+                .verifyComplete();
+    }
 }
