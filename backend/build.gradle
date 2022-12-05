@@ -48,7 +48,7 @@ dependencies {
     implementation 'org.springframework.data:spring-data-commons:3.0.0'
     implementation 'org.springframework.boot:spring-boot-starter-security:3.0.0'
     implementation 'io.r2dbc:r2dbc-h2:0.9.1.RELEASE'
-    implementation 'com.h2database:h2:2.1.210'
+    implementation 'com.h2database:h2:2.1.214'
     implementation 'io.r2dbc:r2dbc-spi:1.0.0.RELEASE'
     implementation 'com.github.spotbugs:spotbugs:4.7.3'
 
