@@ -94,8 +94,8 @@ public class ModuleService {
           )
         )
       )
-      .map(// Name and locator don't exist already, create new module
-      exists ->
+      // Name and locator don't exist already, create new module
+      .map(exists ->
         ModuleEntity
           .builder()
           .isOpen(true)
