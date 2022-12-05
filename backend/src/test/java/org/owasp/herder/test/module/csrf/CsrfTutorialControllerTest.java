@@ -41,6 +41,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CsrfTutorialController unit tests")
 class CsrfTutorialControllerTest extends BaseTest {
+
   CsrfTutorialController csrfTutorialController;
 
   @Mock

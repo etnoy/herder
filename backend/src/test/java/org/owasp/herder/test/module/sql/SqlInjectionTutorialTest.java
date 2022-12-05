@@ -52,6 +52,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SqlInjectionTutorial unit tests")
 class SqlInjectionTutorialTest extends BaseTest {
+
   private String moduleLocator;
 
   SqlInjectionTutorial sqlInjectionTutorial;
@@ -114,13 +115,11 @@ class SqlInjectionTutorialTest extends BaseTest {
 
     StepVerifier
       .create(sqlInjectionTutorial.submitQuery(mockUserId, query))
-      .assertNext(
-        row -> {
-          assertThat(row.getName()).isNull();
-          assertThat(row.getComment()).isNull();
-          assertThat(row.getError()).isEqualTo("Syntax error, yo");
-        }
-      )
+      .assertNext(row -> {
+        assertThat(row.getName()).isNull();
+        assertThat(row.getComment()).isNull();
+        assertThat(row.getError()).isEqualTo("Syntax error, yo");
+      })
       .verifyComplete();
   }
 
@@ -187,13 +186,11 @@ class SqlInjectionTutorialTest extends BaseTest {
 
     StepVerifier
       .create(sqlInjectionTutorial.submitQuery(mockUserId, query))
-      .assertNext(
-        row -> {
-          assertThat(row.getName()).isNull();
-          assertThat(row.getComment()).isNull();
-          assertThat(row.getError()).isEqualTo("Data integrity violation, yo");
-        }
-      )
+      .assertNext(row -> {
+        assertThat(row.getName()).isNull();
+        assertThat(row.getComment()).isNull();
+        assertThat(row.getError()).isEqualTo("Data integrity violation, yo");
+      })
       .verifyComplete();
   }
 

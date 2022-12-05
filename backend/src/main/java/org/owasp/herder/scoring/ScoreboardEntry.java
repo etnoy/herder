@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @With
 @Document("scoreboard")
 public class ScoreboardEntry implements Serializable {
+
   private static final long serialVersionUID = 5300850744874749678L;
 
   @Id

@@ -31,6 +31,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 @Component
 public class WebTokenClock implements io.jsonwebtoken.Clock {
+
   private final Clock clock;
 
   @Override

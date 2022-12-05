@@ -42,6 +42,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class StartupRunner implements ApplicationRunner {
+
   private final UserService userService;
 
   private final ModuleService moduleService;

@@ -23,5 +23,5 @@ package org.owasp.herder.scoring;
 
 public enum PrincipalType {
   USER,
-  TEAM
+  TEAM,
 }

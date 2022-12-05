@@ -25,6 +25,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public class IncompatibleDatabaseException extends RuntimeException {
+
   private static final long serialVersionUID = -4610783131127415375L;
 
   public IncompatibleDatabaseException(final String message) {

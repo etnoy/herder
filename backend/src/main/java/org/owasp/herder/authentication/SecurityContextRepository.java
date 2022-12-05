@@ -38,6 +38,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SecurityContextRepository
   implements ServerSecurityContextRepository {
+
   private final AuthenticationManager authenticationManager;
 
   @Override

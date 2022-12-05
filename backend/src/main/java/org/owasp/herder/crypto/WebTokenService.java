@@ -49,6 +49,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @RequiredArgsConstructor
 public class WebTokenService {
+
   private final WebTokenKeyManager webTokenKeyManager;
 
   // How many seconds a JWT token should last before expiring
@@ -136,7 +137,6 @@ public class WebTokenService {
           .parserBuilder()
           .setSigningKeyResolver(
             new SigningKeyResolverAdapter() {
-
               @Override
               public Key resolveSigningKey(
                 @SuppressWarnings("rawtypes") JwsHeader header,

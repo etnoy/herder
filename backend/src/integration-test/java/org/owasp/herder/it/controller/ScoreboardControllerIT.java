@@ -56,6 +56,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("ScoreboardController integration tests")
 class ScoreboardControllerIT extends BaseIT {
+
   @Autowired
   ModuleService moduleService;
 

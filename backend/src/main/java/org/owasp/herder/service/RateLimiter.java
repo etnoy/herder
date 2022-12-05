@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 abstract class RateLimiter {
+
   private HashMap<String, Bucket> buckets = new HashMap<>();
 
   abstract LocalBucketBuilder transformBuilder(

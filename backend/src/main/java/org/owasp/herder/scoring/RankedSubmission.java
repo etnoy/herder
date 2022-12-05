@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @With
 @Document("submissionRank")
 public class RankedSubmission implements Serializable {
+
   static final long serialVersionUID = -5485881248601955741L;
 
   UserEntity user;

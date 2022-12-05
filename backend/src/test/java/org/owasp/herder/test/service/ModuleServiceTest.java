@@ -52,6 +52,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ModuleService unit tests")
 class ModuleServiceTest extends BaseTest {
+
   final ModuleEntity mockModule = mock(ModuleEntity.class);
 
   ModuleService moduleService;
@@ -94,11 +95,8 @@ class ModuleServiceTest extends BaseTest {
       .thenReturn(Mono.empty());
 
     when(moduleRepository.save(any(ModuleEntity.class)))
-      .thenAnswer(
-        user ->
-          Mono.just(
-            user.getArgument(0, ModuleEntity.class).withId(mockModuleId)
-          )
+      .thenAnswer(user ->
+        Mono.just(user.getArgument(0, ModuleEntity.class).withId(mockModuleId))
       );
 
     StepVerifier
@@ -220,7 +218,7 @@ class ModuleServiceTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
 
     final ModuleEntity mockModuleWithStaticFlag = mock(ModuleEntity.class);
@@ -241,11 +239,9 @@ class ModuleServiceTest extends BaseTest {
 
     StepVerifier
       .create(moduleService.setDynamicFlag(mockModuleId))
-      .assertNext(
-        module -> {
-          assertThat(module.getKey()).isEqualTo(newFlag);
-        }
-      )
+      .assertNext(module -> {
+        assertThat(module.getKey()).isEqualTo(newFlag);
+      })
       .verifyComplete();
     verify(moduleRepository).save(any(ModuleEntity.class));
     verify(keyService, never()).generateRandomString(any(Integer.class));
@@ -277,11 +273,9 @@ class ModuleServiceTest extends BaseTest {
 
     StepVerifier
       .create(moduleService.setDynamicFlag(mockModuleId))
-      .assertNext(
-        module -> {
-          assertThat(module.isFlagStatic()).isFalse();
-        }
-      )
+      .assertNext(module -> {
+        assertThat(module.isFlagStatic()).isFalse();
+      })
       .verifyComplete();
     verify(mockModuleWithStaticFlag).withFlagStatic(false);
     verify(moduleRepository).save(any(ModuleEntity.class));
@@ -299,10 +293,9 @@ class ModuleServiceTest extends BaseTest {
   void setStaticFlag_NullStaticFlag_ReturnsNulPointerException() {
     StepVerifier
       .create(moduleService.setStaticFlag("id", null))
-      .expectErrorMatches(
-        throwable ->
-          throwable instanceof NullPointerException &&
-          throwable.getMessage().equals("Flag cannot be null")
+      .expectErrorMatches(throwable ->
+        throwable instanceof NullPointerException &&
+        throwable.getMessage().equals("Flag cannot be null")
       )
       .verify();
   }
@@ -334,12 +327,10 @@ class ModuleServiceTest extends BaseTest {
 
     StepVerifier
       .create(moduleService.setStaticFlag(mockModuleId, staticFlag))
-      .assertNext(
-        module -> {
-          assertThat(module.isFlagStatic()).isTrue();
-          assertThat(module.getStaticFlag()).isEqualTo(staticFlag);
-        }
-      )
+      .assertNext(module -> {
+        assertThat(module.isFlagStatic()).isTrue();
+        assertThat(module.getStaticFlag()).isEqualTo(staticFlag);
+      })
       .verifyComplete();
   }
 

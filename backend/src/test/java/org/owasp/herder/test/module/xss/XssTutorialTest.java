@@ -47,6 +47,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("XssTutorial unit tests")
 class XssTutorialTest extends BaseTest {
+
   private static final String MODULE_NAME = "xss-tutorial";
 
   XssTutorial xssTutorial;
@@ -93,12 +94,10 @@ class XssTutorialTest extends BaseTest {
 
     StepVerifier
       .create(xssTutorial.submitQuery(mockUserId, query))
-      .assertNext(
-        response -> {
-          assertThat(response.getResult()).contains(mockFlag);
-          assertThat(response.getAlert()).isEqualTo(mockAlertList.get(0));
-        }
-      )
+      .assertNext(response -> {
+        assertThat(response.getResult()).contains(mockFlag);
+        assertThat(response.getAlert()).isEqualTo(mockAlertList.get(0));
+      })
       .verifyComplete();
   }
 
@@ -116,13 +115,11 @@ class XssTutorialTest extends BaseTest {
 
     StepVerifier
       .create(xssTutorial.submitQuery(mockUserId, query))
-      .assertNext(
-        response -> {
-          assertThat(response.getResult()).contains("Sorry");
-          assertThat(response.getResult()).doesNotContain("Congratulations");
-          assertThat(response.getAlert()).isNull();
-        }
-      )
+      .assertNext(response -> {
+        assertThat(response.getResult()).contains("Sorry");
+        assertThat(response.getResult()).doesNotContain("Congratulations");
+        assertThat(response.getAlert()).isNull();
+      })
       .verifyComplete();
   }
 }

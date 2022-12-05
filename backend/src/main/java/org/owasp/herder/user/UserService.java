@@ -65,6 +65,7 @@ import reactor.core.publisher.Mono;
 @Validated
 @RequiredArgsConstructor
 public class UserService {
+
   private final UserRepository userRepository;
 
   private final TeamRepository teamRepository;
@@ -92,16 +93,14 @@ public class UserService {
 
     return Mono
       .zip(userMono, getTeamById(teamId))
-      .flatMap(
-        tuple -> {
-          final UserEntity user = tuple.getT1().withTeamId(teamId);
-          TeamEntity team = tuple.getT2();
-          ArrayList<UserEntity> members = team.getMembers();
-          members.add(user);
-          team.withMembers(members);
-          return userRepository.save(user).then(teamRepository.save(team));
-        }
-      )
+      .flatMap(tuple -> {
+        final UserEntity user = tuple.getT1().withTeamId(teamId);
+        TeamEntity team = tuple.getT2();
+        ArrayList<UserEntity> members = team.getMembers();
+        members.add(user);
+        team.withMembers(members);
+        return userRepository.save(user).then(teamRepository.save(team));
+      })
       .then();
   }
 
@@ -120,11 +119,10 @@ public class UserService {
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(16);
 
     final Mono<PasswordAuth> passwordAuthMono = findPasswordAuthByLoginName( // Find the password auth
-        loginName
-      )
-      .filter(
-        passwordAuth ->
-          encoder.matches(password, passwordAuth.getHashedPassword())
+      loginName
+    )
+      .filter(passwordAuth ->
+        encoder.matches(password, passwordAuth.getHashedPassword())
       )
       .switchIfEmpty(
         Mono.error(new BadCredentialsException("Invalid username or password"))
@@ -138,43 +136,36 @@ public class UserService {
 
     return Mono
       .zip(passwordAuthMono, userMono)
-      .map(
-        tuple -> {
-          final LocalDateTime suspendedUntil = tuple
-            .getT2()
-            .getSuspendedUntil();
-          boolean isSuspended = true;
-          if (suspendedUntil == null) {
-            isSuspended = false;
-          } else {
-            isSuspended =
-              tuple
-                .getT2()
-                .getSuspendedUntil()
-                .isAfter(LocalDateTime.now(clock));
-          }
-
-          if (!tuple.getT2().isEnabled()) {
-            // Account is not enabled
-            throw new DisabledException("Account disabled");
-          } else if (isSuspended) {
-            // Account is suspended until a given date
-            final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-
-            throw new LockedException(
-              String.format(
-                "Account suspended until %s",
-                tuple.getT2().getSuspendedUntil().format(formatter)
-              )
-            );
-          } else {
-            authResponseBuilder.displayName(tuple.getT2().getDisplayName());
-            authResponseBuilder.userId(tuple.getT1().getUserId());
-            authResponseBuilder.isAdmin(tuple.getT2().isAdmin());
-          }
-          return authResponseBuilder.build();
+      .map(tuple -> {
+        final LocalDateTime suspendedUntil = tuple.getT2().getSuspendedUntil();
+        boolean isSuspended = true;
+        if (suspendedUntil == null) {
+          isSuspended = false;
+        } else {
+          isSuspended =
+            tuple.getT2().getSuspendedUntil().isAfter(LocalDateTime.now(clock));
         }
-      );
+
+        if (!tuple.getT2().isEnabled()) {
+          // Account is not enabled
+          throw new DisabledException("Account disabled");
+        } else if (isSuspended) {
+          // Account is suspended until a given date
+          final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+
+          throw new LockedException(
+            String.format(
+              "Account suspended until %s",
+              tuple.getT2().getSuspendedUntil().format(formatter)
+            )
+          );
+        } else {
+          authResponseBuilder.displayName(tuple.getT2().getDisplayName());
+          authResponseBuilder.userId(tuple.getT1().getUserId());
+          authResponseBuilder.isAdmin(tuple.getT2().isAdmin());
+        }
+        return authResponseBuilder.build();
+      });
   }
 
   /**
@@ -260,32 +251,29 @@ public class UserService {
 
     return Mono
       .zip(displayNameMono, loginNameMono)
-      .flatMap(
-        tuple -> {
-          final UserEntity userEntity = UserEntity
-            .builder()
-            .displayName(tuple.getT1())
-            .key(keyService.generateRandomBytes(16))
-            .isEnabled(true)
-            .creationTime(LocalDateTime.now(clock))
-            .build();
+      .flatMap(tuple -> {
+        final UserEntity userEntity = UserEntity
+          .builder()
+          .displayName(tuple.getT1())
+          .key(keyService.generateRandomBytes(16))
+          .isEnabled(true)
+          .creationTime(LocalDateTime.now(clock))
+          .build();
 
-          final Mono<String> userIdMono = userRepository
-            .save(userEntity)
-            .map(UserEntity::getId);
+        final Mono<String> userIdMono = userRepository
+          .save(userEntity)
+          .map(UserEntity::getId);
 
-          final PasswordAuthBuilder passwordAuthBuilder = PasswordAuth.builder();
-          passwordAuthBuilder.loginName(tuple.getT2());
-          passwordAuthBuilder.hashedPassword(passwordHash);
+        final PasswordAuthBuilder passwordAuthBuilder = PasswordAuth.builder();
+        passwordAuthBuilder.loginName(tuple.getT2());
+        passwordAuthBuilder.hashedPassword(passwordHash);
 
-          return userIdMono.delayUntil(
-            userId ->
-              passwordAuthRepository.save(
-                passwordAuthBuilder.userId(userId).build()
-              )
-          );
-        }
-      );
+        return userIdMono.delayUntil(userId ->
+          passwordAuthRepository.save(
+            passwordAuthBuilder.userId(userId).build()
+          )
+        );
+      });
   }
 
   /**
@@ -307,16 +295,15 @@ public class UserService {
           )
         )
       )
-      .flatMap(
-        name ->
-          teamRepository.save(
-            TeamEntity
-              .builder()
-              .displayName(name)
-              .creationTime(LocalDateTime.now(clock))
-              .members(new ArrayList<>())
-              .build()
-          )
+      .flatMap(name ->
+        teamRepository.save(
+          TeamEntity
+            .builder()
+            .displayName(name)
+            .creationTime(LocalDateTime.now(clock))
+            .members(new ArrayList<>())
+            .build()
+        )
       )
       .map(TeamEntity::getId);
   }
@@ -334,15 +321,14 @@ public class UserService {
     kick(userId);
 
     return getById(userId)
-      .map(
-        user ->
-          user
-            .withTeamId(null)
-            .withEnabled(false)
-            .withDeleted(true)
-            .withDisplayName("")
-            .withSuspensionMessage(null)
-            .withAdmin(false)
+      .map(user ->
+        user
+          .withTeamId(null)
+          .withEnabled(false)
+          .withDeleted(true)
+          .withDisplayName("")
+          .withSuspensionMessage(null)
+          .withAdmin(false)
       )
       .flatMap(userRepository::save)
       .flatMap(u -> passwordAuthRepository.deleteByUserId(userId))
@@ -495,40 +481,36 @@ public class UserService {
 
     final Flux<PrincipalEntity> teamFlux = teamRepository
       .findAll()
-      .flatMap(
-        team -> {
-          final String teamId = team.getId();
-          PrincipalEntityBuilder teamEntityBuilder = PrincipalEntity.builder();
+      .flatMap(team -> {
+        final String teamId = team.getId();
+        PrincipalEntityBuilder teamEntityBuilder = PrincipalEntity.builder();
 
-          teamEntityBuilder.principalType(PrincipalType.TEAM);
-          teamEntityBuilder.id(teamId);
-          teamEntityBuilder.displayName(team.getDisplayName());
-          teamEntityBuilder.creationTime(team.getCreationTime());
+        teamEntityBuilder.principalType(PrincipalType.TEAM);
+        teamEntityBuilder.id(teamId);
+        teamEntityBuilder.displayName(team.getDisplayName());
+        teamEntityBuilder.creationTime(team.getCreationTime());
 
-          return userRepository
-            .findAllByTeamId(teamId)
-            .collectList()
-            .map(HashSet<UserEntity>::new)
-            .map(teamEntityBuilder::members)
-            .map(PrincipalEntityBuilder::build);
-        }
-      );
+        return userRepository
+          .findAllByTeamId(teamId)
+          .collectList()
+          .map(HashSet<UserEntity>::new)
+          .map(teamEntityBuilder::members)
+          .map(PrincipalEntityBuilder::build);
+      });
 
     return Flux.concat(
       teamFlux,
-      userFlux.map(
-        user -> {
-          final String userId = user.getId();
-          PrincipalEntityBuilder userEntityBuilder = PrincipalEntity.builder();
+      userFlux.map(user -> {
+        final String userId = user.getId();
+        PrincipalEntityBuilder userEntityBuilder = PrincipalEntity.builder();
 
-          userEntityBuilder.principalType(PrincipalType.USER);
-          userEntityBuilder.id(userId);
-          userEntityBuilder.displayName(user.getDisplayName());
-          userEntityBuilder.creationTime(user.getCreationTime());
+        userEntityBuilder.principalType(PrincipalType.USER);
+        userEntityBuilder.id(userId);
+        userEntityBuilder.displayName(user.getDisplayName());
+        userEntityBuilder.creationTime(user.getCreationTime());
 
-          return userEntityBuilder.build();
-        }
-      )
+        return userEntityBuilder.build();
+      })
     );
   }
 
@@ -550,17 +532,15 @@ public class UserService {
    */
   public Mono<byte[]> findKeyById(@ValidUserId final String userId) {
     return getById(userId)
-      .flatMap(
-        user -> {
-          final byte[] key = user.getKey();
-          if (key == null) {
-            return userRepository
-              .save(user.withKey(keyService.generateRandomBytes(16)))
-              .map(UserEntity::getKey);
-          }
-          return Mono.just(key);
+      .flatMap(user -> {
+        final byte[] key = user.getKey();
+        if (key == null) {
+          return userRepository
+            .save(user.withKey(keyService.generateRandomBytes(16)))
+            .map(UserEntity::getKey);
         }
-      );
+        return Mono.just(key);
+      });
   }
 
   public Mono<PasswordAuth> findPasswordAuthByLoginName(
@@ -620,16 +600,14 @@ public class UserService {
 
   public Mono<TeamEntity> getTeamByUserId(@ValidUserId final String userId) {
     return getById(userId)
-      .flatMap(
-        user -> {
-          final String teamId = user.getTeamId();
-          if (teamId == null) {
-            return Mono.empty();
-          } else {
-            return getTeamById(teamId);
-          }
+      .flatMap(user -> {
+        final String teamId = user.getTeamId();
+        if (teamId == null) {
+          return Mono.empty();
+        } else {
+          return getTeamById(teamId);
         }
-      );
+      });
   }
 
   public void kick(@ValidUserId final String userId) {
@@ -747,11 +725,10 @@ public class UserService {
     );
 
     return getById(userId)
-      .map(
-        user ->
-          user
-            .withSuspendedUntil(suspensionDate)
-            .withSuspensionMessage(suspensionMessage)
+      .map(user ->
+        user
+          .withSuspendedUntil(suspensionDate)
+          .withSuspensionMessage(suspensionMessage)
       )
       .flatMap(userRepository::save)
       .doOnSuccess(u -> kick(userId))

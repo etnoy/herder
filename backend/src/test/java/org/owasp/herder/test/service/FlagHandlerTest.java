@@ -52,6 +52,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlagHandler unit tests")
 class FlagHandlerTest extends BaseTest {
+
   private FlagHandler flagHandler;
 
   @Mock
@@ -92,7 +93,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
 
     final byte[] mockedUserKey = {
@@ -111,7 +112,7 @@ class FlagHandlerTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
     final byte[] mockedModuleKey = {
       -118,
@@ -129,7 +130,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedHmacOutput = {
@@ -148,7 +149,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedTotalKey = {
@@ -187,7 +188,7 @@ class FlagHandlerTest extends BaseTest {
       102,
       108,
       97,
-      103
+      103,
     };
     final String correctFlag = "flag{qaa7txiprsrabyelooaqyutbcm}";
 
@@ -246,7 +247,7 @@ class FlagHandlerTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
     final byte[] mockedServerKey = {
       -118,
@@ -264,7 +265,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
 
     when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
@@ -325,7 +326,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
 
     final byte[] mockedUserKey = {
@@ -344,7 +345,7 @@ class FlagHandlerTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
     final byte[] mockedModuleKey = {
       -118,
@@ -362,7 +363,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedHmacOutput = {
@@ -381,7 +382,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedTotalKey = {
@@ -420,7 +421,7 @@ class FlagHandlerTest extends BaseTest {
       102,
       108,
       97,
-      103
+      103,
     };
 
     final String correctFlag = "flag{qaa7txiprsrabyelooaqyutbcm}";
@@ -494,7 +495,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
 
     final byte[] mockedUserKey = {
@@ -513,7 +514,7 @@ class FlagHandlerTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
     final byte[] mockedModuleKey = {
       -118,
@@ -531,7 +532,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedHmacOutput = {
@@ -550,7 +551,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedTotalKey = {
@@ -589,7 +590,7 @@ class FlagHandlerTest extends BaseTest {
       102,
       108,
       97,
-      103
+      103,
     };
 
     final String correctFlagWithSpacesInside =
@@ -786,7 +787,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
 
     final byte[] mockedUserKey = {
@@ -805,7 +806,7 @@ class FlagHandlerTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
     final byte[] mockedModuleKey = {
       -118,
@@ -823,7 +824,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedHmacOutput = {
@@ -842,7 +843,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedTotalKey = {
@@ -881,7 +882,7 @@ class FlagHandlerTest extends BaseTest {
       102,
       108,
       97,
-      103
+      103,
     };
 
     final String correctFlag = "flag{qaa7txiprsrabyelooaqyutbcm}";
@@ -993,7 +994,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
 
     final byte[] mockedUserKey = {
@@ -1012,7 +1013,7 @@ class FlagHandlerTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
     final byte[] mockedModuleKey = {
       -118,
@@ -1030,7 +1031,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedHmacOutput = {
@@ -1049,7 +1050,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedTotalKey = {
@@ -1088,7 +1089,7 @@ class FlagHandlerTest extends BaseTest {
       102,
       108,
       97,
-      103
+      103,
     };
 
     when(mockModule.isFlagStatic()).thenReturn(false);
@@ -1204,7 +1205,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
 
     final byte[] mockedUserKey = {
@@ -1223,7 +1224,7 @@ class FlagHandlerTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
     final byte[] mockedModuleKey = {
       -118,
@@ -1241,7 +1242,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedHmacOutput = {
@@ -1260,7 +1261,7 @@ class FlagHandlerTest extends BaseTest {
       12,
       82,
       97,
-      19
+      19,
     };
 
     final byte[] mockedTotalKey = {
@@ -1299,7 +1300,7 @@ class FlagHandlerTest extends BaseTest {
       102,
       108,
       97,
-      103
+      103,
     };
 
     when(mockModule.isFlagStatic()).thenReturn(false);

@@ -30,6 +30,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
 
 public final class TestConstants {
+
   public static final boolean INITIAL_BOOLEAN = false;
 
   public static final boolean[] BOOLEANS = { false, true };
@@ -51,7 +52,7 @@ public final class TestConstants {
     123456789L,
     -12346789L,
     Long.MAX_VALUE,
-    Long.MIN_VALUE
+    Long.MIN_VALUE,
   };
 
   public static final Long[] LONGS_WITH_NULL = ArrayUtils.addAll(
@@ -73,7 +74,7 @@ public final class TestConstants {
     INITIAL_LOCALDATETIME.plusYears(1),
     INITIAL_LOCALDATETIME.plusYears(1000),
     INITIAL_LOCALDATETIME.plusYears(100000),
-    LocalDateTime.MAX
+    LocalDateTime.MAX,
   };
 
   public static final LocalDateTime[] LOCALDATETIMES_WITH_NULL = ArrayUtils.addAll(
@@ -91,7 +92,7 @@ public final class TestConstants {
     7,
     8,
     9,
-    10
+    10,
   };
 
   public static final String[] STRINGS = {
@@ -106,7 +107,7 @@ public final class TestConstants {
     "𝕋𝕙𝕖 𝕢𝕦𝕚𝕔𝕜 𝕓𝕣𝕠𝕨𝕟 𝕗𝕠𝕩 𝕛𝕦𝕞𝕡𝕤 𝕠𝕧𝕖𝕣 𝕥𝕙𝕖 𝕝𝕒𝕫𝕪 𝕕𝕠𝕘",
     "❤️ 💔 💌 💕 💞 💓 💗 💖 💘 💝 💟 💜 💛 💚 💙",
     " ﷽ ",
-    "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ، "
+    "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ، ",
   };
 
   public static final String[] VALID_STATIC_FLAGS = {
@@ -119,7 +120,7 @@ public final class TestConstants {
     "𝕋𝕙𝕖 𝕢𝕦𝕚𝕔𝕜 𝕓𝕣𝕠𝕨𝕟 𝕗𝕠𝕩 𝕛𝕦𝕞𝕡𝕤 𝕠𝕧𝕖𝕣 𝕥𝕙𝕖 𝕝𝕒𝕫𝕪 𝕕𝕠𝕘",
     "❤️ 💔 💌 💕 💞 💓 💗 💖 💘 💝 💟 💜 💛 💚 💙",
     " ﷽ ",
-    "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ، "
+    "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ، ",
   };
 
   public static final String[] VALID_NAMES = {
@@ -131,7 +132,7 @@ public final class TestConstants {
     "%*",
     "𝕋𝕙𝕖 𝕢𝕦𝕚𝕔𝕜 𝕓𝕣𝕠𝕨𝕟 𝕗𝕠𝕩 𝕛𝕦𝕞𝕡𝕤",
     "❤️ 💔 💌 💕 💞 💓 💗 💖 💘 💝 💟 💜 💛 💚 💙",
-    " ﷽ ﷽  ﷽  "
+    " ﷽ ﷽  ﷽  ",
   };
 
   public static final String INITIAL_NAME = "id";
@@ -139,7 +140,7 @@ public final class TestConstants {
   public static final String[] NAMES = {
     INITIAL_NAME,
     "id-with-hyphen",
-    "abc123"
+    "abc123",
   };
 
   public static final String[] INVALID_NAMES = { "", null };

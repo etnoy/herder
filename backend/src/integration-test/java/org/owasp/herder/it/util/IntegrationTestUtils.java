@@ -62,6 +62,7 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public final class IntegrationTestUtils {
+
   @Autowired
   UserService userService;
 

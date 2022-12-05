@@ -50,6 +50,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlagController unit tests")
 class FlagControllerTest extends BaseTest {
+
   private FlagController flagController;
 
   @Mock
@@ -116,12 +117,12 @@ class FlagControllerTest extends BaseTest {
       .build();
 
     when(
-        submissionService.submitFlag(
-          TestConstants.TEST_USER_ID,
-          TestConstants.TEST_MODULE_ID,
-          flag
-        )
+      submissionService.submitFlag(
+        TestConstants.TEST_USER_ID,
+        TestConstants.TEST_MODULE_ID,
+        flag
       )
+    )
       .thenReturn(Mono.just(submission));
 
     when(mockModule.getId()).thenReturn(TestConstants.TEST_MODULE_ID);

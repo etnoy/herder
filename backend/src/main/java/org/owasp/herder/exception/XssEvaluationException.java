@@ -25,6 +25,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public class XssEvaluationException extends RuntimeException {
+
   private static final long serialVersionUID = 2621122945600165910L;
 
   public XssEvaluationException(final String message) {

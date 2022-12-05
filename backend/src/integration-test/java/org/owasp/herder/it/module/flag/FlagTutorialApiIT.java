@@ -43,6 +43,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("Flag Tutorial API integration tests")
 class FlagTutorialApiIT extends BaseIT {
+
   @Autowired
   ApplicationContext applicationContext;
 

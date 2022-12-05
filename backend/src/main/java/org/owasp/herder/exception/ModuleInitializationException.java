@@ -25,6 +25,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public class ModuleInitializationException extends RuntimeException {
+
   private static final long serialVersionUID = -3877302037908349146L;
 
   public ModuleInitializationException(String message) {

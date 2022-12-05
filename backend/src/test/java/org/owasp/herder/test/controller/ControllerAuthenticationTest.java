@@ -44,6 +44,7 @@ import reactor.test.StepVerifier;
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("ControllerAuthentication unit tests")
 class ControllerAuthenticationTest extends BaseTest {
+
   private ControllerAuthentication controllerAuthentication;
 
   @Mock

@@ -147,7 +147,7 @@ export class ApiService {
   }
 
   getScoreboard(): Observable<any> {
-    const api = `${this.endpoint}/scoreboard/`;
+    const api = `${this.endpoint}/scoreboard`;
     return this.http.get(api, { headers: this.headers }).pipe(
       map((res: Response) => {
         return res || {};
@@ -157,7 +157,7 @@ export class ApiService {
   }
 
   getSolvers(): Observable<any> {
-    const api = `${this.endpoint}/solvers/`;
+    const api = `${this.endpoint}/solvers`;
     return this.http
       .get(api, { headers: this.headers })
       .pipe(catchError(this.handleError));
@@ -189,7 +189,7 @@ export class ApiService {
   }
 
   getModuleList(): Observable<ModuleList> {
-    const api = `${this.endpoint}/modules/`;
+    const api = `${this.endpoint}/modules`;
     return this.http.get<ModuleList>(api).pipe(catchError(this.handleError));
   }
 

@@ -22,6 +22,7 @@
 package org.owasp.herder.exception;
 
 public class InvalidHerderModuleTypeException extends RuntimeException {
+
   private static final long serialVersionUID = -3877302037908349146L;
 
   public InvalidHerderModuleTypeException(String message) {

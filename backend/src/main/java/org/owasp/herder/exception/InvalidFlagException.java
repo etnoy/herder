@@ -22,6 +22,7 @@
 package org.owasp.herder.exception;
 
 public class InvalidFlagException extends RuntimeException {
+
   private static final long serialVersionUID = -5098332156898854294L;
 
   public InvalidFlagException(final String message) {

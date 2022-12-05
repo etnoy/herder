@@ -34,6 +34,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/v1/module/xss-tutorial")
 public class XssTutorialController {
+
   private final XssTutorial xssTutorial;
 
   private final ControllerAuthentication controllerAuthentication;

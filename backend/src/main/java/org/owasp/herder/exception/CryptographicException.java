@@ -22,6 +22,7 @@
 package org.owasp.herder.exception;
 
 public class CryptographicException extends RuntimeException {
+
   private static final long serialVersionUID = -4269722221163971517L;
 
   public CryptographicException(final String message, final Exception e) {

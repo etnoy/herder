@@ -45,6 +45,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SqlInjectionTutorialController unit tests")
 class SqlInjectionTutorialControllerTest extends BaseTest {
+
   private SqlInjectionTutorialController sqlInjectionTutorialController;
 
   @Mock

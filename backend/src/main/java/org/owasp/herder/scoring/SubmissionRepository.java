@@ -68,7 +68,7 @@ public interface SubmissionRepository
       "{$addFields:{baseScore:'$module.baseScore',bonusScore:{$ifNull:[{$arrayElemAt:['$module.bonusScores',{$sum:['$rank',-1]}]},0]}}}",
       "{$addFields:{score:{$sum:['$baseScore','$bonusScore']}}}",
       "{$project:{user:1,team:1,module:1,score:1,baseScore:1,bonusScore:1,time:1,flag:1,rank:1}}",
-      "{$out:'submissionRank'}"
+      "{$out:'submissionRank'}",
     }
   )
   public Flux<RankedSubmission> refreshSubmissionRanks();

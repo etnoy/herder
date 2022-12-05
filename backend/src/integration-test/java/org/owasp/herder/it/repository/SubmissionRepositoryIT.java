@@ -52,6 +52,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("SubmissionRepository integration tests")
 class SubmissionRepositoryIT extends BaseIT {
+
   @Autowired
   RefresherService refresherService;
 

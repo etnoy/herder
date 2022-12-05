@@ -39,6 +39,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("User API integration tests")
 class UserApiIT extends BaseIT {
+
   @Autowired
   UserService userService;
 
@@ -148,12 +149,10 @@ class UserApiIT extends BaseIT {
           .returnResult(UserEntity.class)
           .getResponseBody()
       )
-      .assertNext(
-        user -> {
-          assertThat(user.getDisplayName())
-            .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
-        }
-      )
+      .assertNext(user -> {
+        assertThat(user.getDisplayName())
+          .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+      })
       .verifyComplete();
   }
 

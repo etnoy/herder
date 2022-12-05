@@ -48,6 +48,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("Flag submission integration tests")
 class FlagSubmissionIT extends BaseIT {
+
   @Autowired
   UserService userService;
 

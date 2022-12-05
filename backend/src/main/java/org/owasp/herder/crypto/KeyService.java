@@ -36,6 +36,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @Service
 public class KeyService {
+
   private final CryptoFactory cryptoFactory;
 
   private byte[] byteGenerator(

@@ -46,6 +46,7 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/v1/")
 @Validated
 public class FlagController {
+
   private final ControllerAuthentication controllerAuthentication;
 
   private final ModuleService moduleService;
@@ -67,17 +68,15 @@ public class FlagController {
       .zipWith(
         moduleService.findByLocator(moduleLocator).map(ModuleEntity::getId)
       )
-      .flatMap(
-        tuple ->
-          submissionService.submitFlag(tuple.getT1(), tuple.getT2(), flag)
+      .flatMap(tuple ->
+        submissionService.submitFlag(tuple.getT1(), tuple.getT2(), flag)
       )
-      .flatMap(
-        u ->
-          refresherService
-            .refreshModuleLists()
-            .then(refresherService.refreshSubmissionRanks())
-            .then(refresherService.refreshScoreboard())
-            .then(Mono.just(u))
+      .flatMap(u ->
+        refresherService
+          .refreshModuleLists()
+          .then(refresherService.refreshSubmissionRanks())
+          .then(refresherService.refreshScoreboard())
+          .then(Mono.just(u))
       )
       .map(submission -> new ResponseEntity<>(submission, HttpStatus.OK))
       .onErrorResume(

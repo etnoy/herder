@@ -44,6 +44,7 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/v1/")
 @Validated
 public class LoginController {
+
   private final UserService userService;
 
   private final WebTokenService webTokenService;
@@ -59,20 +60,18 @@ public class LoginController {
     final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
     return userService
       .authenticate(loginDto.getUserName(), loginDto.getPassword())
-      .map(
-        authResponse -> {
-          final String accessToken = webTokenService.generateToken(
-            authResponse.getUserId(),
-            authResponse.isAdmin()
-          );
-          final LoginResponse loginResponse = loginResponseBuilder
-            .accessToken(accessToken)
-            .displayName(authResponse.getDisplayName())
-            .id(authResponse.getUserId())
-            .build();
-          return new ResponseEntity<>(loginResponse, HttpStatus.OK);
-        }
-      )
+      .map(authResponse -> {
+        final String accessToken = webTokenService.generateToken(
+          authResponse.getUserId(),
+          authResponse.isAdmin()
+        );
+        final LoginResponse loginResponse = loginResponseBuilder
+          .accessToken(accessToken)
+          .displayName(authResponse.getDisplayName())
+          .id(authResponse.getUserId())
+          .build();
+        return new ResponseEntity<>(loginResponse, HttpStatus.OK);
+      })
       .onErrorResume(
         AuthenticationException.class,
         throwable -> {
@@ -94,25 +93,22 @@ public class LoginController {
     final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
     return controllerAuthentication
       .getUserId()
-      .map(
-        userId ->
-          webTokenService.generateImpersonationToken(
-            userId,
-            impersonatedUserId.getImpersonatedId(),
-            false
-          )
+      .map(userId ->
+        webTokenService.generateImpersonationToken(
+          userId,
+          impersonatedUserId.getImpersonatedId(),
+          false
+        )
       )
       .zipWith(userService.getById(impersonatedUserId.getImpersonatedId()))
-      .map(
-        tuple -> {
-          final LoginResponse loginResponse = loginResponseBuilder
-            .accessToken(tuple.getT1())
-            .displayName(tuple.getT2().getDisplayName())
-            .id(tuple.getT2().getId())
-            .build();
-          return new ResponseEntity<>(loginResponse, HttpStatus.OK);
-        }
-      );
+      .map(tuple -> {
+        final LoginResponse loginResponse = loginResponseBuilder
+          .accessToken(tuple.getT1())
+          .displayName(tuple.getT2().getDisplayName())
+          .id(tuple.getT2().getId())
+          .build();
+        return new ResponseEntity<>(loginResponse, HttpStatus.OK);
+      });
   }
 
   @PostMapping(path = "/register")

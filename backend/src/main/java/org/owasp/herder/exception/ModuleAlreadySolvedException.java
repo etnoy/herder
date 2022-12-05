@@ -22,6 +22,7 @@
 package org.owasp.herder.exception;
 
 public class ModuleAlreadySolvedException extends RuntimeException {
+
   private static final long serialVersionUID = 1983915587716845537L;
 
   public ModuleAlreadySolvedException(final String message) {

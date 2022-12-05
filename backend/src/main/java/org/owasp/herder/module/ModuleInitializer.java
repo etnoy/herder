@@ -50,6 +50,7 @@ import reactor.core.publisher.Mono;
 @AllArgsConstructor
 @Service
 public final class ModuleInitializer implements ApplicationContextAware {
+
   private ApplicationContext applicationContext;
 
   private final ModuleService moduleService;
@@ -137,37 +138,35 @@ public final class ModuleInitializer implements ApplicationContextAware {
     return moduleService
       // Persist the module
       .create(moduleName, moduleLocator)
-      .flatMap(
-        moduleId -> {
-          Mono<Void> scoreMono = Mono.empty();
-          // Persist the default scores (if any)
-          if (scoreAnnotation != null) {
-            final ArrayList<Integer> bonusScores = new ArrayList<>();
+      .flatMap(moduleId -> {
+        Mono<Void> scoreMono = Mono.empty();
+        // Persist the default scores (if any)
+        if (scoreAnnotation != null) {
+          final ArrayList<Integer> bonusScores = new ArrayList<>();
 
-            bonusScores.add(scoreAnnotation.goldBonus());
-            bonusScores.add(scoreAnnotation.silverBonus());
-            bonusScores.add(scoreAnnotation.bronzeBonus());
+          bonusScores.add(scoreAnnotation.goldBonus());
+          bonusScores.add(scoreAnnotation.silverBonus());
+          bonusScores.add(scoreAnnotation.bronzeBonus());
 
-            scoreMono =
-              moduleService
-                .setBaseScore(moduleId, scoreAnnotation.baseScore())
-                .then(moduleService.setBonusScores(moduleId, bonusScores));
-          }
-
-          Mono<Void> tagMono = Mono.empty();
-          if (tagAnnotations != null) {
-            final Multimap<String, String> tags = ArrayListMultimap.create();
-            final Iterator<Tag> tagIterator = tagAnnotations.iterator();
-            while (tagIterator.hasNext()) {
-              final Tag currentTag = tagIterator.next();
-              tags.put(currentTag.key(), currentTag.value());
-            }
-            tagMono = moduleService.setTags(moduleId, tags);
-          }
-
-          return scoreMono.then(tagMono).then(Mono.just(moduleId));
+          scoreMono =
+            moduleService
+              .setBaseScore(moduleId, scoreAnnotation.baseScore())
+              .then(moduleService.setBonusScores(moduleId, bonusScores));
         }
-      );
+
+        Mono<Void> tagMono = Mono.empty();
+        if (tagAnnotations != null) {
+          final Multimap<String, String> tags = ArrayListMultimap.create();
+          final Iterator<Tag> tagIterator = tagAnnotations.iterator();
+          while (tagIterator.hasNext()) {
+            final Tag currentTag = tagIterator.next();
+            tags.put(currentTag.key(), currentTag.value());
+          }
+          tagMono = moduleService.setTags(moduleId, tags);
+        }
+
+        return scoreMono.then(tagMono).then(Mono.just(moduleId));
+      });
   }
 
   @Override

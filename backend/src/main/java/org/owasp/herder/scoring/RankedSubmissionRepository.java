@@ -46,7 +46,7 @@ public interface RankedSubmissionRepository
       "{$addFields:{adjustment:'$adjustments.amount'}}",
       "{$group:{_id:'$_id',scoreAdjustment:{$sum:'$adjustment'},team:{$first:'$team'},displayName:{$first:'$displayName'},user:{$first:'$user'},score:{$first:'$score'},bonusScore:{$first:'$bonusScore'},baseScore:{$first:'$baseScore'},goldMedals:{$first:'$goldMedals'},silverMedals:{$first:'$silverMedals'},bronzeMedals:{$first:'$bronzeMedals'}}}",
       "{$addFields:{score:{$sum:['$scoreAdjustment','$score']}}}",
-      "{$sort:{score:-1,goldMedals:-1,silverMedals:-1,bronzeMedals:-1,scoreAdjustment:-1,displayName:1}}"
+      "{$sort:{score:-1,goldMedals:-1,silverMedals:-1,bronzeMedals:-1,scoreAdjustment:-1,displayName:1}}",
     }
   )
   public Flux<UnrankedScoreboardEntry> getUnrankedScoreboard();

@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @DisplayName("XssService integration tests")
 class XssServiceIT extends BaseIT {
+
   @Autowired
   private XssService xssService;
 
@@ -72,50 +73,50 @@ class XssServiceIT extends BaseIT {
   @Test
   void submitButtonOnMouseOver_ShouldShowAlert() throws Exception {
     assertThat(
-        executeQuery(
-          "<input type=\"submit\" onmouseover=\"alert('submit-mouseover')\"/>"
-        )
+      executeQuery(
+        "<input type=\"submit\" onmouseover=\"alert('submit-mouseover')\"/>"
       )
+    )
       .isEqualTo("submit-mouseover");
   }
 
   @Test
   void submitButtonOnMouseDown_ShouldShowAlert() throws Exception {
     assertThat(
-        executeQuery(
-          "<input type=\"submit\" onmousedown=\"alert('submit-mousedown')\"/>"
-        )
+      executeQuery(
+        "<input type=\"submit\" onmousedown=\"alert('submit-mousedown')\"/>"
       )
+    )
       .isEqualTo("submit-mousedown");
   }
 
   @Test
   void aOnBlur_ShouldShowAlert() throws Exception {
     assertThat(
-        executeQuery(
-          "<a onblur=alert('a-onblur') tabindex=1 id=x></a><input autofocus>"
-        )
+      executeQuery(
+        "<a onblur=alert('a-onblur') tabindex=1 id=x></a><input autofocus>"
       )
+    )
       .isEqualTo("a-onblur");
   }
 
   @Test
   void submitButtonOnClick_ShouldShowAlert() throws Exception {
     assertThat(
-        executeQuery(
-          "<input type=\"submit\" onclick=\"alert('submit-onclick')\"/>"
-        )
+      executeQuery(
+        "<input type=\"submit\" onclick=\"alert('submit-onclick')\"/>"
       )
+    )
       .isEqualTo("submit-onclick");
   }
 
   @Test
   void inputButtonOnClick_ShouldShowAlert() throws Exception {
     assertThat(
-        executeQuery(
-          "<input type=\"button\" onclick=\"alert('input-onclick')\"/>"
-        )
+      executeQuery(
+        "<input type=\"button\" onclick=\"alert('input-onclick')\"/>"
       )
+    )
       .isEqualTo("input-onclick");
   }
 

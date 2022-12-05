@@ -22,6 +22,7 @@
 package org.owasp.herder.exception;
 
 public class FlagSubmissionRateLimitException extends RateLimitException {
+
   private static final long serialVersionUID = 3438663842979291484L;
 
   public FlagSubmissionRateLimitException() {

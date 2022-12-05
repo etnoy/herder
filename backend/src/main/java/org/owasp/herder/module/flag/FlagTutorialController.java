@@ -33,6 +33,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/v1/module/flag-tutorial")
 public class FlagTutorialController {
+
   private final FlagTutorial flagTutorial;
 
   private final ControllerAuthentication controllerAuthentication;

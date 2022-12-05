@@ -61,6 +61,7 @@ class ModuleServiceIT extends BaseIT {
   @Nested
   @DisplayName("Can get module list item")
   class canGetModuleListItem {
+
     String userId;
     String moduleId;
     ModuleListItem moduleListItem;
@@ -161,6 +162,7 @@ class ModuleServiceIT extends BaseIT {
   @Nested
   @DisplayName("Can get module list")
   class canGetModuleList {
+
     String userId;
     String moduleId;
     ModuleList moduleList;
@@ -237,9 +239,8 @@ class ModuleServiceIT extends BaseIT {
 
       StepVerifier
         .create(moduleService.findModuleListByUserId(userId))
-        .assertNext(
-          moduleList ->
-            assertThat(moduleList.getModules().get(0).getTags()).isEqualTo(tags)
+        .assertNext(moduleList ->
+          assertThat(moduleList.getModules().get(0).getTags()).isEqualTo(tags)
         )
         .verifyComplete();
     }
@@ -277,14 +278,13 @@ class ModuleServiceIT extends BaseIT {
 
       StepVerifier
         .create(moduleService.findModuleListByUserId(userId))
-        .assertNext(
-          moduleList ->
-            assertThat(moduleList.getModules())
-              .containsExactlyInAnyOrder(
-                moduleListItem1,
-                moduleListItem2,
-                moduleListItem3
-              )
+        .assertNext(moduleList ->
+          assertThat(moduleList.getModules())
+            .containsExactlyInAnyOrder(
+              moduleListItem1,
+              moduleListItem2,
+              moduleListItem3
+            )
         )
         .verifyComplete();
     }
@@ -298,9 +298,8 @@ class ModuleServiceIT extends BaseIT {
 
       StepVerifier
         .create(moduleService.findModuleListByUserId(userId))
-        .assertNext(
-          moduleList ->
-            assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
+        .assertNext(moduleList ->
+          assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
         )
         .verifyComplete();
     }
@@ -321,9 +320,8 @@ class ModuleServiceIT extends BaseIT {
 
       StepVerifier
         .create(moduleService.findModuleListByUserId(userId2))
-        .assertNext(
-          moduleList ->
-            assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
+        .assertNext(moduleList ->
+          assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
         )
         .verifyComplete();
     }
@@ -341,9 +339,8 @@ class ModuleServiceIT extends BaseIT {
 
       StepVerifier
         .create(moduleService.findModuleListByTeamId(teamId))
-        .assertNext(
-          moduleList ->
-            assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
+        .assertNext(moduleList ->
+          assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
         )
         .verifyComplete();
     }

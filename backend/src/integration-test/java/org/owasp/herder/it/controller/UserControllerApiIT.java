@@ -43,6 +43,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("UserController API integration tests")
 class UserControllerApiIT extends BaseIT {
+
   @Autowired
   UserService userService;
 
@@ -381,11 +382,9 @@ class UserControllerApiIT extends BaseIT {
 
     StepVerifier
       .create(getResult.getResponseBody())
-      .assertNext(
-        getData -> {
-          assertThat(getData).isEqualTo(userService.findById(userId).block());
-        }
-      )
+      .assertNext(getData -> {
+        assertThat(getData).isEqualTo(userService.findById(userId).block());
+      })
       .verifyComplete();
   }
 

@@ -40,6 +40,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthenticationManager unit tests")
 class AuthenticationManagerTest {
+
   private AuthenticationManager authenticationManager;
 
   @Mock
@@ -80,10 +81,9 @@ class AuthenticationManagerTest {
 
     StepVerifier
       .create(authenticationManager.authenticate(mockAuthentication))
-      .expectErrorMatches(
-        throwable ->
-          throwable instanceof BadCredentialsException &&
-          throwable.getMessage().equals(invalidToken)
+      .expectErrorMatches(throwable ->
+        throwable instanceof BadCredentialsException &&
+        throwable.getMessage().equals(invalidToken)
       )
       .verify();
   }

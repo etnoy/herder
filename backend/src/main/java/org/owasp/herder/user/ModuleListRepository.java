@@ -36,7 +36,7 @@ public interface ModuleListRepository
       "{$match: {'_id': ?0}}",
       "{$unwind: {path: '$modules'}}",
       "{$replaceRoot: {newRoot: '$modules'}}",
-      "{$match: {'locator': ?1}}"
+      "{$match: {'locator': ?1}}",
     }
   )
   public Mono<ModuleListItem> findListItemByLocator(

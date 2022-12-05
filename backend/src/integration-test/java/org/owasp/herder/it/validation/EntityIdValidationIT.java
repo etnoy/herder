@@ -41,6 +41,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 
 @DisplayName("Can reject an invalid entity id")
 class EntityIdValidationIT extends BaseIT {
+
   private static final String ID_NOT_NULL = "id must not be null";
 
   private static final String INVALID_ID_SIZE = "id must be 24 characters long";

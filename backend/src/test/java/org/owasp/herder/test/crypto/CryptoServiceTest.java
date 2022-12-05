@@ -45,6 +45,7 @@ import org.owasp.herder.test.BaseTest;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CryptoService unit tests")
 class CryptoServiceTest extends BaseTest {
+
   CryptoService cryptoService;
 
   @Mock

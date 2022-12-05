@@ -156,6 +156,7 @@ public class SubmissionService {
       .verifyFlag(userId, moduleId, flag)
       // Set isValid field of the submission
       .map(isValid -> {
+        // This null check is unneccessary since reactor never produces null, but it shuts up a null safety warning
         if (isValid == null) {
           isValid = false;
         }

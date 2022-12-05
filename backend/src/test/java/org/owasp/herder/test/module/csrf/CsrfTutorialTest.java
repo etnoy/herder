@@ -42,6 +42,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CsrfTutorial unit tests")
 class CsrfTutorialTest extends BaseTest {
+
   String locator;
 
   CsrfTutorial csrfTutorial;
@@ -74,14 +75,12 @@ class CsrfTutorialTest extends BaseTest {
 
     StepVerifier
       .create(csrfTutorial.attack(attackerUserId, mockTarget))
-      .assertNext(
-        result -> {
-          assertThat(result.getPseudonym()).isNull();
-          assertThat(result.getFlag()).isNull();
-          assertThat(result.getError()).isNotNull();
-          assertThat(result.getMessage()).isNull();
-        }
-      )
+      .assertNext(result -> {
+        assertThat(result.getPseudonym()).isNull();
+        assertThat(result.getFlag()).isNull();
+        assertThat(result.getError()).isNotNull();
+        assertThat(result.getMessage()).isNull();
+      })
       .verifyComplete();
   }
 
@@ -102,14 +101,12 @@ class CsrfTutorialTest extends BaseTest {
 
     StepVerifier
       .create(csrfTutorial.attack(attackerUserId, mockTarget))
-      .assertNext(
-        result -> {
-          assertThat(result.getPseudonym()).isNull();
-          assertThat(result.getFlag()).isNull();
-          assertThat(result.getError()).isNull();
-          assertThat(result.getMessage()).isNotNull();
-        }
-      )
+      .assertNext(result -> {
+        assertThat(result.getPseudonym()).isNull();
+        assertThat(result.getFlag()).isNull();
+        assertThat(result.getError()).isNull();
+        assertThat(result.getMessage()).isNotNull();
+      })
       .verifyComplete();
   }
 
@@ -128,14 +125,12 @@ class CsrfTutorialTest extends BaseTest {
 
     StepVerifier
       .create(csrfTutorial.attack(userId, pseudonym))
-      .assertNext(
-        result -> {
-          assertThat(result.getPseudonym()).isNull();
-          assertThat(result.getFlag()).isNull();
-          assertThat(result.getError()).isNotNull();
-          assertThat(result.getMessage()).isNull();
-        }
-      )
+      .assertNext(result -> {
+        assertThat(result.getPseudonym()).isNull();
+        assertThat(result.getFlag()).isNull();
+        assertThat(result.getError()).isNotNull();
+        assertThat(result.getMessage()).isNull();
+      })
       .verifyComplete();
   }
 
@@ -158,12 +153,10 @@ class CsrfTutorialTest extends BaseTest {
 
     StepVerifier
       .create(csrfTutorial.getTutorial(mockUserId))
-      .assertNext(
-        result -> {
-          assertThat(result.getPseudonym()).isEqualTo(mockPseudonym);
-          assertThat(result.getFlag()).isEqualTo(flag);
-        }
-      )
+      .assertNext(result -> {
+        assertThat(result.getPseudonym()).isEqualTo(mockPseudonym);
+        assertThat(result.getFlag()).isEqualTo(flag);
+      })
       .verifyComplete();
   }
 
@@ -182,12 +175,10 @@ class CsrfTutorialTest extends BaseTest {
 
     StepVerifier
       .create(csrfTutorial.getTutorial(mockUserId))
-      .assertNext(
-        result -> {
-          assertThat(result.getPseudonym()).isEqualTo(mockPseudonym);
-          assertThat(result.getFlag()).isNull();
-        }
-      )
+      .assertNext(result -> {
+        assertThat(result.getPseudonym()).isEqualTo(mockPseudonym);
+        assertThat(result.getFlag()).isNull();
+      })
       .verifyComplete();
   }
 }

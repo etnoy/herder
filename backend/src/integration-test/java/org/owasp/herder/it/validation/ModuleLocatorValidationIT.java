@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @DisplayName("Can reject an invalid module locator")
 class ModuleLocatorValidationIT extends BaseIT {
+
   private static final String LOCATOR_IS_NULL =
     "Module locator must not be null";
   private static final String LOCATOR_INVALID_PATTERN =

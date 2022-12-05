@@ -30,6 +30,7 @@ import reactor.core.publisher.Flux;
 @Validated
 @Service
 public class ScoreboardService {
+
   private final ScoreboardRepository scoreboardRepository;
 
   public Flux<ScoreboardEntry> getScoreboard() {

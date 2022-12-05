@@ -40,6 +40,7 @@ import reactor.core.publisher.Mono;
 @Validated
 @RequiredArgsConstructor
 public class ScoreAdjustmentService {
+
   private final ScoreAdjustmentRepository scoreAdjustmentRepository;
 
   private final UserService userService;
@@ -80,12 +81,11 @@ public class ScoreAdjustmentService {
     return userService
       .getTeamById(teamId)
       .map(TeamEntity::getMembers)
-      .map(
-        members ->
-          members
-            .stream()
-            .map(UserEntity::getId)
-            .collect(Collectors.toCollection(ArrayList::new))
+      .map(members ->
+        members
+          .stream()
+          .map(UserEntity::getId)
+          .collect(Collectors.toCollection(ArrayList::new))
       )
       .map(scoreAdjustmentBuilder::userIds)
       .map(builder -> builder.build())

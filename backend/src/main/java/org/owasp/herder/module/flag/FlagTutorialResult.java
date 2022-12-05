@@ -28,6 +28,7 @@ import lombok.Value;
 @Value
 @Builder
 public class FlagTutorialResult implements Serializable {
+
   private static final long serialVersionUID = 811912538287752983L;
   private String flag;
 }

@@ -58,6 +58,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SubmissionService unit tests")
 class SubmissonServiceTest extends BaseTest {
+
   private SubmissionService submissionService;
 
   @Mock
@@ -125,10 +126,10 @@ class SubmissonServiceTest extends BaseTest {
   @Test
   void findAllValidByUserId_NoSubmissionsExist_ReturnsEmpty() {
     when(
-        submissionRepository.findAllByUserIdAndIsValidTrue(
-          TestConstants.TEST_USER_ID
-        )
+      submissionRepository.findAllByUserIdAndIsValidTrue(
+        TestConstants.TEST_USER_ID
       )
+    )
       .thenReturn(Flux.empty());
     StepVerifier
       .create(
@@ -148,10 +149,10 @@ class SubmissonServiceTest extends BaseTest {
     final Submission mockSubmission4 = mock(Submission.class);
 
     when(
-        submissionRepository.findAllByUserIdAndIsValidTrue(
-          TestConstants.TEST_USER_ID
-        )
+      submissionRepository.findAllByUserIdAndIsValidTrue(
+        TestConstants.TEST_USER_ID
       )
+    )
       .thenReturn(
         Flux.just(
           mockSubmission1,
@@ -178,11 +179,11 @@ class SubmissonServiceTest extends BaseTest {
   void findAllValidByUserIdAndModuleName_NoSubmissionsExist_ReturnsEmpty() {
     final String mockModuleName = "id";
     when(
-        submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(
-          TestConstants.TEST_USER_ID,
-          mockModuleName
-        )
+      submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(
+        TestConstants.TEST_USER_ID,
+        mockModuleName
       )
+    )
       .thenReturn(Mono.empty());
     StepVerifier
       .create(
@@ -206,11 +207,11 @@ class SubmissonServiceTest extends BaseTest {
     final Submission mockSubmission = mock(Submission.class);
 
     when(
-        submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(
-          TestConstants.TEST_USER_ID,
-          mockModuleName
-        )
+      submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(
+        TestConstants.TEST_USER_ID,
+        mockModuleName
       )
+    )
       .thenReturn(Mono.just(mockSubmission));
     StepVerifier
       .create(
@@ -266,28 +267,27 @@ class SubmissonServiceTest extends BaseTest {
     setClock(fixedClock);
 
     when(
-        flagHandler.verifyFlag(
-          TestConstants.TEST_USER_ID,
-          TestConstants.TEST_MODULE_ID,
-          flag
-        )
+      flagHandler.verifyFlag(
+        TestConstants.TEST_USER_ID,
+        TestConstants.TEST_MODULE_ID,
+        flag
       )
+    )
       .thenReturn(Mono.just(false));
 
     when(
-        submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(
-          TestConstants.TEST_USER_ID,
-          TestConstants.TEST_MODULE_ID
-        )
+      submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(
+        TestConstants.TEST_USER_ID,
+        TestConstants.TEST_MODULE_ID
       )
+    )
       .thenReturn(Mono.just(false));
 
     when(submissionRepository.save(any(Submission.class)))
-      .thenAnswer(
-        user ->
-          Mono.just(
-            user.getArgument(0, Submission.class).withId(mockSubmissionId)
-          )
+      .thenAnswer(user ->
+        Mono.just(
+          user.getArgument(0, Submission.class).withId(mockSubmissionId)
+        )
       );
 
     when(userService.getById(TestConstants.TEST_USER_ID))
@@ -305,19 +305,17 @@ class SubmissonServiceTest extends BaseTest {
           flag
         )
       )
-      .assertNext(
-        submission -> {
-          assertThat(submission.getId()).isEqualTo(mockSubmissionId);
-          assertThat(submission.getUserId())
-            .isEqualTo(TestConstants.TEST_USER_ID);
-          assertThat(submission.getModuleId())
-            .isEqualTo(TestConstants.TEST_MODULE_ID);
-          assertThat(submission.getFlag()).isEqualTo(flag);
-          assertThat(submission.getTime())
-            .isEqualTo(LocalDateTime.now(fixedClock));
-          assertThat(submission.isValid()).isFalse();
-        }
-      )
+      .assertNext(submission -> {
+        assertThat(submission.getId()).isEqualTo(mockSubmissionId);
+        assertThat(submission.getUserId())
+          .isEqualTo(TestConstants.TEST_USER_ID);
+        assertThat(submission.getModuleId())
+          .isEqualTo(TestConstants.TEST_MODULE_ID);
+        assertThat(submission.getFlag()).isEqualTo(flag);
+        assertThat(submission.getTime())
+          .isEqualTo(LocalDateTime.now(fixedClock));
+        assertThat(submission.isValid()).isFalse();
+      })
       .verifyComplete();
 
     verify(flagHandler, times(1))
@@ -350,20 +348,20 @@ class SubmissonServiceTest extends BaseTest {
     setClock(fixedClock);
 
     when(
-        flagHandler.verifyFlag(
-          TestConstants.TEST_USER_ID,
-          TestConstants.TEST_MODULE_ID,
-          flag
-        )
+      flagHandler.verifyFlag(
+        TestConstants.TEST_USER_ID,
+        TestConstants.TEST_MODULE_ID,
+        flag
       )
+    )
       .thenReturn(Mono.just(true));
 
     when(
-        submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(
-          TestConstants.TEST_USER_ID,
-          TestConstants.TEST_MODULE_ID
-        )
+      submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(
+        TestConstants.TEST_USER_ID,
+        TestConstants.TEST_MODULE_ID
       )
+    )
       .thenReturn(Mono.just(true));
 
     when(userService.getById(TestConstants.TEST_USER_ID))
@@ -409,28 +407,27 @@ class SubmissonServiceTest extends BaseTest {
     setClock(fixedClock);
 
     when(
-        flagHandler.verifyFlag(
-          TestConstants.TEST_USER_ID,
-          TestConstants.TEST_MODULE_ID,
-          flag
-        )
+      flagHandler.verifyFlag(
+        TestConstants.TEST_USER_ID,
+        TestConstants.TEST_MODULE_ID,
+        flag
       )
+    )
       .thenReturn(Mono.just(true));
 
     when(
-        submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(
-          TestConstants.TEST_USER_ID,
-          TestConstants.TEST_MODULE_ID
-        )
+      submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(
+        TestConstants.TEST_USER_ID,
+        TestConstants.TEST_MODULE_ID
       )
+    )
       .thenReturn(Mono.just(false));
 
     when(submissionRepository.save(any(Submission.class)))
-      .thenAnswer(
-        user ->
-          Mono.just(
-            user.getArgument(0, Submission.class).withId(mockSubmissionId)
-          )
+      .thenAnswer(user ->
+        Mono.just(
+          user.getArgument(0, Submission.class).withId(mockSubmissionId)
+        )
       );
 
     when(userService.getById(TestConstants.TEST_USER_ID))
@@ -448,19 +445,17 @@ class SubmissonServiceTest extends BaseTest {
           flag
         )
       )
-      .assertNext(
-        submission -> {
-          assertThat(submission.getId()).isEqualTo(mockSubmissionId);
-          assertThat(submission.getUserId())
-            .isEqualTo(TestConstants.TEST_USER_ID);
-          assertThat(submission.getModuleId())
-            .isEqualTo(TestConstants.TEST_MODULE_ID);
-          assertThat(submission.getFlag()).isEqualTo(flag);
-          assertThat(submission.getTime())
-            .isEqualTo(LocalDateTime.now(fixedClock));
-          assertThat(submission.isValid()).isTrue();
-        }
-      )
+      .assertNext(submission -> {
+        assertThat(submission.getId()).isEqualTo(mockSubmissionId);
+        assertThat(submission.getUserId())
+          .isEqualTo(TestConstants.TEST_USER_ID);
+        assertThat(submission.getModuleId())
+          .isEqualTo(TestConstants.TEST_MODULE_ID);
+        assertThat(submission.getFlag()).isEqualTo(flag);
+        assertThat(submission.getTime())
+          .isEqualTo(LocalDateTime.now(fixedClock));
+        assertThat(submission.isValid()).isTrue();
+      })
       .verifyComplete();
 
     verify(flagHandler, times(1))

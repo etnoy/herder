@@ -57,6 +57,7 @@ class ScoreboardServiceIT extends BaseIT {
   @Nested
   @DisplayName("Can get scoreboard")
   class canGetScoreboard {
+
     String userId1;
     String userId2;
     String userId3;
@@ -94,46 +95,38 @@ class ScoreboardServiceIT extends BaseIT {
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-            assertThat(scoreboardEntry.getRank()).isOne();
-            assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-            assertThat(scoreboardEntry.getGoldMedals()).isOne();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isOne();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isOne();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
+          assertThat(scoreboardEntry.getRank()).isOne();
+          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
+          assertThat(scoreboardEntry.getGoldMedals()).isOne();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isOne();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isOne();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
         .verifyComplete();
     }
 
@@ -169,54 +162,46 @@ class ScoreboardServiceIT extends BaseIT {
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-            assertThat(scoreboardEntry.getGoldMedals()).isOne();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isOne();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isOne();
-          }
-        )
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
+          assertThat(scoreboardEntry.getGoldMedals()).isOne();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isOne();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isOne();
+        })
         .verifyComplete();
     }
 
@@ -254,42 +239,36 @@ class ScoreboardServiceIT extends BaseIT {
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isOne();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.TEAM);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(0L);
-            assertThat(scoreboardEntry.getGoldMedals()).isOne();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isOne();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.TEAM);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(0L);
+          assertThat(scoreboardEntry.getGoldMedals()).isOne();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
         .verifyComplete();
     }
 
@@ -332,54 +311,46 @@ class ScoreboardServiceIT extends BaseIT {
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isOne();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-            assertThat(scoreboardEntry.getGoldMedals()).isOne();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isOne();
-          }
-        )
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isOne();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
+          assertThat(scoreboardEntry.getGoldMedals()).isOne();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isOne();
+        })
         .verifyComplete();
     }
 
@@ -417,42 +388,36 @@ class ScoreboardServiceIT extends BaseIT {
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isOne();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.TEAM);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-            assertThat(scoreboardEntry.getGoldMedals()).isOne();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isOne();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.TEAM);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
+          assertThat(scoreboardEntry.getGoldMedals()).isOne();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
         .verifyComplete();
     }
 
@@ -486,54 +451,46 @@ class ScoreboardServiceIT extends BaseIT {
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(1100L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isOne();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isOne();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-            assertThat(scoreboardEntry.getGoldMedals()).isOne();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(1100L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isOne();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isOne();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
+          assertThat(scoreboardEntry.getGoldMedals()).isOne();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
         .verifyComplete();
     }
 
@@ -557,54 +514,46 @@ class ScoreboardServiceIT extends BaseIT {
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(0L);
-            assertThat(scoreboardEntry.getGoldMedals()).isOne();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(0L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isOne();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-            assertThat(scoreboardEntry.getScore()).isEqualTo(0L);
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isOne();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(1L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(0L);
+          assertThat(scoreboardEntry.getGoldMedals()).isOne();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(0L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isOne();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
+          assertThat(scoreboardEntry.getScore()).isEqualTo(0L);
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isOne();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
         .verifyComplete();
     }
 
@@ -617,54 +566,46 @@ class ScoreboardServiceIT extends BaseIT {
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isOne();
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isOne();
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isOne();
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isOne();
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isOne();
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isOne();
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isOne();
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isOne();
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
         .verifyComplete();
     }
 
@@ -678,54 +619,46 @@ class ScoreboardServiceIT extends BaseIT {
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isOne();
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isOne();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isOne();
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isOne();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
         .verifyComplete();
     }
 
@@ -754,42 +687,36 @@ class ScoreboardServiceIT extends BaseIT {
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isOne();
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isOne();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.TEAM);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isOne();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isOne();
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isOne();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.TEAM);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isOne();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
         .verifyComplete();
     }
 
@@ -824,54 +751,46 @@ class ScoreboardServiceIT extends BaseIT {
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isOne();
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isOne();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isOne();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
-        .assertNext(
-          scoreboardEntry -> {
-            assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-            assertThat(scoreboardEntry.getPrincipalType())
-              .isEqualTo(PrincipalType.USER);
-            assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-            assertThat(scoreboardEntry.getScore()).isZero();
-            assertThat(scoreboardEntry.getGoldMedals()).isZero();
-            assertThat(scoreboardEntry.getSilverMedals()).isZero();
-            assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-          }
-        )
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isOne();
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isOne();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isOne();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
+        .assertNext(scoreboardEntry -> {
+          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
+          assertThat(scoreboardEntry.getPrincipalType())
+            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
+          assertThat(scoreboardEntry.getScore()).isZero();
+          assertThat(scoreboardEntry.getGoldMedals()).isZero();
+          assertThat(scoreboardEntry.getSilverMedals()).isZero();
+          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        })
         .verifyComplete();
     }
 

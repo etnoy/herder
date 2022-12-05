@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @Document
 public class SqlInjectionTutorialRow implements Serializable {
+
   private static final long serialVersionUID = 6226793239207879891L;
 
   private String name;

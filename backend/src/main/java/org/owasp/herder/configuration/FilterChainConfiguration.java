@@ -50,25 +50,18 @@ public class FilterChainConfiguration {
       //
       .exceptionHandling()
       //
-      .authenticationEntryPoint(
-        (serverWebExchange, authenticationException) ->
-          Mono.fromRunnable(
-            () -> {
-              serverWebExchange
-                .getResponse()
-                .setStatusCode(HttpStatus.UNAUTHORIZED);
-              Mono.error(authenticationException);
-            }
-          )
+      .authenticationEntryPoint((serverWebExchange, authenticationException) ->
+        Mono.fromRunnable(() -> {
+          serverWebExchange
+            .getResponse()
+            .setStatusCode(HttpStatus.UNAUTHORIZED);
+          Mono.error(authenticationException);
+        })
       )
-      .accessDeniedHandler(
-        (serverWebExchange, authenticationException) ->
-          Mono.fromRunnable(
-            () ->
-              serverWebExchange
-                .getResponse()
-                .setStatusCode(HttpStatus.FORBIDDEN)
-          )
+      .accessDeniedHandler((serverWebExchange, authenticationException) ->
+        Mono.fromRunnable(() ->
+          serverWebExchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN)
+        )
       )
       .and()
       //

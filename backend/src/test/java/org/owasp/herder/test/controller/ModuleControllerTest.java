@@ -45,6 +45,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ModuleController unit tests")
 class ModuleControllerTest extends BaseTest {
+
   ModuleController moduleController;
 
   @Mock

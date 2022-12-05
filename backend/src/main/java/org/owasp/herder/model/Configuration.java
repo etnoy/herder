@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @With
 @Document
 public class Configuration implements Serializable {
+
   private static final long serialVersionUID = -3877275355721047824L;
 
   @Id

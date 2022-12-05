@@ -39,6 +39,7 @@ import org.owasp.herder.test.BaseTest;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CryptoFactory unit tests")
 class CryptoFactoryTest extends BaseTest {
+
   CryptoFactory cryptoFactory;
 
   @Test

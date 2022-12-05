@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Service
 public final class CryptoFactory {
+
   private static final String ALGORITHM = "HmacSHA256";
 
   public SecureRandom getPrng() throws NoSuchAlgorithmException {

@@ -40,6 +40,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlagTutorial unit tests")
 class FlagTutorialTest extends BaseTest {
+
   private String moduleLocator;
 
   FlagTutorial flagTutorial;

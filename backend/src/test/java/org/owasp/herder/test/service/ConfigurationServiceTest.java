@@ -48,6 +48,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ConfigurationService unit tests")
 class ConfigurationServiceTest extends BaseTest {
+
   private ConfigurationService configurationService;
 
   @Mock
@@ -77,7 +78,7 @@ class ConfigurationServiceTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
 
     when(configurationRepository.findByKey(serverKeyConfigurationKey))
@@ -87,15 +88,12 @@ class ConfigurationServiceTest extends BaseTest {
 
     StepVerifier
       .create(configurationService.getServerKey())
-      .assertNext(
-        serverKey -> {
-          assertThat(serverKey).isEqualTo(mockedServerKey);
-          verify(configurationRepository).findByKey(serverKeyConfigurationKey);
-          verify(keyService, never()).generateRandomBytes(16);
-          verify(configurationRepository, never())
-            .save(any(Configuration.class));
-        }
-      )
+      .assertNext(serverKey -> {
+        assertThat(serverKey).isEqualTo(mockedServerKey);
+        verify(configurationRepository).findByKey(serverKeyConfigurationKey);
+        verify(keyService, never()).generateRandomBytes(16);
+        verify(configurationRepository, never()).save(any(Configuration.class));
+      })
       .verifyComplete();
   }
 
@@ -118,30 +116,27 @@ class ConfigurationServiceTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
 
     when(keyService.generateRandomBytes(16)).thenReturn(mockedServerKey);
     when(configurationRepository.findByKey(serverKeyConfigurationKey))
       .thenReturn(Mono.empty());
     when(configurationRepository.save(any(Configuration.class)))
-      .thenAnswer(
-        configuration ->
-          Mono.just(configuration.getArgument(0, Configuration.class))
+      .thenAnswer(configuration ->
+        Mono.just(configuration.getArgument(0, Configuration.class))
       );
 
     StepVerifier
       .create(configurationService.getServerKey())
-      .assertNext(
-        serverKey -> {
-          assertThat(serverKey).isEqualTo(mockedServerKey);
+      .assertNext(serverKey -> {
+        assertThat(serverKey).isEqualTo(mockedServerKey);
 
-          verify(configurationRepository, atLeast(1))
-            .findByKey(serverKeyConfigurationKey);
-          verify(keyService).generateRandomBytes(16);
-          verify(configurationRepository).save(any(Configuration.class));
-        }
-      )
+        verify(configurationRepository, atLeast(1))
+          .findByKey(serverKeyConfigurationKey);
+        verify(keyService).generateRandomBytes(16);
+        verify(configurationRepository).save(any(Configuration.class));
+      })
       .verifyComplete();
   }
 
@@ -164,7 +159,7 @@ class ConfigurationServiceTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
     final String encodedNewServerKey = Base64
       .getEncoder()
@@ -174,31 +169,28 @@ class ConfigurationServiceTest extends BaseTest {
       .thenReturn(Mono.empty());
     when(keyService.generateRandomBytes(16)).thenReturn(newServerKey);
     when(configurationRepository.save(any(Configuration.class)))
-      .thenAnswer(
-        configuration ->
-          Mono.just(configuration.getArgument(0, Configuration.class))
+      .thenAnswer(configuration ->
+        Mono.just(configuration.getArgument(0, Configuration.class))
       );
 
     StepVerifier
       .create(configurationService.refreshServerKey())
-      .assertNext(
-        serverKey -> {
-          assertThat(serverKey).isEqualTo(newServerKey);
+      .assertNext(serverKey -> {
+        assertThat(serverKey).isEqualTo(newServerKey);
 
-          verify(configurationRepository, atLeast(1))
-            .findByKey(serverKeyConfigurationKey);
-          verify(keyService).generateRandomBytes(16);
+        verify(configurationRepository, atLeast(1))
+          .findByKey(serverKeyConfigurationKey);
+        verify(keyService).generateRandomBytes(16);
 
-          ArgumentCaptor<Configuration> argument = ArgumentCaptor.forClass(
-            Configuration.class
-          );
+        ArgumentCaptor<Configuration> argument = ArgumentCaptor.forClass(
+          Configuration.class
+        );
 
-          verify(configurationRepository).save(argument.capture());
+        verify(configurationRepository).save(argument.capture());
 
-          assertThat(argument.getValue().getValue())
-            .isEqualTo(encodedNewServerKey);
-        }
-      )
+        assertThat(argument.getValue().getValue())
+          .isEqualTo(encodedNewServerKey);
+      })
       .verifyComplete();
   }
 
@@ -224,7 +216,7 @@ class ConfigurationServiceTest extends BaseTest {
       12,
       82,
       9,
-      29
+      29,
     };
 
     final String encodedNewServerKey = Base64
@@ -240,33 +232,30 @@ class ConfigurationServiceTest extends BaseTest {
 
     when(keyService.generateRandomBytes(16)).thenReturn(newServerKey);
     when(configurationRepository.save(any(Configuration.class)))
-      .thenAnswer(
-        configuration ->
-          Mono.just(configuration.getArgument(0, Configuration.class))
+      .thenAnswer(configuration ->
+        Mono.just(configuration.getArgument(0, Configuration.class))
       );
 
     StepVerifier
       .create(configurationService.refreshServerKey())
-      .assertNext(
-        serverKey -> {
-          assertThat(serverKey).isEqualTo(newServerKey);
-          verify(configurationRepository, atLeast(1))
-            .findByKey(serverKeyConfigurationKey);
-          verify(keyService).generateRandomBytes(16);
+      .assertNext(serverKey -> {
+        assertThat(serverKey).isEqualTo(newServerKey);
+        verify(configurationRepository, atLeast(1))
+          .findByKey(serverKeyConfigurationKey);
+        verify(keyService).generateRandomBytes(16);
 
-          verify(mockedConfiguration).withValue(encodedNewServerKey);
+        verify(mockedConfiguration).withValue(encodedNewServerKey);
 
-          ArgumentCaptor<Configuration> argument = ArgumentCaptor.forClass(
-            Configuration.class
-          );
+        ArgumentCaptor<Configuration> argument = ArgumentCaptor.forClass(
+          Configuration.class
+        );
 
-          verify(configurationRepository).save(argument.capture());
+        verify(configurationRepository).save(argument.capture());
 
-          assertThat(argument.getValue()).isEqualTo(mockedConfigurationNewKey);
-          assertThat(argument.getValue().getValue())
-            .isEqualTo(encodedNewServerKey);
-        }
-      )
+        assertThat(argument.getValue()).isEqualTo(mockedConfigurationNewKey);
+        assertThat(argument.getValue().getValue())
+          .isEqualTo(encodedNewServerKey);
+      })
       .verifyComplete();
   }
 

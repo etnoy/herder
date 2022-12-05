@@ -67,6 +67,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserService unit tests")
 class UserServiceTest extends BaseTest {
+
   private UserService userService;
 
   @Mock
@@ -97,10 +98,8 @@ class UserServiceTest extends BaseTest {
   @Test
   void authenticate_InvalidUsername_ReturnsFalse() {
     when(
-        passwordAuthRepository.findByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
+      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
+    )
       .thenReturn(Mono.empty());
     StepVerifier
       .create(
@@ -109,10 +108,9 @@ class UserServiceTest extends BaseTest {
           TestConstants.TEST_USER_PASSWORD
         )
       )
-      .expectErrorMatches(
-        throwable ->
-          throwable instanceof AuthenticationException &&
-          throwable.getMessage().equals("Invalid username or password")
+      .expectErrorMatches(throwable ->
+        throwable instanceof AuthenticationException &&
+        throwable.getMessage().equals("Invalid username or password")
       )
       .verify();
     verify(passwordAuthRepository, times(1))
@@ -122,10 +120,8 @@ class UserServiceTest extends BaseTest {
   @Test
   void authenticate_UserSuspended_ReturnsLockedException() {
     when(
-        passwordAuthRepository.findByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
+      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
+    )
       .thenReturn(Mono.just(mockPasswordAuth));
     when(mockPasswordAuth.getHashedPassword())
       .thenReturn(TestConstants.HASHED_TEST_PASSWORD);
@@ -147,14 +143,11 @@ class UserServiceTest extends BaseTest {
           TestConstants.TEST_USER_PASSWORD
         )
       )
-      .expectErrorMatches(
-        throwable ->
-          throwable instanceof LockedException &&
-          throwable
-            .getMessage()
-            .equals(
-              "Account suspended until +999999999-12-31T23:59:59.999999999"
-            )
+      .expectErrorMatches(throwable ->
+        throwable instanceof LockedException &&
+        throwable
+          .getMessage()
+          .equals("Account suspended until +999999999-12-31T23:59:59.999999999")
       )
       .verify();
   }
@@ -164,10 +157,8 @@ class UserServiceTest extends BaseTest {
     when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
       .thenReturn(Mono.just(mockUser));
     when(
-        passwordAuthRepository.findByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
+      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
+    )
       .thenReturn(Mono.just(mockPasswordAuth));
     when(mockPasswordAuth.getHashedPassword())
       .thenReturn(TestConstants.HASHED_TEST_PASSWORD);
@@ -184,12 +175,10 @@ class UserServiceTest extends BaseTest {
           TestConstants.TEST_USER_PASSWORD
         )
       )
-      .assertNext(
-        authResponse -> {
-          assertThat(authResponse.getUserId())
-            .isEqualTo(TestConstants.TEST_USER_ID);
-        }
-      )
+      .assertNext(authResponse -> {
+        assertThat(authResponse.getUserId())
+          .isEqualTo(TestConstants.TEST_USER_ID);
+      })
       .verifyComplete();
 
     verify(passwordAuthRepository, times(1))
@@ -199,10 +188,8 @@ class UserServiceTest extends BaseTest {
   @Test
   void authenticate_ValidUsernameAndPasswordButUserNotEnabled_ReturnsDisabledException() {
     when(
-        passwordAuthRepository.findByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
+      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
+    )
       .thenReturn(Mono.just(mockPasswordAuth));
     when(mockPasswordAuth.getHashedPassword())
       .thenReturn(TestConstants.HASHED_TEST_PASSWORD);
@@ -223,10 +210,9 @@ class UserServiceTest extends BaseTest {
           TestConstants.TEST_USER_PASSWORD
         )
       )
-      .expectErrorMatches(
-        throwable ->
-          throwable instanceof DisabledException &&
-          throwable.getMessage().equals("Account disabled")
+      .expectErrorMatches(throwable ->
+        throwable instanceof DisabledException &&
+        throwable.getMessage().equals("Account disabled")
       )
       .verify();
 
@@ -237,10 +223,8 @@ class UserServiceTest extends BaseTest {
   @Test
   void authenticate_ValidUsernameButInvalidPassword_DoesNotAuthenticate() {
     when(
-        passwordAuthRepository.findByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
+      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
+    )
       .thenReturn(Mono.just(mockPasswordAuth));
     when(mockPasswordAuth.getHashedPassword())
       .thenReturn(TestConstants.HASHED_TEST_PASSWORD);
@@ -252,10 +236,9 @@ class UserServiceTest extends BaseTest {
           "wrong password"
         )
       )
-      .expectErrorMatches(
-        throwable ->
-          throwable instanceof BadCredentialsException &&
-          throwable.getMessage().equals("Invalid username or password")
+      .expectErrorMatches(throwable ->
+        throwable instanceof BadCredentialsException &&
+        throwable.getMessage().equals("Invalid username or password")
       )
       .verify();
 
@@ -282,7 +265,7 @@ class UserServiceTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
 
     when(keyService.generateRandomBytes(16)).thenReturn(testRandomBytes);
@@ -323,19 +306,18 @@ class UserServiceTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
 
     when(keyService.generateRandomBytes(16)).thenReturn(testRandomBytes);
 
     when(userRepository.save(any(UserEntity.class)))
-      .thenAnswer(
-        user ->
-          Mono.just(
-            user
-              .getArgument(0, UserEntity.class)
-              .withId(TestConstants.TEST_USER_ID)
-          )
+      .thenAnswer(user ->
+        Mono.just(
+          user
+            .getArgument(0, UserEntity.class)
+            .withId(TestConstants.TEST_USER_ID)
+        )
       );
 
     setClock(TestConstants.year2000Clock);
@@ -390,10 +372,8 @@ class UserServiceTest extends BaseTest {
   @Test
   void createPasswordUser_DuplicateLoginName_ReturnsDuplicateClassNameException() {
     when(
-        passwordAuthRepository.findByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
+      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
+    )
       .thenReturn(Mono.just(mockPasswordAuth));
     when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME))
       .thenReturn(Mono.empty());
@@ -441,34 +421,30 @@ class UserServiceTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
     when(keyService.generateRandomBytes(16)).thenReturn(testRandomBytes);
     when(
-        passwordAuthRepository.findByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
+      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
+    )
       .thenReturn(Mono.empty());
     when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME))
       .thenReturn(Mono.empty());
     when(userRepository.save(any(UserEntity.class)))
-      .thenAnswer(
-        user ->
-          Mono.just(
-            user
-              .getArgument(0, UserEntity.class)
-              .withId(TestConstants.TEST_USER_ID)
-          )
+      .thenAnswer(user ->
+        Mono.just(
+          user
+            .getArgument(0, UserEntity.class)
+            .withId(TestConstants.TEST_USER_ID)
+        )
       );
     when(passwordAuthRepository.save(any(PasswordAuth.class)))
-      .thenAnswer(
-        user ->
-          Mono.just(
-            user
-              .getArgument(0, PasswordAuth.class)
-              .withId(TestConstants.TEST_USER_ID)
-          )
+      .thenAnswer(user ->
+        Mono.just(
+          user
+            .getArgument(0, PasswordAuth.class)
+            .withId(TestConstants.TEST_USER_ID)
+        )
       );
 
     setClock(TestConstants.year2000Clock);
@@ -558,19 +534,17 @@ class UserServiceTest extends BaseTest {
     final UserEntity mockDemotedUser = mock(UserEntity.class);
 
     when(userRepository.save(any(UserEntity.class)))
-      .thenAnswer(
-        auth -> {
-          if (auth.getArgument(0, UserEntity.class) == mockDemotedUser) {
-            // We are saving the admin auth to db
-            return Mono.just(auth.getArgument(0, UserEntity.class));
-          } else {
-            // We are saving the newly created auth to db
-            return Mono.just(
-              auth.getArgument(0, UserEntity.class).withId(mockAuthId)
-            );
-          }
+      .thenAnswer(auth -> {
+        if (auth.getArgument(0, UserEntity.class) == mockDemotedUser) {
+          // We are saving the admin auth to db
+          return Mono.just(auth.getArgument(0, UserEntity.class));
+        } else {
+          // We are saving the newly created auth to db
+          return Mono.just(
+            auth.getArgument(0, UserEntity.class).withId(mockAuthId)
+          );
         }
-      );
+      });
 
     when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
       .thenReturn(Mono.just(mockUser));
@@ -598,21 +572,19 @@ class UserServiceTest extends BaseTest {
   @Test
   void demote_UserIsNotAdmin_StaysNotAdmin() {
     when(userRepository.save(any(UserEntity.class)))
-      .thenAnswer(
-        savedUser -> {
-          if (savedUser.getArgument(0, UserEntity.class).equals(mockUser)) {
-            // We are saving the admin user to db
-            return Mono.just(savedUser.getArgument(0, UserEntity.class));
-          } else {
-            // We are saving the newly created user to db
-            return Mono.just(
-              savedUser
-                .getArgument(0, UserEntity.class)
-                .withId(TestConstants.TEST_USER_ID)
-            );
-          }
+      .thenAnswer(savedUser -> {
+        if (savedUser.getArgument(0, UserEntity.class).equals(mockUser)) {
+          // We are saving the admin user to db
+          return Mono.just(savedUser.getArgument(0, UserEntity.class));
+        } else {
+          // We are saving the newly created user to db
+          return Mono.just(
+            savedUser
+              .getArgument(0, UserEntity.class)
+              .withId(TestConstants.TEST_USER_ID)
+          );
         }
-      );
+      });
 
     when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
       .thenReturn(Mono.just(mockUser));
@@ -700,10 +672,8 @@ class UserServiceTest extends BaseTest {
     final PasswordAuth mockPasswordAuth = mock(PasswordAuth.class);
 
     when(
-        passwordAuthRepository.findByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
+      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
+    )
       .thenReturn(Mono.just(mockPasswordAuth));
     when(mockPasswordAuth.getUserId()).thenReturn(TestConstants.TEST_USER_ID);
 
@@ -721,10 +691,8 @@ class UserServiceTest extends BaseTest {
   @Test
   void findPasswordAuthByLoginName_ExistingLoginName_ReturnsPasswordAuth() {
     when(
-        passwordAuthRepository.findByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
+      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
+    )
       .thenReturn(Mono.just(mockPasswordAuth));
 
     StepVerifier
@@ -743,10 +711,8 @@ class UserServiceTest extends BaseTest {
   @Test
   void findPasswordAuthByLoginName_NonExistentLoginName_ReturnsEmpty() {
     when(
-        passwordAuthRepository.findByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
+      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
+    )
       .thenReturn(Mono.empty());
     StepVerifier
       .create(
@@ -805,7 +771,7 @@ class UserServiceTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
 
     when(mockUser.getKey()).thenReturn(testRandomBytes);
@@ -846,7 +812,7 @@ class UserServiceTest extends BaseTest {
       22,
       62,
       9,
-      19
+      19,
     };
 
     // This user does not have a key
@@ -899,19 +865,17 @@ class UserServiceTest extends BaseTest {
     final String mockAuthId = "Authid";
 
     when(userRepository.save(any(UserEntity.class)))
-      .thenAnswer(
-        auth -> {
-          if (auth.getArgument(0, UserEntity.class).equals(mockUser)) {
-            // We are saving the admin auth to db
-            return Mono.just(auth.getArgument(0, UserEntity.class));
-          } else {
-            // We are saving the newly created auth to db
-            return Mono.just(
-              auth.getArgument(0, UserEntity.class).withId(mockAuthId)
-            );
-          }
+      .thenAnswer(auth -> {
+        if (auth.getArgument(0, UserEntity.class).equals(mockUser)) {
+          // We are saving the admin auth to db
+          return Mono.just(auth.getArgument(0, UserEntity.class));
+        } else {
+          // We are saving the newly created auth to db
+          return Mono.just(
+            auth.getArgument(0, UserEntity.class).withId(mockAuthId)
+          );
         }
-      );
+      });
 
     when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
       .thenReturn(Mono.just(mockUser));

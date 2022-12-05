@@ -36,6 +36,7 @@ import reactor.core.publisher.Mono;
 @Score(baseScore = 10, goldBonus = 5, silverBonus = 2, bronzeBonus = 1)
 @Tag(key = "type", value = "tutorial")
 public class FlagTutorial implements BaseModule {
+
   private final FlagHandler flagHandler;
 
   public Mono<String> getFlag(final String userId) {

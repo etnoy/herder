@@ -31,6 +31,7 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class CsrfService {
+
   private final CsrfAttackRepository csrfAttackRepository;
 
   private final FlagHandler flagHandler;

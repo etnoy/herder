@@ -46,6 +46,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ScoreboardController unit tests")
 class ScoreboardControllerTest extends BaseTest {
+
   private ScoreboardController scoreboardController;
 
   @Mock

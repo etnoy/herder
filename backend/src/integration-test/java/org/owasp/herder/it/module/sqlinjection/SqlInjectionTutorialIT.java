@@ -43,6 +43,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("SqlInjectionTutorial integration tests")
 class SqlInjectionTutorialIT extends BaseIT {
+
   SqlInjectionTutorial sqlInjectionTutorial;
 
   @Autowired
@@ -107,9 +108,8 @@ class SqlInjectionTutorialIT extends BaseIT {
     StepVerifier
       .create(
         flagVerificationMono
-          .flatMap(
-            flag ->
-              submissionService.submitFlag(userId, moduleId, flag + "wrong")
+          .flatMap(flag ->
+            submissionService.submitFlag(userId, moduleId, flag + "wrong")
           )
           .map(Submission::isValid)
       )

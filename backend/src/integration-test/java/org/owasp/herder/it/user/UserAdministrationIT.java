@@ -44,6 +44,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("User administration integration tests")
 class UserAdministrationIT extends BaseIT {
+
   @Autowired
   UserService userService;
 
@@ -87,8 +88,8 @@ class UserAdministrationIT extends BaseIT {
 
     StepVerifier
       .create(userService.findTeamById(teamId).map(TeamEntity::getMembers))
-      .assertNext(
-        members -> assertThat(members).containsExactly(user.withTeamId(teamId))
+      .assertNext(members ->
+        assertThat(members).containsExactly(user.withTeamId(teamId))
       )
       .verifyComplete();
   }
@@ -156,12 +157,10 @@ class UserAdministrationIT extends BaseIT {
 
     StepVerifier
       .create(userService.findById(userId))
-      .assertNext(
-        user -> {
-          assertThat(user.getDisplayName()).isEqualTo(displayName);
-          assertThat(user.getId()).isEqualTo(userId);
-        }
-      )
+      .assertNext(user -> {
+        assertThat(user.getDisplayName()).isEqualTo(displayName);
+        assertThat(user.getId()).isEqualTo(userId);
+      })
       .verifyComplete();
   }
 
@@ -196,13 +195,11 @@ class UserAdministrationIT extends BaseIT {
     userService.delete(userId).block();
     StepVerifier
       .create(userRepository.findById(userId))
-      .assertNext(
-        user -> {
-          assertThat(user.isDeleted()).isTrue();
-          assertThat(user.getDisplayName()).isEmpty();
-          assertThat(user.isEnabled()).isFalse();
-        }
-      )
+      .assertNext(user -> {
+        assertThat(user.isDeleted()).isTrue();
+        assertThat(user.getDisplayName()).isEmpty();
+        assertThat(user.isEnabled()).isFalse();
+      })
       .verifyComplete();
   }
 
@@ -215,14 +212,12 @@ class UserAdministrationIT extends BaseIT {
     userService.delete(userId).block();
     StepVerifier
       .create(userRepository.findById(userId))
-      .assertNext(
-        user -> {
-          assertThat(user.isDeleted()).isTrue();
-          assertThat(user.getDisplayName()).isEmpty();
-          assertThat(user.isEnabled()).isFalse();
-          assertThat(user.getTeamId()).isNull();
-        }
-      )
+      .assertNext(user -> {
+        assertThat(user.isDeleted()).isTrue();
+        assertThat(user.getDisplayName()).isEmpty();
+        assertThat(user.isEnabled()).isFalse();
+        assertThat(user.getTeamId()).isNull();
+      })
       .verifyComplete();
   }
 
@@ -263,46 +258,44 @@ class UserAdministrationIT extends BaseIT {
       .create(userService.findAllPrincipals())
       .recordWith(HashSet::new)
       .expectNextCount(5)
-      .consumeRecordedWith(
-        principals -> {
-          assertThat(principals)
-            .filteredOn(principal -> principal.getId().equals(teamId1))
-            .hasSize(1);
-          assertThat(principals)
-            .filteredOn(principal -> principal.getId().equals(teamId2))
-            .hasSize(1);
-          assertThat(principals)
-            .filteredOn(principal -> principal.getId().equals(teamId3))
-            .hasSize(1);
-          assertThat(principals)
-            .filteredOn(principal -> principal.getId().equals(teamId4))
-            .hasSize(1);
-          assertThat(principals)
-            .filteredOn(principal -> principal.getId().equals(userId4))
-            .hasSize(1);
+      .consumeRecordedWith(principals -> {
+        assertThat(principals)
+          .filteredOn(principal -> principal.getId().equals(teamId1))
+          .hasSize(1);
+        assertThat(principals)
+          .filteredOn(principal -> principal.getId().equals(teamId2))
+          .hasSize(1);
+        assertThat(principals)
+          .filteredOn(principal -> principal.getId().equals(teamId3))
+          .hasSize(1);
+        assertThat(principals)
+          .filteredOn(principal -> principal.getId().equals(teamId4))
+          .hasSize(1);
+        assertThat(principals)
+          .filteredOn(principal -> principal.getId().equals(userId4))
+          .hasSize(1);
 
-          assertThat(principals)
-            .filteredOn(principal -> principal.getId().equals(teamId1))
-            .flatExtracting(PrincipalEntity::getMembers)
-            .hasSize(2);
-          assertThat(principals)
-            .filteredOn(principal -> principal.getId().equals(teamId2))
-            .flatExtracting(PrincipalEntity::getMembers)
-            .hasSize(1);
-          assertThat(principals)
-            .filteredOn(principal -> principal.getId().equals(teamId3))
-            .flatExtracting(PrincipalEntity::getMembers)
-            .isEmpty();
-          assertThat(principals)
-            .filteredOn(principal -> principal.getId().equals(teamId4))
-            .flatExtracting(PrincipalEntity::getMembers)
-            .isEmpty();
-          assertThat(principals)
-            .filteredOn(principal -> principal.getId().equals(userId1))
-            .flatExtracting(PrincipalEntity::getMembers)
-            .isEmpty();
-        }
-      )
+        assertThat(principals)
+          .filteredOn(principal -> principal.getId().equals(teamId1))
+          .flatExtracting(PrincipalEntity::getMembers)
+          .hasSize(2);
+        assertThat(principals)
+          .filteredOn(principal -> principal.getId().equals(teamId2))
+          .flatExtracting(PrincipalEntity::getMembers)
+          .hasSize(1);
+        assertThat(principals)
+          .filteredOn(principal -> principal.getId().equals(teamId3))
+          .flatExtracting(PrincipalEntity::getMembers)
+          .isEmpty();
+        assertThat(principals)
+          .filteredOn(principal -> principal.getId().equals(teamId4))
+          .flatExtracting(PrincipalEntity::getMembers)
+          .isEmpty();
+        assertThat(principals)
+          .filteredOn(principal -> principal.getId().equals(userId1))
+          .flatExtracting(PrincipalEntity::getMembers)
+          .isEmpty();
+      })
       .verifyComplete();
   }
 
@@ -316,16 +309,14 @@ class UserAdministrationIT extends BaseIT {
     userService.addUserToTeam(userId, teamId).block();
     StepVerifier
       .create(userService.findAllPrincipals())
-      .assertNext(
-        team -> {
-          assertThat(team.getMembers())
-            .hasAtLeastOneElementOfType(UserEntity.class);
-          assertThat(team.getMembers().iterator().next().getDisplayName())
-            .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
-          assertThat(team.getDisplayName())
-            .isEqualTo(TestConstants.TEST_TEAM_DISPLAY_NAME);
-        }
-      )
+      .assertNext(team -> {
+        assertThat(team.getMembers())
+          .hasAtLeastOneElementOfType(UserEntity.class);
+        assertThat(team.getMembers().iterator().next().getDisplayName())
+          .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+        assertThat(team.getDisplayName())
+          .isEqualTo(TestConstants.TEST_TEAM_DISPLAY_NAME);
+      })
       .verifyComplete();
   }
 
@@ -335,12 +326,10 @@ class UserAdministrationIT extends BaseIT {
     integrationTestUtils.createTestUser();
     StepVerifier
       .create(userService.findAllPrincipals())
-      .assertNext(
-        user -> {
-          assertThat(user.getDisplayName())
-            .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
-        }
-      )
+      .assertNext(user -> {
+        assertThat(user.getDisplayName())
+          .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+      })
       .verifyComplete();
   }
 
@@ -358,14 +347,12 @@ class UserAdministrationIT extends BaseIT {
 
     StepVerifier
       .create(userRepository.findById(userId))
-      .assertNext(
-        user -> {
-          assertThat(user.isDeleted()).isTrue();
-          assertThat(user.getDisplayName()).isEmpty();
-          assertThat(user.isEnabled()).isFalse();
-          assertThat(user.getTeamId()).isNull();
-        }
-      )
+      .assertNext(user -> {
+        assertThat(user.isDeleted()).isTrue();
+        assertThat(user.getDisplayName()).isEmpty();
+        assertThat(user.isEnabled()).isFalse();
+        assertThat(user.getTeamId()).isNull();
+      })
       .verifyComplete();
   }
 

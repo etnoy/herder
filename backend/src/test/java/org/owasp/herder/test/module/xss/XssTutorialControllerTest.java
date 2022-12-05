@@ -44,6 +44,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("XssTutorialController unit tests")
 class XssTutorialControllerTest extends BaseTest {
+
   private XssTutorialController xssTutorialController;
 
   @Mock

@@ -52,6 +52,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("SubmissionService integration tests")
 class SubmissionServiceIT extends BaseIT {
+
   @Autowired
   SubmissionService submissionService;
 
@@ -99,14 +100,12 @@ class SubmissionServiceIT extends BaseIT {
           TestConstants.TEST_STATIC_FLAG
         )
       )
-      .assertNext(
-        submission -> {
-          assertThat(submission.getUserId()).isEqualTo(userId);
-          assertThat(submission.getModuleId()).isEqualTo(moduleId);
-          assertThat(submission.getTeamId()).isNull();
-          assertThat(submission.isValid()).isTrue();
-        }
-      )
+      .assertNext(submission -> {
+        assertThat(submission.getUserId()).isEqualTo(userId);
+        assertThat(submission.getModuleId()).isEqualTo(moduleId);
+        assertThat(submission.getTeamId()).isNull();
+        assertThat(submission.isValid()).isTrue();
+      })
       .verifyComplete();
   }
 
@@ -146,14 +145,12 @@ class SubmissionServiceIT extends BaseIT {
 
     StepVerifier
       .create(submissionService.findAllRankedByTeamId(teamId))
-      .assertNext(
-        rankedSubmission -> {
-          assertThat(rankedSubmission.getId()).isEqualTo(team.getId());
-          assertThat(rankedSubmission.getPrincipalType())
-            .isEqualTo(PrincipalType.TEAM);
-          assertThat(rankedSubmission.getRank()).isEqualTo(1L);
-        }
-      )
+      .assertNext(rankedSubmission -> {
+        assertThat(rankedSubmission.getId()).isEqualTo(team.getId());
+        assertThat(rankedSubmission.getPrincipalType())
+          .isEqualTo(PrincipalType.TEAM);
+        assertThat(rankedSubmission.getRank()).isEqualTo(1L);
+      })
       .verifyComplete();
   }
 
@@ -171,14 +168,12 @@ class SubmissionServiceIT extends BaseIT {
 
     StepVerifier
       .create(submissionService.findAllRankedByUserId(userId))
-      .assertNext(
-        submission -> {
-          assertThat(submission.getRank()).isEqualTo(1);
-          assertThat(submission.getId()).isEqualTo(user.getId());
-          assertThat(submission.getModuleLocator())
-            .isEqualTo(module.getLocator());
-        }
-      )
+      .assertNext(submission -> {
+        assertThat(submission.getRank()).isEqualTo(1);
+        assertThat(submission.getId()).isEqualTo(user.getId());
+        assertThat(submission.getModuleLocator())
+          .isEqualTo(module.getLocator());
+      })
       .verifyComplete();
   }
 

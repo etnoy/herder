@@ -34,6 +34,7 @@ import org.springframework.r2dbc.core.DatabaseClient;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SqlInjectionDatabaseClientFactory unit tests")
 class SqlInjectionDatabaseClientFactoryTest extends BaseTest {
+
   private final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory = new SqlInjectionDatabaseClientFactory();
 
   @Test

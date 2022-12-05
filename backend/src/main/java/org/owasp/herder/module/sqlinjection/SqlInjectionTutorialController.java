@@ -34,6 +34,7 @@ import reactor.core.publisher.Flux;
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/v1/module/sql-injection-tutorial")
 public class SqlInjectionTutorialController {
+
   private final SqlInjectionTutorial sqlInjectionTutorial;
 
   private final ControllerAuthentication controllerAuthentication;

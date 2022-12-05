@@ -44,6 +44,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("XssTutorial integration tests")
 class XssTutorialIT extends BaseIT {
+
   XssTutorial xssTutorial;
 
   @Autowired
@@ -120,9 +121,8 @@ class XssTutorialIT extends BaseIT {
     StepVerifier
       .create(
         flagMono
-          .flatMap(
-            flag ->
-              submissionService.submitFlag(userId, moduleId, flag + "wrong")
+          .flatMap(flag ->
+            submissionService.submitFlag(userId, moduleId, flag + "wrong")
           )
           .map(Submission::isValid)
       )
@@ -136,11 +136,9 @@ class XssTutorialIT extends BaseIT {
 
     StepVerifier
       .create(xssTutorial.submitQuery(userId, "test"))
-      .assertNext(
-        response -> {
-          assertThat(response.getResult()).startsWith("Sorry");
-        }
-      )
+      .assertNext(response -> {
+        assertThat(response.getResult()).startsWith("Sorry");
+      })
       .verifyComplete();
   }
 }

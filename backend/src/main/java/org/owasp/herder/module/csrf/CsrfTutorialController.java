@@ -34,6 +34,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/v1/module/csrf-tutorial")
 public class CsrfTutorialController {
+
   private final CsrfTutorial csrfTutorial;
 
   private final ControllerAuthentication controllerAuthentication;

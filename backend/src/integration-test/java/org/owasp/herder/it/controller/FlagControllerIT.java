@@ -56,6 +56,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("FlagController integration tests")
 class FlagControllerIT extends BaseIT {
+
   @Autowired
   ModuleService moduleService;
 
@@ -123,9 +124,8 @@ class FlagControllerIT extends BaseIT {
 
     StepVerifier
       .create(moduleService.findAllModuleLists())
-      .assertNext(
-        moduleList ->
-          assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
+      .assertNext(moduleList ->
+        assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
       )
       .verifyComplete();
   }

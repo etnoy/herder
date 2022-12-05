@@ -50,6 +50,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @DisplayName("WebTokenService integration tests")
 class WebTokenServiceIT extends BaseIT {
+
   @Autowired
   WebTokenService webTokenService;
 
@@ -78,8 +79,8 @@ class WebTokenServiceIT extends BaseIT {
     );
 
     final Clock rightBeforeTheTokenExpires = Clock.fixed(
-      TestConstants
-        .year2000Clock.instant()
+      TestConstants.year2000Clock
+        .instant()
         .plusMillis(webTokenService.getExpirationTime() - 1),
       ZoneId.of("Z")
     );
@@ -87,11 +88,9 @@ class WebTokenServiceIT extends BaseIT {
     // Set the clock to 1 second before the token expires
     setClock(rightBeforeTheTokenExpires);
 
-    assertThatCode(
-        () -> {
-          webTokenService.parseToken(accessToken);
-        }
-      )
+    assertThatCode(() -> {
+        webTokenService.parseToken(accessToken);
+      })
       .doesNotThrowAnyException();
   }
 
@@ -194,11 +193,9 @@ class WebTokenServiceIT extends BaseIT {
     // Invalidate the token
     webTokenKeyManager.invalidateAccessToken(userId);
 
-    assertThatThrownBy(
-        () -> {
-          webTokenService.parseToken(accessToken);
-        }
-      )
+    assertThatThrownBy(() -> {
+        webTokenService.parseToken(accessToken);
+      })
       .isInstanceOf(BadCredentialsException.class)
       .hasMessageContaining("Invalid token");
   }
@@ -216,8 +213,8 @@ class WebTokenServiceIT extends BaseIT {
     );
 
     final Clock rightAfterTheTokenExpires = Clock.fixed(
-      TestConstants
-        .year2000Clock.instant()
+      TestConstants.year2000Clock
+        .instant()
         .plusMillis(webTokenService.getExpirationTime() + 1),
       ZoneId.systemDefault()
     );
@@ -225,11 +222,9 @@ class WebTokenServiceIT extends BaseIT {
     // Set the clock to 1 second after the token expires
     setClock(rightAfterTheTokenExpires);
 
-    assertThatThrownBy(
-        () -> {
-          webTokenService.parseToken(accessToken);
-        }
-      )
+    assertThatThrownBy(() -> {
+        webTokenService.parseToken(accessToken);
+      })
       .isInstanceOf(BadCredentialsException.class)
       .hasMessageContaining("Invalid token");
   }

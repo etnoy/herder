@@ -22,6 +22,7 @@
 package org.owasp.herder.exception;
 
 public class DuplicateTeamDisplayNameException extends RuntimeException {
+
   private static final long serialVersionUID = -1985874670063134743L;
 
   public DuplicateTeamDisplayNameException(final String message) {

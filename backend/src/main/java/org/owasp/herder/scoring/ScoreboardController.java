@@ -44,6 +44,7 @@ import reactor.core.publisher.Mono;
 @Validated
 @RequestMapping("/api/v1/")
 public class ScoreboardController {
+
   private final ScoreboardService scoreboardService;
 
   private final UserService userService;
@@ -100,8 +101,8 @@ public class ScoreboardController {
             )
           )
         )
-        .flatMapMany(
-          u -> submissionService.findAllRankedByModuleLocator(moduleLocator)
+        .flatMapMany(u ->
+          submissionService.findAllRankedByModuleLocator(moduleLocator)
         );
     } catch (ConstraintViolationException e) {
       return Flux.error(

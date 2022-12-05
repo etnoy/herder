@@ -22,6 +22,7 @@
 package org.owasp.herder.exception;
 
 public class RngException extends RuntimeException {
+
   private static final long serialVersionUID = -2579994940836702698L;
 
   public RngException(final String message, final Exception e) {

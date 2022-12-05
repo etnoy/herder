@@ -52,6 +52,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("RefresherService integration tests")
 class RefresherServiceIT extends BaseIT {
+
   @Autowired
   SubmissionService submissionService;
 
@@ -201,12 +202,10 @@ class RefresherServiceIT extends BaseIT {
     refresherService.afterUserUpdate(userId).block();
     StepVerifier
       .create(teamRepository.findAll())
-      .assertNext(
-        team -> {
-          assertThat(team.getMembers().get(0).getDisplayName())
-            .isEqualTo(newDisplayName);
-        }
-      )
+      .assertNext(team -> {
+        assertThat(team.getMembers().get(0).getDisplayName())
+          .isEqualTo(newDisplayName);
+      })
       .verifyComplete();
   }
 
@@ -238,11 +237,9 @@ class RefresherServiceIT extends BaseIT {
     refresherService.afterUserUpdate(userId1).block();
     StepVerifier
       .create(userService.getTeamById(teamId))
-      .assertNext(
-        team -> {
-          assertThat(team.getMembers()).containsExactly(user2);
-        }
-      )
+      .assertNext(team -> {
+        assertThat(team.getMembers()).containsExactly(user2);
+      })
       .verifyComplete();
   }
 

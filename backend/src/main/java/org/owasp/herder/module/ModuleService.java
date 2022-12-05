@@ -46,6 +46,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Service
 public class ModuleService {
+
   private final ModuleRepository moduleRepository;
 
   private final KeyService keyService;
@@ -93,17 +94,16 @@ public class ModuleService {
           )
         )
       )
-      .map(
-        // Name and locator don't exist already, create new module
-        exists ->
-          ModuleEntity
-            .builder()
-            .isOpen(true)
-            .locator(moduleLocator)
-            .name(moduleName)
-            // Generate the secret key
-            .key(keyService.generateRandomBytes(16))
-            .build()
+      .map(// Name and locator don't exist already, create new module
+      exists ->
+        ModuleEntity
+          .builder()
+          .isOpen(true)
+          .locator(moduleLocator)
+          .name(moduleName)
+          // Generate the secret key
+          .key(keyService.generateRandomBytes(16))
+          .build()
       )
       // Persist the module in the database
       .flatMap(moduleRepository::save)

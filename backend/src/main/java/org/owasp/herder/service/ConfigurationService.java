@@ -39,6 +39,7 @@ import reactor.core.publisher.Mono;
 @Validated
 @Service
 public class ConfigurationService {
+
   private final ConfigurationRepository configurationRepository;
 
   private final KeyService keyService;
@@ -89,15 +90,13 @@ public class ConfigurationService {
       .getEncoder()
       .encodeToString(keyService.generateRandomBytes(16));
     return existsByKey(serverKeyConfigurationKey)
-      .flatMap(
-        exists -> {
-          if (Boolean.TRUE.equals(exists)) {
-            return setValue(serverKeyConfigurationKey, newServerKey);
-          } else {
-            return create(serverKeyConfigurationKey, newServerKey);
-          }
+      .flatMap(exists -> {
+        if (Boolean.TRUE.equals(exists)) {
+          return setValue(serverKeyConfigurationKey, newServerKey);
+        } else {
+          return create(serverKeyConfigurationKey, newServerKey);
         }
-      )
+      })
       .map(Configuration::getValue)
       .map(Base64.getDecoder()::decode);
   }
@@ -118,9 +117,8 @@ public class ConfigurationService {
         )
       )
       .flatMap(configurationRepository::findByKey)
-      .flatMap(
-        configuration ->
-          configurationRepository.save(configuration.withValue(value))
+      .flatMap(configuration ->
+        configurationRepository.save(configuration.withValue(value))
       );
   }
 }

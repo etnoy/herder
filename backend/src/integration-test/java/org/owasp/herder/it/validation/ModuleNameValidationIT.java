@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @DisplayName("Can reject an invalid module name")
 class ModuleNameValidationIT extends BaseIT {
+
   private static final String MODULE_NAME_TOO_LONG =
     "Module name must not be longer than 80 characters";
 

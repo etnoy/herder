@@ -62,6 +62,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
   @Nested
   @DisplayName("Can get unranked scoreboard")
   class canGetUnrankedScoreboard {
+
     String userId1;
 
     String userId2;
@@ -159,57 +160,45 @@ class RankedSubmissionRepositoryIT extends BaseIT {
         .create(rankedSubmissionRepository.getUnrankedScoreboard())
         .recordWith(HashSet::new)
         .expectNextCount(2)
-        .consumeRecordedWith(
-          resultSet -> {
-            assertThat(resultSet)
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getTeam() != null
-              )
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getTeam().getId().equals(teamId)
-              )
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getScore().equals(0L)
-              )
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getGoldMedals().equals(1L)
-              )
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getSilverMedals().equals(1L)
-              )
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getBronzeMedals().equals(0L)
-              )
-              .hasSize(1);
+        .consumeRecordedWith(resultSet -> {
+          assertThat(resultSet)
+            .filteredOn(rankedSubmission -> rankedSubmission.getTeam() != null)
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getTeam().getId().equals(teamId)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getScore().equals(0L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getGoldMedals().equals(1L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getSilverMedals().equals(1L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getBronzeMedals().equals(0L)
+            )
+            .hasSize(1);
 
-            assertThat(resultSet)
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getUser().getId().equals(userId2)
-              )
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getTeam() == null
-              )
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getScore().equals(0L)
-              )
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getGoldMedals().equals(1L)
-              )
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getSilverMedals().equals(0L)
-              )
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getBronzeMedals().equals(0L)
-              )
-              .hasSize(1);
-          }
-        )
+          assertThat(resultSet)
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getUser().getId().equals(userId2)
+            )
+            .filteredOn(rankedSubmission -> rankedSubmission.getTeam() == null)
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getScore().equals(0L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getGoldMedals().equals(1L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getSilverMedals().equals(0L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getBronzeMedals().equals(0L)
+            )
+            .hasSize(1);
+        })
         .verifyComplete();
     }
 
@@ -267,72 +256,61 @@ class RankedSubmissionRepositoryIT extends BaseIT {
         .create(rankedSubmissionRepository.getUnrankedScoreboard())
         .recordWith(HashSet::new)
         .expectNextCount(3)
-        .consumeRecordedWith(
-          resultSet -> {
-            assertThat(resultSet)
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getUser().getId().equals(userId1)
-              )
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getScore().equals(0L)
-              )
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getGoldMedals().equals(0L)
-              )
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getSilverMedals().equals(1L)
-              )
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getBronzeMedals().equals(0L)
-              )
-              .hasSize(1);
+        .consumeRecordedWith(resultSet -> {
+          assertThat(resultSet)
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getUser().getId().equals(userId1)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getScore().equals(0L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getGoldMedals().equals(0L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getSilverMedals().equals(1L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getBronzeMedals().equals(0L)
+            )
+            .hasSize(1);
 
-            assertThat(resultSet)
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getUser().getId().equals(userId2)
-              )
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getScore().equals(0L)
-              )
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getGoldMedals().equals(1L)
-              )
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getSilverMedals().equals(0L)
-              )
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getBronzeMedals().equals(0L)
-              )
-              .hasSize(1);
+          assertThat(resultSet)
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getUser().getId().equals(userId2)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getScore().equals(0L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getGoldMedals().equals(1L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getSilverMedals().equals(0L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getBronzeMedals().equals(0L)
+            )
+            .hasSize(1);
 
-            assertThat(resultSet)
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getUser().getId().equals(userId3)
-              )
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getScore().equals(0L)
-              )
-              .filteredOn(
-                rankedSubmission -> rankedSubmission.getGoldMedals().equals(0L)
-              )
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getSilverMedals().equals(0L)
-              )
-              .filteredOn(
-                rankedSubmission ->
-                  rankedSubmission.getBronzeMedals().equals(1L)
-              )
-              .hasSize(1);
-          }
-        )
+          assertThat(resultSet)
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getUser().getId().equals(userId3)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getScore().equals(0L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getGoldMedals().equals(0L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getSilverMedals().equals(0L)
+            )
+            .filteredOn(rankedSubmission ->
+              rankedSubmission.getBronzeMedals().equals(1L)
+            )
+            .hasSize(1);
+        })
         .verifyComplete();
     }
 
@@ -361,6 +339,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
     @Nested
     @DisplayName("for a team")
     class forTeam {
+
       String teamId;
 
       @Test
@@ -410,6 +389,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
     @Nested
     @DisplayName("for a team and a user")
     class forTeamAndUser {
+
       String teamId;
 
       @Test
@@ -421,13 +401,11 @@ class RankedSubmissionRepositoryIT extends BaseIT {
               TestConstants.TEST_MODULE_LOCATOR
             )
           )
-          .assertNext(
-            submission ->
-              assertThat(submission.getTeam().getId()).isEqualTo(teamId)
+          .assertNext(submission ->
+            assertThat(submission.getTeam().getId()).isEqualTo(teamId)
           )
-          .assertNext(
-            submission ->
-              assertThat(submission.getUser().getId()).isEqualTo(userId2)
+          .assertNext(submission ->
+            assertThat(submission.getUser().getId()).isEqualTo(userId2)
           )
           .verifyComplete();
       }
@@ -475,6 +453,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
     @Nested
     @DisplayName("for a team and a user with multiple modules")
     class forTeamAndUserWithMultipleModules {
+
       String teamId;
       String moduleId2;
 
@@ -485,30 +464,23 @@ class RankedSubmissionRepositoryIT extends BaseIT {
           .create(rankedSubmissionRepository.findAllByTeamId(teamId))
           .recordWith(HashSet::new)
           .expectNextCount(2)
-          .consumeRecordedWith(
-            resultSet -> {
-              assertThat(resultSet)
-                .filteredOn(
-                  rankedSubmission ->
-                    rankedSubmission
-                      .getModule()
-                      .getLocator()
-                      .equals(TestConstants.TEST_MODULE_LOCATOR) &&
-                    rankedSubmission.getRank().equals(1L)
-                )
-                .hasSize(1);
-              assertThat(resultSet)
-                .filteredOn(
-                  rankedSubmission ->
-                    rankedSubmission
-                      .getModule()
-                      .getLocator()
-                      .equals("test-2") &&
-                    rankedSubmission.getRank().equals(2L)
-                )
-                .hasSize(1);
-            }
-          )
+          .consumeRecordedWith(resultSet -> {
+            assertThat(resultSet)
+              .filteredOn(rankedSubmission ->
+                rankedSubmission
+                  .getModule()
+                  .getLocator()
+                  .equals(TestConstants.TEST_MODULE_LOCATOR) &&
+                rankedSubmission.getRank().equals(1L)
+              )
+              .hasSize(1);
+            assertThat(resultSet)
+              .filteredOn(rankedSubmission ->
+                rankedSubmission.getModule().getLocator().equals("test-2") &&
+                rankedSubmission.getRank().equals(2L)
+              )
+              .hasSize(1);
+          })
           .verifyComplete();
       }
 
@@ -521,13 +493,11 @@ class RankedSubmissionRepositoryIT extends BaseIT {
               TestConstants.TEST_MODULE_LOCATOR
             )
           )
-          .assertNext(
-            submission ->
-              assertThat(submission.getTeam().getId()).isEqualTo(teamId)
+          .assertNext(submission ->
+            assertThat(submission.getTeam().getId()).isEqualTo(teamId)
           )
-          .assertNext(
-            submission ->
-              assertThat(submission.getUser().getId()).isEqualTo(userId2)
+          .assertNext(submission ->
+            assertThat(submission.getUser().getId()).isEqualTo(userId2)
           )
           .verifyComplete();
       }
@@ -537,13 +507,11 @@ class RankedSubmissionRepositoryIT extends BaseIT {
       void canCombineSubmissionsForTeamForSecondModule() {
         StepVerifier
           .create(rankedSubmissionRepository.findAllByModuleLocator("test-2"))
-          .assertNext(
-            submission ->
-              assertThat(submission.getUser().getId()).isEqualTo(userId2)
+          .assertNext(submission ->
+            assertThat(submission.getUser().getId()).isEqualTo(userId2)
           )
-          .assertNext(
-            submission ->
-              assertThat(submission.getTeam().getId()).isEqualTo(teamId)
+          .assertNext(submission ->
+            assertThat(submission.getTeam().getId()).isEqualTo(teamId)
           )
           .verifyComplete();
       }
@@ -555,30 +523,23 @@ class RankedSubmissionRepositoryIT extends BaseIT {
           .create(rankedSubmissionRepository.findAllByUserId(userId2))
           .recordWith(HashSet::new)
           .expectNextCount(2)
-          .consumeRecordedWith(
-            resultSet -> {
-              assertThat(resultSet)
-                .filteredOn(
-                  rankedSubmission ->
-                    rankedSubmission
-                      .getModule()
-                      .getLocator()
-                      .equals(TestConstants.TEST_MODULE_LOCATOR) &&
-                    rankedSubmission.getRank().equals(2L)
-                )
-                .hasSize(1);
-              assertThat(resultSet)
-                .filteredOn(
-                  rankedSubmission ->
-                    rankedSubmission
-                      .getModule()
-                      .getLocator()
-                      .equals("test-2") &&
-                    rankedSubmission.getRank().equals(1L)
-                )
-                .hasSize(1);
-            }
-          )
+          .consumeRecordedWith(resultSet -> {
+            assertThat(resultSet)
+              .filteredOn(rankedSubmission ->
+                rankedSubmission
+                  .getModule()
+                  .getLocator()
+                  .equals(TestConstants.TEST_MODULE_LOCATOR) &&
+                rankedSubmission.getRank().equals(2L)
+              )
+              .hasSize(1);
+            assertThat(resultSet)
+              .filteredOn(rankedSubmission ->
+                rankedSubmission.getModule().getLocator().equals("test-2") &&
+                rankedSubmission.getRank().equals(1L)
+              )
+              .hasSize(1);
+          })
           .verifyComplete();
       }
 
@@ -631,42 +592,36 @@ class RankedSubmissionRepositoryIT extends BaseIT {
             TestConstants.TEST_MODULE_LOCATOR
           )
         )
-        .assertNext(
-          sanitizedRankedSubmission -> {
-            assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(1);
-            assertThat(sanitizedRankedSubmission.getUser().getId())
-              .isEqualTo(user1.getId());
-            assertThat(sanitizedRankedSubmission.getModule().getLocator())
-              .isEqualTo(module.getLocator());
-            assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
-            assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(20);
-            assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(520);
-          }
-        )
-        .assertNext(
-          sanitizedRankedSubmission -> {
-            assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(2);
-            assertThat(sanitizedRankedSubmission.getUser().getId())
-              .isEqualTo(user2.getId());
-            assertThat(sanitizedRankedSubmission.getModule().getLocator())
-              .isEqualTo(module.getLocator());
-            assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
-            assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(10);
-            assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(510);
-          }
-        )
-        .assertNext(
-          sanitizedRankedSubmission -> {
-            assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(3);
-            assertThat(sanitizedRankedSubmission.getUser().getId())
-              .isEqualTo(user3.getId());
-            assertThat(sanitizedRankedSubmission.getModule().getLocator())
-              .isEqualTo(module.getLocator());
-            assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
-            assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(5);
-            assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(505);
-          }
-        )
+        .assertNext(sanitizedRankedSubmission -> {
+          assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(1);
+          assertThat(sanitizedRankedSubmission.getUser().getId())
+            .isEqualTo(user1.getId());
+          assertThat(sanitizedRankedSubmission.getModule().getLocator())
+            .isEqualTo(module.getLocator());
+          assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
+          assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(20);
+          assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(520);
+        })
+        .assertNext(sanitizedRankedSubmission -> {
+          assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(2);
+          assertThat(sanitizedRankedSubmission.getUser().getId())
+            .isEqualTo(user2.getId());
+          assertThat(sanitizedRankedSubmission.getModule().getLocator())
+            .isEqualTo(module.getLocator());
+          assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
+          assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(10);
+          assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(510);
+        })
+        .assertNext(sanitizedRankedSubmission -> {
+          assertThat(sanitizedRankedSubmission.getRank()).isEqualTo(3);
+          assertThat(sanitizedRankedSubmission.getUser().getId())
+            .isEqualTo(user3.getId());
+          assertThat(sanitizedRankedSubmission.getModule().getLocator())
+            .isEqualTo(module.getLocator());
+          assertThat(sanitizedRankedSubmission.getBaseScore()).isEqualTo(500);
+          assertThat(sanitizedRankedSubmission.getBonusScore()).isEqualTo(5);
+          assertThat(sanitizedRankedSubmission.getScore()).isEqualTo(505);
+        })
         .verifyComplete();
     }
 
@@ -792,16 +747,14 @@ class RankedSubmissionRepositoryIT extends BaseIT {
 
     StepVerifier
       .create(rankedSubmissionRepository.findAll())
-      .assertNext(
-        rankedSubmission -> {
-          assertThat(rankedSubmission.getRank()).isEqualTo(1);
-          assertThat(rankedSubmission.getUser()).isEqualTo(user);
-          assertThat(rankedSubmission.getModule()).isEqualTo(module);
-          assertThat(rankedSubmission.getBaseScore()).isEqualTo(1000);
-          assertThat(rankedSubmission.getBonusScore()).isEqualTo(100);
-          assertThat(rankedSubmission.getScore()).isEqualTo(1100);
-        }
-      )
+      .assertNext(rankedSubmission -> {
+        assertThat(rankedSubmission.getRank()).isEqualTo(1);
+        assertThat(rankedSubmission.getUser()).isEqualTo(user);
+        assertThat(rankedSubmission.getModule()).isEqualTo(module);
+        assertThat(rankedSubmission.getBaseScore()).isEqualTo(1000);
+        assertThat(rankedSubmission.getBonusScore()).isEqualTo(100);
+        assertThat(rankedSubmission.getScore()).isEqualTo(1100);
+      })
       .verifyComplete();
   }
 
@@ -881,36 +834,30 @@ class RankedSubmissionRepositoryIT extends BaseIT {
 
     StepVerifier
       .create(rankedSubmissionRepository.findAll())
-      .assertNext(
-        rankedSubmission -> {
-          assertThat(rankedSubmission.getRank()).isEqualTo(1);
-          assertThat(rankedSubmission.getUser()).isEqualTo(user1);
-          assertThat(rankedSubmission.getModule()).isEqualTo(module);
-          assertThat(rankedSubmission.getBaseScore()).isEqualTo(500);
-          assertThat(rankedSubmission.getBonusScore()).isEqualTo(20);
-          assertThat(rankedSubmission.getScore()).isEqualTo(520);
-        }
-      )
-      .assertNext(
-        rankedSubmission -> {
-          assertThat(rankedSubmission.getRank()).isEqualTo(2);
-          assertThat(rankedSubmission.getUser()).isEqualTo(user2);
-          assertThat(rankedSubmission.getModule()).isEqualTo(module);
-          assertThat(rankedSubmission.getBaseScore()).isEqualTo(500);
-          assertThat(rankedSubmission.getBonusScore()).isEqualTo(10);
-          assertThat(rankedSubmission.getScore()).isEqualTo(510);
-        }
-      )
-      .assertNext(
-        rankedSubmission -> {
-          assertThat(rankedSubmission.getRank()).isEqualTo(3);
-          assertThat(rankedSubmission.getUser()).isEqualTo(user3);
-          assertThat(rankedSubmission.getModule()).isEqualTo(module);
-          assertThat(rankedSubmission.getBaseScore()).isEqualTo(500);
-          assertThat(rankedSubmission.getBonusScore()).isEqualTo(5);
-          assertThat(rankedSubmission.getScore()).isEqualTo(505);
-        }
-      )
+      .assertNext(rankedSubmission -> {
+        assertThat(rankedSubmission.getRank()).isEqualTo(1);
+        assertThat(rankedSubmission.getUser()).isEqualTo(user1);
+        assertThat(rankedSubmission.getModule()).isEqualTo(module);
+        assertThat(rankedSubmission.getBaseScore()).isEqualTo(500);
+        assertThat(rankedSubmission.getBonusScore()).isEqualTo(20);
+        assertThat(rankedSubmission.getScore()).isEqualTo(520);
+      })
+      .assertNext(rankedSubmission -> {
+        assertThat(rankedSubmission.getRank()).isEqualTo(2);
+        assertThat(rankedSubmission.getUser()).isEqualTo(user2);
+        assertThat(rankedSubmission.getModule()).isEqualTo(module);
+        assertThat(rankedSubmission.getBaseScore()).isEqualTo(500);
+        assertThat(rankedSubmission.getBonusScore()).isEqualTo(10);
+        assertThat(rankedSubmission.getScore()).isEqualTo(510);
+      })
+      .assertNext(rankedSubmission -> {
+        assertThat(rankedSubmission.getRank()).isEqualTo(3);
+        assertThat(rankedSubmission.getUser()).isEqualTo(user3);
+        assertThat(rankedSubmission.getModule()).isEqualTo(module);
+        assertThat(rankedSubmission.getBaseScore()).isEqualTo(500);
+        assertThat(rankedSubmission.getBonusScore()).isEqualTo(5);
+        assertThat(rankedSubmission.getScore()).isEqualTo(505);
+      })
       .verifyComplete();
   }
 

@@ -52,6 +52,7 @@ import reactor.test.StepVerifier;
 @DirtiesContext
 @DisplayName("ModuleInitializer integration tests")
 class ModuleInitializerIT extends BaseIT {
+
   @Autowired
   GenericApplicationContext applicationContext;
 
@@ -106,12 +107,10 @@ class ModuleInitializerIT extends BaseIT {
 
     StepVerifier
       .create(moduleService.findByLocator(moduleLocator))
-      .assertNext(
-        module -> {
-          assertThat(module.getBaseScore()).isEqualTo(baseScore);
-          assertThat(module.getBonusScores()).isEqualTo(bonusScores);
-        }
-      )
+      .assertNext(module -> {
+        assertThat(module.getBaseScore()).isEqualTo(baseScore);
+        assertThat(module.getBonusScores()).isEqualTo(bonusScores);
+      })
       .verifyComplete();
   }
 
@@ -181,11 +180,9 @@ class ModuleInitializerIT extends BaseIT {
 
     StepVerifier
       .create(moduleService.getById(moduleId))
-      .assertNext(
-        module -> {
-          assertThat(module.getTags()).hasSameEntriesAs(expectedTags);
-        }
-      )
+      .assertNext(module -> {
+        assertThat(module.getTags()).hasSameEntriesAs(expectedTags);
+      })
       .verifyComplete();
   }
 
@@ -218,11 +215,9 @@ class ModuleInitializerIT extends BaseIT {
 
     StepVerifier
       .create(moduleService.getById(moduleId))
-      .assertNext(
-        module -> {
-          assertThat(module.getTags()).isEqualTo(expectedTags);
-        }
-      )
+      .assertNext(module -> {
+        assertThat(module.getTags()).isEqualTo(expectedTags);
+      })
       .verifyComplete();
   }
 
@@ -253,11 +248,9 @@ class ModuleInitializerIT extends BaseIT {
 
     StepVerifier
       .create(moduleService.getById(moduleId))
-      .assertNext(
-        module -> {
-          assertThat(module.getTags()).isEqualTo(expectedTags);
-        }
-      )
+      .assertNext(module -> {
+        assertThat(module.getTags()).isEqualTo(expectedTags);
+      })
       .verifyComplete();
   }
 

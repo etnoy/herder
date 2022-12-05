@@ -48,6 +48,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SecurityContextRepository unit tests")
 class SecurityContextRepositoryTest extends BaseTest {
+
   private SecurityContextRepository securityContextRepository;
 
   @Mock
@@ -130,10 +131,10 @@ class SecurityContextRepositoryTest extends BaseTest {
     );
 
     when(
-        authenticationManager.authenticate(
-          new UsernamePasswordAuthenticationToken(null, token)
-        )
+      authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken(null, token)
       )
+    )
       .thenReturn(Mono.just(mockAuthentication));
 
     StepVerifier

@@ -28,6 +28,7 @@ import lombok.Value;
 @Value
 @Builder
 public class CsrfTutorialResult implements Serializable {
+
   private static final long serialVersionUID = -4198798937863388090L;
   private String pseudonym;
   private String flag;

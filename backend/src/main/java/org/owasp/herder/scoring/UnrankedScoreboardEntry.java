@@ -34,6 +34,7 @@ import org.owasp.herder.user.UserEntity;
 @Builder
 @With
 public class UnrankedScoreboardEntry implements Serializable {
+
   private static final long serialVersionUID = 902640084501001329L;
 
   @NonNull UserEntity user;

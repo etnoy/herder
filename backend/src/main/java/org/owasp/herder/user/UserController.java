@@ -42,6 +42,7 @@ import reactor.core.publisher.Mono;
 @Validated
 @RequestMapping("/api/v1/")
 public class UserController {
+
   private final UserService userService;
 
   @PostMapping(path = "user/delete/{userId}")

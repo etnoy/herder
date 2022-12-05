@@ -38,6 +38,7 @@ import reactor.core.publisher.Mono;
 @Tag(key = "topic", value = "xss")
 @Score(baseScore = 80, goldBonus = 10, silverBonus = 5, bronzeBonus = 3)
 public class XssTutorial implements BaseModule {
+
   private final FlagHandler flagHandler;
 
   private final XssService xssService;

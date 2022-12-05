@@ -43,6 +43,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlagTutorialController unit tests")
 class FlagTutorialControllerTest extends BaseTest {
+
   private FlagTutorialController flagTutorialController;
 
   @Mock

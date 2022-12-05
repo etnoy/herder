@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @With
 @Document("user")
 public final class UserEntity implements Serializable {
+
   static final long serialVersionUID = 3097353498257801154L;
 
   @Id

@@ -52,6 +52,7 @@ import reactor.core.publisher.Mono;
 @Validated
 @Service
 public class FlagHandler {
+
   private static final String DYNAMIC_FLAG_FORMAT = "flag{%s}";
 
   private final ModuleService moduleService;
@@ -109,8 +110,8 @@ public class FlagHandler {
 
     return userKey
       .zipWith(moduleKey)
-      .map(
-        tuple -> Bytes.concat(tuple.getT1(), tuple.getT2(), prefix.getBytes())
+      .map(tuple ->
+        Bytes.concat(tuple.getT1(), tuple.getT2(), prefix.getBytes())
       )
       .zipWith(serverKey)
       .map(tuple -> cryptoService.hmac(tuple.getT2(), tuple.getT1()))
@@ -149,36 +150,32 @@ public class FlagHandler {
         )
       )
       // Check if the flag is valid
-      .flatMap(
-        module -> {
-          if (module.isFlagStatic()) {
-            // Verifying a static flag
-            return Mono.just(
-              module.getStaticFlag().equalsIgnoreCase(submittedFlag)
-            );
-          } else {
-            // Verifying a dynamic flag
-            return getDynamicFlag(userId, module.getLocator())
-              .map(submittedFlag::equalsIgnoreCase);
+      .flatMap(module -> {
+        if (module.isFlagStatic()) {
+          // Verifying a static flag
+          return Mono.just(
+            module.getStaticFlag().equalsIgnoreCase(submittedFlag)
+          );
+        } else {
+          // Verifying a dynamic flag
+          return getDynamicFlag(userId, module.getLocator())
+            .map(submittedFlag::equalsIgnoreCase);
+        }
+      })
+      .flatMap(validationResult -> {
+        // Check the rate limiter if the flag was invalid
+        if (!Boolean.TRUE.equals(validationResult)) {
+          // flag is invalid
+          Bucket invalidFlagBucket = invalidFlagRateLimiter.resolveBucket(
+            userId
+          );
+          if (!invalidFlagBucket.tryConsume(1)) {
+            // limit is exceeded
+            return Mono.error(new InvalidFlagSubmissionRateLimitException());
           }
         }
-      )
-      .flatMap(
-        validationResult -> {
-          // Check the rate limiter if the flag was invalid
-          if (!Boolean.TRUE.equals(validationResult)) {
-            // flag is invalid
-            Bucket invalidFlagBucket = invalidFlagRateLimiter.resolveBucket(
-              userId
-            );
-            if (!invalidFlagBucket.tryConsume(1)) {
-              // limit is exceeded
-              return Mono.error(new InvalidFlagSubmissionRateLimitException());
-            }
-          }
-          return Mono.just(validationResult);
-        }
-      );
+        return Mono.just(validationResult);
+      });
 
     // Do some logging. First, check if error occurred and then print logs
     final Mono<String> validText = isValid
@@ -191,16 +188,15 @@ public class FlagHandler {
         validText,
         moduleMono.map(ModuleEntity::getId)
       )
-      .map(
-        tuple ->
-          "User " +
-          tuple.getT1() +
-          " submitted " +
-          tuple.getT2() +
-          " flag " +
-          submittedFlag +
-          " to module " +
-          tuple.getT3()
+      .map(tuple ->
+        "User " +
+        tuple.getT1() +
+        " submitted " +
+        tuple.getT2() +
+        " flag " +
+        submittedFlag +
+        " to module " +
+        tuple.getT3()
       )
       .subscribe(log::debug);
 

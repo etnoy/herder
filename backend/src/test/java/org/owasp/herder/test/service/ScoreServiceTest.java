@@ -42,6 +42,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("scoreboardService unit tests")
 class ScoreServiceTest extends BaseTest {
+
   ScoreboardService scoreboardService;
 
   @Mock

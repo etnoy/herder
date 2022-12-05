@@ -30,6 +30,7 @@ import lombok.With;
 @With
 @Builder
 public final class AuthResponse implements Serializable {
+
   private static final long serialVersionUID = 5631647781132001719L;
 
   private String userId;

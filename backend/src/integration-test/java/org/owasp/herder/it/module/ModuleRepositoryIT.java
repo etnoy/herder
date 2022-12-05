@@ -43,6 +43,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("ModuleRepository integration tests")
 class ModuleRepositoryIT extends BaseIT {
+
   @Autowired
   IntegrationTestUtils integrationTestUtils;
 

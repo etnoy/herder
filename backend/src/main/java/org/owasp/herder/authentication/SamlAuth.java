@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @With
 @Document
 public class SamlAuth implements Serializable {
+
   private static final long serialVersionUID = 211951930649985921L;
 
   @Id

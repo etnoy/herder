@@ -36,6 +36,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @Slf4j
 public class WebTokenKeyManager {
+
   private static final Map<String, Key> userToKeyMap = new HashMap<>();
 
   public Key getOrGenerateKeyForUser(@ValidUserId final String userId) {

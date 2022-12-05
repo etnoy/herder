@@ -36,6 +36,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/")
 public class ModuleController {
+
   private final ModuleService moduleService;
 
   private final ControllerAuthentication controllerAuthentication;
@@ -55,8 +56,8 @@ public class ModuleController {
   ) {
     return controllerAuthentication
       .getUserId()
-      .flatMap(
-        userId -> moduleService.findListItemByLocator(userId, moduleLocator)
+      .flatMap(userId ->
+        moduleService.findListItemByLocator(userId, moduleLocator)
       );
   }
 }

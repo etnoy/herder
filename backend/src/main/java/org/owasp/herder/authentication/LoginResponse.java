@@ -29,6 +29,7 @@ import org.owasp.herder.validation.ValidDisplayName;
 @Value
 @Builder
 public final class LoginResponse implements Serializable {
+
   private static final long serialVersionUID = 9069988759049797292L;
 
   private String id;

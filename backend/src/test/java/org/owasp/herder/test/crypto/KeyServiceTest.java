@@ -43,6 +43,7 @@ import org.owasp.herder.test.BaseTest;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("KeyService unit tests")
 class KeyServiceTest extends BaseTest {
+
   KeyService keyService;
 
   @Mock
@@ -51,20 +52,20 @@ class KeyServiceTest extends BaseTest {
   @Test
   void byteFlagToString_ValidBytes_ReturnsString() {
     assertThat(
-        keyService.bytesToHexString(
-          new byte[] { 116, 104, 105, 115, 105, 115, 97, 102, 108, 97, 103 }
-        )
+      keyService.bytesToHexString(
+        new byte[] { 116, 104, 105, 115, 105, 115, 97, 102, 108, 97, 103 }
       )
+    )
       .isEqualTo("74686973697361666c6167");
   }
 
   @Test
   void convertStringKeyToBytes_ValidInput_ReturnsExpectedOutput() {
     assertThat(
-        keyService.convertByteKeyToString(
-          new byte[] { 116, 104, 105, 115, 105, 115, 97, 102, 108, 97, 103 }
-        )
+      keyService.convertByteKeyToString(
+        new byte[] { 116, 104, 105, 115, 105, 115, 97, 102, 108, 97, 103 }
       )
+    )
       .isEqualTo("thisisaflag");
   }
 

@@ -28,6 +28,7 @@ import org.owasp.herder.validation.ValidPassword;
 
 @Value
 public class PasswordLoginDto implements Serializable {
+
   private static final long serialVersionUID = 225588142559080211L;
 
   @ValidLoginName

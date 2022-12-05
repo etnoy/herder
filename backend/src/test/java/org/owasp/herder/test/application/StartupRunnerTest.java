@@ -47,6 +47,7 @@ import reactor.core.publisher.Mono;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("StartupRunner unit tests")
 class StartupRunnerTest extends BaseTest {
+
   private StartupRunner startupRunner;
 
   @Mock
@@ -80,12 +81,12 @@ class StartupRunnerTest extends BaseTest {
   void run_NoArguments_Success() {
     final String mockUserId = "id";
     when(
-        userService.createPasswordUser(
-          "Administrator",
-          "admin",
-          "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G"
-        )
+      userService.createPasswordUser(
+        "Administrator",
+        "admin",
+        "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G"
       )
+    )
       .thenReturn(Mono.just(mockUserId));
 
     when(userService.create(any(String.class))).thenReturn(Mono.empty());

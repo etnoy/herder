@@ -38,6 +38,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class XssService {
+
   private final XssWebClientFactory xssWebClientFactory;
 
   public List<String> doXss(final String htmlPage) {

@@ -31,6 +31,7 @@ import lombok.Value;
 @Value
 @Builder
 public class UserScoreDto implements Serializable {
+
   private static final long serialVersionUID = 8494108113674100571L;
 
   @NonNull private Long submissionId;

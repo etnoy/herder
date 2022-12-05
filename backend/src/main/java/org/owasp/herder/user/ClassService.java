@@ -37,6 +37,7 @@ import reactor.core.publisher.Mono;
 @Validated
 @Service
 public class ClassService {
+
   private final ClassRepository classRepository;
 
   public Mono<Long> count() {
@@ -60,8 +61,8 @@ public class ClassService {
       .switchIfEmpty(
         Mono.error(new DuplicateClassNameException("Class name already exists"))
       )
-      .flatMap(
-        name -> classRepository.save(ClassEntity.builder().name(name).build())
+      .flatMap(name ->
+        classRepository.save(ClassEntity.builder().name(name).build())
       );
   }
 

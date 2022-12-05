@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @Document
 public class XssTutorialResponse implements Serializable {
+
   private static final long serialVersionUID = 7515754390732953464L;
 
   @NonNull private String result;

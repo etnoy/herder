@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @With
 @Document
 public final class CsrfAttack {
+
   @Id
   private String id;
 

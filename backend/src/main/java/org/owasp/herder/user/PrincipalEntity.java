@@ -38,6 +38,7 @@ import org.owasp.herder.validation.ValidPrincipalId;
 @Builder
 @With
 public final class PrincipalEntity implements Serializable {
+
   private static final long serialVersionUID = 8843939402741609352L;
 
   @NonNull @ValidDisplayName

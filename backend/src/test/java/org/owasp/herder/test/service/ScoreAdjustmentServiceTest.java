@@ -45,6 +45,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ScoreAdjustmentService unit tests")
 class ScoreAdjustmentServiceTest extends BaseTest {
+
   private ScoreAdjustmentService scoreAdjustmentService;
 
   @Mock
@@ -75,9 +76,8 @@ class ScoreAdjustmentServiceTest extends BaseTest {
     final String description = "Bonus";
 
     when(scoreAdjustmentRepository.save(any(ScoreAdjustment.class)))
-      .thenAnswer(
-        scoreAdjustment ->
-          Mono.just(scoreAdjustment.getArgument(0, ScoreAdjustment.class))
+      .thenAnswer(scoreAdjustment ->
+        Mono.just(scoreAdjustment.getArgument(0, ScoreAdjustment.class))
       );
 
     setClock(TestConstants.year2000Clock);
@@ -90,15 +90,13 @@ class ScoreAdjustmentServiceTest extends BaseTest {
           description
         )
       )
-      .assertNext(
-        scoreAdjustment -> {
-          assertThat(scoreAdjustment.getUserIds()).contains(mockUserId);
-          assertThat(scoreAdjustment.getAmount()).isEqualTo(amount);
-          assertThat(scoreAdjustment.getDescription()).isEqualTo(description);
-          assertThat(scoreAdjustment.getTime())
-            .isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
-        }
-      )
+      .assertNext(scoreAdjustment -> {
+        assertThat(scoreAdjustment.getUserIds()).contains(mockUserId);
+        assertThat(scoreAdjustment.getAmount()).isEqualTo(amount);
+        assertThat(scoreAdjustment.getDescription()).isEqualTo(description);
+        assertThat(scoreAdjustment.getTime())
+          .isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
+      })
       .verifyComplete();
   }
 }

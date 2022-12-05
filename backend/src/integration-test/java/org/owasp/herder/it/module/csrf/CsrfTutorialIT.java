@@ -43,6 +43,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("CsrfTutorial integration tests")
 class CsrfTutorialIT extends BaseIT {
+
   CsrfTutorial csrfTutorial;
 
   @Autowired
@@ -77,12 +78,10 @@ class CsrfTutorialIT extends BaseIT {
 
     StepVerifier
       .create(csrfTutorial.attack(userId, "Unknown target ID"))
-      .assertNext(
-        result -> {
-          assertThat(result.getMessage()).isNull();
-          assertThat(result.getError()).isEqualTo("Unknown target ID");
-        }
-      )
+      .assertNext(result -> {
+        assertThat(result.getMessage()).isNull();
+        assertThat(result.getError()).isEqualTo("Unknown target ID");
+      })
       .verifyComplete();
   }
 
@@ -99,12 +98,10 @@ class CsrfTutorialIT extends BaseIT {
 
     StepVerifier
       .create(csrfTutorial.getTutorial(userId1))
-      .assertNext(
-        result -> {
-          assertThat(result.getFlag()).isNotNull();
-          assertThat(result.getError()).isNull();
-        }
-      )
+      .assertNext(result -> {
+        assertThat(result.getFlag()).isNotNull();
+        assertThat(result.getError()).isNull();
+      })
       .verifyComplete();
   }
 
@@ -129,13 +126,10 @@ class CsrfTutorialIT extends BaseIT {
 
     StepVerifier
       .create(csrfTutorial.attack(userId, tutorialResult.getPseudonym()))
-      .assertNext(
-        result -> {
-          assertThat(result.getMessage()).isNull();
-          assertThat(result.getError())
-            .isEqualTo("You cannot activate yourself");
-        }
-      )
+      .assertNext(result -> {
+        assertThat(result.getMessage()).isNull();
+        assertThat(result.getError()).isEqualTo("You cannot activate yourself");
+      })
       .verifyComplete();
   }
 }

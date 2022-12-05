@@ -33,6 +33,7 @@ import org.owasp.herder.crypto.WebTokenKeyManager;
 
 @DisplayName("WebTokenKeyManager unit tests")
 class WebTokenKeyManagerTest {
+
   final String testUserId = "id";
 
   final Key testKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);

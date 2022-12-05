@@ -51,6 +51,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CsrfService unit tests")
 class CsrfServiceTest extends BaseTest {
+
   CsrfService csrfService;
 
   @Mock
@@ -74,11 +75,11 @@ class CsrfServiceTest extends BaseTest {
     final String mockModuleName = "csrf-module";
 
     when(
-        csrfAttackRepository.findByPseudonymAndModuleLocator(
-          mockTarget,
-          mockModuleName
-        )
+      csrfAttackRepository.findByPseudonymAndModuleLocator(
+        mockTarget,
+        mockModuleName
       )
+    )
       .thenReturn(Mono.error(new IOException()));
 
     StepVerifier
@@ -98,11 +99,11 @@ class CsrfServiceTest extends BaseTest {
     final String mockModuleName = "csrf-module";
 
     when(
-        csrfAttackRepository.findByPseudonymAndModuleLocator(
-          mockTarget,
-          mockModuleName
-        )
+      csrfAttackRepository.findByPseudonymAndModuleLocator(
+        mockTarget,
+        mockModuleName
       )
+    )
       .thenReturn(Mono.empty());
 
     StepVerifier
@@ -123,11 +124,11 @@ class CsrfServiceTest extends BaseTest {
     final CsrfAttack mockCsrfAttack = mock(CsrfAttack.class);
 
     when(
-        csrfAttackRepository.findByPseudonymAndModuleLocator(
-          mockTarget,
-          mockModuleName
-        )
+      csrfAttackRepository.findByPseudonymAndModuleLocator(
+        mockTarget,
+        mockModuleName
       )
+    )
       .thenReturn(Mono.just(mockCsrfAttack));
 
     when(mockCsrfAttack.withFinished(LocalDateTime.now(fixedClock)))
@@ -172,11 +173,11 @@ class CsrfServiceTest extends BaseTest {
     final String mockModuleName = "csrf-module";
 
     when(
-        csrfAttackRepository.countByPseudonymAndModuleLocator(
-          mockPseudonym,
-          mockModuleName
-        )
+      csrfAttackRepository.countByPseudonymAndModuleLocator(
+        mockPseudonym,
+        mockModuleName
       )
+    )
       .thenReturn(Mono.just(1L));
 
     StepVerifier
@@ -192,11 +193,11 @@ class CsrfServiceTest extends BaseTest {
     final String mockModuleName = "csrf-module";
 
     when(
-        csrfAttackRepository.countByPseudonymAndModuleLocator(
-          mockPseudonym,
-          mockModuleName
-        )
+      csrfAttackRepository.countByPseudonymAndModuleLocator(
+        mockPseudonym,
+        mockModuleName
       )
+    )
       .thenReturn(Mono.just(0L));
 
     StepVerifier
@@ -213,11 +214,11 @@ class CsrfServiceTest extends BaseTest {
     final CsrfAttack mockCsrfAttack = mock(CsrfAttack.class);
 
     when(
-        csrfAttackRepository.findByPseudonymAndModuleLocator(
-          mockPseudonym,
-          mockModuleName
-        )
+      csrfAttackRepository.findByPseudonymAndModuleLocator(
+        mockPseudonym,
+        mockModuleName
       )
+    )
       .thenReturn(Mono.just(mockCsrfAttack));
 
     when(mockCsrfAttack.getFinished()).thenReturn(null);
@@ -240,11 +241,11 @@ class CsrfServiceTest extends BaseTest {
     final CsrfAttack mockCsrfAttack = mock(CsrfAttack.class);
 
     when(
-        csrfAttackRepository.findByPseudonymAndModuleLocator(
-          mockPseudonym,
-          mockModuleName
-        )
+      csrfAttackRepository.findByPseudonymAndModuleLocator(
+        mockPseudonym,
+        mockModuleName
       )
+    )
       .thenReturn(Mono.just(mockCsrfAttack));
 
     when(mockCsrfAttack.getFinished()).thenReturn(LocalDateTime.MAX);

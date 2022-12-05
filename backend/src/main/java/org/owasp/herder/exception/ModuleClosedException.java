@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
   reason = "Module not open for submissions"
 )
 public class ModuleClosedException extends RuntimeException {
+
   private static final long serialVersionUID = 828102966411821839L;
 
   public ModuleClosedException(final String message) {

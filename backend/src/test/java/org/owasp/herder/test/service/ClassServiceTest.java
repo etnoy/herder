@@ -46,6 +46,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ClassService unit tests")
 class ClassServiceTest extends BaseTest {
+
   private ClassService classService;
 
   @Mock
@@ -116,19 +117,16 @@ class ClassServiceTest extends BaseTest {
     when(classRepository.findByName(mockClassName)).thenReturn(Mono.empty());
 
     when(classRepository.save(any(ClassEntity.class)))
-      .thenAnswer(
-        user ->
-          Mono.just(user.getArgument(0, ClassEntity.class).withId(mockClassId))
+      .thenAnswer(user ->
+        Mono.just(user.getArgument(0, ClassEntity.class).withId(mockClassId))
       );
 
     StepVerifier
       .create(classService.create(mockClassName))
-      .assertNext(
-        createdClass -> {
-          assertThat(createdClass).isInstanceOf(ClassEntity.class);
-          assertThat(createdClass.getName()).isEqualTo(mockClassName);
-        }
-      )
+      .assertNext(createdClass -> {
+        assertThat(createdClass).isInstanceOf(ClassEntity.class);
+        assertThat(createdClass.getName()).isEqualTo(mockClassName);
+      })
       .verifyComplete();
 
     verify(classRepository, times(1)).findByName(mockClassName);
@@ -181,11 +179,9 @@ class ClassServiceTest extends BaseTest {
 
     StepVerifier
       .create(classService.getById(mockClassId))
-      .assertNext(
-        classEntity -> {
-          assertThat(classEntity.getName()).isEqualTo(mockName);
-        }
-      )
+      .assertNext(classEntity -> {
+        assertThat(classEntity.getName()).isEqualTo(mockName);
+      })
       .verifyComplete();
 
     verify(classRepository, times(1)).findById(mockClassId);
@@ -253,11 +249,9 @@ class ClassServiceTest extends BaseTest {
 
     StepVerifier
       .create(classService.setName(mockClassId, newName))
-      .assertNext(
-        classEntity -> {
-          assertThat(classEntity.getName()).isEqualTo(newName);
-        }
-      )
+      .assertNext(classEntity -> {
+        assertThat(classEntity.getName()).isEqualTo(newName);
+      })
       .verifyComplete();
 
     verify(classRepository, times(1)).findById(mockClassId);

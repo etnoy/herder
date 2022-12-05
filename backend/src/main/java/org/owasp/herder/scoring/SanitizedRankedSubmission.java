@@ -35,6 +35,7 @@ import lombok.With;
 @AllArgsConstructor
 @With
 public class SanitizedRankedSubmission implements Serializable {
+
   private static final long serialVersionUID = 1059641731788037532L;
 
   @NonNull String id;

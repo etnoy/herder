@@ -35,6 +35,7 @@ import reactor.test.StepVerifier;
 
 @DisplayName("Scoreboard API integration tests")
 class ScoreboardApiIT extends BaseIT {
+
   @Autowired
   WebTestClient webTestClient;
 

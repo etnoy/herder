@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @NoArgsConstructor
 @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Module not found")
 public class ModuleNotFoundException extends RuntimeException {
+
   private static final long serialVersionUID = -2976620163436522813L;
 
   public ModuleNotFoundException(final String message) {

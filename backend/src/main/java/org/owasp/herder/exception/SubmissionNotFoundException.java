@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @NoArgsConstructor
 @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "User not found")
 public class SubmissionNotFoundException extends RuntimeException {
+
   private static final long serialVersionUID = 1142246154205845718L;
 
   public SubmissionNotFoundException(final String message) {

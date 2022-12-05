@@ -52,6 +52,7 @@ import org.owasp.herder.module.xss.XssWebClientFactory;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("XssService unit tests")
 class XssServiceTest {
+
   XssService xssService;
 
   @Mock

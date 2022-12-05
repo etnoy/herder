@@ -55,6 +55,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WebTokenService unit tests")
 class WebTokenServiceTest {
+
   final Key testKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
   private WebTokenService webTokenService;
@@ -85,11 +86,9 @@ class WebTokenServiceTest {
       .setSigningKey(testKey)
       .build();
 
-    assertThatThrownBy(
-        () -> {
-          jwtParser.parseClaimsJws(token);
-        }
-      )
+    assertThatThrownBy(() -> {
+        jwtParser.parseClaimsJws(token);
+      })
       .isInstanceOf(JwtException.class)
       .hasMessageContaining(
         "JWT expired at 2000-01-01T10:15:00Z. Current time: 2100-01-01T10:00:00Z"
@@ -200,11 +199,9 @@ class WebTokenServiceTest {
       .signWith(Keys.secretKeyFor(SignatureAlgorithm.HS512))
       .compact();
 
-    assertThatThrownBy(
-        () -> {
-          webTokenService.parseToken(testToken);
-        }
-      )
+    assertThatThrownBy(() -> {
+        webTokenService.parseToken(testToken);
+      })
       .isInstanceOf(BadCredentialsException.class)
       .hasMessage("Invalid token");
   }
@@ -221,11 +218,9 @@ class WebTokenServiceTest {
       .signWith(Keys.secretKeyFor(SignatureAlgorithm.HS512))
       .compact();
 
-    assertThatThrownBy(
-        () -> {
-          webTokenService.parseToken(testToken);
-        }
-      )
+    assertThatThrownBy(() -> {
+        webTokenService.parseToken(testToken);
+      })
       .isInstanceOf(BadCredentialsException.class)
       .hasMessage("Invalid token");
   }
@@ -235,8 +230,8 @@ class WebTokenServiceTest {
     final Key userKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
     when(
-        webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())
-      )
+      webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())
+    )
       .thenThrow(
         new SignatureException("Signing key is not registred for the subject")
       );
@@ -251,11 +246,9 @@ class WebTokenServiceTest {
       .signWith(userKey)
       .compact();
 
-    assertThatThrownBy(
-        () -> {
-          webTokenService.parseToken(testToken);
-        }
-      )
+    assertThatThrownBy(() -> {
+        webTokenService.parseToken(testToken);
+      })
       .isInstanceOf(BadCredentialsException.class)
       .hasMessage("Invalid token");
   }
@@ -277,11 +270,9 @@ class WebTokenServiceTest {
       .signWith(userKey)
       .compact();
 
-    assertThatThrownBy(
-        () -> {
-          webTokenService.parseToken(testToken);
-        }
-      )
+    assertThatThrownBy(() -> {
+        webTokenService.parseToken(testToken);
+      })
       .isInstanceOf(BadCredentialsException.class)
       .hasMessage("Invalid token");
   }
@@ -289,8 +280,8 @@ class WebTokenServiceTest {
   @Test
   void parseToken_ValidAdminRoleToken_ReturnsAdminAuthority() {
     when(
-        webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())
-      )
+      webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())
+    )
       .thenReturn(testKey);
 
     final String testToken = Jwts
@@ -313,24 +304,24 @@ class WebTokenServiceTest {
       .isEqualTo(TestConstants.TEST_USER_ID);
     assertThat(authentication.getCredentials()).isEqualTo(testToken);
     assertThat(
-        authentication
-          .getAuthorities()
-          .contains(new SimpleGrantedAuthority("ROLE_USER"))
-      )
+      authentication
+        .getAuthorities()
+        .contains(new SimpleGrantedAuthority("ROLE_USER"))
+    )
       .isTrue();
     assertThat(
-        authentication
-          .getAuthorities()
-          .contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
-      )
+      authentication
+        .getAuthorities()
+        .contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
+    )
       .isTrue();
   }
 
   @Test
   void parseToken_ValidUserRoleToken_ReturnsUserAuthority() {
     when(
-        webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())
-      )
+      webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())
+    )
       .thenReturn(testKey);
 
     final String testToken = Jwts
@@ -353,10 +344,10 @@ class WebTokenServiceTest {
       .isEqualTo(TestConstants.TEST_USER_ID);
     assertThat(authentication.getCredentials()).isEqualTo(testToken);
     assertThat(
-        authentication
-          .getAuthorities()
-          .contains(new SimpleGrantedAuthority("ROLE_USER"))
-      )
+      authentication
+        .getAuthorities()
+        .contains(new SimpleGrantedAuthority("ROLE_USER"))
+    )
       .isTrue();
   }
 
@@ -378,8 +369,8 @@ class WebTokenServiceTest {
   @Test
   void parseToken_InvalidRole_ThrowsBadCredentialsException() {
     when(
-        webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())
-      )
+      webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())
+    )
       .thenReturn(testKey);
 
     final String testToken = Jwts
@@ -394,11 +385,9 @@ class WebTokenServiceTest {
 
     setClock(TestConstants.year2000Clock);
 
-    assertThatThrownBy(
-        () -> {
-          webTokenService.parseToken(testToken);
-        }
-      )
+    assertThatThrownBy(() -> {
+        webTokenService.parseToken(testToken);
+      })
       .isInstanceOf(BadCredentialsException.class)
       .hasMessage("Invalid role in token");
   }
@@ -410,8 +399,8 @@ class WebTokenServiceTest {
   @Test
   void parseToken_InvalidIssuer_ThrowsBadCredentialsException() {
     when(
-        webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())
-      )
+      webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())
+    )
       .thenReturn(testKey);
     setClock(TestConstants.year2000Clock);
     final String testToken = Jwts
@@ -424,11 +413,9 @@ class WebTokenServiceTest {
       .signWith(testKey)
       .compact();
 
-    assertThatThrownBy(
-        () -> {
-          webTokenService.parseToken(testToken);
-        }
-      )
+    assertThatThrownBy(() -> {
+        webTokenService.parseToken(testToken);
+      })
       .isInstanceOf(BadCredentialsException.class)
       .hasMessage("Invalid token");
   }

@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Service
 public final class CryptoService {
+
   private final CryptoFactory cryptoFactory;
 
   // TODO: validation

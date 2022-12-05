@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder(builderClassName = "ClassBuilder")
 @With
 public class ClassEntity implements Serializable {
+
   private static final long serialVersionUID = 7375094814834027958L;
 
   @Id
