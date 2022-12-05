@@ -53,7 +53,9 @@ public class ModuleService {
   private final ModuleListRepository moduleListRepository;
 
   public Mono<ModuleEntity> close(@ValidModuleId final String moduleId) {
-    return getById(moduleId).map(module -> module.withOpen(false)).flatMap(moduleRepository::save);
+    return getById(moduleId)
+      .map(module -> module.withOpen(false))
+      .flatMap(moduleRepository::save);
   }
 
   public Mono<Long> count() {
@@ -61,42 +63,57 @@ public class ModuleService {
   }
 
   public Mono<String> create(
-      @ValidModuleName final String moduleName, @ValidModuleLocator final String moduleLocator) {
-    log.info("Creating new module " + moduleName + " with locator " + moduleLocator);
+    @ValidModuleName final String moduleName,
+    @ValidModuleLocator final String moduleLocator
+  ) {
+    log.info(
+      "Creating new module " + moduleName + " with locator " + moduleLocator
+    );
 
-    return Mono.just(moduleLocator)
-        // Check if locator already exists
-        .filterWhen(this::doesNotExistByLocator)
-        .switchIfEmpty(
-            // Locator already exists, return error
-            Mono.error(
-                new DuplicateModuleLocatorException(
-                    String.format("Module locator %s already exists", moduleLocator))))
-        .map(exists -> moduleName)
-        // Check if name already exists
-        .filterWhen(this::doesNotExistByName)
-        .switchIfEmpty(
-            // Name exists, return error
-            Mono.error(
-                new DuplicateModuleNameException(
-                    String.format("Module name %s already exists", moduleName))))
-        .map(
-            // Name and locator don't exist already, create new module
-            exists ->
-                ModuleEntity.builder()
-                    .isOpen(true)
-                    .locator(moduleLocator)
-                    .name(moduleName)
-                    // Generate the secret key
-                    .key(keyService.generateRandomBytes(16))
-                    .build())
-        // Persist the module in the database
-        .flatMap(moduleRepository::save)
-        // Return the created module id
-        .map(ModuleEntity::getId);
+    return Mono
+      .just(moduleLocator)
+      // Check if locator already exists
+      .filterWhen(this::doesNotExistByLocator)
+      .switchIfEmpty(
+        // Locator already exists, return error
+        Mono.error(
+          new DuplicateModuleLocatorException(
+            String.format("Module locator %s already exists", moduleLocator)
+          )
+        )
+      )
+      .map(exists -> moduleName)
+      // Check if name already exists
+      .filterWhen(this::doesNotExistByName)
+      .switchIfEmpty(
+        // Name exists, return error
+        Mono.error(
+          new DuplicateModuleNameException(
+            String.format("Module name %s already exists", moduleName)
+          )
+        )
+      )
+      .map(
+        // Name and locator don't exist already, create new module
+        exists ->
+          ModuleEntity
+            .builder()
+            .isOpen(true)
+            .locator(moduleLocator)
+            .name(moduleName)
+            // Generate the secret key
+            .key(keyService.generateRandomBytes(16))
+            .build()
+      )
+      // Persist the module in the database
+      .flatMap(moduleRepository::save)
+      // Return the created module id
+      .map(ModuleEntity::getId);
   }
 
-  private Mono<Boolean> doesNotExistByLocator(@ValidModuleLocator final String moduleLocator) {
+  private Mono<Boolean> doesNotExistByLocator(
+    @ValidModuleLocator final String moduleLocator
+  ) {
     return findByLocator(moduleLocator).map(u -> false).defaultIfEmpty(true);
   }
 
@@ -104,7 +121,9 @@ public class ModuleService {
     return findByName(moduleName).map(u -> false).defaultIfEmpty(true);
   }
 
-  public Mono<Boolean> existsByLocator(@ValidModuleLocator final String moduleLocator) {
+  public Mono<Boolean> existsByLocator(
+    @ValidModuleLocator final String moduleLocator
+  ) {
     return findByLocator(moduleLocator).map(u -> true).defaultIfEmpty(false);
   }
 
@@ -135,7 +154,9 @@ public class ModuleService {
     return moduleRepository.findById(moduleId);
   }
 
-  public Mono<ModuleEntity> findByLocator(@ValidModuleLocator final String moduleLocator) {
+  public Mono<ModuleEntity> findByLocator(
+    @ValidModuleLocator final String moduleLocator
+  ) {
     return moduleRepository.findByLocator(moduleLocator);
   }
 
@@ -144,15 +165,21 @@ public class ModuleService {
   }
 
   public Mono<ModuleListItem> findListItemByLocator(
-      @ValidUserId final String userId, @ValidModuleLocator final String moduleLocator) {
+    @ValidUserId final String userId,
+    @ValidModuleLocator final String moduleLocator
+  ) {
     return moduleListRepository.findListItemByLocator(userId, moduleLocator);
   }
 
-  public Mono<ModuleList> findModuleListByTeamId(@ValidTeamId final String teamId) {
+  public Mono<ModuleList> findModuleListByTeamId(
+    @ValidTeamId final String teamId
+  ) {
     return moduleListRepository.findByTeamId(teamId);
   }
 
-  public Mono<ModuleList> findModuleListByUserId(@ValidUserId final String userId) {
+  public Mono<ModuleList> findModuleListByUserId(
+    @ValidUserId final String userId
+  ) {
     return moduleListRepository.findById(userId);
   }
 
@@ -165,56 +192,74 @@ public class ModuleService {
    */
   public Mono<ModuleEntity> getById(@ValidModuleId final String moduleId) {
     return moduleRepository
-        .findById(moduleId)
-        .switchIfEmpty(
-            Mono.error(new ModuleNotFoundException("Module id " + moduleId + " not found")));
+      .findById(moduleId)
+      .switchIfEmpty(
+        Mono.error(
+          new ModuleNotFoundException("Module id " + moduleId + " not found")
+        )
+      );
   }
 
   public Mono<ModuleEntity> open(@ValidModuleId final String moduleId) {
-    return getById(moduleId).map(module -> module.withOpen(true)).flatMap(moduleRepository::save);
+    return getById(moduleId)
+      .map(module -> module.withOpen(true))
+      .flatMap(moduleRepository::save);
   }
 
-  public Mono<Void> setBaseScore(@ValidModuleId final String moduleId, final int baseScore) {
+  public Mono<Void> setBaseScore(
+    @ValidModuleId final String moduleId,
+    final int baseScore
+  ) {
     // TODO: validation of score
     return getById(moduleId)
-        .map(module -> module.withBaseScore(baseScore))
-        .flatMap(moduleRepository::save)
-        .then();
+      .map(module -> module.withBaseScore(baseScore))
+      .flatMap(moduleRepository::save)
+      .then();
   }
 
   public Mono<Void> setBonusScores(
-      @ValidModuleId final String moduleId, final ArrayList<Integer> scores) {
+    @ValidModuleId final String moduleId,
+    final ArrayList<Integer> scores
+  ) {
     // TODO: validation of scores
     return getById(moduleId)
-        .map(module -> module.withBonusScores(scores))
-        .flatMap(moduleRepository::save)
-        .then();
+      .map(module -> module.withBonusScores(scores))
+      .flatMap(moduleRepository::save)
+      .then();
   }
 
-  public Mono<ModuleEntity> setDynamicFlag(@ValidModuleId final String moduleId) {
+  public Mono<ModuleEntity> setDynamicFlag(
+    @ValidModuleId final String moduleId
+  ) {
     return getById(moduleId)
-        .map(module -> module.withFlagStatic(false))
-        .flatMap(moduleRepository::save);
+      .map(module -> module.withFlagStatic(false))
+      .flatMap(moduleRepository::save);
   }
 
   public Mono<Void> setModuleLocator(
-      @ValidModuleId final String moduleId, @ValidModuleName final String locator) {
+    @ValidModuleId final String moduleId,
+    @ValidModuleName final String locator
+  ) {
     return getById(moduleId)
-        .map(module -> module.withLocator(locator))
-        .flatMap(moduleRepository::save)
-        .then();
+      .map(module -> module.withLocator(locator))
+      .flatMap(moduleRepository::save)
+      .then();
   }
 
   public Mono<Void> setModuleName(
-      @ValidModuleId final String moduleId, @ValidModuleName final String name) {
+    @ValidModuleId final String moduleId,
+    @ValidModuleName final String name
+  ) {
     return getById(moduleId)
-        .map(module -> module.withName(name))
-        .flatMap(moduleRepository::save)
-        .then();
+      .map(module -> module.withName(name))
+      .flatMap(moduleRepository::save)
+      .then();
   }
 
   public Mono<ModuleEntity> setStaticFlag(
-      @ValidModuleId final String moduleId, final String staticFlag) {
+    @ValidModuleId final String moduleId,
+    final String staticFlag
+  ) {
     // TODO: validate flag argument
     if (staticFlag == null) {
       return Mono.error(new NullPointerException("Flag cannot be null"));
@@ -223,15 +268,17 @@ public class ModuleService {
     }
 
     return getById(moduleId)
-        .map(module -> module.withFlagStatic(true).withStaticFlag(staticFlag))
-        .flatMap(moduleRepository::save);
+      .map(module -> module.withFlagStatic(true).withStaticFlag(staticFlag))
+      .flatMap(moduleRepository::save);
   }
 
   public Mono<Void> setTags(
-      @ValidModuleId final String moduleId, final Multimap<String, String> tags) {
+    @ValidModuleId final String moduleId,
+    final Multimap<String, String> tags
+  ) {
     return getById(moduleId)
-        .map(module -> module.withTags(tags))
-        .flatMap(moduleRepository::save)
-        .then();
+      .map(module -> module.withTags(tags))
+      .flatMap(moduleRepository::save)
+      .then();
   }
 }

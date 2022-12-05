@@ -159,8 +159,6 @@ sonarqube {
 }
 
 spotless {
-  ratchetFrom 'origin/master' // only format files which have changed since origin/main
-
   format 'misc', {
         target '**/.gitignore', '**/*.gradle', '**/*.md', '**/*.sh'
     trimTrailingWhitespace()

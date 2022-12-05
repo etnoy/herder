@@ -26,6 +26,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface TeamRepository extends ReactiveMongoRepository<TeamEntity, String> {
+public interface TeamRepository
+  extends ReactiveMongoRepository<TeamEntity, String> {
   public Mono<TeamEntity> findByDisplayName(final String displayName);
 }

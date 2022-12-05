@@ -40,34 +40,40 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlagTutorial unit tests")
 class FlagTutorialTest extends BaseTest {
+  private String moduleLocator;
 
-    private String moduleLocator;
+  FlagTutorial flagTutorial;
 
-    FlagTutorial flagTutorial;
+  @Mock
+  ModuleService moduleService;
 
-    @Mock ModuleService moduleService;
+  @Mock
+  ScoreboardService scoreboardService;
 
-    @Mock ScoreboardService scoreboardService;
+  @Mock
+  FlagHandler flagHandler;
 
-    @Mock FlagHandler flagHandler;
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
 
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
+    flagTutorial = new FlagTutorial(flagHandler);
 
-        flagTutorial = new FlagTutorial(flagHandler);
+    moduleLocator = flagTutorial.getLocator();
+  }
 
-        moduleLocator = flagTutorial.getLocator();
-    }
+  @Test
+  @DisplayName("getFlag can return flag")
+  void getFlag_ValidData_ReturnsFlag() {
+    final String testUserId = "id";
+    final String flag = "flag";
 
-    @Test
-    @DisplayName("getFlag can return flag")
-    void getFlag_ValidData_ReturnsFlag() {
-        final String testUserId = "id";
-        final String flag = "flag";
+    when(flagHandler.getDynamicFlag(testUserId, moduleLocator))
+      .thenReturn(Mono.just(flag));
 
-        when(flagHandler.getDynamicFlag(testUserId, moduleLocator)).thenReturn(Mono.just(flag));
-
-        StepVerifier.create(flagTutorial.getFlag(testUserId)).expectNext(flag).verifyComplete();
-    }
+    StepVerifier
+      .create(flagTutorial.getFlag(testUserId))
+      .expectNext(flag)
+      .verifyComplete();
+  }
 }

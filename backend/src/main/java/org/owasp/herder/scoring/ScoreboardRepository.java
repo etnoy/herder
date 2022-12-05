@@ -25,4 +25,5 @@ import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ScoreboardRepository extends ReactiveMongoRepository<ScoreboardEntry, String> {}
+public interface ScoreboardRepository
+  extends ReactiveMongoRepository<ScoreboardEntry, String> {}

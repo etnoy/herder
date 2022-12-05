@@ -47,19 +47,18 @@ import reactor.core.publisher.Mono;
 @Score(baseScore = 100, goldBonus = 50, silverBonus = 20, bronzeBonus = 10)
 @Tag(key = "topic", value = "sql-injection")
 public class SqlInjectionTutorial implements BaseModule {
-
   private final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
 
   private final KeyService keyService;
 
   private final FlagHandler flagHandler;
 
-  public static final BiFunction<Row, RowMetadata, SqlInjectionTutorialRow> MAPPING_FUNCTION =
-      (row, rowMetaData) ->
-          SqlInjectionTutorialRow.builder()
-              .name(row.get("name", String.class))
-              .comment(row.get("comment", String.class))
-              .build();
+  public static final BiFunction<Row, RowMetadata, SqlInjectionTutorialRow> MAPPING_FUNCTION = (row, rowMetaData) ->
+    SqlInjectionTutorialRow
+      .builder()
+      .name(row.get("name", String.class))
+      .comment(row.get("comment", String.class))
+      .build();
 
   /**
    * Execute a given SQL injection query
@@ -69,67 +68,80 @@ public class SqlInjectionTutorial implements BaseModule {
    * @return the result of the query
    */
   public Flux<SqlInjectionTutorialRow> submitQuery(
-      final String userId, final String injectionQuery) {
-
+    final String userId,
+    final String injectionQuery
+  ) {
     // Each module and user has a unique in-memory database
     final String dbName = String.format("%s-uid-%s", getName(), userId);
 
-    final DatabaseClient databaseClient = sqlInjectionDatabaseClientFactory.create(dbName);
+    final DatabaseClient databaseClient = sqlInjectionDatabaseClientFactory.create(
+      dbName
+    );
 
     // A randomly chosen "username" that contains the flag
-    final String hiddenName =
-        Base64.getEncoder().encodeToString(keyService.generateRandomBytes(16));
+    final String hiddenName = Base64
+      .getEncoder()
+      .encodeToString(keyService.generateRandomBytes(16));
 
     // Create the SQL query used to populate the database
     final Mono<String> populationQuery =
-        // Compute the flag to be hidden in the database
-        flagHandler
-            .getDynamicFlag(userId, getLocator())
-            .map(
-                flag ->
-                    String.format(
-                        "DROP ALL OBJECTS;" // Clear the database
-                            + "CREATE SCHEMA sqlinjection;"
-                            // Hidden credits are always fun
-                            + "CREATE TABLE sqlinjection.users (name VARCHAR(255) PRIMARY KEY, comment VARCHAR(255));"
-                            + "INSERT INTO sqlinjection.users values ('Jonathan Jogenfors', 'System Author');"
-                            + "INSERT INTO sqlinjection.users values ('Niklas Johansson', 'Teacher');"
-                            + "INSERT INTO sqlinjection.users values ('Jan-Åke Larsson', 'Professor');"
-                            + "INSERT INTO sqlinjection.users values ('Guilherme B. Xavier','Examiner');"
-                            // This is the row that contains the flag!
-                            + "INSERT INTO sqlinjection.users values ('%s', 'Well done, flag is %s');",
-                        hiddenName, flag));
+      // Compute the flag to be hidden in the database
+      flagHandler
+        .getDynamicFlag(userId, getLocator())
+        .map(
+          flag ->
+            String.format(
+              "DROP ALL OBJECTS;" + // Clear the database
+              "CREATE SCHEMA sqlinjection;" +
+              // Hidden credits are always fun
+              "CREATE TABLE sqlinjection.users (name VARCHAR(255) PRIMARY KEY, comment VARCHAR(255));" +
+              "INSERT INTO sqlinjection.users values ('Jonathan Jogenfors', 'System Author');" +
+              "INSERT INTO sqlinjection.users values ('Niklas Johansson', 'Teacher');" +
+              "INSERT INTO sqlinjection.users values ('Jan-Åke Larsson', 'Professor');" +
+              "INSERT INTO sqlinjection.users values ('Guilherme B. Xavier','Examiner');" +
+              // This is the row that contains the flag!
+              "INSERT INTO sqlinjection.users values ('%s', 'Well done, flag is %s');",
+              hiddenName,
+              flag
+            )
+        );
 
     // The query to be executed on the database. Note: if a vulnerability scanner has
     // issues with this line, please ignore. This is *supposed* to be vulnerable, it's a CTF after
     // all!
-    final String vulnerableQuery =
-        String.format("SELECT * FROM sqlinjection.users WHERE name = '%s'", injectionQuery);
+    final String vulnerableQuery = String.format(
+      "SELECT * FROM sqlinjection.users WHERE name = '%s'",
+      injectionQuery
+    );
 
-    return
-    // Take the SQL query for initial population
+    return // Take the SQL query for initial population
     populationQuery
-        // Execute it on the in-memory database
-        .flatMap(query -> databaseClient.sql(query).then())
-        // Then execute the SQL injection and fetch the results
-        .thenMany(databaseClient.sql(vulnerableQuery).map(MAPPING_FUNCTION).all())
-        // Some errors are to be shown to the end user, while all the rest are handled as usual
-        .onErrorResume(
-            exception -> {
-              // We want to forward database syntax errors and integrity violation errors to the
-              // user
-              if ((exception instanceof BadSqlGrammarException)
-                  || (exception instanceof DataIntegrityViolationException)
-                  || (exception instanceof UncategorizedR2dbcException)) {
-                return Flux.just(
-                    // Build a row with only the error field filled in
-                    SqlInjectionTutorialRow.builder()
-                        .error(exception.getCause().getCause().getMessage())
-                        .build());
-              } else {
-                // All other errors are handled in the usual way
-                return Flux.error(exception);
-              }
-            });
+      // Execute it on the in-memory database
+      .flatMap(query -> databaseClient.sql(query).then())
+      // Then execute the SQL injection and fetch the results
+      .thenMany(databaseClient.sql(vulnerableQuery).map(MAPPING_FUNCTION).all())
+      // Some errors are to be shown to the end user, while all the rest are handled as usual
+      .onErrorResume(
+        exception -> {
+          // We want to forward database syntax errors and integrity violation errors to the
+          // user
+          if (
+            (exception instanceof BadSqlGrammarException) ||
+            (exception instanceof DataIntegrityViolationException) ||
+            (exception instanceof UncategorizedR2dbcException)
+          ) {
+            return Flux.just(
+              // Build a row with only the error field filled in
+              SqlInjectionTutorialRow
+                .builder()
+                .error(exception.getCause().getCause().getMessage())
+                .build()
+            );
+          } else {
+            // All other errors are handled in the usual way
+            return Flux.error(exception);
+          }
+        }
+      );
   }
 }

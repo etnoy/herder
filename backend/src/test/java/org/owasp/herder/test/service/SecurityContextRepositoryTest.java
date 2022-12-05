@@ -48,90 +48,116 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SecurityContextRepository unit tests")
 class SecurityContextRepositoryTest extends BaseTest {
+  private SecurityContextRepository securityContextRepository;
 
-    private SecurityContextRepository securityContextRepository;
+  @Mock
+  AuthenticationManager authenticationManager;
 
-    @Mock AuthenticationManager authenticationManager;
+  @Test
+  void load_InvalidHeader_ReturnsSecurityContext() {
+    final ServerWebExchange mockServerWebExchange = mock(
+      ServerWebExchange.class
+    );
+    final String token = "authToken";
+    final ServerHttpRequest mockServerHttpRequest = mock(
+      ServerHttpRequest.class
+    );
+    when(mockServerWebExchange.getRequest()).thenReturn(mockServerHttpRequest);
+    final HttpHeaders mockHttpHeaders = mock(HttpHeaders.class);
+    when(mockServerHttpRequest.getHeaders()).thenReturn(mockHttpHeaders);
+    final String mockAuthorizationHeader = "Hello World" + token;
+    when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION))
+      .thenReturn(mockAuthorizationHeader);
+    StepVerifier
+      .create(
+        securityContextRepository
+          .load(mockServerWebExchange)
+          .map(SecurityContext::getAuthentication)
+      )
+      .verifyComplete();
+  }
 
-    @Test
-    void load_InvalidHeader_ReturnsSecurityContext() {
-        final ServerWebExchange mockServerWebExchange = mock(ServerWebExchange.class);
-        final String token = "authToken";
-        final ServerHttpRequest mockServerHttpRequest = mock(ServerHttpRequest.class);
-        when(mockServerWebExchange.getRequest()).thenReturn(mockServerHttpRequest);
-        final HttpHeaders mockHttpHeaders = mock(HttpHeaders.class);
-        when(mockServerHttpRequest.getHeaders()).thenReturn(mockHttpHeaders);
-        final String mockAuthorizationHeader = "Hello World" + token;
-        when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION))
-                .thenReturn(mockAuthorizationHeader);
-        StepVerifier.create(
-                        securityContextRepository
-                                .load(mockServerWebExchange)
-                                .map(SecurityContext::getAuthentication))
-                .verifyComplete();
-    }
+  @Test
+  void load_NullHeader_ReturnsSecurityContext() {
+    final ServerWebExchange mockServerWebExchange = mock(
+      ServerWebExchange.class
+    );
 
-    @Test
-    void load_NullHeader_ReturnsSecurityContext() {
-        final ServerWebExchange mockServerWebExchange = mock(ServerWebExchange.class);
+    final ServerHttpRequest mockServerHttpRequest = mock(
+      ServerHttpRequest.class
+    );
+    when(mockServerWebExchange.getRequest()).thenReturn(mockServerHttpRequest);
+    final HttpHeaders mockHttpHeaders = mock(HttpHeaders.class);
+    when(mockServerHttpRequest.getHeaders()).thenReturn(mockHttpHeaders);
+    when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION)).thenReturn(null);
 
-        final ServerHttpRequest mockServerHttpRequest = mock(ServerHttpRequest.class);
-        when(mockServerWebExchange.getRequest()).thenReturn(mockServerHttpRequest);
-        final HttpHeaders mockHttpHeaders = mock(HttpHeaders.class);
-        when(mockServerHttpRequest.getHeaders()).thenReturn(mockHttpHeaders);
-        when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION)).thenReturn(null);
+    StepVerifier
+      .create(
+        securityContextRepository
+          .load(mockServerWebExchange)
+          .map(SecurityContext::getAuthentication)
+      )
+      .verifyComplete();
+  }
 
-        StepVerifier.create(
-                        securityContextRepository
-                                .load(mockServerWebExchange)
-                                .map(SecurityContext::getAuthentication))
-                .verifyComplete();
-    }
+  @Test
+  void load_ValidHeader_ReturnsSecurityContext() {
+    final Long mockUserId = 581L;
+    final ServerWebExchange mockServerWebExchange = mock(
+      ServerWebExchange.class
+    );
 
-    @Test
-    void load_ValidHeader_ReturnsSecurityContext() {
-        final Long mockUserId = 581L;
-        final ServerWebExchange mockServerWebExchange = mock(ServerWebExchange.class);
+    final String token = "authToken";
 
-        final String token = "authToken";
+    final ServerHttpRequest mockServerHttpRequest = mock(
+      ServerHttpRequest.class
+    );
+    when(mockServerWebExchange.getRequest()).thenReturn(mockServerHttpRequest);
+    final HttpHeaders mockHttpHeaders = mock(HttpHeaders.class);
+    when(mockServerHttpRequest.getHeaders()).thenReturn(mockHttpHeaders);
+    final String mockAuthorizationHeader = "Bearer " + token;
+    when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION))
+      .thenReturn(mockAuthorizationHeader);
 
-        final ServerHttpRequest mockServerHttpRequest = mock(ServerHttpRequest.class);
-        when(mockServerWebExchange.getRequest()).thenReturn(mockServerHttpRequest);
-        final HttpHeaders mockHttpHeaders = mock(HttpHeaders.class);
-        when(mockServerHttpRequest.getHeaders()).thenReturn(mockHttpHeaders);
-        final String mockAuthorizationHeader = "Bearer " + token;
-        when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION))
-                .thenReturn(mockAuthorizationHeader);
+    final List<SimpleGrantedAuthority> mockAuthorities = Arrays.asList(
+      new SimpleGrantedAuthority[] { new SimpleGrantedAuthority("ROLE_USER") }
+    );
 
-        final List<SimpleGrantedAuthority> mockAuthorities =
-                Arrays.asList(
-                        new SimpleGrantedAuthority[] {new SimpleGrantedAuthority("ROLE_USER")});
+    final Authentication mockAuthentication = new UsernamePasswordAuthenticationToken(
+      mockUserId,
+      token,
+      mockAuthorities
+    );
 
-        final Authentication mockAuthentication =
-                new UsernamePasswordAuthenticationToken(mockUserId, token, mockAuthorities);
+    when(
+        authenticationManager.authenticate(
+          new UsernamePasswordAuthenticationToken(null, token)
+        )
+      )
+      .thenReturn(Mono.just(mockAuthentication));
 
-        when(authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(null, token)))
-                .thenReturn(Mono.just(mockAuthentication));
+    StepVerifier
+      .create(
+        securityContextRepository
+          .load(mockServerWebExchange)
+          .map(SecurityContext::getAuthentication)
+      )
+      .expectNext(mockAuthentication)
+      .verifyComplete();
+  }
 
-        StepVerifier.create(
-                        securityContextRepository
-                                .load(mockServerWebExchange)
-                                .map(SecurityContext::getAuthentication))
-                .expectNext(mockAuthentication)
-                .verifyComplete();
-    }
+  @Test
+  void save_NotImplemented() {
+    StepVerifier
+      .create(securityContextRepository.save(null, null))
+      .expectError(UnsupportedOperationException.class)
+      .verify();
+  }
 
-    @Test
-    void save_NotImplemented() {
-        StepVerifier.create(securityContextRepository.save(null, null))
-                .expectError(UnsupportedOperationException.class)
-                .verify();
-    }
-
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
-        securityContextRepository = new SecurityContextRepository(authenticationManager);
-    }
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
+    securityContextRepository =
+      new SecurityContextRepository(authenticationManager);
+  }
 }

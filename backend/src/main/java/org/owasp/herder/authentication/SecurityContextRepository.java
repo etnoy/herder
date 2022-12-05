@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.authentication;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,36 +32,48 @@ import org.springframework.security.web.server.context.ServerSecurityContextRepo
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
-
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-public class SecurityContextRepository implements ServerSecurityContextRepository {
+public class SecurityContextRepository
+  implements ServerSecurityContextRepository {
   private final AuthenticationManager authenticationManager;
 
   @Override
   public Mono<SecurityContext> load(ServerWebExchange serverWebExchange) {
-    String authorizationHeader =
-        serverWebExchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+    String authorizationHeader = serverWebExchange
+      .getRequest()
+      .getHeaders()
+      .getFirst(HttpHeaders.AUTHORIZATION);
 
-    if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-      return Mono.just(authorizationHeader.substring(7))
-          .map(token -> new UsernamePasswordAuthenticationToken(null, token))
-          .flatMap(authenticationManager::authenticate)
-          .onErrorMap(
-              AuthenticationException.class::isInstance,
-              autEx ->
-                  new ResponseStatusException(HttpStatus.UNAUTHORIZED, autEx.getMessage(), autEx))
-          .map(SecurityContextImpl::new);
+    if (
+      authorizationHeader != null && authorizationHeader.startsWith("Bearer ")
+    ) {
+      return Mono
+        .just(authorizationHeader.substring(7))
+        .map(token -> new UsernamePasswordAuthenticationToken(null, token))
+        .flatMap(authenticationManager::authenticate)
+        .onErrorMap(
+          AuthenticationException.class::isInstance,
+          autEx ->
+            new ResponseStatusException(
+              HttpStatus.UNAUTHORIZED,
+              autEx.getMessage(),
+              autEx
+            )
+        )
+        .map(SecurityContextImpl::new);
     } else {
       return Mono.empty();
     }
   }
 
   @Override
-  public Mono<Void> save(ServerWebExchange serverWebExchange, SecurityContext securityContext) {
+  public Mono<Void> save(
+    ServerWebExchange serverWebExchange,
+    SecurityContext securityContext
+  ) {
     return Mono.error(new UnsupportedOperationException("Not supported yet."));
   }
 }

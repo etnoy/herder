@@ -25,6 +25,5 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public class NotAuthenticatedException extends RuntimeException {
-
   private static final long serialVersionUID = 848671651267142565L;
 }

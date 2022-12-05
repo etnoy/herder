@@ -43,7 +43,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class ModuleEntity implements Serializable {
   private static final long serialVersionUID = 6391362512222766270L;
 
-  @Id private String id;
+  @Id
+  private String id;
 
   @NonNull private String name;
 
@@ -52,9 +53,11 @@ public class ModuleEntity implements Serializable {
   @JsonProperty("isFlagStatic")
   private boolean isFlagStatic;
 
-  @ToString.Exclude private String staticFlag;
+  @ToString.Exclude
+  private String staticFlag;
 
-  @ToString.Exclude @NonNull private byte[] key;
+  @ToString.Exclude
+  @NonNull private byte[] key;
 
   @JsonProperty("isOpen")
   private boolean isOpen;
@@ -63,5 +66,6 @@ public class ModuleEntity implements Serializable {
 
   private ArrayList<Integer> bonusScores;
 
-  @Builder.Default private Multimap<String, String> tags = ArrayListMultimap.create();
+  @Builder.Default
+  private Multimap<String, String> tags = ArrayListMultimap.create();
 }

@@ -25,10 +25,8 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
-
-import org.springframework.stereotype.Component;
-
 import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @AllArgsConstructor
 @Component
@@ -37,6 +35,8 @@ public class WebTokenClock implements io.jsonwebtoken.Clock {
 
   @Override
   public Date now() {
-    return Date.from(LocalDateTime.now(clock).atZone(ZoneId.systemDefault()).toInstant());
+    return Date.from(
+      LocalDateTime.now(clock).atZone(ZoneId.systemDefault()).toInstant()
+    );
   }
 }

@@ -45,58 +45,70 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SqlInjectionTutorialController unit tests")
 class SqlInjectionTutorialControllerTest extends BaseTest {
+  private SqlInjectionTutorialController sqlInjectionTutorialController;
 
-    private SqlInjectionTutorialController sqlInjectionTutorialController;
+  @Mock
+  private ControllerAuthentication controllerAuthentication;
 
-    @Mock private ControllerAuthentication controllerAuthentication;
+  @Mock
+  private SqlInjectionTutorial sqlInjectionTutorial;
 
-    @Mock private SqlInjectionTutorial sqlInjectionTutorial;
+  @Test
+  void search_Autenticated_CallsModule() {
+    final String mockUserId = "id";
 
-    @Test
-    void search_Autenticated_CallsModule() {
-        final String mockUserId = "id";
+    final SqlInjectionTutorialRow sqlInjectionTutorialRow1 = mock(
+      SqlInjectionTutorialRow.class
+    );
+    final SqlInjectionTutorialRow sqlInjectionTutorialRow2 = mock(
+      SqlInjectionTutorialRow.class
+    );
+    final SqlInjectionTutorialRow sqlInjectionTutorialRow3 = mock(
+      SqlInjectionTutorialRow.class
+    );
+    final String query = "sql";
 
-        final SqlInjectionTutorialRow sqlInjectionTutorialRow1 =
-                mock(SqlInjectionTutorialRow.class);
-        final SqlInjectionTutorialRow sqlInjectionTutorialRow2 =
-                mock(SqlInjectionTutorialRow.class);
-        final SqlInjectionTutorialRow sqlInjectionTutorialRow3 =
-                mock(SqlInjectionTutorialRow.class);
-        final String query = "sql";
+    when(controllerAuthentication.getUserId())
+      .thenReturn(Mono.just(mockUserId));
+    when(sqlInjectionTutorial.submitQuery(mockUserId, query))
+      .thenReturn(
+        Flux.just(
+          sqlInjectionTutorialRow1,
+          sqlInjectionTutorialRow2,
+          sqlInjectionTutorialRow3
+        )
+      );
 
-        when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
-        when(sqlInjectionTutorial.submitQuery(mockUserId, query))
-                .thenReturn(
-                        Flux.just(
-                                sqlInjectionTutorialRow1,
-                                sqlInjectionTutorialRow2,
-                                sqlInjectionTutorialRow3));
+    StepVerifier
+      .create(sqlInjectionTutorialController.search(query))
+      .expectNext(sqlInjectionTutorialRow1)
+      .expectNext(sqlInjectionTutorialRow2)
+      .expectNext(sqlInjectionTutorialRow3)
+      .verifyComplete();
 
-        StepVerifier.create(sqlInjectionTutorialController.search(query))
-                .expectNext(sqlInjectionTutorialRow1)
-                .expectNext(sqlInjectionTutorialRow2)
-                .expectNext(sqlInjectionTutorialRow3)
-                .verifyComplete();
+    verify(controllerAuthentication, times(1)).getUserId();
+    verify(sqlInjectionTutorial, times(1)).submitQuery(mockUserId, query);
+  }
 
-        verify(controllerAuthentication, times(1)).getUserId();
-        verify(sqlInjectionTutorial, times(1)).submitQuery(mockUserId, query);
-    }
+  @Test
+  void search_NotAutenticated_CallsModule() {
+    final String query = "sql";
+    when(controllerAuthentication.getUserId())
+      .thenReturn(Mono.error(new NotAuthenticatedException()));
+    StepVerifier
+      .create(sqlInjectionTutorialController.search(query))
+      .expectError(NotAuthenticatedException.class)
+      .verify();
+    verify(controllerAuthentication, times(1)).getUserId();
+  }
 
-    @Test
-    void search_NotAutenticated_CallsModule() {
-        final String query = "sql";
-        when(controllerAuthentication.getUserId())
-                .thenReturn(Mono.error(new NotAuthenticatedException()));
-        StepVerifier.create(sqlInjectionTutorialController.search(query))
-                .expectError(NotAuthenticatedException.class)
-                .verify();
-        verify(controllerAuthentication, times(1)).getUserId();
-    }
-
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
-        sqlInjectionTutorialController =
-                new SqlInjectionTutorialController(sqlInjectionTutorial, controllerAuthentication);
-    }
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
+    sqlInjectionTutorialController =
+      new SqlInjectionTutorialController(
+        sqlInjectionTutorial,
+        controllerAuthentication
+      );
+  }
 }

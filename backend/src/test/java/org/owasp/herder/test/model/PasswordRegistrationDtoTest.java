@@ -32,34 +32,44 @@ import org.owasp.herder.test.util.TestConstants;
 
 @DisplayName("PasswordRegistrationDto unit tests")
 class PasswordRegistrationDtoTest {
-    @Test
-    void buildComment_ValidComment_Builds() {
-        for (final String displayName : TestConstants.STRINGS) {
-            for (final String userName : TestConstants.STRINGS) {
-                for (final String password : TestConstants.STRINGS) {
-                    final PasswordRegistrationDto passwordRegistrationDto =
-                            new PasswordRegistrationDto(displayName, userName, password);
-                    assertThat(passwordRegistrationDto.getDisplayName()).isEqualTo(displayName);
-                    assertThat(passwordRegistrationDto.getUserName()).isEqualTo(userName);
-                    assertThat(passwordRegistrationDto.getPassword()).isEqualTo(password);
-                }
-            }
+
+  @Test
+  void buildComment_ValidComment_Builds() {
+    for (final String displayName : TestConstants.STRINGS) {
+      for (final String userName : TestConstants.STRINGS) {
+        for (final String password : TestConstants.STRINGS) {
+          final PasswordRegistrationDto passwordRegistrationDto = new PasswordRegistrationDto(
+            displayName,
+            userName,
+            password
+          );
+          assertThat(passwordRegistrationDto.getDisplayName())
+            .isEqualTo(displayName);
+          assertThat(passwordRegistrationDto.getUserName()).isEqualTo(userName);
+          assertThat(passwordRegistrationDto.getPassword()).isEqualTo(password);
         }
+      }
     }
+  }
 
-    @Test
-    void equals_EqualsVerifier_AsExpected() {
-        EqualsVerifier.forClass(PasswordRegistrationDto.class)
-                .withIgnoredAnnotations(NotNull.class)
-                .verify();
-    }
+  @Test
+  void equals_EqualsVerifier_AsExpected() {
+    EqualsVerifier
+      .forClass(PasswordRegistrationDto.class)
+      .withIgnoredAnnotations(NotNull.class)
+      .verify();
+  }
 
-    @Test
-    void toString_ValidData_AsExpected() {
-        final PasswordRegistrationDto passwordRegistrationDto =
-                new PasswordRegistrationDto("displayName", "loginName", "password");
-        assertThat(passwordRegistrationDto)
-                .hasToString(
-                        "PasswordRegistrationDto(displayName=displayName, userName=loginName, password=password)");
-    }
+  @Test
+  void toString_ValidData_AsExpected() {
+    final PasswordRegistrationDto passwordRegistrationDto = new PasswordRegistrationDto(
+      "displayName",
+      "loginName",
+      "password"
+    );
+    assertThat(passwordRegistrationDto)
+      .hasToString(
+        "PasswordRegistrationDto(displayName=displayName, userName=loginName, password=password)"
+      );
+  }
 }

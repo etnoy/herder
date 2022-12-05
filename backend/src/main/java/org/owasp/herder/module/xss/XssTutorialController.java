@@ -42,7 +42,7 @@ public class XssTutorialController {
   @PreAuthorize("hasRole('ROLE_USER')")
   public Mono<XssTutorialResponse> search(@RequestBody final String query) {
     return controllerAuthentication
-        .getUserId()
-        .flatMap(userId -> xssTutorial.submitQuery(userId, query));
+      .getUserId()
+      .flatMap(userId -> xssTutorial.submitQuery(userId, query));
   }
 }

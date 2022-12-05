@@ -26,7 +26,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @NoArgsConstructor
-@ResponseStatus(value = HttpStatus.NOT_ACCEPTABLE, reason = "Module not open for submissions")
+@ResponseStatus(
+  value = HttpStatus.NOT_ACCEPTABLE,
+  reason = "Module not open for submissions"
+)
 public class ModuleClosedException extends RuntimeException {
   private static final long serialVersionUID = 828102966411821839L;
 

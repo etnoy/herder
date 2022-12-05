@@ -43,68 +43,84 @@ import reactor.test.StepVerifier;
 
 @DisplayName("Flag Tutorial API integration tests")
 class FlagTutorialApiIT extends BaseIT {
-    @Autowired ApplicationContext applicationContext;
+  @Autowired
+  ApplicationContext applicationContext;
 
-    FlagTutorial flagTutorial;
+  FlagTutorial flagTutorial;
 
-    @Autowired UserService userService;
+  @Autowired
+  UserService userService;
 
-    @Autowired ModuleService moduleService;
+  @Autowired
+  ModuleService moduleService;
 
-    @Autowired SubmissionService submissionService;
+  @Autowired
+  SubmissionService submissionService;
 
-    @Autowired WebTestClient webTestClient;
+  @Autowired
+  WebTestClient webTestClient;
 
-    @Autowired FlagHandler flagHandler;
+  @Autowired
+  FlagHandler flagHandler;
 
-    @Autowired IntegrationTestUtils integrationTestUtils;
+  @Autowired
+  IntegrationTestUtils integrationTestUtils;
 
-    ModuleInitializer moduleInitializer;
+  ModuleInitializer moduleInitializer;
 
-    @BeforeEach
-    void setup() {
-        integrationTestUtils.resetState();
+  @BeforeEach
+  void setup() {
+    integrationTestUtils.resetState();
 
-        moduleInitializer = new ModuleInitializer(applicationContext, moduleService);
+    moduleInitializer =
+      new ModuleInitializer(applicationContext, moduleService);
 
-        flagTutorial = new FlagTutorial(flagHandler);
+    flagTutorial = new FlagTutorial(flagHandler);
 
-        moduleInitializer.initializeModule(flagTutorial).block();
-    }
+    moduleInitializer.initializeModule(flagTutorial).block();
+  }
 
-    @Test
-    @DisplayName("The flag returned by the tutorial should be valid")
-    void canAcceptTheCorrectFlag() {
-        integrationTestUtils.createTestUser();
+  @Test
+  @DisplayName("The flag returned by the tutorial should be valid")
+  void canAcceptTheCorrectFlag() {
+    integrationTestUtils.createTestUser();
 
-        final String accessToken =
-                integrationTestUtils.performAPILoginWithToken(
-                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
+    );
 
-        final String endpoint = "/api/v1/module/flag-tutorial/";
+    final String endpoint = "/api/v1/module/flag-tutorial/";
 
-        final String flag =
-                JsonPath.parse(
-                                new String(
-                                        webTestClient
-                                                .get()
-                                                .uri(endpoint)
-                                                .header("Authorization", "Bearer " + accessToken)
-                                                .accept(MediaType.APPLICATION_JSON)
-                                                .exchange()
-                                                .expectStatus()
-                                                .isOk()
-                                                .returnResult(String.class)
-                                                .getResponseBody()
-                                                .blockFirst()))
-                        .read("$.flag");
+    final String flag = JsonPath
+      .parse(
+        new String(
+          webTestClient
+            .get()
+            .uri(endpoint)
+            .header("Authorization", "Bearer " + accessToken)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .returnResult(String.class)
+            .getResponseBody()
+            .blockFirst()
+        )
+      )
+      .read("$.flag");
 
-        StepVerifier.create(
-                        integrationTestUtils
-                                .submitFlagApiAndReturnSubmission(
-                                        flagTutorial.getLocator(), accessToken, flag)
-                                .map(Submission::isValid))
-                .expectNext(true)
-                .verifyComplete();
-    }
+    StepVerifier
+      .create(
+        integrationTestUtils
+          .submitFlagApiAndReturnSubmission(
+            flagTutorial.getLocator(),
+            accessToken,
+            flag
+          )
+          .map(Submission::isValid)
+      )
+      .expectNext(true)
+      .verifyComplete();
+  }
 }

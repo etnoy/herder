@@ -38,7 +38,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class ScoreAdjustment implements Serializable {
   private static final long serialVersionUID = -3672798577756177047L;
 
-  @Id String id;
+  @Id
+  String id;
 
   @NonNull ArrayList<String> userIds;
 

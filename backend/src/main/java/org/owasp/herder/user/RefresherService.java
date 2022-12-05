@@ -71,192 +71,218 @@ public class RefresherService {
    * @return a Mono<Void> signaling completion
    */
   public Mono<Void> refreshScoreboard() {
-    return
-    // Get unranked scoreboard entries from db. This list is sorted by score and medal count
+    return // Get unranked scoreboard entries from db. This list is sorted by score and medal count
     rankedSubmissionRepository
-        .getUnrankedScoreboard()
-        // Transform the flux to a mono list
-        .collectList()
-        // Get the complete list of all users and teams
-        .zipWith(userService.findAllPrincipals().collectList())
-        .map(
-            tuple -> {
-              final List<UnrankedScoreboardEntry> unrankedScoreboard = tuple.getT1();
+      .getUnrankedScoreboard()
+      // Transform the flux to a mono list
+      .collectList()
+      // Get the complete list of all users and teams
+      .zipWith(userService.findAllPrincipals().collectList())
+      .map(
+        tuple -> {
+          final List<UnrankedScoreboardEntry> unrankedScoreboard = tuple.getT1();
 
-              // The complete list of users and teams. We need this here because we want users
-              // without submissions to be listed on the scoreboard with zero score and medals
-              Stream<PrincipalEntity> principals = tuple.getT2().stream();
+          // The complete list of users and teams. We need this here because we want users
+          // without submissions to be listed on the scoreboard with zero score and medals
+          Stream<PrincipalEntity> principals = tuple.getT2().stream();
 
-              long currentScore = 0;
-              long currentGoldMedals = 0;
-              long currentSilverMedals = 0;
-              long currentBronzeMedals = 0;
-              long currentRank = 1L;
-              long entryRank = 1L;
+          long currentScore = 0;
+          long currentGoldMedals = 0;
+          long currentSilverMedals = 0;
+          long currentBronzeMedals = 0;
+          long currentRank = 1L;
+          long entryRank = 1L;
 
-              // The rank given to all users and teams without submissions
-              long zeroScoreRank = 0;
+          // The rank given to all users and teams without submissions
+          long zeroScoreRank = 0;
 
-              // At what position to insert all zero score users and teams
-              long zeroScorePosition = 0;
+          // At what position to insert all zero score users and teams
+          long zeroScorePosition = 0;
 
-              boolean negativeScoresFound = false;
+          boolean negativeScoresFound = false;
 
-              // Create the empty scoreboard
-              final ArrayList<ScoreboardEntry> scoreboard = new ArrayList<>();
+          // Create the empty scoreboard
+          final ArrayList<ScoreboardEntry> scoreboard = new ArrayList<>();
 
-              final Iterator<UnrankedScoreboardEntry> scoreboardIterator =
-                  unrankedScoreboard.iterator();
+          final Iterator<UnrankedScoreboardEntry> scoreboardIterator = unrankedScoreboard.iterator();
 
-              if (scoreboardIterator.hasNext()) {
-                // Get initial values from first entry
-                final UnrankedScoreboardEntry firstEntry = unrankedScoreboard.get(0);
-                currentScore = firstEntry.getScore();
-                currentGoldMedals = firstEntry.getGoldMedals();
-                currentSilverMedals = firstEntry.getSilverMedals();
-                currentBronzeMedals = firstEntry.getBronzeMedals();
-              }
+          if (scoreboardIterator.hasNext()) {
+            // Get initial values from first entry
+            final UnrankedScoreboardEntry firstEntry = unrankedScoreboard.get(
+              0
+            );
+            currentScore = firstEntry.getScore();
+            currentGoldMedals = firstEntry.getGoldMedals();
+            currentSilverMedals = firstEntry.getSilverMedals();
+            currentBronzeMedals = firstEntry.getBronzeMedals();
+          }
 
-              while (scoreboardIterator.hasNext()) {
-                // Iterate over all unranked scoreboard entries
-                final UnrankedScoreboardEntry scoreboardEntry = scoreboardIterator.next();
+          while (scoreboardIterator.hasNext()) {
+            // Iterate over all unranked scoreboard entries
+            final UnrankedScoreboardEntry scoreboardEntry = scoreboardIterator.next();
 
-                // Get the current score and medal count
-                final Long entryScore = scoreboardEntry.getScore();
-                final Long entryGoldMedals = scoreboardEntry.getGoldMedals();
-                final Long entrySilverMedals = scoreboardEntry.getSilverMedals();
-                final Long entryBronzeMedals = scoreboardEntry.getBronzeMedals();
+            // Get the current score and medal count
+            final Long entryScore = scoreboardEntry.getScore();
+            final Long entryGoldMedals = scoreboardEntry.getGoldMedals();
+            final Long entrySilverMedals = scoreboardEntry.getSilverMedals();
+            final Long entryBronzeMedals = scoreboardEntry.getBronzeMedals();
 
-                // Check if the current score is below zero for the first time
-                if (!negativeScoresFound && (entryScore < 0)) {
-                  negativeScoresFound = true;
-                  if (currentScore == 0
-                      && currentGoldMedals == 0
-                      && currentSilverMedals == 0
-                      && currentBronzeMedals == 0) {
-                    // Set the rank of all zero score users and teams to the current rank
-                    zeroScoreRank = entryRank;
-                  } else {
-                    zeroScoreRank = currentRank;
-                  }
-                  zeroScorePosition = currentRank;
-
-                  currentScore = 0;
-                  currentGoldMedals = 0;
-                  currentSilverMedals = 0;
-                  currentBronzeMedals = 0;
-
-                  // Increment the rank counter with the number of zero score users and teams
-                  currentRank += tuple.getT2().size() - unrankedScoreboard.size();
-                }
-
-                // Compare current score and medals with previous entry
-                if (!entryScore.equals(currentScore)
-                    || (!entryGoldMedals.equals(currentGoldMedals))
-                    || (!entrySilverMedals.equals(currentSilverMedals))
-                    || (!entryBronzeMedals.equals(currentBronzeMedals))) {
-                  // Only advance the entry rank if score and medal count differs from previous
-                  // entry
-                  entryRank = currentRank;
-                }
-
-                // Construct the current scoreboard entry
-                ScoreboardEntryBuilder scoreboardEntryBuilder = ScoreboardEntry.builder();
-                scoreboardEntryBuilder.baseScore(scoreboardEntry.getBaseScore());
-                scoreboardEntryBuilder.bonusScore(scoreboardEntry.getBonusScore());
-                scoreboardEntryBuilder.score(entryScore);
-
-                scoreboardEntryBuilder.goldMedals(entryGoldMedals);
-                scoreboardEntryBuilder.silverMedals(entrySilverMedals);
-                scoreboardEntryBuilder.bronzeMedals(entryBronzeMedals);
-
-                scoreboardEntryBuilder.rank(entryRank);
-
-                String principalId;
-                PrincipalType principalType;
-
-                if (scoreboardEntry.getTeam() != null) {
-                  principalId = scoreboardEntry.getTeam().getId();
-                  principalType = PrincipalType.TEAM;
-                  scoreboardEntryBuilder.displayName(scoreboardEntry.getTeam().getDisplayName());
-                } else {
-                  principalId = scoreboardEntry.getUser().getId();
-                  principalType = PrincipalType.USER;
-                  scoreboardEntryBuilder.displayName(scoreboardEntry.getUser().getDisplayName());
-                }
-                scoreboardEntryBuilder.principalId(principalId);
-                scoreboardEntryBuilder.principalType(principalType);
-
-                // Remove the current scoreboard user from the list of zero score users and teams
-                principals =
-                    principals.filter(
-                        principal -> {
-                          return !principal.getId().equals(principalId)
-                              || !principal.getPrincipalType().equals(principalType);
-                        });
-
-                // Add the current scoreboard entry to the scoreboard
-                scoreboard.add(scoreboardEntryBuilder.build());
-
-                // Advance the current rank value
-                currentRank++;
-
-                // Update the previous state
-                currentScore = entryScore;
-                currentGoldMedals = entryGoldMedals;
-                currentSilverMedals = entrySilverMedals;
-                currentBronzeMedals = entryBronzeMedals;
-              }
-
-              // Were there users with negative scores? (This can happen due to a negative score
-              // adjustment)
-              if (!negativeScoresFound) {
+            // Check if the current score is below zero for the first time
+            if (!negativeScoresFound && (entryScore < 0)) {
+              negativeScoresFound = true;
+              if (
+                currentScore == 0 &&
+                currentGoldMedals == 0 &&
+                currentSilverMedals == 0 &&
+                currentBronzeMedals == 0
+              ) {
+                // Set the rank of all zero score users and teams to the current rank
+                zeroScoreRank = entryRank;
+              } else {
                 zeroScoreRank = currentRank;
-                zeroScorePosition = currentRank;
               }
+              zeroScorePosition = currentRank;
 
-              // Create scoreboard entries for all zero score principals
-              ScoreboardEntryBuilder zeroScoreboardEntryBuilder = ScoreboardEntry.builder();
-              zeroScoreboardEntryBuilder.baseScore(0L);
-              zeroScoreboardEntryBuilder.bonusScore(0L);
-              zeroScoreboardEntryBuilder.score(0L);
+              currentScore = 0;
+              currentGoldMedals = 0;
+              currentSilverMedals = 0;
+              currentBronzeMedals = 0;
 
-              zeroScoreboardEntryBuilder.goldMedals(0L);
-              zeroScoreboardEntryBuilder.silverMedals(0L);
-              zeroScoreboardEntryBuilder.bronzeMedals(0L);
+              // Increment the rank counter with the number of zero score users and teams
+              currentRank += tuple.getT2().size() - unrankedScoreboard.size();
+            }
 
-              // All zero score principals have the same rank
-              zeroScoreboardEntryBuilder.rank(zeroScoreRank);
+            // Compare current score and medals with previous entry
+            if (
+              !entryScore.equals(currentScore) ||
+              (!entryGoldMedals.equals(currentGoldMedals)) ||
+              (!entrySilverMedals.equals(currentSilverMedals)) ||
+              (!entryBronzeMedals.equals(currentBronzeMedals))
+            ) {
+              // Only advance the entry rank if score and medal count differs from previous
+              // entry
+              entryRank = currentRank;
+            }
 
-              // Create a stream of principals that will be inserted in the scoreboard
-              final Stream<ScoreboardEntry> zeroScoreboardPrincipals =
-                  principals.map(
-                      principal -> {
-                        zeroScoreboardEntryBuilder.displayName(principal.getDisplayName());
-                        zeroScoreboardEntryBuilder.principalId(principal.getId());
-                        zeroScoreboardEntryBuilder.principalType(principal.getPrincipalType());
-                        return zeroScoreboardEntryBuilder.build();
-                      });
+            // Construct the current scoreboard entry
+            ScoreboardEntryBuilder scoreboardEntryBuilder = ScoreboardEntry.builder();
+            scoreboardEntryBuilder.baseScore(scoreboardEntry.getBaseScore());
+            scoreboardEntryBuilder.bonusScore(scoreboardEntry.getBonusScore());
+            scoreboardEntryBuilder.score(entryScore);
 
-              // All scoreboard entries before the zero score principals
-              final Stream<ScoreboardEntry> scoreboardAboveZeroStream =
-                  scoreboard.stream().limit(zeroScorePosition - 1);
+            scoreboardEntryBuilder.goldMedals(entryGoldMedals);
+            scoreboardEntryBuilder.silverMedals(entrySilverMedals);
+            scoreboardEntryBuilder.bronzeMedals(entryBronzeMedals);
 
-              // All scoreboard entries after the zero score principals
-              final Stream<ScoreboardEntry> scoreboardBelowZeroStream =
-                  scoreboard.stream().skip(zeroScorePosition - 1);
+            scoreboardEntryBuilder.rank(entryRank);
 
-              // Concatenate the scoreboard and create an array list
-              return Stream.concat(
-                      Stream.concat(scoreboardAboveZeroStream, zeroScoreboardPrincipals),
-                      scoreboardBelowZeroStream)
-                  .collect(Collectors.toCollection(ArrayList::new));
-            })
-        // Clear the scoreboard and save all scoreboard entries
-        .flatMapMany(
-            scoreboard ->
-                scoreboardRepository.deleteAll().thenMany(scoreboardRepository.saveAll(scoreboard)))
-        .then();
+            String principalId;
+            PrincipalType principalType;
+
+            if (scoreboardEntry.getTeam() != null) {
+              principalId = scoreboardEntry.getTeam().getId();
+              principalType = PrincipalType.TEAM;
+              scoreboardEntryBuilder.displayName(
+                scoreboardEntry.getTeam().getDisplayName()
+              );
+            } else {
+              principalId = scoreboardEntry.getUser().getId();
+              principalType = PrincipalType.USER;
+              scoreboardEntryBuilder.displayName(
+                scoreboardEntry.getUser().getDisplayName()
+              );
+            }
+            scoreboardEntryBuilder.principalId(principalId);
+            scoreboardEntryBuilder.principalType(principalType);
+
+            // Remove the current scoreboard user from the list of zero score users and teams
+            principals =
+              principals.filter(
+                principal -> {
+                  return (
+                    !principal.getId().equals(principalId) ||
+                    !principal.getPrincipalType().equals(principalType)
+                  );
+                }
+              );
+
+            // Add the current scoreboard entry to the scoreboard
+            scoreboard.add(scoreboardEntryBuilder.build());
+
+            // Advance the current rank value
+            currentRank++;
+
+            // Update the previous state
+            currentScore = entryScore;
+            currentGoldMedals = entryGoldMedals;
+            currentSilverMedals = entrySilverMedals;
+            currentBronzeMedals = entryBronzeMedals;
+          }
+
+          // Were there users with negative scores? (This can happen due to a negative score
+          // adjustment)
+          if (!negativeScoresFound) {
+            zeroScoreRank = currentRank;
+            zeroScorePosition = currentRank;
+          }
+
+          // Create scoreboard entries for all zero score principals
+          ScoreboardEntryBuilder zeroScoreboardEntryBuilder = ScoreboardEntry.builder();
+          zeroScoreboardEntryBuilder.baseScore(0L);
+          zeroScoreboardEntryBuilder.bonusScore(0L);
+          zeroScoreboardEntryBuilder.score(0L);
+
+          zeroScoreboardEntryBuilder.goldMedals(0L);
+          zeroScoreboardEntryBuilder.silverMedals(0L);
+          zeroScoreboardEntryBuilder.bronzeMedals(0L);
+
+          // All zero score principals have the same rank
+          zeroScoreboardEntryBuilder.rank(zeroScoreRank);
+
+          // Create a stream of principals that will be inserted in the scoreboard
+          final Stream<ScoreboardEntry> zeroScoreboardPrincipals = principals.map(
+            principal -> {
+              zeroScoreboardEntryBuilder.displayName(
+                principal.getDisplayName()
+              );
+              zeroScoreboardEntryBuilder.principalId(principal.getId());
+              zeroScoreboardEntryBuilder.principalType(
+                principal.getPrincipalType()
+              );
+              return zeroScoreboardEntryBuilder.build();
+            }
+          );
+
+          // All scoreboard entries before the zero score principals
+          final Stream<ScoreboardEntry> scoreboardAboveZeroStream = scoreboard
+            .stream()
+            .limit(zeroScorePosition - 1);
+
+          // All scoreboard entries after the zero score principals
+          final Stream<ScoreboardEntry> scoreboardBelowZeroStream = scoreboard
+            .stream()
+            .skip(zeroScorePosition - 1);
+
+          // Concatenate the scoreboard and create an array list
+          return Stream
+            .concat(
+              Stream.concat(
+                scoreboardAboveZeroStream,
+                zeroScoreboardPrincipals
+              ),
+              scoreboardBelowZeroStream
+            )
+            .collect(Collectors.toCollection(ArrayList::new));
+        }
+      )
+      // Clear the scoreboard and save all scoreboard entries
+      .flatMapMany(
+        scoreboard ->
+          scoreboardRepository
+            .deleteAll()
+            .thenMany(scoreboardRepository.saveAll(scoreboard))
+      )
+      .then();
   }
 
   public Mono<Void> refreshSubmissionRanks() {
@@ -279,98 +305,118 @@ public class RefresherService {
     // First, update all teams related to the user
 
     // The team (if any) the user belongs to now
-    Mono<TeamEntity> incomingTeam =
-        updatedUser
-            .filter(user -> user.getTeamId() != null)
-            .map(UserEntity::getTeamId)
-            .flatMap(userService::getTeamById)
-            .zipWith(updatedUser)
-            .map(
-                tuple ->
-                    tuple
-                        .getT1()
-                        // Update the correct member entry in the team's member list
-                        .withMembers(
-                            tuple.getT1().getMembers().stream()
-                                .map(
-                                    user -> {
-                                      if (user.getId().equals(userId)) {
-                                        // Found the correct user id, replace this with the new user
-                                        // entity
-                                        return tuple.getT2();
-                                      } else {
-                                        return user;
-                                      }
-                                    })
-                                // Collect all entries into an array list
-                                .collect(Collectors.toCollection(ArrayList::new))))
-            // Save the team to the db
-            .flatMap(teamRepository::save);
+    Mono<TeamEntity> incomingTeam = updatedUser
+      .filter(user -> user.getTeamId() != null)
+      .map(UserEntity::getTeamId)
+      .flatMap(userService::getTeamById)
+      .zipWith(updatedUser)
+      .map(
+        tuple ->
+          tuple
+            .getT1()
+            // Update the correct member entry in the team's member list
+            .withMembers(
+              tuple
+                .getT1()
+                .getMembers()
+                .stream()
+                .map(
+                  user -> {
+                    if (user.getId().equals(userId)) {
+                      // Found the correct user id, replace this with the new user
+                      // entity
+                      return tuple.getT2();
+                    } else {
+                      return user;
+                    }
+                  }
+                )
+                // Collect all entries into an array list
+                .collect(Collectors.toCollection(ArrayList::new))
+            )
+      )
+      // Save the team to the db
+      .flatMap(teamRepository::save);
 
     // The team (if any) the user belonged to before. This number can be greater than one
-    final Flux<TeamEntity> outgoingTeams =
-        userService
-            .findAllTeams()
-            .filter(
-                team ->
-                    // Look through all teams and find the one that lists the updated user as member
-                    !team.getMembers().stream()
-                        .filter(user -> user.getId().equals(userId))
-                        .findAny()
-                        .isEmpty())
-            .zipWith(updatedUser.cache().repeat())
-            // If the new team and old team are the same, don't remove the old team
-            .filter(
-                tuple -> {
-                  if (tuple.getT2().getTeamId() != null) {
-                    return !tuple.getT2().getTeamId().equals(tuple.getT1().getId());
-                  } else {
-                    return true;
-                  }
-                })
-            .flatMap(
-                tuple -> {
-                  if (tuple.getT1().getMembers().size() == 1) {
-                    // The last user of the team was removed, therefore delete the entire team
-                    log.info(
-                        "Deleting team with id "
-                            + tuple.getT1().getId()
-                            + " because last user left");
-                    return userService
-                        .deleteTeam(tuple.getT1().getId())
-                        .then(afterTeamDeletion(tuple.getT1().getId()))
-                        // Return an empty tuple
-                        .then(Mono.empty());
-                  } else {
-                    // Team not empty, do nothing here
-                    return Mono.just(tuple);
-                  }
-                })
-            .map(
-                tuple ->
-                    tuple
-                        .getT1()
-                        // Update the members list to only contain remaining users
-                        .withMembers(
-                            tuple.getT1().getMembers().stream()
-                                .filter(user -> !user.getId().equals(userId))
-                                .collect(Collectors.toCollection(ArrayList::new))));
+    final Flux<TeamEntity> outgoingTeams = userService
+      .findAllTeams()
+      .filter(
+        team ->
+          // Look through all teams and find the one that lists the updated user as member
+          !team
+            .getMembers()
+            .stream()
+            .filter(user -> user.getId().equals(userId))
+            .findAny()
+            .isEmpty()
+      )
+      .zipWith(updatedUser.cache().repeat())
+      // If the new team and old team are the same, don't remove the old team
+      .filter(
+        tuple -> {
+          if (tuple.getT2().getTeamId() != null) {
+            return !tuple.getT2().getTeamId().equals(tuple.getT1().getId());
+          } else {
+            return true;
+          }
+        }
+      )
+      .flatMap(
+        tuple -> {
+          if (tuple.getT1().getMembers().size() == 1) {
+            // The last user of the team was removed, therefore delete the entire team
+            log.info(
+              "Deleting team with id " +
+              tuple.getT1().getId() +
+              " because last user left"
+            );
+            return userService
+              .deleteTeam(tuple.getT1().getId())
+              .then(afterTeamDeletion(tuple.getT1().getId()))
+              // Return an empty tuple
+              .then(Mono.empty());
+          } else {
+            // Team not empty, do nothing here
+            return Mono.just(tuple);
+          }
+        }
+      )
+      .map(
+        tuple ->
+          tuple
+            .getT1()
+            // Update the members list to only contain remaining users
+            .withMembers(
+              tuple
+                .getT1()
+                .getMembers()
+                .stream()
+                .filter(user -> !user.getId().equals(userId))
+                .collect(Collectors.toCollection(ArrayList::new))
+            )
+      );
 
     // Update submissions
-    Flux<Submission> submissionsToUpdate = submissionRepository.findAllByUserId(userId);
+    Flux<Submission> submissionsToUpdate = submissionRepository.findAllByUserId(
+      userId
+    );
 
     // Update team field in submissions
-    Flux<Submission> addedTeamSubmissions =
-        incomingTeam
-            .flatMapMany(
-                team -> submissionsToUpdate.map(submission -> submission.withTeamId(team.getId())))
-            .switchIfEmpty(submissionsToUpdate);
+    Flux<Submission> addedTeamSubmissions = incomingTeam
+      .flatMapMany(
+        team ->
+          submissionsToUpdate.map(
+            submission -> submission.withTeamId(team.getId())
+          )
+      )
+      .switchIfEmpty(submissionsToUpdate);
 
     // Save all to db
     return teamRepository
-        .saveAll(outgoingTeams)
-        .thenMany(submissionRepository.saveAll(addedTeamSubmissions))
-        .then();
+      .saveAll(outgoingTeams)
+      .thenMany(submissionRepository.saveAll(addedTeamSubmissions))
+      .then();
   }
 
   /**
@@ -383,8 +429,9 @@ public class RefresherService {
     // Update submissions
 
     // Update team field in submissions
-    final Flux<Submission> updatedTeamSubmissions =
-        submissionRepository.findAllByTeamId(teamId).map(submission -> submission.withTeamId(null));
+    final Flux<Submission> updatedTeamSubmissions = submissionRepository
+      .findAllByTeamId(teamId)
+      .map(submission -> submission.withTeamId(null));
 
     return submissionRepository.saveAll(updatedTeamSubmissions).then();
   }
@@ -397,39 +444,49 @@ public class RefresherService {
    */
   public Mono<Void> afterUserDeletion(@ValidUserId final String userId) {
     // The team (if any) the user belonged to before
-    final Flux<TeamEntity> outgoingTeams =
-        userService
-            .findAllTeams()
-            .filter(
-                team ->
-                    // Look through all teams and find the one that lists the updated user as member
-                    !team.getMembers().stream()
-                        .filter(user -> user.getId().equals(userId))
-                        .findAny()
-                        .isEmpty())
-            .flatMap(
-                team -> {
-                  if (team.getMembers().size() == 1) {
-                    // The last user of the team was removed, therefore delete the entire team
-                    log.info("Deleting team with id " + team.getId() + " because last user left");
-                    return userService
-                        .deleteTeam(team.getId())
-                        .flatMap(u -> afterTeamDeletion(team.getId()))
-                        // Return an empty tuple
-                        .then(Mono.empty());
-                  } else {
-                    // Team not empty, do nothing here
-                    return Mono.just(team);
-                  }
-                })
-            .map(
-                team ->
-                    team
-                        // Update the members list to only contain remaining users
-                        .withMembers(
-                        team.getMembers().stream()
-                            .filter(user -> !user.getId().equals(userId))
-                            .collect(Collectors.toCollection(ArrayList::new))));
+    final Flux<TeamEntity> outgoingTeams = userService
+      .findAllTeams()
+      .filter(
+        team ->
+          // Look through all teams and find the one that lists the updated user as member
+          !team
+            .getMembers()
+            .stream()
+            .filter(user -> user.getId().equals(userId))
+            .findAny()
+            .isEmpty()
+      )
+      .flatMap(
+        team -> {
+          if (team.getMembers().size() == 1) {
+            // The last user of the team was removed, therefore delete the entire team
+            log.info(
+              "Deleting team with id " +
+              team.getId() +
+              " because last user left"
+            );
+            return userService
+              .deleteTeam(team.getId())
+              .flatMap(u -> afterTeamDeletion(team.getId()))
+              // Return an empty tuple
+              .then(Mono.empty());
+          } else {
+            // Team not empty, do nothing here
+            return Mono.just(team);
+          }
+        }
+      )
+      .map(
+        team ->
+          team// Update the members list to only contain remaining users
+          .withMembers(
+            team
+              .getMembers()
+              .stream()
+              .filter(user -> !user.getId().equals(userId))
+              .collect(Collectors.toCollection(ArrayList::new))
+          )
+      );
 
     return teamRepository.saveAll(outgoingTeams).then();
   }

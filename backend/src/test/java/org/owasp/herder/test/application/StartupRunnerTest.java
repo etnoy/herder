@@ -47,60 +47,76 @@ import reactor.core.publisher.Mono;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("StartupRunner unit tests")
 class StartupRunnerTest extends BaseTest {
-    private StartupRunner startupRunner;
+  private StartupRunner startupRunner;
 
-    @Mock private UserService userService;
+  @Mock
+  private UserService userService;
 
-    @Mock private ModuleService moduleService;
+  @Mock
+  private ModuleService moduleService;
 
-    @Mock private SubmissionService submissionService;
+  @Mock
+  private SubmissionService submissionService;
 
-    @Mock private RefresherService refresherService;
+  @Mock
+  private RefresherService refresherService;
 
-    @Mock private XssTutorial xssTutorial;
+  @Mock
+  private XssTutorial xssTutorial;
 
-    @Mock private SqlInjectionTutorial sqlInjectionTutorial;
+  @Mock
+  private SqlInjectionTutorial sqlInjectionTutorial;
 
-    @Mock private CsrfTutorial csrfTutorial;
+  @Mock
+  private CsrfTutorial csrfTutorial;
 
-    @Mock private FlagTutorial flagTutorial;
+  @Mock
+  private FlagTutorial flagTutorial;
 
-    @Mock private FlagHandler flagHandler;
+  @Mock
+  private FlagHandler flagHandler;
 
-    @Test
-    void run_NoArguments_Success() {
-        final String mockUserId = "id";
-        when(userService.createPasswordUser(
-                        "Administrator",
-                        "admin",
-                        "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G"))
-                .thenReturn(Mono.just(mockUserId));
+  @Test
+  void run_NoArguments_Success() {
+    final String mockUserId = "id";
+    when(
+        userService.createPasswordUser(
+          "Administrator",
+          "admin",
+          "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G"
+        )
+      )
+      .thenReturn(Mono.just(mockUserId));
 
-        when(userService.create(any(String.class))).thenReturn(Mono.empty());
+    when(userService.create(any(String.class))).thenReturn(Mono.empty());
 
-        when(userService.promote(mockUserId)).thenReturn(Mono.empty());
+    when(userService.promote(mockUserId)).thenReturn(Mono.empty());
 
-        when(userService.existsByLoginName(any(String.class))).thenReturn(Mono.just(false));
-        when(userService.existsByDisplayName(any(String.class))).thenReturn(Mono.just(false));
+    when(userService.existsByLoginName(any(String.class)))
+      .thenReturn(Mono.just(false));
+    when(userService.existsByDisplayName(any(String.class)))
+      .thenReturn(Mono.just(false));
 
-        when(userService.teamExistsByDisplayName("Team 1")).thenReturn(Mono.just(true));
-        when(refresherService.refreshModuleLists()).thenReturn(Mono.empty());
-        when(refresherService.refreshSubmissionRanks()).thenReturn(Mono.empty());
-        when(refresherService.refreshScoreboard()).thenReturn(Mono.empty());
+    when(userService.teamExistsByDisplayName("Team 1"))
+      .thenReturn(Mono.just(true));
+    when(refresherService.refreshModuleLists()).thenReturn(Mono.empty());
+    when(refresherService.refreshSubmissionRanks()).thenReturn(Mono.empty());
+    when(refresherService.refreshScoreboard()).thenReturn(Mono.empty());
 
-        assertDoesNotThrow(() -> startupRunner.run(null));
-    }
+    assertDoesNotThrow(() -> startupRunner.run(null));
+  }
 
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
 
-        startupRunner =
-                new StartupRunner(
-                        userService,
-                        moduleService,
-                        submissionService,
-                        refresherService,
-                        flagTutorial);
-    }
+    startupRunner =
+      new StartupRunner(
+        userService,
+        moduleService,
+        submissionService,
+        refresherService,
+        flagTutorial
+      );
+  }
 }

@@ -43,79 +43,90 @@ import org.owasp.herder.test.BaseTest;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("KeyService unit tests")
 class KeyServiceTest extends BaseTest {
-    KeyService keyService;
+  KeyService keyService;
 
-    @Mock CryptoFactory prngFactory;
+  @Mock
+  CryptoFactory prngFactory;
 
-    @Test
-    void byteFlagToString_ValidBytes_ReturnsString() {
-        assertThat(
-                        keyService.bytesToHexString(
-                                new byte[] {116, 104, 105, 115, 105, 115, 97, 102, 108, 97, 103}))
-                .isEqualTo("74686973697361666c6167");
+  @Test
+  void byteFlagToString_ValidBytes_ReturnsString() {
+    assertThat(
+        keyService.bytesToHexString(
+          new byte[] { 116, 104, 105, 115, 105, 115, 97, 102, 108, 97, 103 }
+        )
+      )
+      .isEqualTo("74686973697361666c6167");
+  }
+
+  @Test
+  void convertStringKeyToBytes_ValidInput_ReturnsExpectedOutput() {
+    assertThat(
+        keyService.convertByteKeyToString(
+          new byte[] { 116, 104, 105, 115, 105, 115, 97, 102, 108, 97, 103 }
+        )
+      )
+      .isEqualTo("thisisaflag");
+  }
+
+  @Test
+  void generateRandomBytes_NoSuchAlgorithmException_ThrowsRngException()
+    throws NoSuchAlgorithmException {
+    final int[] testedLengths = { 0, 1, 12, 16, 128, 4096 };
+
+    when(prngFactory.getPrng())
+      .thenThrow(
+        new NoSuchAlgorithmException(
+          "Null/empty securerandom.strongAlgorithms Security Property"
+        )
+      );
+
+    for (int length : testedLengths) {
+      assertThatExceptionOfType(RngException.class)
+        .isThrownBy(() -> keyService.generateRandomBytes(length))
+        .withMessageMatching("Could not initialize PRNG");
     }
+  }
 
-    @Test
-    void convertStringKeyToBytes_ValidInput_ReturnsExpectedOutput() {
-        assertThat(
-                        keyService.convertByteKeyToString(
-                                new byte[] {116, 104, 105, 115, 105, 115, 97, 102, 108, 97, 103}))
-                .isEqualTo("thisisaflag");
+  @Test
+  void generateRandomBytes_ValidLength_ReturnsRandomBytes()
+    throws NoSuchAlgorithmException {
+    final int[] testedLengths = { 0, 1, 12, 16, 128, 4096 };
+
+    final SecureRandom mockPrng = mock(SecureRandom.class);
+
+    when(prngFactory.getPrng()).thenReturn(mockPrng);
+
+    for (int length : testedLengths) {
+      final byte[] randomBytes = keyService.generateRandomBytes(length);
+      assertThat(randomBytes).isNotNull();
+      assertThat(randomBytes).hasSize(length);
     }
+  }
 
-    @Test
-    void generateRandomBytes_NoSuchAlgorithmException_ThrowsRngException()
-            throws NoSuchAlgorithmException {
-        final int[] testedLengths = {0, 1, 12, 16, 128, 4096};
+  @Test
+  void generateRandomString_ValidLength_ReturnsRandomString()
+    throws NoSuchAlgorithmException {
+    final SecureRandom mockPrng = mock(SecureRandom.class);
 
-        when(prngFactory.getPrng())
-                .thenThrow(
-                        new NoSuchAlgorithmException(
-                                "Null/empty securerandom.strongAlgorithms Security Property"));
-
-        for (int length : testedLengths) {
-            assertThatExceptionOfType(RngException.class)
-                    .isThrownBy(() -> keyService.generateRandomBytes(length))
-                    .withMessageMatching("Could not initialize PRNG");
-        }
+    when(prngFactory.getPrng()).thenReturn(mockPrng);
+    final int[] testedLengths = { 0, 1, 12, 16, 128, 4096 };
+    for (int length : testedLengths) {
+      final String randomString = keyService.generateRandomString(length);
+      assertThat(randomString).isNotNull();
+      assertThat(randomString).hasSize(length);
     }
+  }
 
-    @Test
-    void generateRandomBytes_ValidLength_ReturnsRandomBytes() throws NoSuchAlgorithmException {
-        final int[] testedLengths = {0, 1, 12, 16, 128, 4096};
+  @BeforeEach
+  void setup() {
+    keyService = new KeyService(prngFactory);
+  }
 
-        final SecureRandom mockPrng = mock(SecureRandom.class);
-
-        when(prngFactory.getPrng()).thenReturn(mockPrng);
-
-        for (int length : testedLengths) {
-            final byte[] randomBytes = keyService.generateRandomBytes(length);
-            assertThat(randomBytes).isNotNull();
-            assertThat(randomBytes).hasSize(length);
-        }
-    }
-
-    @Test
-    void generateRandomString_ValidLength_ReturnsRandomString() throws NoSuchAlgorithmException {
-        final SecureRandom mockPrng = mock(SecureRandom.class);
-
-        when(prngFactory.getPrng()).thenReturn(mockPrng);
-        final int[] testedLengths = {0, 1, 12, 16, 128, 4096};
-        for (int length : testedLengths) {
-            final String randomString = keyService.generateRandomString(length);
-            assertThat(randomString).isNotNull();
-            assertThat(randomString).hasSize(length);
-        }
-    }
-
-    @BeforeEach
-    void setup() {
-        keyService = new KeyService(prngFactory);
-    }
-
-    @Test
-    void stringFlagToByte_ValidString_ReturnsString() throws DecoderException {
-        assertThat(keyService.hexStringToBytes("74686973697361666c6167"))
-                .isEqualTo(new byte[] {116, 104, 105, 115, 105, 115, 97, 102, 108, 97, 103});
-    }
+  @Test
+  void stringFlagToByte_ValidString_ReturnsString() throws DecoderException {
+    assertThat(keyService.hexStringToBytes("74686973697361666c6167"))
+      .isEqualTo(
+        new byte[] { 116, 104, 105, 115, 105, 115, 97, 102, 108, 97, 103 }
+      );
+  }
 }

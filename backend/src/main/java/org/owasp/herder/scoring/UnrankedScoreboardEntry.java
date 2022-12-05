@@ -56,5 +56,6 @@ public class UnrankedScoreboardEntry implements Serializable {
 
   @NonNull Long bronzeMedals;
 
-  @Builder.Default ArrayList<ScoreAdjustment> adjustments = new ArrayList<>();
+  @Builder.Default
+  ArrayList<ScoreAdjustment> adjustments = new ArrayList<>();
 }

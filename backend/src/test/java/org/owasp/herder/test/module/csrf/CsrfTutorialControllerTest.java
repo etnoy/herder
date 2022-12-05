@@ -41,48 +41,59 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CsrfTutorialController unit tests")
 class CsrfTutorialControllerTest extends BaseTest {
+  CsrfTutorialController csrfTutorialController;
 
-    CsrfTutorialController csrfTutorialController;
+  @Mock
+  CsrfTutorial csrfTutorial;
 
-    @Mock CsrfTutorial csrfTutorial;
+  @Mock
+  ControllerAuthentication controllerAuthentication;
 
-    @Mock ControllerAuthentication controllerAuthentication;
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
+    csrfTutorialController =
+      new CsrfTutorialController(csrfTutorial, controllerAuthentication);
+  }
 
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
-        csrfTutorialController = new CsrfTutorialController(csrfTutorial, controllerAuthentication);
-    }
+  @Test
+  void tutorial_TutorialCreated_ReturnsTutorial() {
+    final String mockUserId = "id";
 
-    @Test
-    void tutorial_TutorialCreated_ReturnsTutorial() {
-        final String mockUserId = "id";
+    when(controllerAuthentication.getUserId())
+      .thenReturn(Mono.just(mockUserId));
 
-        when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
+    final CsrfTutorialResult mockCsrfTutorialResult = mock(
+      CsrfTutorialResult.class
+    );
 
-        final CsrfTutorialResult mockCsrfTutorialResult = mock(CsrfTutorialResult.class);
+    when(csrfTutorial.getTutorial(mockUserId))
+      .thenReturn(Mono.just(mockCsrfTutorialResult));
 
-        when(csrfTutorial.getTutorial(mockUserId)).thenReturn(Mono.just(mockCsrfTutorialResult));
+    StepVerifier
+      .create(csrfTutorialController.tutorial())
+      .expectNext(mockCsrfTutorialResult)
+      .verifyComplete();
+  }
 
-        StepVerifier.create(csrfTutorialController.tutorial())
-                .expectNext(mockCsrfTutorialResult)
-                .verifyComplete();
-    }
+  @Test
+  void activate_TutorialCreated_ReturnsTutorial() {
+    final String mockUserId = "id";
+    final String mockPseudonym = "abcd123";
 
-    @Test
-    void activate_TutorialCreated_ReturnsTutorial() {
-        final String mockUserId = "id";
-        final String mockPseudonym = "abcd123";
+    when(controllerAuthentication.getUserId())
+      .thenReturn(Mono.just(mockUserId));
 
-        when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
+    final CsrfTutorialResult mockCsrfTutorialResult = mock(
+      CsrfTutorialResult.class
+    );
 
-        final CsrfTutorialResult mockCsrfTutorialResult = mock(CsrfTutorialResult.class);
+    when(csrfTutorial.attack(mockUserId, mockPseudonym))
+      .thenReturn(Mono.just(mockCsrfTutorialResult));
 
-        when(csrfTutorial.attack(mockUserId, mockPseudonym))
-                .thenReturn(Mono.just(mockCsrfTutorialResult));
-
-        StepVerifier.create(csrfTutorialController.attack(mockPseudonym))
-                .expectNext(mockCsrfTutorialResult)
-                .verifyComplete();
-    }
+    StepVerifier
+      .create(csrfTutorialController.attack(mockPseudonym))
+      .expectNext(mockCsrfTutorialResult)
+      .verifyComplete();
+  }
 }

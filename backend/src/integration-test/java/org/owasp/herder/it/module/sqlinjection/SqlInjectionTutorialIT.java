@@ -43,168 +43,192 @@ import reactor.test.StepVerifier;
 
 @DisplayName("SqlInjectionTutorial integration tests")
 class SqlInjectionTutorialIT extends BaseIT {
+  SqlInjectionTutorial sqlInjectionTutorial;
 
-    SqlInjectionTutorial sqlInjectionTutorial;
+  @Autowired
+  UserService userService;
 
-    @Autowired UserService userService;
+  @Autowired
+  ModuleService moduleService;
 
-    @Autowired ModuleService moduleService;
+  @Autowired
+  SubmissionService submissionService;
 
-    @Autowired SubmissionService submissionService;
+  @Autowired
+  ScoreboardService scoreboardService;
 
-    @Autowired ScoreboardService scoreboardService;
+  @Autowired
+  SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
 
-    @Autowired SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory;
+  @Autowired
+  FlagHandler flagHandler;
 
-    @Autowired FlagHandler flagHandler;
+  @Autowired
+  KeyService keyService;
 
-    @Autowired KeyService keyService;
+  @Autowired
+  IntegrationTestUtils integrationTestUtils;
 
-    @Autowired IntegrationTestUtils integrationTestUtils;
+  ModuleInitializer moduleInitializer;
 
-    ModuleInitializer moduleInitializer;
+  String moduleId;
 
-    String moduleId;
+  @BeforeEach
+  void setup() {
+    integrationTestUtils.resetState();
 
-    @BeforeEach
-    void setup() {
-        integrationTestUtils.resetState();
+    moduleInitializer = new ModuleInitializer(null, moduleService);
 
-        moduleInitializer = new ModuleInitializer(null, moduleService);
+    sqlInjectionTutorial =
+      new SqlInjectionTutorial(
+        sqlInjectionDatabaseClientFactory,
+        keyService,
+        flagHandler
+      );
 
-        sqlInjectionTutorial =
-                new SqlInjectionTutorial(
-                        sqlInjectionDatabaseClientFactory, keyService, flagHandler);
+    moduleId = moduleInitializer.initializeModule(sqlInjectionTutorial).block();
+  }
 
-        moduleId = moduleInitializer.initializeModule(sqlInjectionTutorial).block();
-    }
+  private String extractFlagFromRow(final SqlInjectionTutorialRow row) {
+    return row.getComment().replaceAll("Well done, flag is ", "");
+  }
 
-    private String extractFlagFromRow(final SqlInjectionTutorialRow row) {
-        return row.getComment().replaceAll("Well done, flag is ", "");
-    }
+  @Test
+  void submitQuery_CorrectAttackQuery_ModifiedFlagIsWrong() {
+    final String userId = userService.create("TestUser1").block();
 
-    @Test
-    void submitQuery_CorrectAttackQuery_ModifiedFlagIsWrong() {
-        final String userId = userService.create("TestUser1").block();
+    final Mono<String> flagVerificationMono = sqlInjectionTutorial
+      .submitQuery(userId, "' OR '1' = '1")
+      .skip(4)
+      .next()
+      .map(this::extractFlagFromRow);
 
-        final Mono<String> flagVerificationMono =
-                sqlInjectionTutorial
-                        .submitQuery(userId, "' OR '1' = '1")
-                        .skip(4)
-                        .next()
-                        .map(this::extractFlagFromRow);
+    // Take the flag we got from the tutorial, modify it, and expect validation to fail
+    StepVerifier
+      .create(
+        flagVerificationMono
+          .flatMap(
+            flag ->
+              submissionService.submitFlag(userId, moduleId, flag + "wrong")
+          )
+          .map(Submission::isValid)
+      )
+      .expectNext(false)
+      .verifyComplete();
+  }
 
-        // Take the flag we got from the tutorial, modify it, and expect validation to fail
-        StepVerifier.create(
-                        flagVerificationMono
-                                .flatMap(
-                                        flag ->
-                                                submissionService.submitFlag(
-                                                        userId, moduleId, flag + "wrong"))
-                                .map(Submission::isValid))
-                .expectNext(false)
-                .verifyComplete();
-    }
+  @Test
+  void submitQuery_CorrectAttackQuery_ReturnedFlagIsCorrect() {
+    final String userId = userService.create("TestUser1").block();
 
-    @Test
-    void submitQuery_CorrectAttackQuery_ReturnedFlagIsCorrect() {
-        final String userId = userService.create("TestUser1").block();
+    final Mono<String> flagMono = sqlInjectionTutorial
+      .submitQuery(userId, "' OR '1' = '1")
+      .skip(4)
+      .next()
+      .map(this::extractFlagFromRow);
 
-        final Mono<String> flagMono =
-                sqlInjectionTutorial
-                        .submitQuery(userId, "' OR '1' = '1")
-                        .skip(4)
-                        .next()
-                        .map(this::extractFlagFromRow);
+    // Submit the flag we got from the sql injection and make sure it validates
+    StepVerifier
+      .create(
+        flagMono
+          .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag))
+          .map(Submission::isValid)
+      )
+      .expectNext(true)
+      .verifyComplete();
+  }
 
-        // Submit the flag we got from the sql injection and make sure it validates
-        StepVerifier.create(
-                        flagMono.flatMap(
-                                        flag ->
-                                                submissionService.submitFlag(
-                                                        userId, moduleId, flag))
-                                .map(Submission::isValid))
-                .expectNext(true)
-                .verifyComplete();
-    }
+  @Test
+  void submitQuery_CorrectAttackQuery_ReturnsWholeDatabase() {
+    final String userId = userService.create("TestUser1").block();
 
-    @Test
-    void submitQuery_CorrectAttackQuery_ReturnsWholeDatabase() {
-        final String userId = userService.create("TestUser1").block();
+    StepVerifier
+      .create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
+      .expectNextCount(5)
+      .verifyComplete();
+  }
 
-        StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-                .expectNextCount(5)
-                .verifyComplete();
-    }
+  @Test
+  void submitQuery_InjectionDeletesAll_DoesNotImpactDatabase()
+    throws InterruptedException {
+    final String userId = userService.create("TestUser1").block();
 
-    @Test
-    void submitQuery_InjectionDeletesAll_DoesNotImpactDatabase() throws InterruptedException {
-        final String userId = userService.create("TestUser1").block();
+    sqlInjectionTutorial
+      .submitQuery(userId, "1'; DROP ALL OBJECTS; --")
+      .blockLast();
 
-        sqlInjectionTutorial.submitQuery(userId, "1'; DROP ALL OBJECTS; --").blockLast();
+    StepVerifier
+      .create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
+      .expectNextCount(5)
+      .verifyComplete();
+  }
 
-        StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-                .expectNextCount(5)
-                .verifyComplete();
-    }
+  @Test
+  void submitQuery_QueryWithNoMatches_EmptyResultSet() {
+    final String userId = userService.create("TestUser1").block();
+    StepVerifier
+      .create(sqlInjectionTutorial.submitQuery(userId, "test"))
+      .verifyComplete();
+  }
 
-    @Test
-    void submitQuery_QueryWithNoMatches_EmptyResultSet() {
-        final String userId = userService.create("TestUser1").block();
-        StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "test")).verifyComplete();
-    }
+  @Test
+  void submitQuery_QueryWithOneMatch_OneItemInResultSet() {
+    final String userId = userService.create("TestUser1").block();
+    StepVerifier
+      .create(sqlInjectionTutorial.submitQuery(userId, "Jonathan Jogenfors"))
+      .expectNextCount(1)
+      .verifyComplete();
+  }
 
-    @Test
-    void submitQuery_QueryWithOneMatch_OneItemInResultSet() {
-        final String userId = userService.create("TestUser1").block();
-        StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "Jonathan Jogenfors"))
-                .expectNextCount(1)
-                .verifyComplete();
-    }
+  @Test
+  void submitQuery_RepeatedCorrectAttackQuery_ReturnsWholeDatabaseFromCache() {
+    final String userId = userService.create("TestUser1").block();
 
-    @Test
-    void submitQuery_RepeatedCorrectAttackQuery_ReturnsWholeDatabaseFromCache() {
-        final String userId = userService.create("TestUser1").block();
+    StepVerifier
+      .create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
+      .expectNextCount(5)
+      .verifyComplete();
 
-        StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-                .expectNextCount(5)
-                .verifyComplete();
+    StepVerifier
+      .create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
+      .expectNextCount(5)
+      .verifyComplete();
+  }
 
-        StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-                .expectNextCount(5)
-                .verifyComplete();
-    }
+  @Test
+  void submitQuery_InvalidQueryWithOneApostrophe_ReturnsError() {
+    final String userId = userService.create("TestUser1").block();
 
-    @Test
-    void submitQuery_InvalidQueryWithOneApostrophe_ReturnsError() {
-        final String userId = userService.create("TestUser1").block();
+    final String errorMessage =
+      "Syntax error in SQL statement \"SELECT * FROM sqlinjection.users " +
+      "WHERE name = [*]'''\"; SQL statement:\n" +
+      "SELECT * FROM sqlinjection.users WHERE name = ''' [42000-210]";
 
-        final String errorMessage =
-                "Syntax error in SQL statement \"SELECT * FROM sqlinjection.users "
-                        + "WHERE name = [*]'''\"; SQL statement:\n"
-                        + "SELECT * FROM sqlinjection.users WHERE name = ''' [42000-210]";
+    StepVerifier
+      .create(
+        sqlInjectionTutorial
+          .submitQuery(userId, "'")
+          .map(SqlInjectionTutorialRow::getError)
+      )
+      .expectNext(errorMessage)
+      .verifyComplete();
+  }
 
-        StepVerifier.create(
-                        sqlInjectionTutorial
-                                .submitQuery(userId, "'")
-                                .map(SqlInjectionTutorialRow::getError))
-                .expectNext(errorMessage)
-                .verifyComplete();
-    }
+  @Test
+  void submitQuery_InvalidQueryOneEqualsOne_NumberFormatException() {
+    final String userId = userService.create("TestUser1").block();
 
-    @Test
-    void submitQuery_InvalidQueryOneEqualsOne_NumberFormatException() {
-        final String userId = userService.create("TestUser1").block();
+    final String errorMessage =
+      "Data conversion error converting \"CHARACTER VARYING to BOOLEAN\"; SQL statement:\n" +
+      "SELECT * FROM sqlinjection.users WHERE name = '' OR '1=1' [22018-210]";
 
-        final String errorMessage =
-                "Data conversion error converting \"CHARACTER VARYING to BOOLEAN\"; SQL statement:\n"
-                        + "SELECT * FROM sqlinjection.users WHERE name = '' OR '1=1' [22018-210]";
-
-        StepVerifier.create(
-                        sqlInjectionTutorial
-                                .submitQuery(userId, "' OR '1=1")
-                                .map(SqlInjectionTutorialRow::getError))
-                .expectNext(errorMessage)
-                .verifyComplete();
-    }
+    StepVerifier
+      .create(
+        sqlInjectionTutorial
+          .submitQuery(userId, "' OR '1=1")
+          .map(SqlInjectionTutorialRow::getError)
+      )
+      .expectNext(errorMessage)
+      .verifyComplete();
+  }
 }

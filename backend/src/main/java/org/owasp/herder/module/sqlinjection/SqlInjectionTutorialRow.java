@@ -22,11 +22,9 @@
 package org.owasp.herder.module.sqlinjection;
 
 import java.io.Serializable;
-
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
 @Builder
@@ -40,9 +38,15 @@ public class SqlInjectionTutorialRow implements Serializable {
 
   private String error;
 
-  SqlInjectionTutorialRow(final String name, final String comment, final String error) {
+  SqlInjectionTutorialRow(
+    final String name,
+    final String comment,
+    final String error
+  ) {
     if (name == null && comment == null && error == null) {
-      throw new NullPointerException("Name, comment, and error can't all be null");
+      throw new NullPointerException(
+        "Name, comment, and error can't all be null"
+      );
     }
     this.name = name;
     this.comment = comment;

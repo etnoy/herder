@@ -37,38 +37,50 @@ import org.springframework.beans.factory.annotation.Autowired;
 @DisplayName("Can reject an invalid module name")
 class ModuleNameValidationIT extends BaseIT {
   private static final String MODULE_NAME_TOO_LONG =
-      "Module name must not be longer than 80 characters";
+    "Module name must not be longer than 80 characters";
 
   private static final String NULL_MODULE_NAME = "Module name must not be null";
 
   private static final String MODULE_NAME_TOO_SHORT =
-      "Module name must be at least 2 characters long";
+    "Module name must be at least 2 characters long";
 
   static Stream<Arguments> invalidModuleNameSource() {
     return Stream.of(
-        arguments("", MODULE_NAME_TOO_SHORT),
-        arguments(null, NULL_MODULE_NAME),
-        arguments(TestConstants.VERY_LONG_STRING, MODULE_NAME_TOO_LONG));
+      arguments("", MODULE_NAME_TOO_SHORT),
+      arguments(null, NULL_MODULE_NAME),
+      arguments(TestConstants.VERY_LONG_STRING, MODULE_NAME_TOO_LONG)
+    );
   }
 
-  @Autowired ModuleService moduleService;
+  @Autowired
+  ModuleService moduleService;
 
-  @Autowired IntegrationTestUtils integrationTestUtils;
+  @Autowired
+  IntegrationTestUtils integrationTestUtils;
 
   @ParameterizedTest
   @MethodSource("invalidModuleNameSource")
   @DisplayName("in moduleService.create()")
-  void moduleService_create(final String moduleName, final String containingMessage) {
+  void moduleService_create(
+    final String moduleName,
+    final String containingMessage
+  ) {
     integrationTestUtils.checkConstraintViolation(
-        () -> moduleService.create(moduleName, TestConstants.TEST_MODULE_LOCATOR),
-        containingMessage);
+      () -> moduleService.create(moduleName, TestConstants.TEST_MODULE_LOCATOR),
+      containingMessage
+    );
   }
 
   @ParameterizedTest
   @MethodSource("invalidModuleNameSource")
   @DisplayName("in moduleService.doesNotExistByName()")
-  void moduleService_doesNotExistByName(final String moduleName, final String containingMessage) {
+  void moduleService_doesNotExistByName(
+    final String moduleName,
+    final String containingMessage
+  ) {
     integrationTestUtils.checkConstraintViolation(
-        () -> moduleService.existsByName(moduleName), containingMessage);
+      () -> moduleService.existsByName(moduleName),
+      containingMessage
+    );
   }
 }

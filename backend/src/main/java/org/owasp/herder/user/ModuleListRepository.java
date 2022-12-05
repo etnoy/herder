@@ -29,14 +29,20 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface ModuleListRepository extends ReactiveMongoRepository<ModuleList, String> {
-  @Aggregation({
-    "{$match: {'_id': ?0}}",
-    "{$unwind: {path: '$modules'}}",
-    "{$replaceRoot: {newRoot: '$modules'}}",
-    "{$match: {'locator': ?1}}",
-  })
-  public Mono<ModuleListItem> findListItemByLocator(final String userId, final String locator);
+public interface ModuleListRepository
+  extends ReactiveMongoRepository<ModuleList, String> {
+  @Aggregation(
+    {
+      "{$match: {'_id': ?0}}",
+      "{$unwind: {path: '$modules'}}",
+      "{$replaceRoot: {newRoot: '$modules'}}",
+      "{$match: {'locator': ?1}}"
+    }
+  )
+  public Mono<ModuleListItem> findListItemByLocator(
+    final String userId,
+    final String locator
+  );
 
   public Mono<ModuleList> findByTeamId(final String teamId);
 }

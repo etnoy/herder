@@ -45,73 +45,74 @@ import org.owasp.herder.test.BaseTest;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CryptoService unit tests")
 class CryptoServiceTest extends BaseTest {
+  CryptoService cryptoService;
 
-    CryptoService cryptoService;
+  @Mock
+  CryptoFactory cryptoFactory;
 
-    @Mock CryptoFactory cryptoFactory;
+  @Test
+  void hmac_GetHmacThrowsNoSuchAlgorithmException_ThrowsCryptographicException()
+    throws NoSuchAlgorithmException {
+    final byte[] key = { -91, -79, 67 };
+    final byte[] message = { 120, 56 };
+    when(cryptoFactory.getHmac()).thenThrow(new NoSuchAlgorithmException());
+    assertThatExceptionOfType(CryptographicException.class)
+      .isThrownBy(() -> cryptoService.hmac(key, message));
+  }
 
-    @Test
-    void hmac_GetHmacThrowsNoSuchAlgorithmException_ThrowsCryptographicException()
-            throws NoSuchAlgorithmException {
-        final byte[] key = {-91, -79, 67};
-        final byte[] message = {120, 56};
-        when(cryptoFactory.getHmac()).thenThrow(new NoSuchAlgorithmException());
-        assertThatExceptionOfType(CryptographicException.class)
-                .isThrownBy(() -> cryptoService.hmac(key, message));
-    }
+  @Test
+  void hmac_InvalidKeyException_ThrowsCryptographicException()
+    throws Exception {
+    final byte[] key = { -91 };
+    final byte[] message = { 120, 56, 111 };
 
-    @Test
-    void hmac_InvalidKeyException_ThrowsCryptographicException() throws Exception {
-        final byte[] key = {-91};
-        final byte[] message = {120, 56, 111};
+    Mac mockMac = mock(Mac.class);
+    when(cryptoFactory.getHmac()).thenReturn(mockMac);
 
-        Mac mockMac = mock(Mac.class);
-        when(cryptoFactory.getHmac()).thenReturn(mockMac);
+    SecretKeySpec mockSecretKeySpec = mock(SecretKeySpec.class);
+    when(cryptoFactory.getSecretKeySpec(key)).thenReturn(mockSecretKeySpec);
 
-        SecretKeySpec mockSecretKeySpec = mock(SecretKeySpec.class);
-        when(cryptoFactory.getSecretKeySpec(key)).thenReturn(mockSecretKeySpec);
+    doThrow(new InvalidKeyException()).when(mockMac).init(mockSecretKeySpec);
 
-        doThrow(new InvalidKeyException()).when(mockMac).init(mockSecretKeySpec);
+    assertThatExceptionOfType(CryptographicException.class)
+      .isThrownBy(() -> cryptoService.hmac(key, message));
+  }
 
-        assertThatExceptionOfType(CryptographicException.class)
-                .isThrownBy(() -> cryptoService.hmac(key, message));
-    }
+  @Test
+  void hmac_NullKey_ThrowsNullPointerException() {
+    final byte[] message = { 120, 56, 111, -98, -118, 44, -65, -127, 39, 35 };
 
-    @Test
-    void hmac_NullKey_ThrowsNullPointerException() {
-        final byte[] message = {120, 56, 111, -98, -118, 44, -65, -127, 39, 35};
+    assertThatExceptionOfType(NullPointerException.class)
+      .isThrownBy(() -> cryptoService.hmac(null, message));
+  }
 
-        assertThatExceptionOfType(NullPointerException.class)
-                .isThrownBy(() -> cryptoService.hmac(null, message));
-    }
+  @Test
+  void hmac_NullMessage_ThrowsNullPointerException() {
+    final byte[] key = { -91, -79, 67, -107, 9, 91, 62, -95, 80, 78 };
 
-    @Test
-    void hmac_NullMessage_ThrowsNullPointerException() {
-        final byte[] key = {-91, -79, 67, -107, 9, 91, 62, -95, 80, 78};
+    assertThatExceptionOfType(NullPointerException.class)
+      .isThrownBy(() -> cryptoService.hmac(key, null));
+  }
 
-        assertThatExceptionOfType(NullPointerException.class)
-                .isThrownBy(() -> cryptoService.hmac(key, null));
-    }
+  @Test
+  void hmac_ValidData_ReturnsHash() throws NoSuchAlgorithmException {
+    final byte[] key = { -91 };
+    final byte[] message = { 120, 56, 111 };
+    final byte[] expectedHash = { 46 };
 
-    @Test
-    void hmac_ValidData_ReturnsHash() throws NoSuchAlgorithmException {
-        final byte[] key = {-91};
-        final byte[] message = {120, 56, 111};
-        final byte[] expectedHash = {46};
+    Mac mockMac = mock(Mac.class);
+    when(cryptoFactory.getHmac()).thenReturn(mockMac);
 
-        Mac mockMac = mock(Mac.class);
-        when(cryptoFactory.getHmac()).thenReturn(mockMac);
+    SecretKeySpec mockSecretKeySpec = mock(SecretKeySpec.class);
+    when(cryptoFactory.getSecretKeySpec(key)).thenReturn(mockSecretKeySpec);
 
-        SecretKeySpec mockSecretKeySpec = mock(SecretKeySpec.class);
-        when(cryptoFactory.getSecretKeySpec(key)).thenReturn(mockSecretKeySpec);
+    when(mockMac.doFinal(message)).thenReturn(expectedHash);
 
-        when(mockMac.doFinal(message)).thenReturn(expectedHash);
+    assertThat(cryptoService.hmac(key, message)).isEqualTo(expectedHash);
+  }
 
-        assertThat(cryptoService.hmac(key, message)).isEqualTo(expectedHash);
-    }
-
-    @BeforeEach
-    void setup() {
-        cryptoService = new CryptoService(cryptoFactory);
-    }
+  @BeforeEach
+  void setup() {
+    cryptoService = new CryptoService(cryptoFactory);
+  }
 }

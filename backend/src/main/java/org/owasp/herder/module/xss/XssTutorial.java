@@ -42,26 +42,32 @@ public class XssTutorial implements BaseModule {
 
   private final XssService xssService;
 
-  public Mono<XssTutorialResponse> submitQuery(final String userId, final String query) {
-    final String htmlTarget =
-        String.format(
-            "<html><head><title>Alert</title></head><body><p>Result: %s</p></body></html>", query);
+  public Mono<XssTutorialResponse> submitQuery(
+    final String userId,
+    final String query
+  ) {
+    final String htmlTarget = String.format(
+      "<html><head><title>Alert</title></head><body><p>Result: %s</p></body></html>",
+      query
+    );
 
     final List<String> alerts = xssService.doXss(htmlTarget);
 
     final XssTutorialResponseBuilder xssTutorialResponseBuilder = XssTutorialResponse.builder();
 
     if (alerts.isEmpty()) {
-      xssTutorialResponseBuilder.result(String.format("Sorry, found no result for %s", query));
+      xssTutorialResponseBuilder.result(
+        String.format("Sorry, found no result for %s", query)
+      );
       return Mono.just(xssTutorialResponseBuilder.build());
     } else {
       xssTutorialResponseBuilder.alert(alerts.get(0));
 
       return flagHandler
-          .getDynamicFlag(userId, getLocator())
-          .map(flag -> String.format("Congratulations, flag is %s", flag))
-          .map(xssTutorialResponseBuilder::result)
-          .map(XssTutorialResponseBuilder::build);
+        .getDynamicFlag(userId, getLocator())
+        .map(flag -> String.format("Congratulations, flag is %s", flag))
+        .map(xssTutorialResponseBuilder::result)
+        .map(XssTutorialResponseBuilder::build);
     }
   }
 }

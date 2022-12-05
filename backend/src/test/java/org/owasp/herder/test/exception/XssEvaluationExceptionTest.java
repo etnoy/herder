@@ -33,9 +33,11 @@ import org.owasp.herder.test.util.TestConstants;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("XssEvaluationException unit tests")
 class XssEvaluationExceptionTest {
+
   @Test
   void noArgsConstructor_NoArguments_ReturnsException() {
-    assertThat(new XssEvaluationException()).isInstanceOf(XssEvaluationException.class);
+    assertThat(new XssEvaluationException())
+      .isInstanceOf(XssEvaluationException.class);
   }
 
   @Test
@@ -49,8 +51,10 @@ class XssEvaluationExceptionTest {
   @Test
   void messageExceptionConstructor_ValidMessageAndException_MessageIncluded() {
     for (final String message : TestConstants.STRINGS) {
-      XssEvaluationException exception =
-          new XssEvaluationException(message, new RuntimeException());
+      XssEvaluationException exception = new XssEvaluationException(
+        message,
+        new RuntimeException()
+      );
       assertThat(exception.getMessage()).isEqualTo(message);
       assertThat(exception.getCause()).isInstanceOf(RuntimeException.class);
     }
@@ -58,7 +62,9 @@ class XssEvaluationExceptionTest {
 
   @Test
   void exceptionConstructor_ValidException_MessageIncluded() {
-    XssEvaluationException exception = new XssEvaluationException(new RuntimeException());
+    XssEvaluationException exception = new XssEvaluationException(
+      new RuntimeException()
+    );
     assertThat(exception.getCause()).isInstanceOf(RuntimeException.class);
   }
 }

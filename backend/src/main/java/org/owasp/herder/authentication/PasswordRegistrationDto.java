@@ -31,9 +31,12 @@ import org.owasp.herder.validation.ValidPassword;
 public class PasswordRegistrationDto implements Serializable {
   private static final long serialVersionUID = 8155074795022450359L;
 
-  @ValidDisplayName private String displayName;
+  @ValidDisplayName
+  private String displayName;
 
-  @ValidLoginName private String userName;
+  @ValidLoginName
+  private String userName;
 
-  @ValidPassword private String password;
+  @ValidPassword
+  private String password;
 }

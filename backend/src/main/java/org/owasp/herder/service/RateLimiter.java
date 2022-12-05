@@ -21,18 +21,18 @@
  */
 package org.owasp.herder.service;
 
-import java.util.HashMap;
-
-import org.springframework.stereotype.Service;
-
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.local.LocalBucketBuilder;
+import java.util.HashMap;
+import org.springframework.stereotype.Service;
 
 @Service
 abstract class RateLimiter {
   private HashMap<String, Bucket> buckets = new HashMap<>();
 
-  abstract LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder);
+  abstract LocalBucketBuilder transformBuilder(
+    LocalBucketBuilder bucketBuilder
+  );
 
   public Bucket resolveBucket(final String userId) {
     if (buckets.containsKey(userId)) {

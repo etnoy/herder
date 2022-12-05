@@ -51,7 +51,8 @@ public class SanitizedRankedSubmission implements Serializable {
 
   @NonNull LocalDateTime time;
 
-  @ToString.Exclude String flag;
+  @ToString.Exclude
+  String flag;
 
   @NonNull Long baseScore;
 

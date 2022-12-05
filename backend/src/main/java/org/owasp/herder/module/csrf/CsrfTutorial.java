@@ -44,58 +44,71 @@ public class CsrfTutorial implements BaseModule {
   private final FlagHandler flagHandler;
 
   public Mono<CsrfTutorialResult> getTutorial(final String userId) {
-    final Mono<String> pseudonymMono = csrfService.getPseudonym(userId, getLocator());
+    final Mono<String> pseudonymMono = csrfService.getPseudonym(
+      userId,
+      getLocator()
+    );
 
-    final Mono<CsrfTutorialResultBuilder> resultWithoutFlag =
-        pseudonymMono.map(p -> CsrfTutorialResult.builder().pseudonym(p));
+    final Mono<CsrfTutorialResultBuilder> resultWithoutFlag = pseudonymMono.map(
+      p -> CsrfTutorialResult.builder().pseudonym(p)
+    );
 
-    final Mono<CsrfTutorialResultBuilder> resultWithFlag =
-        resultWithoutFlag
-            .zipWith(flagHandler.getDynamicFlag(userId, getLocator()))
-            .map(tuple -> tuple.getT1().flag(tuple.getT2()));
+    final Mono<CsrfTutorialResultBuilder> resultWithFlag = resultWithoutFlag
+      .zipWith(flagHandler.getDynamicFlag(userId, getLocator()))
+      .map(tuple -> tuple.getT1().flag(tuple.getT2()));
 
     return pseudonymMono
-        .flatMap(pseudonym -> csrfService.validate(pseudonym, getLocator()))
-        .filter(isActive -> isActive)
-        .flatMap(isActive -> resultWithFlag)
-        .switchIfEmpty(resultWithoutFlag)
-        .map(CsrfTutorialResultBuilder::build);
+      .flatMap(pseudonym -> csrfService.validate(pseudonym, getLocator()))
+      .filter(isActive -> isActive)
+      .flatMap(isActive -> resultWithFlag)
+      .switchIfEmpty(resultWithoutFlag)
+      .map(CsrfTutorialResultBuilder::build);
   }
 
-  public Mono<CsrfTutorialResult> attack(final String userId, final String target) {
-
+  public Mono<CsrfTutorialResult> attack(
+    final String userId,
+    final String target
+  ) {
     CsrfTutorialResultBuilder csrfTutorialResultBuilder = CsrfTutorialResult.builder();
 
-    log.debug(String.format("User %s is attacking csrf target %s", userId, target));
+    log.debug(
+      String.format("User %s is attacking csrf target %s", userId, target)
+    );
 
     return csrfService
-        .validatePseudonym(target, getLocator())
-        .flatMap(
-            valid -> {
-              if (Boolean.TRUE.equals(valid)) {
-                return csrfService
-                    .getPseudonym(userId, getLocator())
-                    .flatMap(
-                        pseudonym -> {
-                          if (pseudonym.equals(target)) {
-                            return Mono.just(
-                                csrfTutorialResultBuilder
-                                    .error("You cannot activate yourself")
-                                    .build());
-                          } else {
-                            return csrfService
-                                .attack(target, getLocator())
-                                .then(
-                                    Mono.just(
-                                        csrfTutorialResultBuilder
-                                            .message("Thank you for voting")
-                                            .build()));
-                          }
-                        });
-
-              } else {
-                return Mono.just(csrfTutorialResultBuilder.error("Unknown target ID").build());
-              }
-            });
+      .validatePseudonym(target, getLocator())
+      .flatMap(
+        valid -> {
+          if (Boolean.TRUE.equals(valid)) {
+            return csrfService
+              .getPseudonym(userId, getLocator())
+              .flatMap(
+                pseudonym -> {
+                  if (pseudonym.equals(target)) {
+                    return Mono.just(
+                      csrfTutorialResultBuilder
+                        .error("You cannot activate yourself")
+                        .build()
+                    );
+                  } else {
+                    return csrfService
+                      .attack(target, getLocator())
+                      .then(
+                        Mono.just(
+                          csrfTutorialResultBuilder
+                            .message("Thank you for voting")
+                            .build()
+                        )
+                      );
+                  }
+                }
+              );
+          } else {
+            return Mono.just(
+              csrfTutorialResultBuilder.error("Unknown target ID").build()
+            );
+          }
+        }
+      );
   }
 }

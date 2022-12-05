@@ -22,7 +22,6 @@
 package org.owasp.herder.authentication;
 
 import java.io.Serializable;
-
 import lombok.Builder;
 import lombok.Value;
 import lombok.With;
@@ -35,5 +34,7 @@ public final class AuthResponse implements Serializable {
 
   private String userId;
   private String displayName;
-  @Builder.Default private boolean isAdmin = false;
+
+  @Builder.Default
+  private boolean isAdmin = false;
 }

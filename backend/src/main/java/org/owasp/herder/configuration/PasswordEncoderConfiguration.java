@@ -30,6 +30,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Generated
 @Configuration
 public class PasswordEncoderConfiguration {
+
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();

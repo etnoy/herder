@@ -26,7 +26,8 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface PasswordAuthRepository extends ReactiveMongoRepository<PasswordAuth, String> {
+public interface PasswordAuthRepository
+  extends ReactiveMongoRepository<PasswordAuth, String> {
   public Mono<PasswordAuth> findByLoginName(final String loginName);
 
   public Mono<PasswordAuth> findByUserId(final String userId);

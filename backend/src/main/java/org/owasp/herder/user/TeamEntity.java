@@ -40,7 +40,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public final class TeamEntity implements Serializable {
   private static final long serialVersionUID = -7440925760611988872L;
 
-  @Id String id;
+  @Id
+  String id;
 
   @NonNull String displayName;
 

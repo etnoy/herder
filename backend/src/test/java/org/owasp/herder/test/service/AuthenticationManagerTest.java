@@ -40,46 +40,51 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthenticationManager unit tests")
 class AuthenticationManagerTest {
-    private AuthenticationManager authenticationManager;
+  private AuthenticationManager authenticationManager;
 
-    @Mock private WebTokenService webTokenService;
+  @Mock
+  private WebTokenService webTokenService;
 
-    @Mock private UserService userService;
+  @Mock
+  private UserService userService;
 
-    @Test
-    void authenticate_ValidToken_Authenticates() {
-        final Authentication mockAuthentication = mock(Authentication.class);
-        final String mockToken = "token";
-        when(mockAuthentication.getCredentials()).thenReturn(mockToken);
+  @Test
+  void authenticate_ValidToken_Authenticates() {
+    final Authentication mockAuthentication = mock(Authentication.class);
+    final String mockToken = "token";
+    when(mockAuthentication.getCredentials()).thenReturn(mockToken);
 
-        when(webTokenService.parseToken(mockToken)).thenReturn(mockAuthentication);
+    when(webTokenService.parseToken(mockToken)).thenReturn(mockAuthentication);
 
-        StepVerifier.create(authenticationManager.authenticate(mockAuthentication))
-                .expectNext(mockAuthentication)
-                .verifyComplete();
-    }
+    StepVerifier
+      .create(authenticationManager.authenticate(mockAuthentication))
+      .expectNext(mockAuthentication)
+      .verifyComplete();
+  }
 
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
-        authenticationManager = new AuthenticationManager(webTokenService);
-    }
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
+    authenticationManager = new AuthenticationManager(webTokenService);
+  }
 
-    @Test
-    void authenticate_InvalidToken_DoesNotAuthenticate() {
-        final Authentication mockAuthentication = mock(Authentication.class);
-        final String mockToken = "token";
-        final String invalidToken = "Invalid token";
-        when(mockAuthentication.getCredentials()).thenReturn(mockToken);
+  @Test
+  void authenticate_InvalidToken_DoesNotAuthenticate() {
+    final Authentication mockAuthentication = mock(Authentication.class);
+    final String mockToken = "token";
+    final String invalidToken = "Invalid token";
+    when(mockAuthentication.getCredentials()).thenReturn(mockToken);
 
-        when(webTokenService.parseToken(mockToken))
-                .thenThrow(new BadCredentialsException(invalidToken));
+    when(webTokenService.parseToken(mockToken))
+      .thenThrow(new BadCredentialsException(invalidToken));
 
-        StepVerifier.create(authenticationManager.authenticate(mockAuthentication))
-                .expectErrorMatches(
-                        throwable ->
-                                throwable instanceof BadCredentialsException
-                                        && throwable.getMessage().equals(invalidToken))
-                .verify();
-    }
+    StepVerifier
+      .create(authenticationManager.authenticate(mockAuthentication))
+      .expectErrorMatches(
+        throwable ->
+          throwable instanceof BadCredentialsException &&
+          throwable.getMessage().equals(invalidToken)
+      )
+      .verify();
+  }
 }

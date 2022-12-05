@@ -37,7 +37,6 @@ import reactor.core.publisher.Mono;
 @Validated
 @Service
 public class ClassService {
-
   private final ClassRepository classRepository;
 
   public Mono<Long> count() {
@@ -55,14 +54,24 @@ public class ClassService {
 
     log.debug("Creating class with name " + className);
 
-    return Mono.just(className)
-        .filterWhen(this::doesNotExistByName)
-        .switchIfEmpty(Mono.error(new DuplicateClassNameException("Class name already exists")))
-        .flatMap(name -> classRepository.save(ClassEntity.builder().name(name).build()));
+    return Mono
+      .just(className)
+      .filterWhen(this::doesNotExistByName)
+      .switchIfEmpty(
+        Mono.error(new DuplicateClassNameException("Class name already exists"))
+      )
+      .flatMap(
+        name -> classRepository.save(ClassEntity.builder().name(name).build())
+      );
   }
 
-  private Mono<Boolean> doesNotExistByName(@ValidClassName final String className) {
-    return classRepository.findByName(className).map(u -> false).defaultIfEmpty(true);
+  private Mono<Boolean> doesNotExistByName(
+    @ValidClassName final String className
+  ) {
+    return classRepository
+      .findByName(className)
+      .map(u -> false)
+      .defaultIfEmpty(true);
   }
 
   public Mono<Boolean> existsById(@ValidClassId final String classId) {
@@ -70,24 +79,29 @@ public class ClassService {
   }
 
   public Mono<ClassEntity> getById(@ValidClassId final String classId) {
-    return Mono.just(classId)
-        .filterWhen(classRepository::existsById)
-        .switchIfEmpty(Mono.error(new ClassIdNotFoundException()))
-        .flatMap(classRepository::findById);
+    return Mono
+      .just(classId)
+      .filterWhen(classRepository::existsById)
+      .switchIfEmpty(Mono.error(new ClassIdNotFoundException()))
+      .flatMap(classRepository::findById);
   }
 
   public Mono<ClassEntity> setName(
-      @ValidClassId final String classId, @ValidClassName final String name) {
-    Mono<String> nameMono =
-        Mono.just(name)
-            .filterWhen(this::doesNotExistByName)
-            .switchIfEmpty(
-                Mono.error(new DuplicateClassNameException("Class name already exists")));
+    @ValidClassId final String classId,
+    @ValidClassName final String name
+  ) {
+    Mono<String> nameMono = Mono
+      .just(name)
+      .filterWhen(this::doesNotExistByName)
+      .switchIfEmpty(
+        Mono.error(new DuplicateClassNameException("Class name already exists"))
+      );
 
-    return Mono.just(classId)
-        .flatMap(this::getById)
-        .zipWith(nameMono)
-        .map(tuple -> tuple.getT1().withName(tuple.getT2()))
-        .flatMap(classRepository::save);
+    return Mono
+      .just(classId)
+      .flatMap(this::getById)
+      .zipWith(nameMono)
+      .map(tuple -> tuple.getT1().withName(tuple.getT2()))
+      .flatMap(classRepository::save);
   }
 }

@@ -37,5 +37,6 @@ public final class LoginResponse implements Serializable {
 
   private String errorMessage;
 
-  @ValidDisplayName private String displayName;
+  @ValidDisplayName
+  private String displayName;
 }

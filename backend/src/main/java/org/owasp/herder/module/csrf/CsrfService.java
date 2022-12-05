@@ -23,11 +23,9 @@ package org.owasp.herder.module.csrf;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-
+import lombok.RequiredArgsConstructor;
 import org.owasp.herder.flag.FlagHandler;
 import org.springframework.stereotype.Component;
-
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -41,34 +39,46 @@ public class CsrfService {
 
   public Mono<Void> attack(final String pseudonym, final String moduleName) {
     return csrfAttackRepository
-        .findByPseudonymAndModuleLocator(pseudonym, moduleName)
-        .map(attack -> attack.withFinished(LocalDateTime.now(clock)))
-        .flatMap(csrfAttackRepository::save)
-        .then(Mono.empty());
+      .findByPseudonymAndModuleLocator(pseudonym, moduleName)
+      .map(attack -> attack.withFinished(LocalDateTime.now(clock)))
+      .flatMap(csrfAttackRepository::save)
+      .then(Mono.empty());
   }
 
-  public Mono<String> getPseudonym(final String userId, final String moduleLocator) {
+  public Mono<String> getPseudonym(
+    final String userId,
+    final String moduleLocator
+  ) {
     return flagHandler.getSaltedHmac(userId, moduleLocator, "csrfPseudonym");
   }
 
-  public Mono<Boolean> validatePseudonym(final String pseudonym, final String moduleLocator) {
+  public Mono<Boolean> validatePseudonym(
+    final String pseudonym,
+    final String moduleLocator
+  ) {
     return csrfAttackRepository
-        .countByPseudonymAndModuleLocator(pseudonym, moduleLocator)
-        .map(count -> count > 0);
+      .countByPseudonymAndModuleLocator(pseudonym, moduleLocator)
+      .map(count -> count > 0);
   }
 
-  public Mono<Boolean> validate(final String pseudonym, final String moduleLocator) {
+  public Mono<Boolean> validate(
+    final String pseudonym,
+    final String moduleLocator
+  ) {
     return csrfAttackRepository
-        .findByPseudonymAndModuleLocator(pseudonym, moduleLocator)
-        .map(attack -> attack.getFinished() != null)
-        .switchIfEmpty(
-            csrfAttackRepository
-                .save(
-                    CsrfAttack.builder()
-                        .pseudonym(pseudonym)
-                        .started(LocalDateTime.now(clock))
-                        .moduleLocator(moduleLocator)
-                        .build())
-                .then(Mono.just(false)));
+      .findByPseudonymAndModuleLocator(pseudonym, moduleLocator)
+      .map(attack -> attack.getFinished() != null)
+      .switchIfEmpty(
+        csrfAttackRepository
+          .save(
+            CsrfAttack
+              .builder()
+              .pseudonym(pseudonym)
+              .started(LocalDateTime.now(clock))
+              .moduleLocator(moduleLocator)
+              .build()
+          )
+          .then(Mono.just(false))
+      );
   }
 }

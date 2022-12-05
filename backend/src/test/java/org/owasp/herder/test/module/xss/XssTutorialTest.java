@@ -47,71 +47,82 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("XssTutorial unit tests")
 class XssTutorialTest extends BaseTest {
-    private static final String MODULE_NAME = "xss-tutorial";
+  private static final String MODULE_NAME = "xss-tutorial";
 
-    XssTutorial xssTutorial;
+  XssTutorial xssTutorial;
 
-    @Mock ModuleService moduleService;
+  @Mock
+  ModuleService moduleService;
 
-    @Mock XssService xssService;
+  @Mock
+  XssService xssService;
 
-    @Mock ScoreboardService scoreboardService;
+  @Mock
+  ScoreboardService scoreboardService;
 
-    @Mock FlagHandler flagHandler;
+  @Mock
+  FlagHandler flagHandler;
 
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
+  final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
-        xssTutorial = new XssTutorial(flagHandler, xssService);
-    }
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
+    xssTutorial = new XssTutorial(flagHandler, xssService);
+  }
 
-    @Test
-    void submitQuery_MakesAlert_ReturnsFlag() {
-        final String mockUserId = "id";
-        final String mockFlag = "mockedflag";
-        final String query = "username";
+  @Test
+  void submitQuery_MakesAlert_ReturnsFlag() {
+    final String mockUserId = "id";
+    final String mockFlag = "mockedflag";
+    final String query = "username";
 
-        when(mockModule.getName()).thenReturn(MODULE_NAME);
-        when(flagHandler.getDynamicFlag(mockUserId, MODULE_NAME)).thenReturn(Mono.just(mockFlag));
-        when(mockModule.isFlagStatic()).thenReturn(false);
+    when(mockModule.getName()).thenReturn(MODULE_NAME);
+    when(flagHandler.getDynamicFlag(mockUserId, MODULE_NAME))
+      .thenReturn(Mono.just(mockFlag));
+    when(mockModule.isFlagStatic()).thenReturn(false);
 
-        final String mockTarget =
-                "<html><head><title>Alert</title></head><body><p>Result: username</p></body></html>";
+    final String mockTarget =
+      "<html><head><title>Alert</title></head><body><p>Result: username</p></body></html>";
 
-        final List<String> mockAlertList = Arrays.asList(new String[] {"xss", "alert"});
+    final List<String> mockAlertList = Arrays.asList(
+      new String[] { "xss", "alert" }
+    );
 
-        when(xssService.doXss(mockTarget)).thenReturn(mockAlertList);
+    when(xssService.doXss(mockTarget)).thenReturn(mockAlertList);
 
-        StepVerifier.create(xssTutorial.submitQuery(mockUserId, query))
-                .assertNext(
-                        response -> {
-                            assertThat(response.getResult()).contains(mockFlag);
-                            assertThat(response.getAlert()).isEqualTo(mockAlertList.get(0));
-                        })
-                .verifyComplete();
-    }
+    StepVerifier
+      .create(xssTutorial.submitQuery(mockUserId, query))
+      .assertNext(
+        response -> {
+          assertThat(response.getResult()).contains(mockFlag);
+          assertThat(response.getAlert()).isEqualTo(mockAlertList.get(0));
+        }
+      )
+      .verifyComplete();
+  }
 
-    @Test
-    void submitQuery_NoAlert_ReturnsQuery() {
-        final String mockUserId = "id";
-        final String query = "username";
+  @Test
+  void submitQuery_NoAlert_ReturnsQuery() {
+    final String mockUserId = "id";
+    final String query = "username";
 
-        final String mockTarget =
-                "<html><head><title>Alert</title></head><body><p>Result: username</p></body></html>";
+    final String mockTarget =
+      "<html><head><title>Alert</title></head><body><p>Result: username</p></body></html>";
 
-        final List<String> mockAlertList = new ArrayList<>();
+    final List<String> mockAlertList = new ArrayList<>();
 
-        when(xssService.doXss(mockTarget)).thenReturn(mockAlertList);
+    when(xssService.doXss(mockTarget)).thenReturn(mockAlertList);
 
-        StepVerifier.create(xssTutorial.submitQuery(mockUserId, query))
-                .assertNext(
-                        response -> {
-                            assertThat(response.getResult()).contains("Sorry");
-                            assertThat(response.getResult()).doesNotContain("Congratulations");
-                            assertThat(response.getAlert()).isNull();
-                        })
-                .verifyComplete();
-    }
+    StepVerifier
+      .create(xssTutorial.submitQuery(mockUserId, query))
+      .assertNext(
+        response -> {
+          assertThat(response.getResult()).contains("Sorry");
+          assertThat(response.getResult()).doesNotContain("Congratulations");
+          assertThat(response.getAlert()).isNull();
+        }
+      )
+      .verifyComplete();
+  }
 }

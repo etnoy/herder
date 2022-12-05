@@ -44,78 +44,88 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/v1/")
 @Validated
 public class LoginController {
+  private final UserService userService;
 
-    private final UserService userService;
+  private final WebTokenService webTokenService;
 
-    private final WebTokenService webTokenService;
+  private final PasswordEncoder passwordEncoder;
 
-    private final PasswordEncoder passwordEncoder;
+  private final ControllerAuthentication controllerAuthentication;
 
-    private final ControllerAuthentication controllerAuthentication;
+  @PostMapping(value = "/login")
+  public Mono<ResponseEntity<LoginResponse>> login(
+    @RequestBody @Valid PasswordLoginDto loginDto
+  ) {
+    final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
+    return userService
+      .authenticate(loginDto.getUserName(), loginDto.getPassword())
+      .map(
+        authResponse -> {
+          final String accessToken = webTokenService.generateToken(
+            authResponse.getUserId(),
+            authResponse.isAdmin()
+          );
+          final LoginResponse loginResponse = loginResponseBuilder
+            .accessToken(accessToken)
+            .displayName(authResponse.getDisplayName())
+            .id(authResponse.getUserId())
+            .build();
+          return new ResponseEntity<>(loginResponse, HttpStatus.OK);
+        }
+      )
+      .onErrorResume(
+        AuthenticationException.class,
+        throwable -> {
+          final LoginResponse loginResponse = loginResponseBuilder
+            .errorMessage(throwable.getMessage())
+            .build();
+          return Mono.just(
+            new ResponseEntity<>(loginResponse, HttpStatus.UNAUTHORIZED)
+          );
+        }
+      );
+  }
 
-    @PostMapping(value = "/login")
-    public Mono<ResponseEntity<LoginResponse>> login(
-            @RequestBody @Valid PasswordLoginDto loginDto) {
-        final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
-        return userService
-                .authenticate(loginDto.getUserName(), loginDto.getPassword())
-                .map(
-                        authResponse -> {
-                            final String accessToken =
-                                    webTokenService.generateToken(
-                                            authResponse.getUserId(), authResponse.isAdmin());
-                            final LoginResponse loginResponse =
-                                    loginResponseBuilder
-                                            .accessToken(accessToken)
-                                            .displayName(authResponse.getDisplayName())
-                                            .id(authResponse.getUserId())
-                                            .build();
-                            return new ResponseEntity<>(loginResponse, HttpStatus.OK);
-                        })
-                .onErrorResume(
-                        AuthenticationException.class,
-                        throwable -> {
-                            final LoginResponse loginResponse =
-                                    loginResponseBuilder
-                                            .errorMessage(throwable.getMessage())
-                                            .build();
-                            return Mono.just(
-                                    new ResponseEntity<>(loginResponse, HttpStatus.UNAUTHORIZED));
-                        });
-    }
+  @PostMapping(path = "/impersonate")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  public Mono<ResponseEntity<LoginResponse>> impersonate(
+    @Valid @RequestBody final ImpersonationDto impersonatedUserId
+  ) {
+    final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
+    return controllerAuthentication
+      .getUserId()
+      .map(
+        userId ->
+          webTokenService.generateImpersonationToken(
+            userId,
+            impersonatedUserId.getImpersonatedId(),
+            false
+          )
+      )
+      .zipWith(userService.getById(impersonatedUserId.getImpersonatedId()))
+      .map(
+        tuple -> {
+          final LoginResponse loginResponse = loginResponseBuilder
+            .accessToken(tuple.getT1())
+            .displayName(tuple.getT2().getDisplayName())
+            .id(tuple.getT2().getId())
+            .build();
+          return new ResponseEntity<>(loginResponse, HttpStatus.OK);
+        }
+      );
+  }
 
-    @PostMapping(path = "/impersonate")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public Mono<ResponseEntity<LoginResponse>> impersonate(
-            @Valid @RequestBody final ImpersonationDto impersonatedUserId) {
-        final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
-        return controllerAuthentication
-                .getUserId()
-                .map(
-                        userId ->
-                                webTokenService.generateImpersonationToken(
-                                        userId, impersonatedUserId.getImpersonatedId(), false))
-                .zipWith(userService.getById(impersonatedUserId.getImpersonatedId()))
-                .map(
-                        tuple -> {
-                            final LoginResponse loginResponse =
-                                    loginResponseBuilder
-                                            .accessToken(tuple.getT1())
-                                            .displayName(tuple.getT2().getDisplayName())
-                                            .id(tuple.getT2().getId())
-                                            .build();
-                            return new ResponseEntity<>(loginResponse, HttpStatus.OK);
-                        });
-    }
-
-    @PostMapping(path = "/register")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Mono<Void> register(@Valid @RequestBody final PasswordRegistrationDto registrationDto) {
-        return userService
-                .createPasswordUser(
-                        registrationDto.getDisplayName(),
-                        registrationDto.getUserName(),
-                        passwordEncoder.encode(registrationDto.getPassword()))
-                .then();
-    }
+  @PostMapping(path = "/register")
+  @ResponseStatus(HttpStatus.CREATED)
+  public Mono<Void> register(
+    @Valid @RequestBody final PasswordRegistrationDto registrationDto
+  ) {
+    return userService
+      .createPasswordUser(
+        registrationDto.getDisplayName(),
+        registrationDto.getUserName(),
+        passwordEncoder.encode(registrationDto.getPassword())
+      )
+      .then();
+  }
 }

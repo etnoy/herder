@@ -46,79 +46,91 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserController unit tests")
 class UserControllerTest extends BaseTest {
+  private UserController userController;
 
-    private UserController userController;
+  @Mock
+  private UserService userService;
 
-    @Mock private UserService userService;
+  @Test
+  void deleteById_ValidId_CallsUserService() {
+    when(userService.delete(TestConstants.TEST_USER_ID))
+      .thenReturn(Mono.empty());
+    StepVerifier
+      .create(userController.deleteById(TestConstants.TEST_USER_ID))
+      .verifyComplete();
+    verify(userService, times(1)).delete(TestConstants.TEST_USER_ID);
+  }
 
-    @Test
-    void deleteById_ValidId_CallsUserService() {
-        when(userService.delete(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
-        StepVerifier.create(userController.deleteById(TestConstants.TEST_USER_ID)).verifyComplete();
-        verify(userService, times(1)).delete(TestConstants.TEST_USER_ID);
-    }
+  @Test
+  void findAll_NoUsersExist_ReturnsEmpty() {
+    when(userService.findAllUsers()).thenReturn(Flux.empty());
+    StepVerifier.create(userController.findAll()).verifyComplete();
+    verify(userService, times(1)).findAllUsers();
+  }
 
-    @Test
-    void findAll_NoUsersExist_ReturnsEmpty() {
-        when(userService.findAllUsers()).thenReturn(Flux.empty());
-        StepVerifier.create(userController.findAll()).verifyComplete();
-        verify(userService, times(1)).findAllUsers();
-    }
+  @Test
+  void findAll_UsersExist_ReturnsUsers() {
+    final UserEntity user1 = mock(UserEntity.class);
+    final UserEntity user2 = mock(UserEntity.class);
+    final UserEntity user3 = mock(UserEntity.class);
+    final UserEntity user4 = mock(UserEntity.class);
 
-    @Test
-    void findAll_UsersExist_ReturnsUsers() {
-        final UserEntity user1 = mock(UserEntity.class);
-        final UserEntity user2 = mock(UserEntity.class);
-        final UserEntity user3 = mock(UserEntity.class);
-        final UserEntity user4 = mock(UserEntity.class);
+    when(userService.findAllUsers())
+      .thenReturn(Flux.just(user1, user2, user3, user4));
+    StepVerifier
+      .create(userController.findAll())
+      .expectNext(user1)
+      .expectNext(user2)
+      .expectNext(user3)
+      .expectNext(user4)
+      .verifyComplete();
+    verify(userService, times(1)).findAllUsers();
+  }
 
-        when(userService.findAllUsers()).thenReturn(Flux.just(user1, user2, user3, user4));
-        StepVerifier.create(userController.findAll())
-                .expectNext(user1)
-                .expectNext(user2)
-                .expectNext(user3)
-                .expectNext(user4)
-                .verifyComplete();
-        verify(userService, times(1)).findAllUsers();
-    }
+  @Test
+  void findById_InvalidUserId_ReturnsUserNotFoundException() {
+    final ConstraintViolationException mockConstraintViolation = mock(
+      ConstraintViolationException.class
+    );
+    final String testMessage = "Invalid id";
+    when(mockConstraintViolation.getMessage()).thenReturn(testMessage);
 
-    @Test
-    void findById_InvalidUserId_ReturnsUserNotFoundException() {
-        final ConstraintViolationException mockConstraintViolation =
-                mock(ConstraintViolationException.class);
-        final String testMessage = "Invalid id";
-        when(mockConstraintViolation.getMessage()).thenReturn(testMessage);
+    when(userService.findById(TestConstants.TEST_USER_ID))
+      .thenThrow(mockConstraintViolation);
+    StepVerifier
+      .create(userController.findById(TestConstants.TEST_USER_ID))
+      .expectError(UserNotFoundException.class)
+      .verify();
+    verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
+  }
 
-        when(userService.findById(TestConstants.TEST_USER_ID)).thenThrow(mockConstraintViolation);
-        StepVerifier.create(userController.findById(TestConstants.TEST_USER_ID))
-                .expectError(UserNotFoundException.class)
-                .verify();
-        verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
-    }
+  @Test
+  void findById_UserIdDoesNotExist_ReturnsUserNotFoundException() {
+    when(userService.findById(TestConstants.TEST_USER_ID))
+      .thenReturn(Mono.empty());
+    StepVerifier
+      .create(userController.findById(TestConstants.TEST_USER_ID))
+      .expectError(UserNotFoundException.class)
+      .verify();
+    verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
+  }
 
-    @Test
-    void findById_UserIdDoesNotExist_ReturnsUserNotFoundException() {
-        when(userService.findById(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
-        StepVerifier.create(userController.findById(TestConstants.TEST_USER_ID))
-                .expectError(UserNotFoundException.class)
-                .verify();
-        verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
-    }
+  @Test
+  void findById_UserIdExists_ReturnsUser() {
+    final UserEntity mockUser = mock(UserEntity.class);
 
-    @Test
-    void findById_UserIdExists_ReturnsUser() {
-        final UserEntity mockUser = mock(UserEntity.class);
+    when(userService.findById(TestConstants.TEST_USER_ID))
+      .thenReturn(Mono.just(mockUser));
+    StepVerifier
+      .create(userController.findById(TestConstants.TEST_USER_ID))
+      .expectNext(mockUser)
+      .verifyComplete();
+    verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
+  }
 
-        when(userService.findById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-        StepVerifier.create(userController.findById(TestConstants.TEST_USER_ID))
-                .expectNext(mockUser)
-                .verifyComplete();
-        verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
-    }
-
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
-        userController = new UserController(userService);
-    }
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
+    userController = new UserController(userService);
+  }
 }

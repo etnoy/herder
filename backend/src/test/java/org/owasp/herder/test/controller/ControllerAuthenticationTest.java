@@ -44,35 +44,36 @@ import reactor.test.StepVerifier;
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("ControllerAuthentication unit tests")
 class ControllerAuthenticationTest extends BaseTest {
+  private ControllerAuthentication controllerAuthentication;
 
-    private ControllerAuthentication controllerAuthentication;
+  @Mock
+  private Authentication authentication;
 
-    @Mock private Authentication authentication;
+  private TestExecutionListener reactorContextTestExecutionListener = new ReactorContextTestExecutionListener();
 
-    private TestExecutionListener reactorContextTestExecutionListener =
-            new ReactorContextTestExecutionListener();
+  @BeforeEach
+  void authenticate() throws Exception {
+    // Set up the system under test
+    controllerAuthentication = new ControllerAuthentication();
+    TestSecurityContextHolder.setAuthentication(authentication);
+    reactorContextTestExecutionListener.beforeTestMethod(null);
+  }
 
-    @BeforeEach
-    void authenticate() throws Exception {
-        // Set up the system under test
-        controllerAuthentication = new ControllerAuthentication();
-        TestSecurityContextHolder.setAuthentication(authentication);
-        reactorContextTestExecutionListener.beforeTestMethod(null);
-    }
+  @Test
+  void getUserId_UserAuthenticated_ReturnsUserId() {
+    final String mockUserId = "id";
+    when(authentication.getPrincipal()).thenReturn(mockUserId);
+    StepVerifier
+      .create(controllerAuthentication.getUserId())
+      .expectNext(mockUserId)
+      .verifyComplete();
+  }
 
-    @Test
-    void getUserId_UserAuthenticated_ReturnsUserId() {
-        final String mockUserId = "id";
-        when(authentication.getPrincipal()).thenReturn(mockUserId);
-        StepVerifier.create(controllerAuthentication.getUserId())
-                .expectNext(mockUserId)
-                .verifyComplete();
-    }
-
-    @Test
-    void getUserId_UserNotAuthenticated_ReturnsNotAuthenticatedException() {
-        StepVerifier.create(controllerAuthentication.getUserId())
-                .expectError(NotAuthenticatedException.class)
-                .verify();
-    }
+  @Test
+  void getUserId_UserNotAuthenticated_ReturnsNotAuthenticatedException() {
+    StepVerifier
+      .create(controllerAuthentication.getUserId())
+      .expectError(NotAuthenticatedException.class)
+      .verify();
+  }
 }

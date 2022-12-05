@@ -35,14 +35,15 @@ import org.springframework.context.annotation.Primary;
 @Generated
 @Configuration
 public class ObjectMapperConfiguration {
+
   @Bean
   @Primary
   public ObjectMapper buildObjectMapper() {
     return new ObjectMapper()
-        .setAnnotationIntrospector(new JacksonAnnotationIntrospector())
-        .registerModule(new JavaTimeModule())
-        .setDateFormat(new StdDateFormat())
-        .registerModule(new GuavaModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+      .setAnnotationIntrospector(new JacksonAnnotationIntrospector())
+      .registerModule(new JavaTimeModule())
+      .setDateFormat(new StdDateFormat())
+      .registerModule(new GuavaModule())
+      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   }
 }

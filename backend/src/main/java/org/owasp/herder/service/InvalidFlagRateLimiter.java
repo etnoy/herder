@@ -21,12 +21,10 @@
  */
 package org.owasp.herder.service;
 
-import java.time.Duration;
-
-import org.springframework.stereotype.Service;
-
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.local.LocalBucketBuilder;
+import java.time.Duration;
+import org.springframework.stereotype.Service;
 
 @Service
 public final class InvalidFlagRateLimiter extends RateLimiter {
@@ -34,7 +32,7 @@ public final class InvalidFlagRateLimiter extends RateLimiter {
   @Override
   LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder) {
     return bucketBuilder
-        .addLimit(Bandwidth.simple(5, Duration.ofMinutes(5)))
-        .addLimit(Bandwidth.simple(2, Duration.ofMinutes(1)));
+      .addLimit(Bandwidth.simple(5, Duration.ofMinutes(5)))
+      .addLimit(Bandwidth.simple(2, Duration.ofMinutes(1)));
   }
 }

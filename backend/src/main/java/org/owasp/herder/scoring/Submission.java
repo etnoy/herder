@@ -41,7 +41,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Submission implements Serializable {
   private static final long serialVersionUID = -5485881248601955741L;
 
-  @Id String id;
+  @Id
+  String id;
 
   @NonNull String userId;
 
@@ -54,5 +55,6 @@ public class Submission implements Serializable {
   @JsonProperty("isValid")
   boolean isValid;
 
-  @ToString.Exclude String flag;
+  @ToString.Exclude
+  String flag;
 }

@@ -44,93 +44,103 @@ import reactor.test.StepVerifier;
 
 @DisplayName("XssTutorial integration tests")
 class XssTutorialIT extends BaseIT {
-    XssTutorial xssTutorial;
+  XssTutorial xssTutorial;
 
-    @Autowired UserService userService;
+  @Autowired
+  UserService userService;
 
-    @Autowired ModuleService moduleService;
+  @Autowired
+  ModuleService moduleService;
 
-    @Autowired SubmissionService submissionService;
+  @Autowired
+  SubmissionService submissionService;
 
-    @Autowired ScoreboardService scoreboardService;
+  @Autowired
+  ScoreboardService scoreboardService;
 
-    @Autowired XssService xssService;
+  @Autowired
+  XssService xssService;
 
-    @Autowired FlagHandler flagHandler;
+  @Autowired
+  FlagHandler flagHandler;
 
-    @Autowired IntegrationTestUtils integrationTestUtils;
+  @Autowired
+  IntegrationTestUtils integrationTestUtils;
 
-    ModuleInitializer moduleInitializer;
+  ModuleInitializer moduleInitializer;
 
-    String moduleId;
+  String moduleId;
 
-    @BeforeEach
-    void setup() {
-        integrationTestUtils.resetState();
+  @BeforeEach
+  void setup() {
+    integrationTestUtils.resetState();
 
-        moduleInitializer = new ModuleInitializer(null, moduleService);
+    moduleInitializer = new ModuleInitializer(null, moduleService);
 
-        xssTutorial = new XssTutorial(flagHandler, xssService);
+    xssTutorial = new XssTutorial(flagHandler, xssService);
 
-        moduleInitializer.initializeModule(xssTutorial).block();
+    moduleInitializer.initializeModule(xssTutorial).block();
 
-        moduleId = moduleService.findByName(xssTutorial.getName()).block().getId();
-    }
+    moduleId = moduleService.findByName(xssTutorial.getName()).block().getId();
+  }
 
-    private String extractFlagFromResponse(final XssTutorialResponse response) {
-        assertThat(response.getResult()).startsWith("Congratulations, flag is");
-        return response.getResult().replaceAll("Congratulations, flag is ", "");
-    }
+  private String extractFlagFromResponse(final XssTutorialResponse response) {
+    assertThat(response.getResult()).startsWith("Congratulations, flag is");
+    return response.getResult().replaceAll("Congratulations, flag is ", "");
+  }
 
-    @Test
-    void submitQuery_XssQuery_ShowsAlert() {
-        final String userId = userService.create("TestUser1").block();
+  @Test
+  void submitQuery_XssQuery_ShowsAlert() {
+    final String userId = userService.create("TestUser1").block();
 
-        final Mono<String> flagMono =
-                xssTutorial
-                        .submitQuery(userId, "<script>alert('xss')</script>")
-                        .map(this::extractFlagFromResponse);
+    final Mono<String> flagMono = xssTutorial
+      .submitQuery(userId, "<script>alert('xss')</script>")
+      .map(this::extractFlagFromResponse);
 
-        // Submit the flag we got from the sql injection and make sure it validates
-        StepVerifier.create(
-                        flagMono.flatMap(
-                                        flag ->
-                                                submissionService.submitFlag(
-                                                        userId, moduleId, flag))
-                                .map(Submission::isValid))
-                .expectNext(true)
-                .verifyComplete();
-    }
+    // Submit the flag we got from the sql injection and make sure it validates
+    StepVerifier
+      .create(
+        flagMono
+          .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag))
+          .map(Submission::isValid)
+      )
+      .expectNext(true)
+      .verifyComplete();
+  }
 
-    @Test
-    void submitQuery_CorrectAttackQuery_ModifiedFlagIsWrong() {
-        final String userId = userService.create("TestUser1").block();
+  @Test
+  void submitQuery_CorrectAttackQuery_ModifiedFlagIsWrong() {
+    final String userId = userService.create("TestUser1").block();
 
-        final Mono<String> flagMono =
-                xssTutorial
-                        .submitQuery(userId, "<script>alert('xss')</script>")
-                        .map(this::extractFlagFromResponse);
+    final Mono<String> flagMono = xssTutorial
+      .submitQuery(userId, "<script>alert('xss')</script>")
+      .map(this::extractFlagFromResponse);
 
-        // Take the flag we got from the tutorial, modify it, and expect validation to fail
-        StepVerifier.create(
-                        flagMono.flatMap(
-                                        flag ->
-                                                submissionService.submitFlag(
-                                                        userId, moduleId, flag + "wrong"))
-                                .map(Submission::isValid))
-                .expectNext(false)
-                .verifyComplete();
-    }
+    // Take the flag we got from the tutorial, modify it, and expect validation to fail
+    StepVerifier
+      .create(
+        flagMono
+          .flatMap(
+            flag ->
+              submissionService.submitFlag(userId, moduleId, flag + "wrong")
+          )
+          .map(Submission::isValid)
+      )
+      .expectNext(false)
+      .verifyComplete();
+  }
 
-    @Test
-    void submitQuery_QueryWithoutXss_NoResults() {
-        final String userId = userService.create("TestUser1").block();
+  @Test
+  void submitQuery_QueryWithoutXss_NoResults() {
+    final String userId = userService.create("TestUser1").block();
 
-        StepVerifier.create(xssTutorial.submitQuery(userId, "test"))
-                .assertNext(
-                        response -> {
-                            assertThat(response.getResult()).startsWith("Sorry");
-                        })
-                .verifyComplete();
-    }
+    StepVerifier
+      .create(xssTutorial.submitQuery(userId, "test"))
+      .assertNext(
+        response -> {
+          assertThat(response.getResult()).startsWith("Sorry");
+        }
+      )
+      .verifyComplete();
+  }
 }

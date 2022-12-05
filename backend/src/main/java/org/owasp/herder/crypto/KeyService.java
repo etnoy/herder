@@ -36,36 +36,40 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @Service
 public class KeyService {
-    private final CryptoFactory cryptoFactory;
+  private final CryptoFactory cryptoFactory;
 
-    private byte[] byteGenerator(final SecureRandom strongPRNG, final int numberOfBytes) {
-        byte[] randomBytes = new byte[numberOfBytes];
-        strongPRNG.nextBytes(randomBytes);
-        return randomBytes;
-    }
+  private byte[] byteGenerator(
+    final SecureRandom strongPRNG,
+    final int numberOfBytes
+  ) {
+    byte[] randomBytes = new byte[numberOfBytes];
+    strongPRNG.nextBytes(randomBytes);
+    return randomBytes;
+  }
 
-    public String convertByteKeyToString(final byte[] keyBytes) {
-        return new String(keyBytes, StandardCharsets.US_ASCII);
-    }
+  public String convertByteKeyToString(final byte[] keyBytes) {
+    return new String(keyBytes, StandardCharsets.US_ASCII);
+  }
 
-    public String bytesToHexString(final byte[] bytes) {
-        return Hex.encodeHexString(bytes, true);
-    }
+  public String bytesToHexString(final byte[] bytes) {
+    return Hex.encodeHexString(bytes, true);
+  }
 
-    public byte[] hexStringToBytes(final String stringFlag) throws DecoderException {
-        return Hex.decodeHex(stringFlag);
-    }
+  public byte[] hexStringToBytes(final String stringFlag)
+    throws DecoderException {
+    return Hex.decodeHex(stringFlag);
+  }
 
-    public byte[] generateRandomBytes(@Min(1) final int numberOfBytes) {
-        try {
-            final SecureRandom prng = cryptoFactory.getPrng();
-            return byteGenerator(prng, numberOfBytes);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RngException("Could not initialize PRNG", e);
-        }
+  public byte[] generateRandomBytes(@Min(1) final int numberOfBytes) {
+    try {
+      final SecureRandom prng = cryptoFactory.getPrng();
+      return byteGenerator(prng, numberOfBytes);
+    } catch (NoSuchAlgorithmException e) {
+      throw new RngException("Could not initialize PRNG", e);
     }
+  }
 
-    public String generateRandomString(@Min(1) final int numberOfBytes) {
-        return convertByteKeyToString(generateRandomBytes(numberOfBytes));
-    }
+  public String generateRandomString(@Min(1) final int numberOfBytes) {
+    return convertByteKeyToString(generateRandomBytes(numberOfBytes));
+  }
 }

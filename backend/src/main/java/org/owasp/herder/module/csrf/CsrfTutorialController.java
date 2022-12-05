@@ -41,14 +41,18 @@ public class CsrfTutorialController {
   @GetMapping(path = "/")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Mono<CsrfTutorialResult> tutorial() {
-    return controllerAuthentication.getUserId().flatMap(csrfTutorial::getTutorial);
+    return controllerAuthentication
+      .getUserId()
+      .flatMap(csrfTutorial::getTutorial);
   }
 
-  @GetMapping(value = {"/activate/{pseudonym}"})
+  @GetMapping(value = { "/activate/{pseudonym}" })
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Mono<CsrfTutorialResult> attack(@PathVariable(value = "pseudonym") String pseudonym) {
+  public Mono<CsrfTutorialResult> attack(
+    @PathVariable(value = "pseudonym") String pseudonym
+  ) {
     return controllerAuthentication
-        .getUserId()
-        .flatMap(userId -> csrfTutorial.attack(userId, pseudonym));
+      .getUserId()
+      .flatMap(userId -> csrfTutorial.attack(userId, pseudonym));
   }
 }

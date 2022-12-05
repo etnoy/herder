@@ -21,16 +21,13 @@
  */
 package org.owasp.herder.authentication;
 
-import java.io.Serializable;
-
-import org.springframework.data.annotation.Id;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import java.io.Serializable;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
+import org.springframework.data.annotation.Id;
 
 @Value
 @Builder
@@ -38,7 +35,8 @@ import lombok.With;
 public final class PasswordAuth implements Serializable {
   private static final long serialVersionUID = 32553442956391684L;
 
-  @Id private String id;
+  @Id
+  private String id;
 
   @NonNull private String userId;
 

@@ -28,7 +28,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface ModuleRepository extends ReactiveMongoRepository<ModuleEntity, String> {
+public interface ModuleRepository
+  extends ReactiveMongoRepository<ModuleEntity, String> {
   @Query("{ 'isOpen' : true }")
   public Flux<ModuleEntity> findAllOpen();
 

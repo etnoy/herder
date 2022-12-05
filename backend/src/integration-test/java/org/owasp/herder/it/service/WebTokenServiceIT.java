@@ -50,207 +50,240 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @DisplayName("WebTokenService integration tests")
 class WebTokenServiceIT extends BaseIT {
-    @Autowired WebTokenService webTokenService;
+  @Autowired
+  WebTokenService webTokenService;
 
-    @Autowired WebTokenKeyManager webTokenKeyManager;
+  @Autowired
+  WebTokenKeyManager webTokenKeyManager;
 
-    @Autowired UserService userService;
+  @Autowired
+  UserService userService;
 
-    @Autowired IntegrationTestUtils integrationTestUtils;
+  @Autowired
+  IntegrationTestUtils integrationTestUtils;
 
-    @MockBean WebTokenClock webTokenClock;
+  @MockBean
+  WebTokenClock webTokenClock;
 
-    @Test
-    @DisplayName("A token that is about to expire should still be valid")
-    void canAcceptTokensThatHaveNotExpiredYet() {
-        integrationTestUtils.createTestUser();
+  @Test
+  @DisplayName("A token that is about to expire should still be valid")
+  void canAcceptTokensThatHaveNotExpiredYet() {
+    integrationTestUtils.createTestUser();
 
-        setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.year2000Clock);
 
-        final String accessToken =
-                integrationTestUtils.performAPILoginWithToken(
-                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
+    );
 
-        final Clock rightBeforeTheTokenExpires =
-                Clock.fixed(
-                        TestConstants.year2000Clock
-                                .instant()
-                                .plusMillis(webTokenService.getExpirationTime() - 1),
-                        ZoneId.of("Z"));
+    final Clock rightBeforeTheTokenExpires = Clock.fixed(
+      TestConstants
+        .year2000Clock.instant()
+        .plusMillis(webTokenService.getExpirationTime() - 1),
+      ZoneId.of("Z")
+    );
 
-        // Set the clock to 1 second before the token expires
-        setClock(rightBeforeTheTokenExpires);
+    // Set the clock to 1 second before the token expires
+    setClock(rightBeforeTheTokenExpires);
 
-        assertThatCode(
-                        () -> {
-                            webTokenService.parseToken(accessToken);
-                        })
-                .doesNotThrowAnyException();
-    }
+    assertThatCode(
+        () -> {
+          webTokenService.parseToken(accessToken);
+        }
+      )
+      .doesNotThrowAnyException();
+  }
 
-    @Test
-    @DisplayName("It should be possible to generate a new token after an old one was invalidated")
-    void canGenerateNewAccessTokenAfterOldTokenIsInvalidated() {
-        final String userId = integrationTestUtils.createTestUser();
+  @Test
+  @DisplayName(
+    "It should be possible to generate a new token after an old one was invalidated"
+  )
+  void canGenerateNewAccessTokenAfterOldTokenIsInvalidated() {
+    final String userId = integrationTestUtils.createTestUser();
 
-        // Create a token (we don't save it)
-        integrationTestUtils.performAPILoginWithToken(
-                TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+    // Create a token (we don't save it)
+    integrationTestUtils.performAPILoginWithToken(
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
+    );
 
-        // Invalidate the token
-        webTokenKeyManager.invalidateAccessToken(userId);
+    // Invalidate the token
+    webTokenKeyManager.invalidateAccessToken(userId);
 
-        final String accessToken =
-                integrationTestUtils.performAPILoginWithToken(
-                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
+    );
 
-        final Authentication authentication = webTokenService.parseToken(accessToken);
+    final Authentication authentication = webTokenService.parseToken(
+      accessToken
+    );
 
-        assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
-        assertThat(authentication.getPrincipal()).isEqualTo(userId);
-        assertThat(authentication.getCredentials()).isEqualTo(accessToken);
+    assertThat(authentication)
+      .isInstanceOf(UsernamePasswordAuthenticationToken.class);
+    assertThat(authentication.getPrincipal()).isEqualTo(userId);
+    assertThat(authentication.getCredentials()).isEqualTo(accessToken);
 
-        // AssertJ cannot do list asserts on Collection<? extends ... >
-        @SuppressWarnings("unchecked")
-        Collection<SimpleGrantedAuthority> authorityList =
-                (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
-        assertThat(authorityList).containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
-    }
+    // AssertJ cannot do list asserts on Collection<? extends ... >
+    @SuppressWarnings("unchecked")
+    Collection<SimpleGrantedAuthority> authorityList = (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
+    assertThat(authorityList)
+      .containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
+  }
 
-    @Test
-    @DisplayName("A generated admin access token should be valid")
-    void canGenerateValidAdminAccessTokens() {
-        final String userId = integrationTestUtils.createTestAdmin();
+  @Test
+  @DisplayName("A generated admin access token should be valid")
+  void canGenerateValidAdminAccessTokens() {
+    final String userId = integrationTestUtils.createTestAdmin();
 
-        final String accessToken =
-                integrationTestUtils.performAPILoginWithToken(
-                        TestConstants.TEST_ADMIN_LOGIN_NAME, TestConstants.TEST_ADMIN_PASSWORD);
-        Authentication authentication = webTokenService.parseToken(accessToken);
+    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+      TestConstants.TEST_ADMIN_LOGIN_NAME,
+      TestConstants.TEST_ADMIN_PASSWORD
+    );
+    Authentication authentication = webTokenService.parseToken(accessToken);
 
-        assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
-        assertThat(authentication.getPrincipal()).isEqualTo(userId);
-        assertThat(authentication.getCredentials()).isEqualTo(accessToken);
+    assertThat(authentication)
+      .isInstanceOf(UsernamePasswordAuthenticationToken.class);
+    assertThat(authentication.getPrincipal()).isEqualTo(userId);
+    assertThat(authentication.getCredentials()).isEqualTo(accessToken);
 
-        // AssertJ cannot do list asserts on Collection<? extends ... >
-        @SuppressWarnings("unchecked")
-        Collection<SimpleGrantedAuthority> authorityList =
-                (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
-        assertThat(authorityList)
-                .containsExactlyInAnyOrder(
-                        new SimpleGrantedAuthority("ROLE_USER"),
-                        new SimpleGrantedAuthority("ROLE_ADMIN"));
-    }
+    // AssertJ cannot do list asserts on Collection<? extends ... >
+    @SuppressWarnings("unchecked")
+    Collection<SimpleGrantedAuthority> authorityList = (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
+    assertThat(authorityList)
+      .containsExactlyInAnyOrder(
+        new SimpleGrantedAuthority("ROLE_USER"),
+        new SimpleGrantedAuthority("ROLE_ADMIN")
+      );
+  }
 
-    @Test
-    @DisplayName("A generated user access token should be valid")
-    void canGenerateValidUserAccessTokens() {
-        final String userId = integrationTestUtils.createTestUser();
+  @Test
+  @DisplayName("A generated user access token should be valid")
+  void canGenerateValidUserAccessTokens() {
+    final String userId = integrationTestUtils.createTestUser();
 
-        final String accessToken =
-                integrationTestUtils.performAPILoginWithToken(
-                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
-        Authentication authentication = webTokenService.parseToken(accessToken);
+    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
+    );
+    Authentication authentication = webTokenService.parseToken(accessToken);
 
-        assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
-        assertThat(authentication.getPrincipal()).isEqualTo(userId);
-        assertThat(authentication.getCredentials()).isEqualTo(accessToken);
+    assertThat(authentication)
+      .isInstanceOf(UsernamePasswordAuthenticationToken.class);
+    assertThat(authentication.getPrincipal()).isEqualTo(userId);
+    assertThat(authentication.getCredentials()).isEqualTo(accessToken);
 
-        // AssertJ cannot do list asserts on Collection<? extends ... >
-        @SuppressWarnings("unchecked")
-        Collection<SimpleGrantedAuthority> authorityList =
-                (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
-        assertThat(authorityList).containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
-    }
+    // AssertJ cannot do list asserts on Collection<? extends ... >
+    @SuppressWarnings("unchecked")
+    Collection<SimpleGrantedAuthority> authorityList = (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
+    assertThat(authorityList)
+      .containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
+  }
 
-    @Test
-    @DisplayName("An invalidated token should be rejected")
-    void canInvalidateAccessTokens() {
-        final String userId = integrationTestUtils.createTestUser();
+  @Test
+  @DisplayName("An invalidated token should be rejected")
+  void canInvalidateAccessTokens() {
+    final String userId = integrationTestUtils.createTestUser();
 
-        final String accessToken =
-                integrationTestUtils.performAPILoginWithToken(
-                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
+    );
 
-        // Invalidate the token
-        webTokenKeyManager.invalidateAccessToken(userId);
+    // Invalidate the token
+    webTokenKeyManager.invalidateAccessToken(userId);
 
-        assertThatThrownBy(
-                        () -> {
-                            webTokenService.parseToken(accessToken);
-                        })
-                .isInstanceOf(BadCredentialsException.class)
-                .hasMessageContaining("Invalid token");
-    }
+    assertThatThrownBy(
+        () -> {
+          webTokenService.parseToken(accessToken);
+        }
+      )
+      .isInstanceOf(BadCredentialsException.class)
+      .hasMessageContaining("Invalid token");
+  }
 
-    @Test
-    @DisplayName("An expired token should be rejected")
-    void canRejectTokensThatHaveExpired() {
-        integrationTestUtils.createTestUser();
+  @Test
+  @DisplayName("An expired token should be rejected")
+  void canRejectTokensThatHaveExpired() {
+    integrationTestUtils.createTestUser();
 
-        setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.year2000Clock);
 
-        final String accessToken =
-                integrationTestUtils.performAPILoginWithToken(
-                        TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
+    );
 
-        final Clock rightAfterTheTokenExpires =
-                Clock.fixed(
-                        TestConstants.year2000Clock
-                                .instant()
-                                .plusMillis(webTokenService.getExpirationTime() + 1),
-                        ZoneId.systemDefault());
+    final Clock rightAfterTheTokenExpires = Clock.fixed(
+      TestConstants
+        .year2000Clock.instant()
+        .plusMillis(webTokenService.getExpirationTime() + 1),
+      ZoneId.systemDefault()
+    );
 
-        // Set the clock to 1 second after the token expires
-        setClock(rightAfterTheTokenExpires);
+    // Set the clock to 1 second after the token expires
+    setClock(rightAfterTheTokenExpires);
 
-        assertThatThrownBy(
-                        () -> {
-                            webTokenService.parseToken(accessToken);
-                        })
-                .isInstanceOf(BadCredentialsException.class)
-                .hasMessageContaining("Invalid token");
-    }
+    assertThatThrownBy(
+        () -> {
+          webTokenService.parseToken(accessToken);
+        }
+      )
+      .isInstanceOf(BadCredentialsException.class)
+      .hasMessageContaining("Invalid token");
+  }
 
-    @BeforeEach
-    void setup() {
-        integrationTestUtils.resetState();
-        resetClock();
-    }
+  @BeforeEach
+  void setup() {
+    integrationTestUtils.resetState();
+    resetClock();
+  }
 
-    private void setClock(final Clock testClock) {
-        when(webTokenClock.now())
-                .thenReturn(
-                        Date.from(LocalDateTime.now(testClock).atZone(ZoneId.of("Z")).toInstant()));
-    }
+  private void setClock(final Clock testClock) {
+    when(webTokenClock.now())
+      .thenReturn(
+        Date.from(
+          LocalDateTime.now(testClock).atZone(ZoneId.of("Z")).toInstant()
+        )
+      );
+  }
 
-    private void resetClock() {
-        when(webTokenClock.now())
-                .thenReturn(
-                        Date.from(
-                                LocalDateTime.now(Clock.systemDefaultZone())
-                                        .atZone(ZoneId.systemDefault())
-                                        .toInstant()));
-    }
+  private void resetClock() {
+    when(webTokenClock.now())
+      .thenReturn(
+        Date.from(
+          LocalDateTime
+            .now(Clock.systemDefaultZone())
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+        )
+      );
+  }
 
-    @Test
-    @DisplayName("An admin can create an impersonation access token")
-    void canGenerateValidImpersonationAccessToken() {
-        final String adminId = integrationTestUtils.createTestAdmin();
-        final String userId = integrationTestUtils.createTestUser();
+  @Test
+  @DisplayName("An admin can create an impersonation access token")
+  void canGenerateValidImpersonationAccessToken() {
+    final String adminId = integrationTestUtils.createTestAdmin();
+    final String userId = integrationTestUtils.createTestUser();
 
-        final String accessToken =
-                webTokenService.generateImpersonationToken(adminId, userId, false);
+    final String accessToken = webTokenService.generateImpersonationToken(
+      adminId,
+      userId,
+      false
+    );
 
-        Authentication authentication = webTokenService.parseToken(accessToken);
+    Authentication authentication = webTokenService.parseToken(accessToken);
 
-        assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
-        assertThat(authentication.getPrincipal()).isEqualTo(userId);
-        assertThat(authentication.getCredentials()).isEqualTo(accessToken);
+    assertThat(authentication)
+      .isInstanceOf(UsernamePasswordAuthenticationToken.class);
+    assertThat(authentication.getPrincipal()).isEqualTo(userId);
+    assertThat(authentication.getCredentials()).isEqualTo(accessToken);
 
-        // AssertJ cannot do list asserts on Collection<? extends ... >
-        @SuppressWarnings("unchecked")
-        Collection<SimpleGrantedAuthority> authorityList =
-                (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
-        assertThat(authorityList).containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
-    }
+    // AssertJ cannot do list asserts on Collection<? extends ... >
+    @SuppressWarnings("unchecked")
+    Collection<SimpleGrantedAuthority> authorityList = (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
+    assertThat(authorityList)
+      .containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
+  }
 }

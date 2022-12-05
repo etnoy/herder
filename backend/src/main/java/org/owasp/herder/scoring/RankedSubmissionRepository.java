@@ -29,7 +29,7 @@ import reactor.core.publisher.Flux;
 
 @Repository
 public interface RankedSubmissionRepository
-    extends ReactiveMongoRepository<RankedSubmission, String> {
+  extends ReactiveMongoRepository<RankedSubmission, String> {
   public Flux<RankedSubmission> findAllByTeamId(String teamId);
 
   public Flux<RankedSubmission> findAllByUserId(String userId);
@@ -37,15 +37,17 @@ public interface RankedSubmissionRepository
   @Query("{'module.locator' : ?0}")
   public Flux<RankedSubmission> findAllByModuleLocator(String moduleLocator);
 
-  @Aggregation({
-    "{$addFields:{displayName:{$ifNull:['$team.displayName','$user.displayName']},solver:{$ifNull:['$team._id',{$concat:['user',{$toString:'$user._id'}]}]}}}",
-    "{$group:{_id:'$solver',team:{$first:'$team'},displayName:{$first:'$displayName'},user:{$first:'$user'},score:{$sum:'$score'},bonusScore:{$sum:'$bonusScore'},baseScore:{$sum:'$baseScore'},goldMedals:{$sum:{$cond:[{$eq:['$rank',1]},1,0]}},silverMedals:{$sum:{$cond:[{$eq:['$rank',2]},1,0]}},bronzeMedals:{$sum:{$cond:[{$eq:['$rank',3]},1,0]}}}}",
-    "{$lookup:{from:'scoreAdjustment','let':{userId:{$toString:'$user._id'}},pipeline:[{$match:{$expr:{$in:['$$userId','$userIds']}}}],as:'adjustments'}}",
-    "{$unwind:{path:'$adjustments',preserveNullAndEmptyArrays:true}}",
-    "{$addFields:{adjustment:'$adjustments.amount'}}",
-    "{$group:{_id:'$_id',scoreAdjustment:{$sum:'$adjustment'},team:{$first:'$team'},displayName:{$first:'$displayName'},user:{$first:'$user'},score:{$first:'$score'},bonusScore:{$first:'$bonusScore'},baseScore:{$first:'$baseScore'},goldMedals:{$first:'$goldMedals'},silverMedals:{$first:'$silverMedals'},bronzeMedals:{$first:'$bronzeMedals'}}}",
-    "{$addFields:{score:{$sum:['$scoreAdjustment','$score']}}}",
-    "{$sort:{score:-1,goldMedals:-1,silverMedals:-1,bronzeMedals:-1,scoreAdjustment:-1,displayName:1}}"
-  })
+  @Aggregation(
+    {
+      "{$addFields:{displayName:{$ifNull:['$team.displayName','$user.displayName']},solver:{$ifNull:['$team._id',{$concat:['user',{$toString:'$user._id'}]}]}}}",
+      "{$group:{_id:'$solver',team:{$first:'$team'},displayName:{$first:'$displayName'},user:{$first:'$user'},score:{$sum:'$score'},bonusScore:{$sum:'$bonusScore'},baseScore:{$sum:'$baseScore'},goldMedals:{$sum:{$cond:[{$eq:['$rank',1]},1,0]}},silverMedals:{$sum:{$cond:[{$eq:['$rank',2]},1,0]}},bronzeMedals:{$sum:{$cond:[{$eq:['$rank',3]},1,0]}}}}",
+      "{$lookup:{from:'scoreAdjustment','let':{userId:{$toString:'$user._id'}},pipeline:[{$match:{$expr:{$in:['$$userId','$userIds']}}}],as:'adjustments'}}",
+      "{$unwind:{path:'$adjustments',preserveNullAndEmptyArrays:true}}",
+      "{$addFields:{adjustment:'$adjustments.amount'}}",
+      "{$group:{_id:'$_id',scoreAdjustment:{$sum:'$adjustment'},team:{$first:'$team'},displayName:{$first:'$displayName'},user:{$first:'$user'},score:{$first:'$score'},bonusScore:{$first:'$bonusScore'},baseScore:{$first:'$baseScore'},goldMedals:{$first:'$goldMedals'},silverMedals:{$first:'$silverMedals'},bronzeMedals:{$first:'$bronzeMedals'}}}",
+      "{$addFields:{score:{$sum:['$scoreAdjustment','$score']}}}",
+      "{$sort:{score:-1,goldMedals:-1,silverMedals:-1,bronzeMedals:-1,scoreAdjustment:-1,displayName:1}}"
+    }
+  )
   public Flux<UnrankedScoreboardEntry> getUnrankedScoreboard();
 }

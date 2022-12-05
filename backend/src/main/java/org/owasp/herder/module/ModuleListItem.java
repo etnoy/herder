@@ -41,7 +41,9 @@ public class ModuleListItem implements Serializable {
 
   @NonNull String locator;
 
-  @Builder.Default Multimap<String, String> tags = ArrayListMultimap.create();
+  @Builder.Default
+  Multimap<String, String> tags = ArrayListMultimap.create();
 
-  @Builder.Default Boolean isSolved = false;
+  @Builder.Default
+  Boolean isSolved = false;
 }

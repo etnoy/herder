@@ -46,8 +46,7 @@ public class UserScoreDto implements Serializable {
   @NonNull private LocalDateTime time;
 
   @JsonProperty("isValid")
-  @NonNull
-  private Boolean isValid;
+  @NonNull private Boolean isValid;
 
   @NonNull private String flag;
 }

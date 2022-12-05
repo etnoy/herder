@@ -49,134 +49,152 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @RequiredArgsConstructor
 public class WebTokenService {
-    private final WebTokenKeyManager webTokenKeyManager;
+  private final WebTokenKeyManager webTokenKeyManager;
 
-    // How many seconds a JWT token should last before expiring
-    private static final long EXPIRATION_TIME = 900;
+  // How many seconds a JWT token should last before expiring
+  private static final long EXPIRATION_TIME = 900;
 
-    private final WebTokenClock webTokenClock;
+  private final WebTokenClock webTokenClock;
 
-    public long getExpirationTime() {
-        return 1000 * EXPIRATION_TIME;
+  public long getExpirationTime() {
+    return 1000 * EXPIRATION_TIME;
+  }
+
+  public String generateToken(@ValidUserId final String userId) {
+    return generateToken(userId, false);
+  }
+
+  public String generateToken(
+    @ValidUserId final String userId,
+    final boolean isAdmin
+  ) {
+    final Date creationTime = webTokenClock.now();
+    final Date expirationTime = new Date(
+      creationTime.getTime() + getExpirationTime()
+    );
+    final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(userId);
+
+    String role;
+
+    if (isAdmin) {
+      role = "admin";
+    } else {
+      role = "user";
     }
 
-    public String generateToken(@ValidUserId final String userId) {
-        return generateToken(userId, false);
+    return Jwts
+      .builder()
+      .claim("role", role)
+      .setIssuer("herder")
+      .setSubject(userId)
+      .setIssuedAt(creationTime)
+      .setExpiration(expirationTime)
+      .signWith(userKey)
+      .compact();
+  }
+
+  public String generateImpersonationToken(
+    @ValidUserId final String impersonatorUserId,
+    @ValidUserId final String impersonatedUserId,
+    final boolean impersonateAnAdmin
+  ) {
+    final Date creationTime = webTokenClock.now();
+    final Date expirationTime = new Date(
+      creationTime.getTime() + getExpirationTime()
+    );
+    final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(
+      impersonatorUserId
+    );
+
+    String role;
+
+    if (impersonateAnAdmin) {
+      role = "admin";
+    } else {
+      role = "user";
     }
 
-    public String generateToken(@ValidUserId final String userId, final boolean isAdmin) {
-        final Date creationTime = webTokenClock.now();
-        final Date expirationTime = new Date(creationTime.getTime() + getExpirationTime());
-        final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(userId);
+    return Jwts
+      .builder()
+      .claim("role", role)
+      .claim("impersonator", impersonatorUserId)
+      .setIssuer("herder")
+      .setSubject(impersonatedUserId)
+      .setIssuedAt(creationTime)
+      .setExpiration(expirationTime)
+      .signWith(userKey)
+      .compact();
+  }
 
-        String role;
+  public Authentication parseToken(@NotNull @NotEmpty String token)
+    throws AuthenticationException {
+    final Claims parsedClaims;
 
-        if (isAdmin) {
-            role = "admin";
-        } else {
-            role = "user";
-        }
+    try {
+      parsedClaims =
+        Jwts
+          .parserBuilder()
+          .setSigningKeyResolver(
+            new SigningKeyResolverAdapter() {
 
-        return Jwts.builder()
-                .claim("role", role)
-                .setIssuer("herder")
-                .setSubject(userId)
-                .setIssuedAt(creationTime)
-                .setExpiration(expirationTime)
-                .signWith(userKey)
-                .compact();
+              @Override
+              public Key resolveSigningKey(
+                @SuppressWarnings("rawtypes") JwsHeader header,
+                Claims claims
+              ) {
+                String subjectId;
+
+                if (claims.containsKey("impersonator")) {
+                  subjectId = claims.get("impersonator", String.class);
+                } else {
+                  subjectId = claims.getSubject();
+                }
+                if (
+                  subjectId == null || subjectId.isEmpty()
+                ) throw new MissingClaimException(
+                  header,
+                  claims,
+                  "Subject is not provided in token"
+                );
+                return webTokenKeyManager.getKeyForUser(subjectId);
+              }
+            }
+          )
+          .requireIssuer("herder")
+          .setClock(webTokenClock)
+          .build()
+          .parseClaimsJws(token)
+          .getBody();
+    } catch (JwtException e) {
+      // Invalid token
+      log.debug("Invalid token encountered. Reason: " + e.getMessage());
+      throw new BadCredentialsException("Invalid token", e);
     }
 
-    public String generateImpersonationToken(
-            @ValidUserId final String impersonatorUserId,
-            @ValidUserId final String impersonatedUserId,
-            final boolean impersonateAnAdmin) {
-        final Date creationTime = webTokenClock.now();
-        final Date expirationTime = new Date(creationTime.getTime() + getExpirationTime());
-        final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(impersonatorUserId);
+    final String userId = parsedClaims.getSubject();
 
-        String role;
+    if (userId == null || userId.isEmpty()) {
+      final String userIdErrorMessage =
+        "Invalid userid " + userId + " found in token";
 
-        if (impersonateAnAdmin) {
-            role = "admin";
-        } else {
-            role = "user";
-        }
-
-        return Jwts.builder()
-                .claim("role", role)
-                .claim("impersonator", impersonatorUserId)
-                .setIssuer("herder")
-                .setSubject(impersonatedUserId)
-                .setIssuedAt(creationTime)
-                .setExpiration(expirationTime)
-                .signWith(userKey)
-                .compact();
+      log.debug(userIdErrorMessage);
+      throw new BadCredentialsException(userIdErrorMessage);
     }
 
-    public Authentication parseToken(@NotNull @NotEmpty String token)
-            throws AuthenticationException {
-        final Claims parsedClaims;
+    final String role = parsedClaims.get("role", String.class);
 
-        try {
-            parsedClaims =
-                    Jwts.parserBuilder()
-                            .setSigningKeyResolver(
-                                    new SigningKeyResolverAdapter() {
-                                        @Override
-                                        public Key resolveSigningKey(
-                                                @SuppressWarnings("rawtypes") JwsHeader header,
-                                                Claims claims) {
-                                            String subjectId;
+    ArrayList<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-                                            if (claims.containsKey("impersonator")) {
-                                                subjectId =
-                                                        claims.get("impersonator", String.class);
-                                            } else {
-                                                subjectId = claims.getSubject();
-                                            }
-                                            if (subjectId == null || subjectId.isEmpty())
-                                                throw new MissingClaimException(
-                                                        header,
-                                                        claims,
-                                                        "Subject is not provided in token");
-                                            return webTokenKeyManager.getKeyForUser(subjectId);
-                                        }
-                                    })
-                            .requireIssuer("herder")
-                            .setClock(webTokenClock)
-                            .build()
-                            .parseClaimsJws(token)
-                            .getBody();
-        } catch (JwtException e) {
-            // Invalid token
-            log.debug("Invalid token encountered. Reason: " + e.getMessage());
-            throw new BadCredentialsException("Invalid token", e);
-        }
-
-        final String userId = parsedClaims.getSubject();
-
-        if (userId == null || userId.isEmpty()) {
-            final String userIdErrorMessage = "Invalid userid " + userId + " found in token";
-
-            log.debug(userIdErrorMessage);
-            throw new BadCredentialsException(userIdErrorMessage);
-        }
-
-        final String role = parsedClaims.get("role", String.class);
-
-        ArrayList<SimpleGrantedAuthority> authorities = new ArrayList<>();
-
-        if (role.equals("admin")) {
-            authorities.add(new SimpleGrantedAuthority(Role.ROLE_ADMIN.name()));
-            authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
-        } else if (role.equals("user")) {
-            authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
-        } else {
-            // Invalid role found, bail out
-            throw new BadCredentialsException("Invalid role in token");
-        }
-
-        return new UsernamePasswordAuthenticationToken(userId, token, authorities);
+    if (role.equals("admin")) {
+      authorities.add(new SimpleGrantedAuthority(Role.ROLE_ADMIN.name()));
+      authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
+    } else if (role.equals("user")) {
+      authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
+    } else {
+      // Invalid role found, bail out
+      throw new BadCredentialsException("Invalid role in token");
     }
+
+    return new UsernamePasswordAuthenticationToken(userId, token, authorities);
+  }
 }

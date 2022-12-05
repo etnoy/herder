@@ -43,13 +43,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public final class UserEntity implements Serializable {
   static final long serialVersionUID = 3097353498257801154L;
 
-  @Id String id;
+  @Id
+  String id;
 
   @NonNull String displayName;
 
-  @ValidClassId String classId;
+  @ValidClassId
+  String classId;
 
-  @ValidTeamId String teamId;
+  @ValidTeamId
+  String teamId;
 
   LocalDateTime creationTime;
 
@@ -67,5 +70,6 @@ public final class UserEntity implements Serializable {
 
   String suspensionMessage;
 
-  @ToString.Exclude @NonNull byte[] key;
+  @ToString.Exclude
+  @NonNull byte[] key;
 }

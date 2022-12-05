@@ -76,7 +76,9 @@ public class XssService {
   }
 
   private void interactWithPage(final HtmlPage page) throws IOException {
-    Iterator<DomElement> domElementIterator = page.getDomElementDescendants().iterator();
+    Iterator<DomElement> domElementIterator = page
+      .getDomElementDescendants()
+      .iterator();
 
     while (domElementIterator.hasNext()) {
       final DomElement domElement = domElementIterator.next();

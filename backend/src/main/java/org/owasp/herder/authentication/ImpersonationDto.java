@@ -29,5 +29,6 @@ import org.owasp.herder.validation.ValidUserId;
 public class ImpersonationDto implements Serializable {
   private static final long serialVersionUID = 6677007967388014214L;
 
-  @ValidUserId String impersonatedId;
+  @ValidUserId
+  String impersonatedId;
 }

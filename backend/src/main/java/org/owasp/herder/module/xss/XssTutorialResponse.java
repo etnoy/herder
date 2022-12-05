@@ -22,12 +22,10 @@
 package org.owasp.herder.module.xss;
 
 import java.io.Serializable;
-
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
 @Builder

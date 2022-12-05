@@ -37,28 +37,33 @@ import reactor.core.publisher.Hooks;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-        webEnvironment = WebEnvironment.RANDOM_PORT,
-        properties = {"application.runner.enabled=false"})
+  webEnvironment = WebEnvironment.RANDOM_PORT,
+  properties = { "application.runner.enabled=false" }
+)
 @AutoConfigureWebTestClient
 @Slf4j
 @Execution(ExecutionMode.SAME_THREAD)
 public abstract class BaseIT {
-    @BeforeAll
-    public static void reactorVerbose() {
-        // Tell Reactor to print verbose error messages
-        Hooks.onOperatorDebug();
-    }
 
-    static final MongoDBContainer mongoDBContainer;
+  @BeforeAll
+  public static void reactorVerbose() {
+    // Tell Reactor to print verbose error messages
+    Hooks.onOperatorDebug();
+  }
 
-    static {
-        mongoDBContainer = new MongoDBContainer("mongo:5").withReuse(true);
-        mongoDBContainer.start();
-    }
+  static final MongoDBContainer mongoDBContainer;
 
-    @DynamicPropertySource
-    static void mongoDbProperties(DynamicPropertyRegistry registry) {
-        log.info("Using testcontainer for MongoDB at " + mongoDBContainer.getReplicaSetUrl());
-        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-    }
+  static {
+    mongoDBContainer = new MongoDBContainer("mongo:5").withReuse(true);
+    mongoDBContainer.start();
+  }
+
+  @DynamicPropertySource
+  static void mongoDbProperties(DynamicPropertyRegistry registry) {
+    log.info(
+      "Using testcontainer for MongoDB at " +
+      mongoDBContainer.getReplicaSetUrl()
+    );
+    registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+  }
 }

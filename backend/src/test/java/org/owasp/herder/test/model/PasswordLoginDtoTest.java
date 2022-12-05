@@ -32,28 +32,36 @@ import org.owasp.herder.test.util.TestConstants;
 
 @DisplayName("PasswordLoginDto unit tests")
 class PasswordLoginDtoTest {
-    @Test
-    void buildComment_ValidComment_Builds() {
-        for (final String userName : TestConstants.STRINGS) {
-            for (final String password : TestConstants.STRINGS) {
-                final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(userName, password);
-                assertThat(passwordLoginDto.getUserName()).hasToString(userName);
-                assertThat(passwordLoginDto.getPassword()).hasToString(password);
-            }
-        }
-    }
 
-    @Test
-    void equals_EqualsVerifier_AsExpected() {
-        EqualsVerifier.forClass(PasswordLoginDto.class)
-                .withIgnoredAnnotations(NotNull.class)
-                .verify();
+  @Test
+  void buildComment_ValidComment_Builds() {
+    for (final String userName : TestConstants.STRINGS) {
+      for (final String password : TestConstants.STRINGS) {
+        final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(
+          userName,
+          password
+        );
+        assertThat(passwordLoginDto.getUserName()).hasToString(userName);
+        assertThat(passwordLoginDto.getPassword()).hasToString(password);
+      }
     }
+  }
 
-    @Test
-    void toString_ValidData_AsExpected() {
-        final PasswordLoginDto passwordLoginDto = new PasswordLoginDto("loginName", "password");
-        assertThat(passwordLoginDto)
-                .hasToString("PasswordLoginDto(userName=loginName, password=password)");
-    }
+  @Test
+  void equals_EqualsVerifier_AsExpected() {
+    EqualsVerifier
+      .forClass(PasswordLoginDto.class)
+      .withIgnoredAnnotations(NotNull.class)
+      .verify();
+  }
+
+  @Test
+  void toString_ValidData_AsExpected() {
+    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(
+      "loginName",
+      "password"
+    );
+    assertThat(passwordLoginDto)
+      .hasToString("PasswordLoginDto(userName=loginName, password=password)");
+  }
 }

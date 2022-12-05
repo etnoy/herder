@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class XssWebClientFactory {
+
   public WebClient createWebClient() {
     return new WebClient();
   }

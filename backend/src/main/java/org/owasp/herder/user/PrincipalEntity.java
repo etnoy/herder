@@ -40,13 +40,16 @@ import org.owasp.herder.validation.ValidPrincipalId;
 public final class PrincipalEntity implements Serializable {
   private static final long serialVersionUID = 8843939402741609352L;
 
-  @NonNull @ValidDisplayName String displayName;
+  @NonNull @ValidDisplayName
+  String displayName;
 
-  @ValidPrincipalId String id;
+  @ValidPrincipalId
+  String id;
 
   @NonNull PrincipalType principalType;
 
   @NonNull LocalDateTime creationTime;
 
-  @Builder.Default HashSet<UserEntity> members = new HashSet<>();
+  @Builder.Default
+  HashSet<UserEntity> members = new HashSet<>();
 }

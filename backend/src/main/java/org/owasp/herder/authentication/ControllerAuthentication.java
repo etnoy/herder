@@ -30,17 +30,18 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class ControllerAuthentication {
+
   public Mono<String> getUserId() {
-    return
-    // Get the security context
-    ReactiveSecurityContextHolder.getContext()
-        // Get the authentication from the context
-        .map(SecurityContext::getAuthentication)
-        // If the principal is null, filter it out and return exception
-        .filter(auth -> auth.getPrincipal() != null)
-        .switchIfEmpty(Mono.error(new NotAuthenticatedException()))
-        // If the principal isn't null, cast it to String
-        .map(Authentication::getPrincipal)
-        .cast(String.class);
+    return // Get the security context
+    ReactiveSecurityContextHolder
+      .getContext()
+      // Get the authentication from the context
+      .map(SecurityContext::getAuthentication)
+      // If the principal is null, filter it out and return exception
+      .filter(auth -> auth.getPrincipal() != null)
+      .switchIfEmpty(Mono.error(new NotAuthenticatedException()))
+      // If the principal isn't null, cast it to String
+      .map(Authentication::getPrincipal)
+      .cast(String.class);
   }
 }

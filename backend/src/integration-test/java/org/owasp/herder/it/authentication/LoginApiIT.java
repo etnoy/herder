@@ -38,7 +38,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 @DisplayName("Login API integration tests")
 class LoginApiIT extends BaseIT {
-
   @Autowired
   UserService userService;
 

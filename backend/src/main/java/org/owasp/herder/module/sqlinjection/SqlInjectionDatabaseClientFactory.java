@@ -21,18 +21,23 @@
  */
 package org.owasp.herder.module.sqlinjection;
 
+import io.r2dbc.h2.H2ConnectionConfiguration;
+import io.r2dbc.h2.H2ConnectionFactory;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 
-import io.r2dbc.h2.H2ConnectionConfiguration;
-import io.r2dbc.h2.H2ConnectionFactory;
-
 @Component
 public class SqlInjectionDatabaseClientFactory {
-  public DatabaseClient create(final String dbName) {
-    final H2ConnectionConfiguration h2ConnectionConfiguration =
-        H2ConnectionConfiguration.builder().inMemory(dbName).option("DB_CLOSE_DELAY=60").build();
 
-    return DatabaseClient.create(new H2ConnectionFactory(h2ConnectionConfiguration));
+  public DatabaseClient create(final String dbName) {
+    final H2ConnectionConfiguration h2ConnectionConfiguration = H2ConnectionConfiguration
+      .builder()
+      .inMemory(dbName)
+      .option("DB_CLOSE_DELAY=60")
+      .build();
+
+    return DatabaseClient.create(
+      new H2ConnectionFactory(h2ConnectionConfiguration)
+    );
   }
 }

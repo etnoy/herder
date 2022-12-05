@@ -33,20 +33,20 @@ import org.owasp.herder.crypto.WebTokenKeyManager;
 
 @DisplayName("WebTokenKeyManager unit tests")
 class WebTokenKeyManagerTest {
-    final String testUserId = "id";
+  final String testUserId = "id";
 
-    final Key testKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+  final Key testKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
-    private WebTokenKeyManager webTokenKeyManager;
+  private WebTokenKeyManager webTokenKeyManager;
 
-    @Test
-    void invalidateAccessToken_ValidUserId_Succeeds() {
-        assertDoesNotThrow(() -> webTokenKeyManager.invalidateAccessToken("id"));
-    }
+  @Test
+  void invalidateAccessToken_ValidUserId_Succeeds() {
+    assertDoesNotThrow(() -> webTokenKeyManager.invalidateAccessToken("id"));
+  }
 
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
-        webTokenKeyManager = new WebTokenKeyManager();
-    }
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
+    webTokenKeyManager = new WebTokenKeyManager();
+  }
 }

@@ -34,14 +34,14 @@ import org.springframework.r2dbc.core.DatabaseClient;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SqlInjectionDatabaseClientFactory unit tests")
 class SqlInjectionDatabaseClientFactoryTest extends BaseTest {
+  private final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory = new SqlInjectionDatabaseClientFactory();
 
-    private final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory =
-            new SqlInjectionDatabaseClientFactory();
-
-    @Test
-    void create_ValidConnectionUrl_ReturnsDatabaseClient() {
-        final String dbName = "testdb";
-        final DatabaseClient client = sqlInjectionDatabaseClientFactory.create(dbName);
-        assertThat(client).isInstanceOf(DatabaseClient.class);
-    }
+  @Test
+  void create_ValidConnectionUrl_ReturnsDatabaseClient() {
+    final String dbName = "testdb";
+    final DatabaseClient client = sqlInjectionDatabaseClientFactory.create(
+      dbName
+    );
+    assertThat(client).isInstanceOf(DatabaseClient.class);
+  }
 }

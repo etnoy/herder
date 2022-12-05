@@ -35,22 +35,23 @@ import org.owasp.herder.module.xss.XssWebClientFactory;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("XssWebClientFactory unit tests")
 class XssWebClientFactoryTest {
-    XssWebClientFactory xssWebClientFactory;
+  XssWebClientFactory xssWebClientFactory;
 
-    @Test
-    void createAlertHandler_ReturnsAlertHandler() {
-        assertThat(xssWebClientFactory.createAlertHandler())
-                .isInstanceOf(CollectingAlertHandler.class);
-    }
+  @Test
+  void createAlertHandler_ReturnsAlertHandler() {
+    assertThat(xssWebClientFactory.createAlertHandler())
+      .isInstanceOf(CollectingAlertHandler.class);
+  }
 
-    @Test
-    void createWebClient_ReturnsWebClient() {
-        assertThat(xssWebClientFactory.createWebClient()).isInstanceOf(WebClient.class);
-    }
+  @Test
+  void createWebClient_ReturnsWebClient() {
+    assertThat(xssWebClientFactory.createWebClient())
+      .isInstanceOf(WebClient.class);
+  }
 
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
-        xssWebClientFactory = new XssWebClientFactory();
-    }
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
+    xssWebClientFactory = new XssWebClientFactory();
+  }
 }

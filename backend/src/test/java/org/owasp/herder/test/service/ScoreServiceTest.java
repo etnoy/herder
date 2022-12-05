@@ -42,37 +42,44 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("scoreboardService unit tests")
 class ScoreServiceTest extends BaseTest {
+  ScoreboardService scoreboardService;
 
-    ScoreboardService scoreboardService;
+  @Mock
+  SubmissionService submissionService;
 
-    @Mock SubmissionService submissionService;
+  @Mock
+  ScoreboardRepository scoreboardRepository;
 
-    @Mock ScoreboardRepository scoreboardRepository;
+  @Mock
+  UserService userService;
 
-    @Mock UserService userService;
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
+    scoreboardService = new ScoreboardService(scoreboardRepository);
+  }
 
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
-        scoreboardService = new ScoreboardService(scoreboardRepository);
-    }
+  @Test
+  @DisplayName("Can rank users in the scoreboard")
+  void getScoreboard_ThreeUsersToScore_CallsRepository() {
+    final ScoreboardEntry mockScoreboardEntry1 = mock(ScoreboardEntry.class);
+    final ScoreboardEntry mockScoreboardEntry2 = mock(ScoreboardEntry.class);
+    final ScoreboardEntry mockScoreboardEntry3 = mock(ScoreboardEntry.class);
 
-    @Test
-    @DisplayName("Can rank users in the scoreboard")
-    void getScoreboard_ThreeUsersToScore_CallsRepository() {
-        final ScoreboardEntry mockScoreboardEntry1 = mock(ScoreboardEntry.class);
-        final ScoreboardEntry mockScoreboardEntry2 = mock(ScoreboardEntry.class);
-        final ScoreboardEntry mockScoreboardEntry3 = mock(ScoreboardEntry.class);
+    when(scoreboardRepository.findAll())
+      .thenReturn(
+        Flux.just(
+          mockScoreboardEntry1,
+          mockScoreboardEntry2,
+          mockScoreboardEntry3
+        )
+      );
 
-        when(scoreboardRepository.findAll())
-                .thenReturn(
-                        Flux.just(
-                                mockScoreboardEntry1, mockScoreboardEntry2, mockScoreboardEntry3));
-
-        StepVerifier.create(scoreboardService.getScoreboard())
-                .expectNext(mockScoreboardEntry1)
-                .expectNext(mockScoreboardEntry2)
-                .expectNext(mockScoreboardEntry3)
-                .verifyComplete();
-    }
+    StepVerifier
+      .create(scoreboardService.getScoreboard())
+      .expectNext(mockScoreboardEntry1)
+      .expectNext(mockScoreboardEntry2)
+      .expectNext(mockScoreboardEntry3)
+      .verifyComplete();
+  }
 }

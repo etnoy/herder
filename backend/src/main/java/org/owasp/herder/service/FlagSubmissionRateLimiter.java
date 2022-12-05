@@ -21,12 +21,10 @@
  */
 package org.owasp.herder.service;
 
-import java.time.Duration;
-
-import org.springframework.stereotype.Service;
-
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.local.LocalBucketBuilder;
+import java.time.Duration;
+import org.springframework.stereotype.Service;
 
 @Service
 public final class FlagSubmissionRateLimiter extends RateLimiter {

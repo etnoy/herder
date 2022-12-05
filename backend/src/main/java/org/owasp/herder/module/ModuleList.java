@@ -37,7 +37,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class ModuleList implements Serializable {
   private static final long serialVersionUID = 8586975724586678796L;
 
-  @Id String id;
+  @Id
+  String id;
 
   String teamId;
 

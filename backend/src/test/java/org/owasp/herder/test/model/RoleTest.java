@@ -29,6 +29,7 @@ import org.owasp.herder.authentication.Role;
 
 @DisplayName("Role unit tests")
 class RoleTest {
+
   @Test
   void userRole_ToString_IsRoleUser() {
     assertThat(Role.ROLE_USER).hasToString("ROLE_USER");

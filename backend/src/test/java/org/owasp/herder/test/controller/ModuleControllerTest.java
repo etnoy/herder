@@ -45,84 +45,102 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ModuleController unit tests")
 class ModuleControllerTest extends BaseTest {
-    ModuleController moduleController;
+  ModuleController moduleController;
 
-    @Mock ControllerAuthentication controllerAuthentication;
+  @Mock
+  ControllerAuthentication controllerAuthentication;
 
-    @Mock ModuleService moduleService;
+  @Mock
+  ModuleService moduleService;
 
-    @Mock UserService userService;
+  @Mock
+  UserService userService;
 
-    @Test
-    void findAllByUserId_NotAuthenticated_ReturnsNotAuthenticatedException() {
-        when(controllerAuthentication.getUserId())
-                .thenReturn(Mono.error(new NotAuthenticatedException()));
+  @Test
+  void findAllByUserId_NotAuthenticated_ReturnsNotAuthenticatedException() {
+    when(controllerAuthentication.getUserId())
+      .thenReturn(Mono.error(new NotAuthenticatedException()));
 
-        StepVerifier.create(moduleController.findAllByUserId())
-                .expectError(NotAuthenticatedException.class)
-                .verify();
-    }
+    StepVerifier
+      .create(moduleController.findAllByUserId())
+      .expectError(NotAuthenticatedException.class)
+      .verify();
+  }
 
-    @Test
-    void findByName_NameDoesNotExist_ReturnsNothing() {
-        final String mockModuleName = "test-module";
-        final String mockUserId = "id";
-        when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
-        when(moduleService.findListItemByLocator(mockUserId, mockModuleName))
-                .thenReturn(Mono.empty());
-        StepVerifier.create(moduleController.findByName(mockModuleName)).verifyComplete();
-    }
+  @Test
+  void findByName_NameDoesNotExist_ReturnsNothing() {
+    final String mockModuleName = "test-module";
+    final String mockUserId = "id";
+    when(controllerAuthentication.getUserId())
+      .thenReturn(Mono.just(mockUserId));
+    when(moduleService.findListItemByLocator(mockUserId, mockModuleName))
+      .thenReturn(Mono.empty());
+    StepVerifier
+      .create(moduleController.findByName(mockModuleName))
+      .verifyComplete();
+  }
 
-    @Test
-    void findByName_NameExists_ReturnsModuleListItem() {
-        final String mockModuleName = "test-module";
-        final String mockUserId = "id";
+  @Test
+  void findByName_NameExists_ReturnsModuleListItem() {
+    final String mockModuleName = "test-module";
+    final String mockUserId = "id";
 
-        final ModuleListItem mockModuleListItem = mock(ModuleListItem.class);
-        when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
+    final ModuleListItem mockModuleListItem = mock(ModuleListItem.class);
+    when(controllerAuthentication.getUserId())
+      .thenReturn(Mono.just(mockUserId));
 
-        when(moduleService.findListItemByLocator(mockUserId, mockModuleName))
-                .thenReturn(Mono.just(mockModuleListItem));
-        StepVerifier.create(moduleController.findByName(mockModuleName))
-                .expectNext(mockModuleListItem)
-                .verifyComplete();
+    when(moduleService.findListItemByLocator(mockUserId, mockModuleName))
+      .thenReturn(Mono.just(mockModuleListItem));
+    StepVerifier
+      .create(moduleController.findByName(mockModuleName))
+      .expectNext(mockModuleListItem)
+      .verifyComplete();
 
-        verify(moduleService, times(1)).findListItemByLocator(mockUserId, mockModuleName);
-    }
+    verify(moduleService, times(1))
+      .findListItemByLocator(mockUserId, mockModuleName);
+  }
 
-    @Test
-    void findByName_NameDoesNotExist_ReturnsEmpty() {
-        final String mockUserId = "id";
-        final String mockModuleName = "test-module";
-        when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
+  @Test
+  void findByName_NameDoesNotExist_ReturnsEmpty() {
+    final String mockUserId = "id";
+    final String mockModuleName = "test-module";
+    when(controllerAuthentication.getUserId())
+      .thenReturn(Mono.just(mockUserId));
 
-        when(moduleService.findListItemByLocator(mockUserId, mockModuleName))
-                .thenReturn(Mono.empty());
-        StepVerifier.create(moduleController.findByName(mockModuleName)).verifyComplete();
-        verify(controllerAuthentication, times(1)).getUserId();
-        verify(moduleService, times(1)).findListItemByLocator(mockUserId, mockModuleName);
-    }
+    when(moduleService.findListItemByLocator(mockUserId, mockModuleName))
+      .thenReturn(Mono.empty());
+    StepVerifier
+      .create(moduleController.findByName(mockModuleName))
+      .verifyComplete();
+    verify(controllerAuthentication, times(1)).getUserId();
+    verify(moduleService, times(1))
+      .findListItemByLocator(mockUserId, mockModuleName);
+  }
 
-    @Test
-    void findByName_ShortNameExists_ReturnsModule() {
-        final String mockUserId = "id";
-        final String mockModuleName = "test-module";
-        final ModuleListItem mockModuleListItem = mock(ModuleListItem.class);
-        when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
+  @Test
+  void findByName_ShortNameExists_ReturnsModule() {
+    final String mockUserId = "id";
+    final String mockModuleName = "test-module";
+    final ModuleListItem mockModuleListItem = mock(ModuleListItem.class);
+    when(controllerAuthentication.getUserId())
+      .thenReturn(Mono.just(mockUserId));
 
-        when(moduleService.findListItemByLocator(mockUserId, mockModuleName))
-                .thenReturn(Mono.just(mockModuleListItem));
-        StepVerifier.create(moduleController.findByName(mockModuleName))
-                .expectNext(mockModuleListItem)
-                .verifyComplete();
+    when(moduleService.findListItemByLocator(mockUserId, mockModuleName))
+      .thenReturn(Mono.just(mockModuleListItem));
+    StepVerifier
+      .create(moduleController.findByName(mockModuleName))
+      .expectNext(mockModuleListItem)
+      .verifyComplete();
 
-        verify(controllerAuthentication, times(1)).getUserId();
-        verify(moduleService, times(1)).findListItemByLocator(mockUserId, mockModuleName);
-    }
+    verify(controllerAuthentication, times(1)).getUserId();
+    verify(moduleService, times(1))
+      .findListItemByLocator(mockUserId, mockModuleName);
+  }
 
-    @BeforeEach
-    void setup() {
-        // Set up the system under test
-        moduleController = new ModuleController(moduleService, controllerAuthentication);
-    }
+  @BeforeEach
+  void setup() {
+    // Set up the system under test
+    moduleController =
+      new ModuleController(moduleService, controllerAuthentication);
+  }
 }

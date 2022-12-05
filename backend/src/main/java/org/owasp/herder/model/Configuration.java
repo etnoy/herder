@@ -22,14 +22,12 @@
 package org.owasp.herder.model;
 
 import java.io.Serializable;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
 @Builder
@@ -38,7 +36,8 @@ import lombok.With;
 public class Configuration implements Serializable {
   private static final long serialVersionUID = -3877275355721047824L;
 
-  @Id private String id;
+  @Id
+  private String id;
 
   @NonNull private String key;
 

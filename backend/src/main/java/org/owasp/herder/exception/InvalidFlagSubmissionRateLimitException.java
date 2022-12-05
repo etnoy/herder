@@ -21,8 +21,8 @@
  */
 package org.owasp.herder.exception;
 
-public class InvalidFlagSubmissionRateLimitException extends RateLimitException {
-
+public class InvalidFlagSubmissionRateLimitException
+  extends RateLimitException {
   private static final long serialVersionUID = 6336300311211655723L;
 
   public InvalidFlagSubmissionRateLimitException() {

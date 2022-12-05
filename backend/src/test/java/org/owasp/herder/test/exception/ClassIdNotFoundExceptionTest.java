@@ -35,11 +35,13 @@ import org.owasp.herder.test.util.TestConstants;
 @DisplayName("ClassIdNotFoundException unit tests")
 class ClassIdNotFoundExceptionTest extends BaseTest {
 
-    @Test
-    void messageConstructor_ValidMessage_MessageIncluded() {
-        for (final String message : TestConstants.STRINGS) {
-            ClassIdNotFoundException exception = new ClassIdNotFoundException(message);
-            assertThat(exception.getMessage()).isEqualTo(message);
-        }
+  @Test
+  void messageConstructor_ValidMessage_MessageIncluded() {
+    for (final String message : TestConstants.STRINGS) {
+      ClassIdNotFoundException exception = new ClassIdNotFoundException(
+        message
+      );
+      assertThat(exception.getMessage()).isEqualTo(message);
     }
+  }
 }

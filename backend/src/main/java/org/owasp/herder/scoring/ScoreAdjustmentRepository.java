@@ -25,6 +25,7 @@ import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ScoreAdjustmentRepository extends ReactiveMongoRepository<ScoreAdjustment, Long> {
+public interface ScoreAdjustmentRepository
+  extends ReactiveMongoRepository<ScoreAdjustment, Long> {
   // public Flux<ScoreAdjustment> findAllByUserId(String userId);
 }

@@ -25,9 +25,10 @@ import org.junit.jupiter.api.BeforeAll;
 import reactor.core.publisher.Hooks;
 
 public abstract class BaseTest {
-    @BeforeAll
-    static void reactorVerbose() {
-        // Tell Reactor to print verbose error messages
-        Hooks.onOperatorDebug();
-    }
+
+  @BeforeAll
+  static void reactorVerbose() {
+    // Tell Reactor to print verbose error messages
+    Hooks.onOperatorDebug();
+  }
 }
