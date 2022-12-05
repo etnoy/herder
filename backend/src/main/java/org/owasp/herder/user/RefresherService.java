@@ -71,8 +71,8 @@ public class RefresherService {
    * @return a Mono<Void> signaling completion
    */
   public Mono<Void> refreshScoreboard() {
-    return // Get unranked scoreboard entries from db. This list is sorted by score and medal count
-    rankedSubmissionRepository
+    return rankedSubmissionRepository
+      // Get unranked scoreboard entries from db. This list is sorted by score and medal count
       .getUnrankedScoreboard()
       // Transform the flux to a mono list
       .collectList()
@@ -478,8 +478,8 @@ public class RefresherService {
       )
       .map(
         team ->
-          team// Update the members list to only contain remaining users
-          .withMembers(
+          team.withMembers(
+            // Update the members list to only contain remaining users
             team
               .getMembers()
               .stream()

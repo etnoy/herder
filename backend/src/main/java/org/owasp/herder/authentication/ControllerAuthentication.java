@@ -32,8 +32,8 @@ import reactor.core.publisher.Mono;
 public class ControllerAuthentication {
 
   public Mono<String> getUserId() {
-    return // Get the security context
-    ReactiveSecurityContextHolder
+    return ReactiveSecurityContextHolder
+      // Get the security context
       .getContext()
       // Get the authentication from the context
       .map(SecurityContext::getAuthentication)

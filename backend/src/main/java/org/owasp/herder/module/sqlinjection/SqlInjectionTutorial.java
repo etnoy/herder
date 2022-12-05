@@ -114,9 +114,8 @@ public class SqlInjectionTutorial implements BaseModule {
       injectionQuery
     );
 
-    return // Take the SQL query for initial population
-    populationQuery
-      // Execute it on the in-memory database
+    return populationQuery
+      // Execute the population query on the in-memory database
       .flatMap(query -> databaseClient.sql(query).then())
       // Then execute the SQL injection and fetch the results
       .thenMany(databaseClient.sql(vulnerableQuery).map(MAPPING_FUNCTION).all())
