@@ -202,7 +202,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     final String errorMessage =
       "Syntax error in SQL statement \"SELECT * FROM sqlinjection.users " +
       "WHERE name = [*]'''\"; SQL statement:\n" +
-      "SELECT * FROM sqlinjection.users WHERE name = ''' [42000-210]";
+      "SELECT * FROM sqlinjection.users WHERE name = '''";
 
     StepVerifier
       .create(
@@ -210,7 +210,7 @@ class SqlInjectionTutorialIT extends BaseIT {
           .submitQuery(userId, "'")
           .map(SqlInjectionTutorialRow::getError)
       )
-      .expectNext(errorMessage)
+      .expectNextMatches(message -> message.startsWith(errorMessage))
       .verifyComplete();
   }
 
@@ -220,7 +220,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
     final String errorMessage =
       "Data conversion error converting \"CHARACTER VARYING to BOOLEAN\"; SQL statement:\n" +
-      "SELECT * FROM sqlinjection.users WHERE name = '' OR '1=1' [22018-210]";
+      "SELECT * FROM sqlinjection.users WHERE name = '' OR '1=1'";
 
     StepVerifier
       .create(
@@ -228,7 +228,7 @@ class SqlInjectionTutorialIT extends BaseIT {
           .submitQuery(userId, "' OR '1=1")
           .map(SqlInjectionTutorialRow::getError)
       )
-      .expectNext(errorMessage)
+      .expectNextMatches(message -> message.startsWith(errorMessage))
       .verifyComplete();
   }
 }
