@@ -49,6 +49,7 @@ import reactor.core.publisher.Mono;
 @Validated
 @RequiredArgsConstructor
 public class SubmissionService {
+
   private final SubmissionRepository submissionRepository;
 
   private final RankedSubmissionRepository rankedSubmissionRepository;
@@ -138,7 +139,7 @@ public class SubmissionService {
     return builder.build();
   }
 
-  // TODO: validate flag
+  // TODO: add flag validation annotation
   public Mono<Submission> submitFlag(
     @ValidUserId final String userId,
     @ValidModuleId final String moduleId,
@@ -153,11 +154,16 @@ public class SubmissionService {
 
     return flagHandler // Check if flag is correct
       .verifyFlag(userId, moduleId, flag)
-      // Get isValid field
-      .map(submissionBuilder::isValid)
+      // Set isValid field of the submission
+      .map(isValid -> {
+        if (isValid == null) {
+          isValid = false;
+        }
+        return submissionBuilder.isValid(isValid);
+      })
       // Has this module been solved by this user? In that case, throw exception.
-      .filterWhen(
-        u -> validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleId)
+      .filterWhen(u ->
+        validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleId)
       )
       .switchIfEmpty(
         Mono.error(
@@ -182,8 +188,8 @@ public class SubmissionService {
       )
       .map(tuple -> tuple.getT1().moduleId(moduleId))
       .zipWith(userService.getById(userId))
-      .map(
-        tuple -> tuple.getT1().userId(userId).teamId(tuple.getT2().getTeamId())
+      .map(tuple ->
+        tuple.getT1().userId(userId).teamId(tuple.getT2().getTeamId())
       )
       .map(SubmissionBuilder::build)
       .flatMap(submissionRepository::save);
