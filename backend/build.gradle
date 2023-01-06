@@ -167,7 +167,7 @@ spotless {
     endWithNewline()
   }
   java {
-    // prettier()
+    prettier(['prettier': '2.8.1', 'prettier-plugin-java': '2.0.0'])
     toggleOffOn()
     removeUnusedImports()
     trimTrailingWhitespace()
