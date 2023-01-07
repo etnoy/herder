@@ -1,12 +1,13 @@
+/* groovylint-disable DuplicateStringLiteral */
 plugins {
     id 'java'
-    id "org.springframework.boot" version "3.0.0"
+    id 'org.springframework.boot' version '3.0.1'
     id 'io.spring.dependency-management' version '1.1.0'
     id 'eclipse'
     id 'jacoco'
-    id "io.freefair.lombok" version "6.5.1"
-    id "org.sonarqube" version "3.3"
-    id "com.diffplug.spotless" version "6.12.0"
+    id 'io.freefair.lombok' version '6.5.1'
+    id 'org.sonarqube' version '3.3'
+    id 'com.diffplug.spotless' version '6.12.0'
     id 'com.adarshr.test-logger' version '3.1.0'
 }
 
@@ -28,7 +29,7 @@ jacocoTestReport {
 sourceSets {
     test {
         java {
-            srcDirs = ["src/test/java"]
+            srcDirs = ['src/test/java']
         }
     }
 
@@ -78,12 +79,12 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'
     testImplementation 'org.assertj:assertj-guava:3.4.0'
-    testImplementation "org.projectlombok:lombok"
+    testImplementation 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
-    testImplementation "org.testcontainers:mongodb:1.17.3"
-    testImplementation "org.testcontainers:junit-jupiter:1.17.3"
+    testImplementation 'org.testcontainers:mongodb:1.17.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.3'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.8.2'
     testImplementation 'io.projectreactor:reactor-test'
@@ -91,8 +92,8 @@ dependencies {
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.5.13'
 
     integrationTestCompileOnly 'org.projectlombok:lombok'
-    integrationTestAnnotationProcessor "org.projectlombok:lombok"
-    integrationTestImplementation "org.projectlombok:lombok"
+    integrationTestAnnotationProcessor 'org.projectlombok:lombok'
+    integrationTestImplementation 'org.projectlombok:lombok'
     integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
     integrationTestImplementation 'org.springframework.security:spring-security-test'
     integrationTestImplementation 'org.junit.jupiter:junit-jupiter-api'
@@ -133,8 +134,8 @@ integrationTest {
     finalizedBy jacocoTestReport
 
     testLogging {
-        events "failed"
-        exceptionFormat "full"
+        events 'failed'
+        exceptionFormat 'full'
     }
 }
 
@@ -144,35 +145,35 @@ test {
     finalizedBy jacocoTestReport
 
     testLogging {
-        events "failed"
-        exceptionFormat "full"
+        events 'failed'
+        exceptionFormat 'full'
     }
 }
 
 sonarqube {
     properties {
         property 'sonar.host.url', 'https://sonarcloud.io'
-        property "sonar.projectName", "Herder"
-        property "sonar.projectKey", "etnoy_herder"
-        property "sonar.organization", "etnoy"
-        properties["sonar.tests"] += "src/integration-test/java"
+        property 'sonar.projectName', 'Herder'
+        property 'sonar.projectKey', 'etnoy_herder'
+        property 'sonar.organization', 'etnoy'
+        properties['sonar.tests'] += 'src/integration-test/java'
     }
 }
 
 spotless {
-  format 'misc', {
+    format 'misc', {
         target '**/.gitignore', '**/*.gradle', '**/*.md', '**/*.sh'
-    trimTrailingWhitespace()
-    indentWithSpaces()
-    endWithNewline()
-  }
-  java {
-    prettier(['prettier': '2.8.1', 'prettier-plugin-java': '2.0.0'])
-    toggleOffOn()
-    removeUnusedImports()
-    trimTrailingWhitespace()
-    endWithNewline()
-    formatAnnotations()
-    licenseHeaderFile "${project.rootDir}/license.template"
-  }
+        trimTrailingWhitespace()
+        indentWithSpaces(2)
+        endWithNewline()
+    }
+    java {
+        prettier(['prettier': '2.8.1', 'prettier-plugin-java': '2.0.0'])
+        toggleOffOn()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+        formatAnnotations()
+        licenseHeaderFile "${project.rootDir}/license.template"
+    }
 }
