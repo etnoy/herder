@@ -20,6 +20,7 @@
 		"[java]": {
 			"editor.defaultFormatter": "mwpb.java-prettier-formatter"
 		},
-		"java.compile.nullAnalysis.mode": "automatic"
+		"java.compile.nullAnalysis.mode": "automatic",
+		"editor.tabSize": 2
 	}
 }
