@@ -1,5 +1,6 @@
 {
   "recommendations": [
-    "nicolasvuillamy.vscode-groovy-lint"
+    "nicolasvuillamy.vscode-groovy-lint",
+    "vscjava.vscode-java-pack"
   ]
 }
