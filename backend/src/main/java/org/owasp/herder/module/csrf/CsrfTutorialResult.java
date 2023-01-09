@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2022 Jonathan Jogenfors, jonathan@jogenfors.se
+ * Copyright Jonathan Jogenfors, jonathan@jogenfors.se
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
