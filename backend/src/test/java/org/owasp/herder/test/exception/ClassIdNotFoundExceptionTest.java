@@ -38,9 +38,7 @@ class ClassIdNotFoundExceptionTest extends BaseTest {
   @Test
   void messageConstructor_ValidMessage_MessageIncluded() {
     for (final String message : TestConstants.STRINGS) {
-      ClassIdNotFoundException exception = new ClassIdNotFoundException(
-        message
-      );
+      ClassIdNotFoundException exception = new ClassIdNotFoundException(message);
       assertThat(exception.getMessage()).isEqualTo(message);
     }
   }

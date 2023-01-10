@@ -68,13 +68,7 @@ class FlagControllerTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    flagController =
-      new FlagController(
-        controllerAuthentication,
-        moduleService,
-        submissionService,
-        refresherService
-      );
+    flagController = new FlagController(controllerAuthentication, moduleService, submissionService, refresherService);
   }
 
   @Test
@@ -82,16 +76,12 @@ class FlagControllerTest extends BaseTest {
     final String flag = "validflag";
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    when(controllerAuthentication.getUserId())
-      .thenReturn(Mono.error(new NotAuthenticatedException()));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.error(new NotAuthenticatedException()));
 
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
-      .thenReturn(Mono.just(mockModule));
+    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
 
     StepVerifier
-      .create(
-        flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag)
-      )
+      .create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag))
       .expectError(NotAuthenticatedException.class)
       .verify();
 
@@ -104,8 +94,7 @@ class FlagControllerTest extends BaseTest {
 
     final String flag = "validflag";
 
-    when(controllerAuthentication.getUserId())
-      .thenReturn(Mono.just(TestConstants.TEST_USER_ID));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
 
     final Submission submission = Submission
       .builder()
@@ -116,38 +105,22 @@ class FlagControllerTest extends BaseTest {
       .time(LocalDateTime.now(TestConstants.year2000Clock))
       .build();
 
-    when(
-      submissionService.submitFlag(
-        TestConstants.TEST_USER_ID,
-        TestConstants.TEST_MODULE_ID,
-        flag
-      )
-    )
+    when(submissionService.submitFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
       .thenReturn(Mono.just(submission));
 
     when(mockModule.getId()).thenReturn(TestConstants.TEST_MODULE_ID);
 
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
-      .thenReturn(Mono.just(mockModule));
+    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
 
     when(refresherService.refreshModuleLists()).thenReturn(Mono.empty());
     when(refresherService.refreshSubmissionRanks()).thenReturn(Mono.empty());
     when(refresherService.refreshScoreboard()).thenReturn(Mono.empty());
 
     StepVerifier
-      .create(
-        flagController
-          .submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag)
-          .map(ResponseEntity::getBody)
-      )
+      .create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag).map(ResponseEntity::getBody))
       .expectNext(submission)
       .verifyComplete();
 
-    verify(submissionService, times(1))
-      .submitFlag(
-        TestConstants.TEST_USER_ID,
-        TestConstants.TEST_MODULE_ID,
-        flag
-      );
+    verify(submissionService, times(1)).submitFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag);
   }
 }

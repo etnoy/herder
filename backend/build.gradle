@@ -168,7 +168,11 @@ spotless {
         endWithNewline()
     }
     java {
-        prettier(['prettier': '2.8.1', 'prettier-plugin-java': '2.0.0'])
+        prettier(['prettier': '2.8.1', 'prettier-plugin-java': '2.0.0']).config([
+      'tabWidth': 2,
+      'printWidth': 120
+    ])
+
         toggleOffOn()
         removeUnusedImports()
         trimTrailingWhitespace()

@@ -73,21 +73,14 @@ class SqlInjectionTutorialTest extends BaseTest {
     final String mockFlag = "mockedflag";
     final String query = "username";
 
-    sqlInjectionTutorial =
-      new SqlInjectionTutorial(
-        sqlInjectionDatabaseClientFactory,
-        keyService,
-        flagHandler
-      );
+    sqlInjectionTutorial = new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
     final byte[] randomBytes = { 120, 56, 111 };
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
-    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator))
-      .thenReturn(Mono.just(mockFlag));
+    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
     final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
-    when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
-      .thenReturn(mockDatabaseClient);
+    when(sqlInjectionDatabaseClientFactory.create(any(String.class))).thenReturn(mockDatabaseClient);
 
     final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
@@ -103,12 +96,7 @@ class SqlInjectionTutorialTest extends BaseTest {
           new BadSqlGrammarException(
             "Error",
             query,
-            new R2dbcBadGrammarException(
-              new R2dbcBadGrammarException(
-                "Syntax error, yo",
-                new RuntimeException()
-              )
-            )
+            new R2dbcBadGrammarException(new R2dbcBadGrammarException("Syntax error, yo", new RuntimeException()))
           )
         )
       );
@@ -126,12 +114,7 @@ class SqlInjectionTutorialTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    sqlInjectionTutorial =
-      new SqlInjectionTutorial(
-        sqlInjectionDatabaseClientFactory,
-        keyService,
-        flagHandler
-      );
+    sqlInjectionTutorial = new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
     moduleLocator = sqlInjectionTutorial.getLocator();
   }
@@ -143,21 +126,14 @@ class SqlInjectionTutorialTest extends BaseTest {
     final String mockFlag = "mockedflag";
     final String query = "username";
 
-    sqlInjectionTutorial =
-      new SqlInjectionTutorial(
-        sqlInjectionDatabaseClientFactory,
-        keyService,
-        flagHandler
-      );
+    sqlInjectionTutorial = new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
     final byte[] randomBytes = { 120, 56, 111 };
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
-    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator))
-      .thenReturn(Mono.just(mockFlag));
+    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
     final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
-    when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
-      .thenReturn(mockDatabaseClient);
+    when(sqlInjectionDatabaseClientFactory.create(any(String.class))).thenReturn(mockDatabaseClient);
 
     final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
@@ -175,10 +151,7 @@ class SqlInjectionTutorialTest extends BaseTest {
             "Error",
             new DataIntegrityViolationException(
               "Error",
-              new DataIntegrityViolationException(
-                "Data integrity violation, yo",
-                new RuntimeException()
-              )
+              new DataIntegrityViolationException("Data integrity violation, yo", new RuntimeException())
             )
           )
         )
@@ -203,19 +176,12 @@ class SqlInjectionTutorialTest extends BaseTest {
     final byte[] randomBytes = { 120, 56, 111 };
 
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
-    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator))
-      .thenReturn(Mono.just(mockFlag));
+    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
-    sqlInjectionTutorial =
-      new SqlInjectionTutorial(
-        sqlInjectionDatabaseClientFactory,
-        keyService,
-        flagHandler
-      );
+    sqlInjectionTutorial = new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
     final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
-    when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
-      .thenReturn(mockDatabaseClient);
+    when(sqlInjectionDatabaseClientFactory.create(any(String.class))).thenReturn(mockDatabaseClient);
 
     final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
@@ -225,8 +191,7 @@ class SqlInjectionTutorialTest extends BaseTest {
     final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
 
     when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
-    when(fetchSpec.all())
-      .thenReturn(Flux.error(new IllegalArgumentException()));
+    when(fetchSpec.all()).thenReturn(Flux.error(new IllegalArgumentException()));
 
     StepVerifier
       .create(sqlInjectionTutorial.submitQuery(mockUserId, query))
@@ -241,22 +206,15 @@ class SqlInjectionTutorialTest extends BaseTest {
     final String mockFlag = "mockedflag";
     final String query = "username";
 
-    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator))
-      .thenReturn(Mono.just(mockFlag));
+    when(flagHandler.getDynamicFlag(mockUserId, moduleLocator)).thenReturn(Mono.just(mockFlag));
 
-    sqlInjectionTutorial =
-      new SqlInjectionTutorial(
-        sqlInjectionDatabaseClientFactory,
-        keyService,
-        flagHandler
-      );
+    sqlInjectionTutorial = new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
     final byte[] randomBytes = { 120, 56, 111, 95, 6, 3 };
     when(keyService.generateRandomBytes(16)).thenReturn(randomBytes);
 
     final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
-    when(sqlInjectionDatabaseClientFactory.create(any(String.class)))
-      .thenReturn(mockDatabaseClient);
+    when(sqlInjectionDatabaseClientFactory.create(any(String.class))).thenReturn(mockDatabaseClient);
 
     final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
@@ -264,18 +222,11 @@ class SqlInjectionTutorialTest extends BaseTest {
     when(mockExecuteSpec.then()).thenReturn(Mono.empty());
 
     final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
-    final SqlInjectionTutorialRow mockSqlInjectionTutorialRow1 = mock(
-      SqlInjectionTutorialRow.class
-    );
-    final SqlInjectionTutorialRow mockSqlInjectionTutorialRow2 = mock(
-      SqlInjectionTutorialRow.class
-    );
+    final SqlInjectionTutorialRow mockSqlInjectionTutorialRow1 = mock(SqlInjectionTutorialRow.class);
+    final SqlInjectionTutorialRow mockSqlInjectionTutorialRow2 = mock(SqlInjectionTutorialRow.class);
 
     when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
-    when(fetchSpec.all())
-      .thenReturn(
-        Flux.just(mockSqlInjectionTutorialRow1, mockSqlInjectionTutorialRow2)
-      );
+    when(fetchSpec.all()).thenReturn(Flux.just(mockSqlInjectionTutorialRow1, mockSqlInjectionTutorialRow2));
 
     StepVerifier
       .create(sqlInjectionTutorial.submitQuery(mockUserId, query))

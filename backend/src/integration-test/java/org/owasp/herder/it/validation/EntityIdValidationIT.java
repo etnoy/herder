@@ -46,8 +46,7 @@ class EntityIdValidationIT extends BaseIT {
 
   private static final String INVALID_ID_SIZE = "id must be 24 characters long";
 
-  private static final String INVALID_ID_PATTERN =
-    "id can only contain hexadecimal characters";
+  private static final String INVALID_ID_PATTERN = "id can only contain hexadecimal characters";
 
   static Stream<Arguments> invalidIdSource() {
     return Stream.of(
@@ -80,42 +79,23 @@ class EntityIdValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in moduleService.close()")
-  void moduleService_create(
-    final String moduleId,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> moduleService.close(moduleId),
-      containingMessage
-    );
+  void moduleService_create(final String moduleId, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> moduleService.close(moduleId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in moduleService.findById()")
-  void moduleService_findById(
-    final String moduleId,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> moduleService.findById(moduleId),
-      containingMessage
-    );
+  void moduleService_findById(final String moduleId, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> moduleService.findById(moduleId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in moduleService.findByLocatorWithSolutionStatus()")
-  void moduleService_findByLocatorWithSolutionStatus(
-    final String userId,
-    final String containingMessage
-  ) {
+  void moduleService_findByLocatorWithSolutionStatus(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-      () ->
-        moduleService.findListItemByLocator(
-          userId,
-          TestConstants.TEST_MODULE_LOCATOR
-        ),
+      () -> moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR),
       containingMessage
     );
   }
@@ -123,39 +103,23 @@ class EntityIdValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in moduleService.open()")
-  void moduleService_open(
-    final String moduleId,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> moduleService.open(moduleId),
-      containingMessage
-    );
+  void moduleService_open(final String moduleId, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> moduleService.open(moduleId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in moduleService.setDynamicFlag()")
-  void moduleService_setDynamicFlag(
-    final String moduleId,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> moduleService.setDynamicFlag(moduleId),
-      containingMessage
-    );
+  void moduleService_setDynamicFlag(final String moduleId, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> moduleService.setDynamicFlag(moduleId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in moduleService.setStaticFlag()")
-  void moduleService_setStaticFlag(
-    final String moduleId,
-    final String containingMessage
-  ) {
+  void moduleService_setStaticFlag(final String moduleId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-      () ->
-        moduleService.setStaticFlag(moduleId, TestConstants.TEST_STATIC_FLAG),
+      () -> moduleService.setStaticFlag(moduleId, TestConstants.TEST_STATIC_FLAG),
       containingMessage
     );
   }
@@ -163,82 +127,49 @@ class EntityIdValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.deleteById()")
-  void userService_deleteById(
-    final String userId,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> userService.delete(userId),
-      containingMessage
-    );
+  void userService_deleteById(final String userId, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> userService.delete(userId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.demote()")
   void userService_demote(final String userId, final String containingMessage) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> userService.demote(userId),
-      containingMessage
-    );
+    integrationTestUtils.checkConstraintViolation(() -> userService.demote(userId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.disable()")
-  void userService_disable(
-    final String userId,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> userService.disable(userId),
-      containingMessage
-    );
+  void userService_disable(final String userId, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> userService.disable(userId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.enable()")
   void userService_enable(final String userId, final String containingMessage) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> userService.enable(userId),
-      containingMessage
-    );
+    integrationTestUtils.checkConstraintViolation(() -> userService.enable(userId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.findById()")
-  void userService_findById(
-    final String userId,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> userService.findById(userId),
-      containingMessage
-    );
+  void userService_findById(final String userId, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> userService.findById(userId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.findKeyById()")
-  void userService_findKeyById(
-    final String userId,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> userService.findKeyById(userId),
-      containingMessage
-    );
+  void userService_findKeyById(final String userId, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> userService.findKeyById(userId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.findPasswordAuthByUserId()")
-  void userService_findPasswordAuthByUserId(
-    final String userId,
-    final String containingMessage
-  ) {
+  void userService_findPasswordAuthByUserId(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
       () -> userService.findPasswordAuthByUserId(userId),
       containingMessage
@@ -249,32 +180,20 @@ class EntityIdValidationIT extends BaseIT {
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.kick()")
   void userService_kick(final String userId, final String containingMessage) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> userService.kick(userId),
-      containingMessage
-    );
+    integrationTestUtils.checkConstraintViolation(() -> userService.kick(userId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.promote()")
-  void userService_promote(
-    final String userId,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> userService.promote(userId),
-      containingMessage
-    );
+  void userService_promote(final String userId, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> userService.promote(userId), containingMessage);
   }
 
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.setClassId()")
-  void userService_setClassId_userId(
-    final String userId,
-    final String containingMessage
-  ) {
+  void userService_setClassId_userId(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
       () -> userService.setClassId(userId, TestConstants.TEST_CLASS_ID),
       containingMessage
@@ -284,16 +203,9 @@ class EntityIdValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.setDisplayName()")
-  void userService_setDisplayName(
-    final String userId,
-    final String containingMessage
-  ) {
+  void userService_setDisplayName(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-      () ->
-        userService.setDisplayName(
-          userId,
-          TestConstants.TEST_USER_DISPLAY_NAME
-        ),
+      () -> userService.setDisplayName(userId, TestConstants.TEST_USER_DISPLAY_NAME),
       containingMessage
     );
   }
@@ -301,10 +213,7 @@ class EntityIdValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.suspendUntil()")
-  void userService_suspendUntil_DateTime(
-    final String userId,
-    final String containingMessage
-  ) {
+  void userService_suspendUntil_DateTime(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
       () -> userService.suspendUntil(userId, LocalDateTime.now()),
       containingMessage
@@ -314,10 +223,7 @@ class EntityIdValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.suspendUntil()")
-  void userService_suspendUntil_DateTimeMessage(
-    final String userId,
-    final String containingMessage
-  ) {
+  void userService_suspendUntil_DateTimeMessage(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
       () -> userService.suspendUntil(userId, LocalDateTime.now(), "Banned!"),
       containingMessage
@@ -327,10 +233,7 @@ class EntityIdValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.suspendUntil()")
-  void userService_suspendUntil_Duration(
-    final String userId,
-    final String containingMessage
-  ) {
+  void userService_suspendUntil_Duration(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
       () -> userService.suspendUntil(userId, Duration.ofDays(14)),
       containingMessage
@@ -340,10 +243,7 @@ class EntityIdValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.suspendUntil()")
-  void userService_suspendUntil_DurationMessage(
-    final String userId,
-    final String containingMessage
-  ) {
+  void userService_suspendUntil_DurationMessage(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
       () -> userService.suspendUntil(userId, Duration.ofDays(14), "Banned!"),
       containingMessage
@@ -354,27 +254,15 @@ class EntityIdValidationIT extends BaseIT {
   @WithMockUser
   @MethodSource("invalidIdSource")
   @DisplayName("in userController.deleteById()")
-  void userController_deleteById(
-    final String userId,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> userService.delete(userId),
-      containingMessage
-    );
+  void userController_deleteById(final String userId, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> userService.delete(userId), containingMessage);
   }
 
   @ParameterizedTest
   @WithMockUser
   @MethodSource("invalidIdSource")
   @DisplayName("in userController.findById()")
-  void userController_findById(
-    final String userId,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> userService.findById(userId),
-      containingMessage
-    );
+  void userController_findById(final String userId, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> userService.findById(userId), containingMessage);
   }
 }

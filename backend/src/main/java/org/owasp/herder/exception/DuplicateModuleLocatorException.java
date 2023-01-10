@@ -21,8 +21,7 @@
  */
 package org.owasp.herder.exception;
 
-public class DuplicateModuleLocatorException
-  extends ModuleInitializationException {
+public class DuplicateModuleLocatorException extends ModuleInitializationException {
 
   private static final long serialVersionUID = 3953456107426522726L;
 

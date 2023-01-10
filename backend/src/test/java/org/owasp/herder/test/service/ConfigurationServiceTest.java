@@ -62,29 +62,10 @@ class ConfigurationServiceTest extends BaseTest {
     final String serverKeyConfigurationKey = "serverKey";
     final Configuration mockedConfiguration = mock(Configuration.class);
 
-    final byte[] mockedServerKey = {
-      -118,
-      9,
-      -7,
-      -35,
-      17,
-      -116,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      12,
-      82,
-      9,
-      29,
-    };
+    final byte[] mockedServerKey = { -118, 9, -7, -35, 17, -116, -94, 0, -32, -117, 65, -127, 12, 82, 9, 29 };
 
-    when(configurationRepository.findByKey(serverKeyConfigurationKey))
-      .thenReturn(Mono.just(mockedConfiguration));
-    when(mockedConfiguration.getValue())
-      .thenReturn(Base64.getEncoder().encodeToString(mockedServerKey));
+    when(configurationRepository.findByKey(serverKeyConfigurationKey)).thenReturn(Mono.just(mockedConfiguration));
+    when(mockedConfiguration.getValue()).thenReturn(Base64.getEncoder().encodeToString(mockedServerKey));
 
     StepVerifier
       .create(configurationService.getServerKey())
@@ -100,40 +81,19 @@ class ConfigurationServiceTest extends BaseTest {
   @Test
   void getServerKey_NoKeyExists_ReturnsNewKey() {
     final String serverKeyConfigurationKey = "serverKey";
-    final byte[] mockedServerKey = {
-      -118,
-      9,
-      -7,
-      -35,
-      17,
-      -116,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      12,
-      82,
-      9,
-      29,
-    };
+    final byte[] mockedServerKey = { -118, 9, -7, -35, 17, -116, -94, 0, -32, -117, 65, -127, 12, 82, 9, 29 };
 
     when(keyService.generateRandomBytes(16)).thenReturn(mockedServerKey);
-    when(configurationRepository.findByKey(serverKeyConfigurationKey))
-      .thenReturn(Mono.empty());
+    when(configurationRepository.findByKey(serverKeyConfigurationKey)).thenReturn(Mono.empty());
     when(configurationRepository.save(any(Configuration.class)))
-      .thenAnswer(configuration ->
-        Mono.just(configuration.getArgument(0, Configuration.class))
-      );
+      .thenAnswer(configuration -> Mono.just(configuration.getArgument(0, Configuration.class)));
 
     StepVerifier
       .create(configurationService.getServerKey())
       .assertNext(serverKey -> {
         assertThat(serverKey).isEqualTo(mockedServerKey);
 
-        verify(configurationRepository, atLeast(1))
-          .findByKey(serverKeyConfigurationKey);
+        verify(configurationRepository, atLeast(1)).findByKey(serverKeyConfigurationKey);
         verify(keyService).generateRandomBytes(16);
         verify(configurationRepository).save(any(Configuration.class));
       })
@@ -143,53 +103,27 @@ class ConfigurationServiceTest extends BaseTest {
   @Test
   void refreshServerKey_KeyDoesNotExist_GeneratesNewKey() {
     final String serverKeyConfigurationKey = "serverKey";
-    final byte[] newServerKey = {
-      -118,
-      9,
-      -7,
-      -35,
-      17,
-      -116,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      12,
-      82,
-      9,
-      29,
-    };
-    final String encodedNewServerKey = Base64
-      .getEncoder()
-      .encodeToString(newServerKey);
+    final byte[] newServerKey = { -118, 9, -7, -35, 17, -116, -94, 0, -32, -117, 65, -127, 12, 82, 9, 29 };
+    final String encodedNewServerKey = Base64.getEncoder().encodeToString(newServerKey);
 
-    when(configurationRepository.findByKey(serverKeyConfigurationKey))
-      .thenReturn(Mono.empty());
+    when(configurationRepository.findByKey(serverKeyConfigurationKey)).thenReturn(Mono.empty());
     when(keyService.generateRandomBytes(16)).thenReturn(newServerKey);
     when(configurationRepository.save(any(Configuration.class)))
-      .thenAnswer(configuration ->
-        Mono.just(configuration.getArgument(0, Configuration.class))
-      );
+      .thenAnswer(configuration -> Mono.just(configuration.getArgument(0, Configuration.class)));
 
     StepVerifier
       .create(configurationService.refreshServerKey())
       .assertNext(serverKey -> {
         assertThat(serverKey).isEqualTo(newServerKey);
 
-        verify(configurationRepository, atLeast(1))
-          .findByKey(serverKeyConfigurationKey);
+        verify(configurationRepository, atLeast(1)).findByKey(serverKeyConfigurationKey);
         verify(keyService).generateRandomBytes(16);
 
-        ArgumentCaptor<Configuration> argument = ArgumentCaptor.forClass(
-          Configuration.class
-        );
+        ArgumentCaptor<Configuration> argument = ArgumentCaptor.forClass(Configuration.class);
 
         verify(configurationRepository).save(argument.capture());
 
-        assertThat(argument.getValue().getValue())
-          .isEqualTo(encodedNewServerKey);
+        assertThat(argument.getValue().getValue()).isEqualTo(encodedNewServerKey);
       })
       .verifyComplete();
   }
@@ -200,61 +134,34 @@ class ConfigurationServiceTest extends BaseTest {
     final Configuration mockedConfiguration = mock(Configuration.class);
     final Configuration mockedConfigurationNewKey = mock(Configuration.class);
 
-    final byte[] newServerKey = {
-      -118,
-      9,
-      -7,
-      -35,
-      17,
-      -116,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      12,
-      82,
-      9,
-      29,
-    };
+    final byte[] newServerKey = { -118, 9, -7, -35, 17, -116, -94, 0, -32, -117, 65, -127, 12, 82, 9, 29 };
 
-    final String encodedNewServerKey = Base64
-      .getEncoder()
-      .encodeToString(newServerKey);
+    final String encodedNewServerKey = Base64.getEncoder().encodeToString(newServerKey);
 
-    when(configurationRepository.findByKey(serverKeyConfigurationKey))
-      .thenReturn(Mono.just(mockedConfiguration));
+    when(configurationRepository.findByKey(serverKeyConfigurationKey)).thenReturn(Mono.just(mockedConfiguration));
 
-    when(mockedConfiguration.withValue(encodedNewServerKey))
-      .thenReturn(mockedConfigurationNewKey);
+    when(mockedConfiguration.withValue(encodedNewServerKey)).thenReturn(mockedConfigurationNewKey);
     when(mockedConfigurationNewKey.getValue()).thenReturn(encodedNewServerKey);
 
     when(keyService.generateRandomBytes(16)).thenReturn(newServerKey);
     when(configurationRepository.save(any(Configuration.class)))
-      .thenAnswer(configuration ->
-        Mono.just(configuration.getArgument(0, Configuration.class))
-      );
+      .thenAnswer(configuration -> Mono.just(configuration.getArgument(0, Configuration.class)));
 
     StepVerifier
       .create(configurationService.refreshServerKey())
       .assertNext(serverKey -> {
         assertThat(serverKey).isEqualTo(newServerKey);
-        verify(configurationRepository, atLeast(1))
-          .findByKey(serverKeyConfigurationKey);
+        verify(configurationRepository, atLeast(1)).findByKey(serverKeyConfigurationKey);
         verify(keyService).generateRandomBytes(16);
 
         verify(mockedConfiguration).withValue(encodedNewServerKey);
 
-        ArgumentCaptor<Configuration> argument = ArgumentCaptor.forClass(
-          Configuration.class
-        );
+        ArgumentCaptor<Configuration> argument = ArgumentCaptor.forClass(Configuration.class);
 
         verify(configurationRepository).save(argument.capture());
 
         assertThat(argument.getValue()).isEqualTo(mockedConfigurationNewKey);
-        assertThat(argument.getValue().getValue())
-          .isEqualTo(encodedNewServerKey);
+        assertThat(argument.getValue().getValue()).isEqualTo(encodedNewServerKey);
       })
       .verifyComplete();
   }
@@ -262,7 +169,6 @@ class ConfigurationServiceTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    configurationService =
-      new ConfigurationService(configurationRepository, keyService);
+    configurationService = new ConfigurationService(configurationRepository, keyService);
   }
 }

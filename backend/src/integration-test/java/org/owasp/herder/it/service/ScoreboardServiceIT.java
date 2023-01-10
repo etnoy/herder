@@ -147,15 +147,9 @@ class ScoreboardServiceIT extends BaseIT {
       setClock(testClock);
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
-      scoreAdjustmentService
-        .submitUserAdjustment(userId1, -1000, "Penalty for cheating")
-        .block();
-      scoreAdjustmentService
-        .submitUserAdjustment(userId2, -1000, "Penalty for cheating")
-        .block();
-      scoreAdjustmentService
-        .submitUserAdjustment(userId3, -1000, "Penalty for cheating")
-        .block();
+      scoreAdjustmentService.submitUserAdjustment(userId1, -1000, "Penalty for cheating").block();
+      scoreAdjustmentService.submitUserAdjustment(userId2, -1000, "Penalty for cheating").block();
+      scoreAdjustmentService.submitUserAdjustment(userId3, -1000, "Penalty for cheating").block();
 
       refresherService.refreshSubmissionRanks().block();
       refresherService.refreshScoreboard().block();
@@ -164,8 +158,7 @@ class ScoreboardServiceIT extends BaseIT {
         .create(scoreboardService.getScoreboard())
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -174,8 +167,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
           assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
           assertThat(scoreboardEntry.getGoldMedals()).isOne();
@@ -184,8 +176,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
           assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -194,8 +185,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
           assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -226,9 +216,7 @@ class ScoreboardServiceIT extends BaseIT {
       userService.addUserToTeam(userId1, teamId).block();
       userService.addUserToTeam(userId3, teamId).block();
 
-      scoreAdjustmentService
-        .submitTeamAdjustment(teamId, -100, "No scores for you!")
-        .block();
+      scoreAdjustmentService.submitTeamAdjustment(teamId, -100, "No scores for you!").block();
 
       refresherService.afterUserUpdate(userId1).block();
       refresherService.afterUserUpdate(userId3).block();
@@ -239,8 +227,7 @@ class ScoreboardServiceIT extends BaseIT {
         .create(scoreboardService.getScoreboard())
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
 
           assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
@@ -250,8 +237,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.TEAM);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
           assertThat(scoreboardEntry.getScore()).isEqualTo(0L);
           assertThat(scoreboardEntry.getGoldMedals()).isOne();
@@ -260,8 +246,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -272,9 +257,7 @@ class ScoreboardServiceIT extends BaseIT {
     }
 
     @Test
-    @DisplayName(
-      "with teams with score adjustment remaining after user leaves team"
-    )
+    @DisplayName("with teams with score adjustment remaining after user leaves team")
     void canGetScoreboardWithTeamScoreAdjustmentRemainingAfterUserLeavingTeam() {
       moduleService.setBaseScore(moduleId1, 100).block();
 
@@ -294,9 +277,7 @@ class ScoreboardServiceIT extends BaseIT {
       userService.addUserToTeam(userId1, teamId).block();
       userService.addUserToTeam(userId3, teamId).block();
 
-      scoreAdjustmentService
-        .submitTeamAdjustment(teamId, -1000, "No scores for you!")
-        .block();
+      scoreAdjustmentService.submitTeamAdjustment(teamId, -1000, "No scores for you!").block();
 
       userService.clearTeamForUser(userId1).block();
       userService.clearTeamForUser(userId3).block();
@@ -312,8 +293,7 @@ class ScoreboardServiceIT extends BaseIT {
         .create(scoreboardService.getScoreboard())
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -322,8 +302,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -332,8 +311,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
           assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
           assertThat(scoreboardEntry.getGoldMedals()).isOne();
@@ -342,8 +320,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
           assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -374,9 +351,7 @@ class ScoreboardServiceIT extends BaseIT {
       userService.addUserToTeam(userId1, teamId).block();
       userService.addUserToTeam(userId3, teamId).block();
 
-      scoreAdjustmentService
-        .submitTeamAdjustment(teamId, -1000, "No scores for you!")
-        .block();
+      scoreAdjustmentService.submitTeamAdjustment(teamId, -1000, "No scores for you!").block();
 
       refresherService.afterUserUpdate(userId1).block();
       refresherService.afterUserUpdate(userId3).block();
@@ -389,8 +364,7 @@ class ScoreboardServiceIT extends BaseIT {
         .create(scoreboardService.getScoreboard())
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -399,8 +373,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -410,8 +383,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.TEAM);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
           assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
           assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
           assertThat(scoreboardEntry.getGoldMedals()).isOne();
@@ -438,12 +410,8 @@ class ScoreboardServiceIT extends BaseIT {
       setClock(testClock);
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
-      scoreAdjustmentService
-        .submitUserAdjustment(userId1, -1000, "Penalty for cheating")
-        .block();
-      scoreAdjustmentService
-        .submitUserAdjustment(userId3, 1000, "Thanks for the bribe")
-        .block();
+      scoreAdjustmentService.submitUserAdjustment(userId1, -1000, "Penalty for cheating").block();
+      scoreAdjustmentService.submitUserAdjustment(userId3, 1000, "Thanks for the bribe").block();
 
       refresherService.refreshSubmissionRanks().block();
 
@@ -453,8 +421,7 @@ class ScoreboardServiceIT extends BaseIT {
         .create(scoreboardService.getScoreboard())
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isEqualTo(1100L);
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -463,8 +430,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
           assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -473,8 +439,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -483,8 +448,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
           assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
           assertThat(scoreboardEntry.getGoldMedals()).isOne();
@@ -516,8 +480,7 @@ class ScoreboardServiceIT extends BaseIT {
         .create(scoreboardService.getScoreboard())
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isOne();
@@ -526,8 +489,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -536,8 +498,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -546,8 +507,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -568,8 +528,7 @@ class ScoreboardServiceIT extends BaseIT {
         .create(scoreboardService.getScoreboard())
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -578,8 +537,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -588,8 +546,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -598,8 +555,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -621,8 +577,7 @@ class ScoreboardServiceIT extends BaseIT {
         .create(scoreboardService.getScoreboard())
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isOne();
@@ -631,8 +586,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -641,8 +595,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -651,8 +604,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -689,8 +641,7 @@ class ScoreboardServiceIT extends BaseIT {
         .create(scoreboardService.getScoreboard())
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isOne();
@@ -699,8 +650,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.TEAM);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -709,8 +659,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -753,8 +702,7 @@ class ScoreboardServiceIT extends BaseIT {
         .create(scoreboardService.getScoreboard())
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isOne();
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isOne();
@@ -763,8 +711,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -773,8 +720,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -783,8 +729,7 @@ class ScoreboardServiceIT extends BaseIT {
         })
         .assertNext(scoreboardEntry -> {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType())
-            .isEqualTo(PrincipalType.USER);
+          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
           assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
           assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isZero();
@@ -858,10 +803,8 @@ class ScoreboardServiceIT extends BaseIT {
     // Bypass the rate limiter
     final Bucket mockBucket = mock(Bucket.class);
     when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
+    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
 
     resetClock();
   }

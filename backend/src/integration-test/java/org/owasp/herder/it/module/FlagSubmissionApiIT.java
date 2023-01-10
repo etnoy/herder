@@ -66,11 +66,7 @@ class FlagSubmissionApiIT extends BaseIT {
         StepVerifier
           .create(
             integrationTestUtils
-              .submitFlagApiAndReturnSubmission(
-                TestConstants.TEST_MODULE_LOCATOR,
-                token,
-                dynamicFlag
-              )
+              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, dynamicFlag)
               .map(Submission::isValid)
           )
           .expectNext(true)
@@ -83,11 +79,7 @@ class FlagSubmissionApiIT extends BaseIT {
         StepVerifier
           .create(
             integrationTestUtils
-              .submitFlagApiAndReturnSubmission(
-                TestConstants.TEST_MODULE_LOCATOR,
-                token,
-                dynamicFlag.toLowerCase()
-              )
+              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, dynamicFlag.toLowerCase())
               .map(Submission::isValid)
           )
           .expectNext(true)
@@ -100,11 +92,7 @@ class FlagSubmissionApiIT extends BaseIT {
         StepVerifier
           .create(
             integrationTestUtils
-              .submitFlagApiAndReturnSubmission(
-                TestConstants.TEST_MODULE_LOCATOR,
-                token,
-                dynamicFlag.toUpperCase()
-              )
+              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, dynamicFlag.toUpperCase())
               .map(Submission::isValid)
           )
           .expectNext(true)
@@ -121,11 +109,7 @@ class FlagSubmissionApiIT extends BaseIT {
       StepVerifier
         .create(
           integrationTestUtils
-            .submitFlagApiAndReturnSubmission(
-              TestConstants.TEST_MODULE_LOCATOR,
-              token,
-              testString
-            )
+            .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, testString)
             .map(Submission::isValid)
         )
         .expectNext(false)
@@ -144,10 +128,7 @@ class FlagSubmissionApiIT extends BaseIT {
     @Test
     @DisplayName("when empty should return HTTP 401 when not logged in")
     void canRejectUnauthorizedEmptyDynamicFlag() {
-      integrationTestUtils
-        .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "")
-        .expectStatus()
-        .isUnauthorized();
+      integrationTestUtils.submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "").expectStatus().isUnauthorized();
     }
 
     @BeforeEach
@@ -160,10 +141,7 @@ class FlagSubmissionApiIT extends BaseIT {
         );
 
       integrationTestUtils.createDynamicTestModule();
-      dynamicFlag =
-        flagHandler
-          .getDynamicFlag(userId, TestConstants.TEST_MODULE_LOCATOR)
-          .block();
+      dynamicFlag = flagHandler.getDynamicFlag(userId, TestConstants.TEST_MODULE_LOCATOR).block();
     }
   }
 
@@ -176,20 +154,14 @@ class FlagSubmissionApiIT extends BaseIT {
     class ValidStaticFlag {
 
       @ParameterizedTest
-      @MethodSource(
-        "org.owasp.herder.test.util.TestConstants#validStaticFlagProvider"
-      )
+      @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
       @DisplayName("should be accepted")
       void canAcceptValidStaticFlag(final String flagToTest) {
         moduleService.setStaticFlag(moduleId, flagToTest).block();
         StepVerifier
           .create(
             integrationTestUtils
-              .submitFlagApiAndReturnSubmission(
-                TestConstants.TEST_MODULE_LOCATOR,
-                token,
-                flagToTest
-              )
+              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, flagToTest)
               .map(Submission::isValid)
           )
           .expectNext(true)
@@ -197,9 +169,7 @@ class FlagSubmissionApiIT extends BaseIT {
       }
 
       @ParameterizedTest
-      @MethodSource(
-        "org.owasp.herder.test.util.TestConstants#validStaticFlagProvider"
-      )
+      @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
       @DisplayName("should be accepted when in lowercase")
       void canAcceptValidStaticFlagInLowercase(final String flagToTest) {
         moduleService.setStaticFlag(moduleId, flagToTest).block();
@@ -207,11 +177,7 @@ class FlagSubmissionApiIT extends BaseIT {
         StepVerifier
           .create(
             integrationTestUtils
-              .submitFlagApiAndReturnSubmission(
-                TestConstants.TEST_MODULE_LOCATOR,
-                token,
-                flagToTest.toLowerCase()
-              )
+              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, flagToTest.toLowerCase())
               .map(Submission::isValid)
           )
           .expectNext(true)
@@ -219,9 +185,7 @@ class FlagSubmissionApiIT extends BaseIT {
       }
 
       @ParameterizedTest
-      @MethodSource(
-        "org.owasp.herder.test.util.TestConstants#validStaticFlagProvider"
-      )
+      @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
       @DisplayName("should be accepted when in uppercase")
       void canAcceptValidStaticFlagInUppercase(final String flagToTest) {
         moduleService.setStaticFlag(moduleId, flagToTest).block();
@@ -229,11 +193,7 @@ class FlagSubmissionApiIT extends BaseIT {
         StepVerifier
           .create(
             integrationTestUtils
-              .submitFlagApiAndReturnSubmission(
-                TestConstants.TEST_MODULE_LOCATOR,
-                token,
-                flagToTest.toUpperCase()
-              )
+              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, flagToTest.toUpperCase())
               .map(Submission::isValid)
           )
           .expectNext(true)
@@ -246,19 +206,13 @@ class FlagSubmissionApiIT extends BaseIT {
     private String moduleId;
 
     @ParameterizedTest
-    @MethodSource(
-      "org.owasp.herder.test.util.TestConstants#validStaticFlagProvider"
-    )
+    @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("if invalid should be rejected")
     void canRejectInvalidStaticFlag(final String invalidStaticFlag) {
       StepVerifier
         .create(
           integrationTestUtils
-            .submitFlagApiAndReturnSubmission(
-              TestConstants.TEST_MODULE_LOCATOR,
-              token,
-              invalidStaticFlag
-            )
+            .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, invalidStaticFlag)
             .map(Submission::isValid)
         )
         .expectNext(false)
@@ -268,21 +222,14 @@ class FlagSubmissionApiIT extends BaseIT {
     @Test
     @DisplayName("should return HTTP 401 when not logged in")
     void canRejectUnauthorizedEmptyStaticFlag() {
-      integrationTestUtils
-        .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "")
-        .expectStatus()
-        .isUnauthorized();
+      integrationTestUtils.submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "").expectStatus().isUnauthorized();
     }
 
     @Test
     @DisplayName("when empty should return HTTP 401 when not logged in")
     void canRejectUnauthorizedStaticFlag() {
       integrationTestUtils
-        .submitFlagApi(
-          TestConstants.TEST_MODULE_LOCATOR,
-          null,
-          TestConstants.TEST_STATIC_FLAG
-        )
+        .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, TestConstants.TEST_STATIC_FLAG)
         .expectStatus()
         .isUnauthorized();
     }
@@ -341,9 +288,7 @@ class FlagSubmissionApiIT extends BaseIT {
     // Bypass all rate limiters
     final Bucket mockBucket = mock(Bucket.class);
     when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
+    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
   }
 }

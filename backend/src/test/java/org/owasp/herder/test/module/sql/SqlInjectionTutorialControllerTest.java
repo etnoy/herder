@@ -58,27 +58,14 @@ class SqlInjectionTutorialControllerTest extends BaseTest {
   void search_Autenticated_CallsModule() {
     final String mockUserId = "id";
 
-    final SqlInjectionTutorialRow sqlInjectionTutorialRow1 = mock(
-      SqlInjectionTutorialRow.class
-    );
-    final SqlInjectionTutorialRow sqlInjectionTutorialRow2 = mock(
-      SqlInjectionTutorialRow.class
-    );
-    final SqlInjectionTutorialRow sqlInjectionTutorialRow3 = mock(
-      SqlInjectionTutorialRow.class
-    );
+    final SqlInjectionTutorialRow sqlInjectionTutorialRow1 = mock(SqlInjectionTutorialRow.class);
+    final SqlInjectionTutorialRow sqlInjectionTutorialRow2 = mock(SqlInjectionTutorialRow.class);
+    final SqlInjectionTutorialRow sqlInjectionTutorialRow3 = mock(SqlInjectionTutorialRow.class);
     final String query = "sql";
 
-    when(controllerAuthentication.getUserId())
-      .thenReturn(Mono.just(mockUserId));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
     when(sqlInjectionTutorial.submitQuery(mockUserId, query))
-      .thenReturn(
-        Flux.just(
-          sqlInjectionTutorialRow1,
-          sqlInjectionTutorialRow2,
-          sqlInjectionTutorialRow3
-        )
-      );
+      .thenReturn(Flux.just(sqlInjectionTutorialRow1, sqlInjectionTutorialRow2, sqlInjectionTutorialRow3));
 
     StepVerifier
       .create(sqlInjectionTutorialController.search(query))
@@ -94,8 +81,7 @@ class SqlInjectionTutorialControllerTest extends BaseTest {
   @Test
   void search_NotAutenticated_CallsModule() {
     final String query = "sql";
-    when(controllerAuthentication.getUserId())
-      .thenReturn(Mono.error(new NotAuthenticatedException()));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.error(new NotAuthenticatedException()));
     StepVerifier
       .create(sqlInjectionTutorialController.search(query))
       .expectError(NotAuthenticatedException.class)
@@ -106,10 +92,6 @@ class SqlInjectionTutorialControllerTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    sqlInjectionTutorialController =
-      new SqlInjectionTutorialController(
-        sqlInjectionTutorial,
-        controllerAuthentication
-      );
+    sqlInjectionTutorialController = new SqlInjectionTutorialController(sqlInjectionTutorial, controllerAuthentication);
   }
 }

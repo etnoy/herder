@@ -29,8 +29,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface SubmissionRepository
-  extends ReactiveMongoRepository<Submission, String> {
+public interface SubmissionRepository extends ReactiveMongoRepository<Submission, String> {
   @Aggregation({ "{$match:{'module._id':?0}}" })
   public Flux<Submission> findAllByModuleId(String moduleId);
 
@@ -40,10 +39,7 @@ public interface SubmissionRepository
 
   public Flux<Submission> findAllByUserIdAndIsValidTrue(String userId);
 
-  public Mono<Submission> findAllByUserIdAndModuleIdAndIsValidTrue(
-    String userId,
-    String moduleId
-  );
+  public Mono<Submission> findAllByUserIdAndModuleIdAndIsValidTrue(String userId, String moduleId);
 
   public Mono<Boolean> existsByUserIdAndModuleIdAndIsValidTrue(
     @Param("userId") String userId,

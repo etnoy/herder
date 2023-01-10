@@ -36,10 +36,7 @@ import org.testcontainers.containers.MongoDBContainer;
 import reactor.core.publisher.Hooks;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(
-  webEnvironment = WebEnvironment.RANDOM_PORT,
-  properties = { "application.runner.enabled=false" }
-)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = { "application.runner.enabled=false" })
 @AutoConfigureWebTestClient
 @Slf4j
 @Execution(ExecutionMode.SAME_THREAD)
@@ -60,10 +57,7 @@ public abstract class BaseIT {
 
   @DynamicPropertySource
   static void mongoDbProperties(DynamicPropertyRegistry registry) {
-    log.info(
-      "Using testcontainer for MongoDB at " +
-      mongoDBContainer.getReplicaSetUrl()
-    );
+    log.info("Using testcontainer for MongoDB at " + mongoDBContainer.getReplicaSetUrl());
     registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
   }
 }

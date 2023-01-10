@@ -36,33 +36,22 @@ import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-public class SecurityContextRepository
-  implements ServerSecurityContextRepository {
+public class SecurityContextRepository implements ServerSecurityContextRepository {
 
   private final AuthenticationManager authenticationManager;
 
   @Override
   public Mono<SecurityContext> load(ServerWebExchange serverWebExchange) {
-    String authorizationHeader = serverWebExchange
-      .getRequest()
-      .getHeaders()
-      .getFirst(HttpHeaders.AUTHORIZATION);
+    String authorizationHeader = serverWebExchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
-    if (
-      authorizationHeader != null && authorizationHeader.startsWith("Bearer ")
-    ) {
+    if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
       return Mono
         .just(authorizationHeader.substring(7))
         .map(token -> new UsernamePasswordAuthenticationToken(null, token))
         .flatMap(authenticationManager::authenticate)
         .onErrorMap(
           AuthenticationException.class::isInstance,
-          autEx ->
-            new ResponseStatusException(
-              HttpStatus.UNAUTHORIZED,
-              autEx.getMessage(),
-              autEx
-            )
+          autEx -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, autEx.getMessage(), autEx)
         )
         .map(SecurityContextImpl::new);
     } else {
@@ -71,10 +60,7 @@ public class SecurityContextRepository
   }
 
   @Override
-  public Mono<Void> save(
-    ServerWebExchange serverWebExchange,
-    SecurityContext securityContext
-  ) {
+  public Mono<Void> save(ServerWebExchange serverWebExchange, SecurityContext securityContext) {
     return Mono.error(new UnsupportedOperationException("Not supported yet."));
   }
 }

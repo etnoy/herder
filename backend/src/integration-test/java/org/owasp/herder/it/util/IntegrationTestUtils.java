@@ -119,10 +119,7 @@ public final class IntegrationTestUtils {
 
   String moduleId;
 
-  public void checkConstraintViolation(
-    final ThrowingCallable shouldRaiseThrowable,
-    final String containedMessage
-  ) {
+  public void checkConstraintViolation(final ThrowingCallable shouldRaiseThrowable, final String containedMessage) {
     assertThatThrownBy(shouldRaiseThrowable)
       .isInstanceOf(ConstraintViolationException.class)
       .hasMessageContaining(containedMessage);
@@ -142,9 +139,7 @@ public final class IntegrationTestUtils {
       .create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR)
       .block();
 
-    moduleService
-      .setStaticFlag(moduleId, TestConstants.TEST_STATIC_FLAG)
-      .block();
+    moduleService.setStaticFlag(moduleId, TestConstants.TEST_STATIC_FLAG).block();
     return moduleId;
   }
 
@@ -182,23 +177,14 @@ public final class IntegrationTestUtils {
       .contentType(MediaType.APPLICATION_JSON)
       .body(
         BodyInserters.fromPublisher(
-          Mono.just(
-            "{\"userName\": \"" +
-            username +
-            "\", \"password\": \"" +
-            password +
-            "\"}"
-          ),
+          Mono.just("{\"userName\": \"" + username + "\", \"password\": \"" + password + "\"}"),
           String.class
         )
       )
       .exchange();
   }
 
-  public String performAPILoginWithToken(
-    final String username,
-    final String password
-  ) {
+  public String performAPILoginWithToken(final String username, final String password) {
     return JsonPath
       .parse(
         new String(
@@ -241,28 +227,18 @@ public final class IntegrationTestUtils {
       .block();
   }
 
-  public ResponseSpec submitFlagApi(
-    final String moduleLocator,
-    final String token,
-    final String flag
-  ) {
+  public ResponseSpec submitFlagApi(final String moduleLocator, final String token, final String flag) {
     if ((moduleLocator == null) || (flag == null)) {
       throw new NullPointerException();
     }
 
-    final String endpoint = String.format(
-      "/api/v1/flag/submit/%s",
-      moduleLocator
-    );
+    final String endpoint = String.format("/api/v1/flag/submit/%s", moduleLocator);
 
-    final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody = BodyInserters.fromValue(
-      flag
-    );
+    final BodyInserter<String, ReactiveHttpOutputMessage> submissionBody = BodyInserters.fromValue(flag);
     RequestBodySpec requestBodySpec = webTestClient.post().uri(endpoint);
 
     if (token != null) {
-      requestBodySpec =
-        requestBodySpec.header("Authorization", "Bearer " + token);
+      requestBodySpec = requestBodySpec.header("Authorization", "Bearer " + token);
     }
 
     return requestBodySpec
@@ -288,19 +264,11 @@ public final class IntegrationTestUtils {
       .getResponseBody();
   }
 
-  public Submission submitInvalidFlag(
-    final String userId,
-    final String moduleId
-  ) {
-    return submissionService
-      .submitFlag(userId, moduleId, "an-invalid-flag-cant-be-right")
-      .block();
+  public Submission submitInvalidFlag(final String userId, final String moduleId) {
+    return submissionService.submitFlag(userId, moduleId, "an-invalid-flag-cant-be-right").block();
   }
 
-  public Submission submitValidFlag(
-    final String userId,
-    final String moduleId
-  ) {
+  public Submission submitValidFlag(final String userId, final String moduleId) {
     final ModuleEntity moduleEntity = moduleService.findById(moduleId).block();
 
     String validFlag;
@@ -308,8 +276,7 @@ public final class IntegrationTestUtils {
     if (moduleEntity.isFlagStatic()) {
       validFlag = moduleEntity.getStaticFlag();
     } else {
-      validFlag =
-        flagHandler.getDynamicFlag(userId, moduleEntity.getLocator()).block();
+      validFlag = flagHandler.getDynamicFlag(userId, moduleEntity.getLocator()).block();
     }
 
     return submissionService.submitFlag(userId, moduleId, validFlag).block();

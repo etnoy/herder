@@ -54,9 +54,7 @@ class LoginApiIT extends BaseIT {
   private String userId;
 
   @Test
-  @DisplayName(
-    "Logging in with correct credentials should return a valid token"
-  )
+  @DisplayName("Logging in with correct credentials should return a valid token")
   void canLoginWithValidCredentials() {
     final String token = integrationTestUtils.performAPILoginWithToken(
       TestConstants.TEST_USER_LOGIN_NAME,
@@ -74,58 +72,33 @@ class LoginApiIT extends BaseIT {
   }
 
   @Test
-  @DisplayName(
-    "Logging in with an empty password should return HTTP Bad Request"
-  )
+  @DisplayName("Logging in with an empty password should return HTTP Bad Request")
   void canReturn400WhenLogginInWithEmptyPassword() {
-    integrationTestUtils
-      .performAPILogin(TestConstants.TEST_USER_LOGIN_NAME, "")
-      .expectStatus()
-      .isBadRequest();
+    integrationTestUtils.performAPILogin(TestConstants.TEST_USER_LOGIN_NAME, "").expectStatus().isBadRequest();
   }
 
   @Test
-  @DisplayName(
-    "Logging in with an empty username should return HTTP Unauthorized"
-  )
+  @DisplayName("Logging in with an empty username should return HTTP Unauthorized")
   void canReturn400WhenLogginInWithEmptyUsername() {
-    integrationTestUtils
-      .performAPILogin("", TestConstants.TEST_USER_PASSWORD)
-      .expectStatus()
-      .isBadRequest();
+    integrationTestUtils.performAPILogin("", TestConstants.TEST_USER_PASSWORD).expectStatus().isBadRequest();
   }
 
   @Test
-  @DisplayName(
-    "Logging in with an incorrect password should return HTTP Unauthorized"
-  )
+  @DisplayName("Logging in with an incorrect password should return HTTP Unauthorized")
   void canReturn401WhenLogginInWithWrongPassword() {
-    integrationTestUtils
-      .performAPILogin(TestConstants.TEST_USER_LOGIN_NAME, "wrong")
-      .expectStatus()
-      .isUnauthorized();
+    integrationTestUtils.performAPILogin(TestConstants.TEST_USER_LOGIN_NAME, "wrong").expectStatus().isUnauthorized();
   }
 
   @Test
-  @DisplayName(
-    "Logging in with an incorrect username should return HTTP Unauthorized"
-  )
+  @DisplayName("Logging in with an incorrect username should return HTTP Unauthorized")
   void canReturn401WhenLogginInWithWrongUsername() {
-    integrationTestUtils
-      .performAPILogin("wrong", TestConstants.TEST_USER_PASSWORD)
-      .expectStatus()
-      .isUnauthorized();
+    integrationTestUtils.performAPILogin("wrong", TestConstants.TEST_USER_PASSWORD).expectStatus().isUnauthorized();
   }
 
   @Test
-  @DisplayName(
-    "Logging in with an incorrect username and password should return HTTP Unauthorized"
-  )
+  @DisplayName("Logging in with an incorrect username and password should return HTTP Unauthorized")
   void canReturn401WhenLogginInWithWrongUsernameAndPassword() {
-    integrationTestUtils
-      .performAPILogin("wrong", "still wrong")
-      .expectStatus()
-      .isUnauthorized();
+    integrationTestUtils.performAPILogin("wrong", "still wrong").expectStatus().isUnauthorized();
   }
 
   @BeforeEach

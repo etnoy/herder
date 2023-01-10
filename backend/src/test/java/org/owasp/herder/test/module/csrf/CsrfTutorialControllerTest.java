@@ -53,28 +53,20 @@ class CsrfTutorialControllerTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    csrfTutorialController =
-      new CsrfTutorialController(csrfTutorial, controllerAuthentication);
+    csrfTutorialController = new CsrfTutorialController(csrfTutorial, controllerAuthentication);
   }
 
   @Test
   void tutorial_TutorialCreated_ReturnsTutorial() {
     final String mockUserId = "id";
 
-    when(controllerAuthentication.getUserId())
-      .thenReturn(Mono.just(mockUserId));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
 
-    final CsrfTutorialResult mockCsrfTutorialResult = mock(
-      CsrfTutorialResult.class
-    );
+    final CsrfTutorialResult mockCsrfTutorialResult = mock(CsrfTutorialResult.class);
 
-    when(csrfTutorial.getTutorial(mockUserId))
-      .thenReturn(Mono.just(mockCsrfTutorialResult));
+    when(csrfTutorial.getTutorial(mockUserId)).thenReturn(Mono.just(mockCsrfTutorialResult));
 
-    StepVerifier
-      .create(csrfTutorialController.tutorial())
-      .expectNext(mockCsrfTutorialResult)
-      .verifyComplete();
+    StepVerifier.create(csrfTutorialController.tutorial()).expectNext(mockCsrfTutorialResult).verifyComplete();
   }
 
   @Test
@@ -82,15 +74,11 @@ class CsrfTutorialControllerTest extends BaseTest {
     final String mockUserId = "id";
     final String mockPseudonym = "abcd123";
 
-    when(controllerAuthentication.getUserId())
-      .thenReturn(Mono.just(mockUserId));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
 
-    final CsrfTutorialResult mockCsrfTutorialResult = mock(
-      CsrfTutorialResult.class
-    );
+    final CsrfTutorialResult mockCsrfTutorialResult = mock(CsrfTutorialResult.class);
 
-    when(csrfTutorial.attack(mockUserId, mockPseudonym))
-      .thenReturn(Mono.just(mockCsrfTutorialResult));
+    when(csrfTutorial.attack(mockUserId, mockPseudonym)).thenReturn(Mono.just(mockCsrfTutorialResult));
 
     StepVerifier
       .create(csrfTutorialController.attack(mockPseudonym))

@@ -69,12 +69,8 @@ class FlagTutorialTest extends BaseTest {
     final String testUserId = "id";
     final String flag = "flag";
 
-    when(flagHandler.getDynamicFlag(testUserId, moduleLocator))
-      .thenReturn(Mono.just(flag));
+    when(flagHandler.getDynamicFlag(testUserId, moduleLocator)).thenReturn(Mono.just(flag));
 
-    StepVerifier
-      .create(flagTutorial.getFlag(testUserId))
-      .expectNext(flag)
-      .verifyComplete();
+    StepVerifier.create(flagTutorial.getFlag(testUserId)).expectNext(flag).verifyComplete();
   }
 }

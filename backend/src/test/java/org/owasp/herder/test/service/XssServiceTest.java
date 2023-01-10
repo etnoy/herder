@@ -67,9 +67,7 @@ class XssServiceTest {
     final DomElement mockElement2 = mock(DomElement.class);
     final DomElement mockElement3 = mock(DomElement.class);
 
-    final List<String> alerts = Arrays.asList(
-      new String[] { "XSS", "Hello World" }
-    );
+    final List<String> alerts = Arrays.asList(new String[] { "XSS", "Hello World" });
     final List<DomElement> mockDomElements = Arrays.asList(
       new DomElement[] { mockElement1, mockElement2, mockElement3 }
     );
@@ -79,9 +77,7 @@ class XssServiceTest {
     when(mockElement3.isDisplayed()).thenReturn(true);
 
     final WebClient mockWebClient = mock(WebClient.class);
-    final CollectingAlertHandler mockAlertHandler = mock(
-      CollectingAlertHandler.class
-    );
+    final CollectingAlertHandler mockAlertHandler = mock(CollectingAlertHandler.class);
     when(xssWebClientFactory.createWebClient()).thenReturn(mockWebClient);
     when(xssWebClientFactory.createAlertHandler()).thenReturn(mockAlertHandler);
 
@@ -98,37 +94,26 @@ class XssServiceTest {
     throws FailingHttpStatusCodeException, MalformedURLException, IOException {
     final String htmlPage = "<html></html>";
     final WebClient mockWebClient = mock(WebClient.class);
-    final CollectingAlertHandler mockAlertHandler = mock(
-      CollectingAlertHandler.class
-    );
+    final CollectingAlertHandler mockAlertHandler = mock(CollectingAlertHandler.class);
     when(xssWebClientFactory.createWebClient()).thenReturn(mockWebClient);
     when(xssWebClientFactory.createAlertHandler()).thenReturn(mockAlertHandler);
     when(mockWebClient.getPage(any(String.class))).thenThrow(new IOException());
-    assertThrows(
-      XssEvaluationException.class,
-      () -> xssService.doXss(htmlPage)
-    );
+    assertThrows(XssEvaluationException.class, () -> xssService.doXss(htmlPage));
     verify(mockWebClient, times(1)).getPage(any(String.class));
   }
 
   @Test
-  void doXss_PageInitializeThrowsIOException_ThrowsXssEvaluationException()
-    throws Exception {
+  void doXss_PageInitializeThrowsIOException_ThrowsXssEvaluationException() throws Exception {
     final String htmlPage = "<html></html>";
     final HtmlPage mockPage = mock(HtmlPage.class);
     final WebClient mockWebClient = mock(WebClient.class);
-    final CollectingAlertHandler mockAlertHandler = mock(
-      CollectingAlertHandler.class
-    );
+    final CollectingAlertHandler mockAlertHandler = mock(CollectingAlertHandler.class);
     when(xssWebClientFactory.createWebClient()).thenReturn(mockWebClient);
     when(xssWebClientFactory.createAlertHandler()).thenReturn(mockAlertHandler);
 
     when(mockWebClient.getPage(any(String.class))).thenReturn(mockPage);
     doThrow(new IOException()).when(mockPage).initialize();
-    assertThrows(
-      XssEvaluationException.class,
-      () -> xssService.doXss(htmlPage)
-    );
+    assertThrows(XssEvaluationException.class, () -> xssService.doXss(htmlPage));
     verify(mockWebClient, times(1)).getPage(any(String.class));
     verify(mockPage, times(1)).initialize();
   }

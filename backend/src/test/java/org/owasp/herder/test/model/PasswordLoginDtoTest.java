@@ -37,10 +37,7 @@ class PasswordLoginDtoTest {
   void buildComment_ValidComment_Builds() {
     for (final String userName : TestConstants.STRINGS) {
       for (final String password : TestConstants.STRINGS) {
-        final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(
-          userName,
-          password
-        );
+        final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(userName, password);
         assertThat(passwordLoginDto.getUserName()).hasToString(userName);
         assertThat(passwordLoginDto.getPassword()).hasToString(password);
       }
@@ -49,19 +46,12 @@ class PasswordLoginDtoTest {
 
   @Test
   void equals_EqualsVerifier_AsExpected() {
-    EqualsVerifier
-      .forClass(PasswordLoginDto.class)
-      .withIgnoredAnnotations(NotNull.class)
-      .verify();
+    EqualsVerifier.forClass(PasswordLoginDto.class).withIgnoredAnnotations(NotNull.class).verify();
   }
 
   @Test
   void toString_ValidData_AsExpected() {
-    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(
-      "loginName",
-      "password"
-    );
-    assertThat(passwordLoginDto)
-      .hasToString("PasswordLoginDto(userName=loginName, password=password)");
+    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto("loginName", "password");
+    assertThat(passwordLoginDto).hasToString("PasswordLoginDto(userName=loginName, password=password)");
   }
 }

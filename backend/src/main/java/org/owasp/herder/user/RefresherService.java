@@ -128,12 +128,7 @@ public class RefresherService {
           // Check if the current score is below zero for the first time
           if (!negativeScoresFound && (entryScore < 0)) {
             negativeScoresFound = true;
-            if (
-              currentScore == 0 &&
-              currentGoldMedals == 0 &&
-              currentSilverMedals == 0 &&
-              currentBronzeMedals == 0
-            ) {
+            if (currentScore == 0 && currentGoldMedals == 0 && currentSilverMedals == 0 && currentBronzeMedals == 0) {
               // Set the rank of all zero score users and teams to the current rank
               zeroScoreRank = entryRank;
             } else {
@@ -180,15 +175,11 @@ public class RefresherService {
           if (scoreboardEntry.getTeam() != null) {
             principalId = scoreboardEntry.getTeam().getId();
             principalType = PrincipalType.TEAM;
-            scoreboardEntryBuilder.displayName(
-              scoreboardEntry.getTeam().getDisplayName()
-            );
+            scoreboardEntryBuilder.displayName(scoreboardEntry.getTeam().getDisplayName());
           } else {
             principalId = scoreboardEntry.getUser().getId();
             principalType = PrincipalType.USER;
-            scoreboardEntryBuilder.displayName(
-              scoreboardEntry.getUser().getDisplayName()
-            );
+            scoreboardEntryBuilder.displayName(scoreboardEntry.getUser().getDisplayName());
           }
           scoreboardEntryBuilder.principalId(principalId);
           scoreboardEntryBuilder.principalType(principalType);
@@ -196,10 +187,7 @@ public class RefresherService {
           // Remove the current scoreboard user from the list of zero score users and teams
           principals =
             principals.filter(principal -> {
-              return (
-                !principal.getId().equals(principalId) ||
-                !principal.getPrincipalType().equals(principalType)
-              );
+              return (!principal.getId().equals(principalId) || !principal.getPrincipalType().equals(principalType));
             });
 
           // Add the current scoreboard entry to the scoreboard
@@ -237,39 +225,25 @@ public class RefresherService {
 
         // Create a stream of principals that will be inserted in the scoreboard
         final Stream<ScoreboardEntry> zeroScoreboardPrincipals = principals.map(principal -> {
-            zeroScoreboardEntryBuilder.displayName(principal.getDisplayName());
-            zeroScoreboardEntryBuilder.principalId(principal.getId());
-            zeroScoreboardEntryBuilder.principalType(
-              principal.getPrincipalType()
-            );
-            return zeroScoreboardEntryBuilder.build();
-          }
-        );
+          zeroScoreboardEntryBuilder.displayName(principal.getDisplayName());
+          zeroScoreboardEntryBuilder.principalId(principal.getId());
+          zeroScoreboardEntryBuilder.principalType(principal.getPrincipalType());
+          return zeroScoreboardEntryBuilder.build();
+        });
 
         // All scoreboard entries before the zero score principals
-        final Stream<ScoreboardEntry> scoreboardAboveZeroStream = scoreboard
-          .stream()
-          .limit(zeroScorePosition - 1);
+        final Stream<ScoreboardEntry> scoreboardAboveZeroStream = scoreboard.stream().limit(zeroScorePosition - 1);
 
         // All scoreboard entries after the zero score principals
-        final Stream<ScoreboardEntry> scoreboardBelowZeroStream = scoreboard
-          .stream()
-          .skip(zeroScorePosition - 1);
+        final Stream<ScoreboardEntry> scoreboardBelowZeroStream = scoreboard.stream().skip(zeroScorePosition - 1);
 
         // Concatenate the scoreboard and create an array list
         return Stream
-          .concat(
-            Stream.concat(scoreboardAboveZeroStream, zeroScoreboardPrincipals),
-            scoreboardBelowZeroStream
-          )
+          .concat(Stream.concat(scoreboardAboveZeroStream, zeroScoreboardPrincipals), scoreboardBelowZeroStream)
           .collect(Collectors.toCollection(ArrayList::new));
       })
       // Clear the scoreboard and save all scoreboard entries
-      .flatMapMany(scoreboard ->
-        scoreboardRepository
-          .deleteAll()
-          .thenMany(scoreboardRepository.saveAll(scoreboard))
-      )
+      .flatMapMany(scoreboard -> scoreboardRepository.deleteAll().thenMany(scoreboardRepository.saveAll(scoreboard)))
       .then();
   }
 
@@ -328,12 +302,7 @@ public class RefresherService {
       .findAllTeams()
       .filter(team ->
         // Look through all teams and find the one that lists the updated user as member
-        !team
-          .getMembers()
-          .stream()
-          .filter(user -> user.getId().equals(userId))
-          .findAny()
-          .isEmpty()
+        !team.getMembers().stream().filter(user -> user.getId().equals(userId)).findAny().isEmpty()
       )
       .zipWith(updatedUser.cache().repeat())
       // If the new team and old team are the same, don't remove the old team
@@ -347,11 +316,7 @@ public class RefresherService {
       .flatMap(tuple -> {
         if (tuple.getT1().getMembers().size() == 1) {
           // The last user of the team was removed, therefore delete the entire team
-          log.info(
-            "Deleting team with id " +
-            tuple.getT1().getId() +
-            " because last user left"
-          );
+          log.info("Deleting team with id " + tuple.getT1().getId() + " because last user left");
           return userService
             .deleteTeam(tuple.getT1().getId())
             .then(afterTeamDeletion(tuple.getT1().getId()))
@@ -377,24 +342,15 @@ public class RefresherService {
       );
 
     // Update submissions
-    Flux<Submission> submissionsToUpdate = submissionRepository.findAllByUserId(
-      userId
-    );
+    Flux<Submission> submissionsToUpdate = submissionRepository.findAllByUserId(userId);
 
     // Update team field in submissions
     Flux<Submission> addedTeamSubmissions = incomingTeam
-      .flatMapMany(team ->
-        submissionsToUpdate.map(submission ->
-          submission.withTeamId(team.getId())
-        )
-      )
+      .flatMapMany(team -> submissionsToUpdate.map(submission -> submission.withTeamId(team.getId())))
       .switchIfEmpty(submissionsToUpdate);
 
     // Save all to db
-    return teamRepository
-      .saveAll(outgoingTeams)
-      .thenMany(submissionRepository.saveAll(addedTeamSubmissions))
-      .then();
+    return teamRepository.saveAll(outgoingTeams).thenMany(submissionRepository.saveAll(addedTeamSubmissions)).then();
   }
 
   /**
@@ -426,19 +382,12 @@ public class RefresherService {
       .findAllTeams()
       .filter(team ->
         // Look through all teams and find the one that lists the updated user as member
-        !team
-          .getMembers()
-          .stream()
-          .filter(user -> user.getId().equals(userId))
-          .findAny()
-          .isEmpty()
+        !team.getMembers().stream().filter(user -> user.getId().equals(userId)).findAny().isEmpty()
       )
       .flatMap(team -> {
         if (team.getMembers().size() == 1) {
           // The last user of the team was removed, therefore delete the entire team
-          log.info(
-            "Deleting team with id " + team.getId() + " because last user left"
-          );
+          log.info("Deleting team with id " + team.getId() + " because last user left");
           return userService
             .deleteTeam(team.getId())
             .flatMap(u -> afterTeamDeletion(team.getId()))

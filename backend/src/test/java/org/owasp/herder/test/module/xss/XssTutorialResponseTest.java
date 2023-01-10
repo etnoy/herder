@@ -37,9 +37,7 @@ class XssTutorialResponseTest {
 
   @Test
   void build_NullResult_ThrowsNullPointerException() {
-    final XssTutorialResponseBuilder xssTutorialResponseBuilder = XssTutorialResponse
-      .builder()
-      .alert("xss");
+    final XssTutorialResponseBuilder xssTutorialResponseBuilder = XssTutorialResponse.builder().alert("xss");
     assertThatExceptionOfType(NullPointerException.class)
       .isThrownBy(() -> xssTutorialResponseBuilder.build())
       .withMessage("result is marked non-null but is null");
@@ -49,10 +47,7 @@ class XssTutorialResponseTest {
   void buildAlert_ValidAlert_Builds() {
     final XssTutorialResponseBuilder xssTutorialResponseBuilder = XssTutorialResponse.builder();
     for (final String alert : TestConstants.STRINGS_WITH_NULL) {
-      final XssTutorialResponse xssTutorialResponse = xssTutorialResponseBuilder
-        .result("result")
-        .alert(alert)
-        .build();
+      final XssTutorialResponse xssTutorialResponse = xssTutorialResponseBuilder.result("result").alert(alert).build();
       assertThat(xssTutorialResponse.getAlert()).isEqualTo(alert);
     }
   }
@@ -64,9 +59,7 @@ class XssTutorialResponseTest {
       .result("TestXssTutorialResponse")
       .alert("xss");
     assertThat(testXssTutorialResponseBuilder)
-      .hasToString(
-        "XssTutorialResponse.XssTutorialResponseBuilder(result=TestXssTutorialResponse, alert=xss)"
-      );
+      .hasToString("XssTutorialResponse.XssTutorialResponseBuilder(result=TestXssTutorialResponse, alert=xss)");
   }
 
   @Test
@@ -81,19 +74,14 @@ class XssTutorialResponseTest {
   void buildResult_ValidResult_Builds() {
     final XssTutorialResponseBuilder xssTutorialResponseBuilder = XssTutorialResponse.builder();
     for (final String result : TestConstants.STRINGS) {
-      final XssTutorialResponse xssTutorialResponse = xssTutorialResponseBuilder
-        .result(result)
-        .build();
+      final XssTutorialResponse xssTutorialResponse = xssTutorialResponseBuilder.result(result).build();
       assertThat(xssTutorialResponse.getResult()).isEqualTo(result);
     }
   }
 
   @Test
   void equals_EqualsVerifier_AsExpected() {
-    EqualsVerifier
-      .forClass(XssTutorialResponse.class)
-      .withIgnoredAnnotations(NonNull.class)
-      .verify();
+    EqualsVerifier.forClass(XssTutorialResponse.class).withIgnoredAnnotations(NonNull.class).verify();
   }
 
   @Test
@@ -103,9 +91,6 @@ class XssTutorialResponseTest {
       .result("result is good")
       .alert("xss warning")
       .build();
-    assertThat(testXssTutorialResponse)
-      .hasToString(
-        "XssTutorialResponse(result=result is good, alert=xss warning)"
-      );
+    assertThat(testXssTutorialResponse).hasToString("XssTutorialResponse(result=result is good, alert=xss warning)");
   }
 }

@@ -102,16 +102,12 @@ class SubmissionRepositoryIT extends BaseIT {
   InvalidFlagRateLimiter invalidFlagRateLimiter;
 
   @Test
-  @DisplayName(
-    "Can return an empty list if only invalid submissions exist for user"
-  )
+  @DisplayName("Can return an empty list if only invalid submissions exist for user")
   void canFindNoSubmissionsForUserIfOnlyInvalidExist() {
     integrationTestUtils.createStaticTestModule();
     final String userId = integrationTestUtils.createTestUser();
 
-    StepVerifier
-      .create(submissionRepository.findAllByUserIdAndIsValidTrue(userId))
-      .verifyComplete();
+    StepVerifier.create(submissionRepository.findAllByUserIdAndIsValidTrue(userId)).verifyComplete();
   }
 
   @BeforeEach
@@ -121,9 +117,7 @@ class SubmissionRepositoryIT extends BaseIT {
     // Bypass the rate limiter
     final Bucket mockBucket = mock(Bucket.class);
     when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
+    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
   }
 }

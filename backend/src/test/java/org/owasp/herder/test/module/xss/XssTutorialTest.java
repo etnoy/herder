@@ -79,16 +79,12 @@ class XssTutorialTest extends BaseTest {
     final String query = "username";
 
     when(mockModule.getName()).thenReturn(MODULE_NAME);
-    when(flagHandler.getDynamicFlag(mockUserId, MODULE_NAME))
-      .thenReturn(Mono.just(mockFlag));
+    when(flagHandler.getDynamicFlag(mockUserId, MODULE_NAME)).thenReturn(Mono.just(mockFlag));
     when(mockModule.isFlagStatic()).thenReturn(false);
 
-    final String mockTarget =
-      "<html><head><title>Alert</title></head><body><p>Result: username</p></body></html>";
+    final String mockTarget = "<html><head><title>Alert</title></head><body><p>Result: username</p></body></html>";
 
-    final List<String> mockAlertList = Arrays.asList(
-      new String[] { "xss", "alert" }
-    );
+    final List<String> mockAlertList = Arrays.asList(new String[] { "xss", "alert" });
 
     when(xssService.doXss(mockTarget)).thenReturn(mockAlertList);
 
@@ -106,8 +102,7 @@ class XssTutorialTest extends BaseTest {
     final String mockUserId = "id";
     final String query = "username";
 
-    final String mockTarget =
-      "<html><head><title>Alert</title></head><body><p>Result: username</p></body></html>";
+    final String mockTarget = "<html><head><title>Alert</title></head><body><p>Result: username</p></body></html>";
 
     final List<String> mockAlertList = new ArrayList<>();
 

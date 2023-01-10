@@ -39,8 +39,7 @@ class XssServiceIT extends BaseIT {
 
   @Test
   void scriptAlert_ShouldShowAlert() throws Exception {
-    assertThat(executeQuery("<script>alert('script-xss')</script>"))
-      .isEqualTo("script-xss");
+    assertThat(executeQuery("<script>alert('script-xss')</script>")).isEqualTo("script-xss");
   }
 
   @Test
@@ -52,79 +51,52 @@ class XssServiceIT extends BaseIT {
   void noXss_PreviousFailure_ShouldShowAlert() throws Exception {
     assertThat(executeQuery("")).isNull();
     // Test for the gotcha that previous versions of xssservice didn't clear between invocations
-    assertThat(executeQuery("<script>alert('previousfail')</script>"))
-      .isEqualTo("previousfail");
+    assertThat(executeQuery("<script>alert('previousfail')</script>")).isEqualTo("previousfail");
   }
 
   @Test
   void noXss_PreviousSuccess_ShouldNotShowAlert() throws Exception {
-    assertThat(executeQuery("<script>alert('success')</script>"))
-      .isEqualTo("success");
+    assertThat(executeQuery("<script>alert('success')</script>")).isEqualTo("success");
     // Test for the gotcha that previous versions of xssservice didn't clear between invocations
     assertThat(executeQuery("")).isNull();
   }
 
   @Test
   void imgOnLoad_ShouldShowAlert() throws Exception {
-    assertThat(executeQuery("<img src=\"#\" onload=\"alert('img-onload')\" />"))
-      .isEqualTo("img-onload");
+    assertThat(executeQuery("<img src=\"#\" onload=\"alert('img-onload')\" />")).isEqualTo("img-onload");
   }
 
   @Test
   void submitButtonOnMouseOver_ShouldShowAlert() throws Exception {
-    assertThat(
-      executeQuery(
-        "<input type=\"submit\" onmouseover=\"alert('submit-mouseover')\"/>"
-      )
-    )
+    assertThat(executeQuery("<input type=\"submit\" onmouseover=\"alert('submit-mouseover')\"/>"))
       .isEqualTo("submit-mouseover");
   }
 
   @Test
   void submitButtonOnMouseDown_ShouldShowAlert() throws Exception {
-    assertThat(
-      executeQuery(
-        "<input type=\"submit\" onmousedown=\"alert('submit-mousedown')\"/>"
-      )
-    )
+    assertThat(executeQuery("<input type=\"submit\" onmousedown=\"alert('submit-mousedown')\"/>"))
       .isEqualTo("submit-mousedown");
   }
 
   @Test
   void aOnBlur_ShouldShowAlert() throws Exception {
-    assertThat(
-      executeQuery(
-        "<a onblur=alert('a-onblur') tabindex=1 id=x></a><input autofocus>"
-      )
-    )
-      .isEqualTo("a-onblur");
+    assertThat(executeQuery("<a onblur=alert('a-onblur') tabindex=1 id=x></a><input autofocus>")).isEqualTo("a-onblur");
   }
 
   @Test
   void submitButtonOnClick_ShouldShowAlert() throws Exception {
-    assertThat(
-      executeQuery(
-        "<input type=\"submit\" onclick=\"alert('submit-onclick')\"/>"
-      )
-    )
+    assertThat(executeQuery("<input type=\"submit\" onclick=\"alert('submit-onclick')\"/>"))
       .isEqualTo("submit-onclick");
   }
 
   @Test
   void inputButtonOnClick_ShouldShowAlert() throws Exception {
-    assertThat(
-      executeQuery(
-        "<input type=\"button\" onclick=\"alert('input-onclick')\"/>"
-      )
-    )
-      .isEqualTo("input-onclick");
+    assertThat(executeQuery("<input type=\"button\" onclick=\"alert('input-onclick')\"/>")).isEqualTo("input-onclick");
   }
 
   private String executeQuery(final String query) throws IOException {
     final List<String> alerts = xssService.doXss(
-      "<html><head><title>Alert</title></head><body><p>Result: " +
-      query +
-      "</p></body></html>"
+      "<html><head><title>Alert</title></head><body><p>Result: " + query + "</p></body></html>"
     );
     if (!alerts.isEmpty()) {
       return alerts.get(0);

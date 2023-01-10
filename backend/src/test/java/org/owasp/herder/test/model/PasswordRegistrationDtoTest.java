@@ -43,8 +43,7 @@ class PasswordRegistrationDtoTest {
             userName,
             password
           );
-          assertThat(passwordRegistrationDto.getDisplayName())
-            .isEqualTo(displayName);
+          assertThat(passwordRegistrationDto.getDisplayName()).isEqualTo(displayName);
           assertThat(passwordRegistrationDto.getUserName()).isEqualTo(userName);
           assertThat(passwordRegistrationDto.getPassword()).isEqualTo(password);
         }
@@ -54,10 +53,7 @@ class PasswordRegistrationDtoTest {
 
   @Test
   void equals_EqualsVerifier_AsExpected() {
-    EqualsVerifier
-      .forClass(PasswordRegistrationDto.class)
-      .withIgnoredAnnotations(NotNull.class)
-      .verify();
+    EqualsVerifier.forClass(PasswordRegistrationDto.class).withIgnoredAnnotations(NotNull.class).verify();
   }
 
   @Test
@@ -68,8 +64,6 @@ class PasswordRegistrationDtoTest {
       "password"
     );
     assertThat(passwordRegistrationDto)
-      .hasToString(
-        "PasswordRegistrationDto(displayName=displayName, userName=loginName, password=password)"
-      );
+      .hasToString("PasswordRegistrationDto(displayName=displayName, userName=loginName, password=password)");
   }
 }

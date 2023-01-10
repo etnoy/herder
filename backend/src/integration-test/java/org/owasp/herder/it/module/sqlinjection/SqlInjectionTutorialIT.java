@@ -80,12 +80,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
     moduleInitializer = new ModuleInitializer(null, moduleService);
 
-    sqlInjectionTutorial =
-      new SqlInjectionTutorial(
-        sqlInjectionDatabaseClientFactory,
-        keyService,
-        flagHandler
-      );
+    sqlInjectionTutorial = new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
     moduleId = moduleInitializer.initializeModule(sqlInjectionTutorial).block();
   }
@@ -108,9 +103,7 @@ class SqlInjectionTutorialIT extends BaseIT {
     StepVerifier
       .create(
         flagVerificationMono
-          .flatMap(flag ->
-            submissionService.submitFlag(userId, moduleId, flag + "wrong")
-          )
+          .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag + "wrong"))
           .map(Submission::isValid)
       )
       .expectNext(false)
@@ -129,11 +122,7 @@ class SqlInjectionTutorialIT extends BaseIT {
 
     // Submit the flag we got from the sql injection and make sure it validates
     StepVerifier
-      .create(
-        flagMono
-          .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag))
-          .map(Submission::isValid)
-      )
+      .create(flagMono.flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag)).map(Submission::isValid))
       .expectNext(true)
       .verifyComplete();
   }
@@ -142,33 +131,22 @@ class SqlInjectionTutorialIT extends BaseIT {
   void submitQuery_CorrectAttackQuery_ReturnsWholeDatabase() {
     final String userId = userService.create("TestUser1").block();
 
-    StepVerifier
-      .create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-      .expectNextCount(5)
-      .verifyComplete();
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1")).expectNextCount(5).verifyComplete();
   }
 
   @Test
-  void submitQuery_InjectionDeletesAll_DoesNotImpactDatabase()
-    throws InterruptedException {
+  void submitQuery_InjectionDeletesAll_DoesNotImpactDatabase() throws InterruptedException {
     final String userId = userService.create("TestUser1").block();
 
-    sqlInjectionTutorial
-      .submitQuery(userId, "1'; DROP ALL OBJECTS; --")
-      .blockLast();
+    sqlInjectionTutorial.submitQuery(userId, "1'; DROP ALL OBJECTS; --").blockLast();
 
-    StepVerifier
-      .create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-      .expectNextCount(5)
-      .verifyComplete();
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1")).expectNextCount(5).verifyComplete();
   }
 
   @Test
   void submitQuery_QueryWithNoMatches_EmptyResultSet() {
     final String userId = userService.create("TestUser1").block();
-    StepVerifier
-      .create(sqlInjectionTutorial.submitQuery(userId, "test"))
-      .verifyComplete();
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "test")).verifyComplete();
   }
 
   @Test
@@ -184,15 +162,9 @@ class SqlInjectionTutorialIT extends BaseIT {
   void submitQuery_RepeatedCorrectAttackQuery_ReturnsWholeDatabaseFromCache() {
     final String userId = userService.create("TestUser1").block();
 
-    StepVerifier
-      .create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-      .expectNextCount(5)
-      .verifyComplete();
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1")).expectNextCount(5).verifyComplete();
 
-    StepVerifier
-      .create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1"))
-      .expectNextCount(5)
-      .verifyComplete();
+    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1")).expectNextCount(5).verifyComplete();
   }
 
   @Test
@@ -205,11 +177,7 @@ class SqlInjectionTutorialIT extends BaseIT {
       "SELECT * FROM sqlinjection.users WHERE name = '''";
 
     StepVerifier
-      .create(
-        sqlInjectionTutorial
-          .submitQuery(userId, "'")
-          .map(SqlInjectionTutorialRow::getError)
-      )
+      .create(sqlInjectionTutorial.submitQuery(userId, "'").map(SqlInjectionTutorialRow::getError))
       .expectNextMatches(message -> message.startsWith(errorMessage))
       .verifyComplete();
   }
@@ -223,11 +191,7 @@ class SqlInjectionTutorialIT extends BaseIT {
       "SELECT * FROM sqlinjection.users WHERE name = '' OR '1=1'";
 
     StepVerifier
-      .create(
-        sqlInjectionTutorial
-          .submitQuery(userId, "' OR '1=1")
-          .map(SqlInjectionTutorialRow::getError)
-      )
+      .create(sqlInjectionTutorial.submitQuery(userId, "' OR '1=1").map(SqlInjectionTutorialRow::getError))
       .expectNextMatches(message -> message.startsWith(errorMessage))
       .verifyComplete();
   }

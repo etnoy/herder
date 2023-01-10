@@ -60,8 +60,7 @@ class CryptoFactoryTest extends BaseTest {
 
   @Test
   void getHmacKey_NullKey_ThrowsIllegalArgumentException() {
-    assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(() -> cryptoFactory.getSecretKeySpec(null));
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> cryptoFactory.getSecretKeySpec(null));
   }
 
   @BeforeEach

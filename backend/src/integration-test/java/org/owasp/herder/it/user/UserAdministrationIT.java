@@ -70,10 +70,7 @@ class UserAdministrationIT extends BaseIT {
 
     userService.addUserToTeam(userId, teamId).block();
 
-    StepVerifier
-      .create(userService.findById(userId).map(UserEntity::getTeamId))
-      .expectNext(teamId)
-      .verifyComplete();
+    StepVerifier.create(userService.findById(userId).map(UserEntity::getTeamId)).expectNext(teamId).verifyComplete();
   }
 
   @Test
@@ -88,9 +85,7 @@ class UserAdministrationIT extends BaseIT {
 
     StepVerifier
       .create(userService.findTeamById(teamId).map(TeamEntity::getMembers))
-      .assertNext(members ->
-        assertThat(members).containsExactly(user.withTeamId(teamId))
-      )
+      .assertNext(members -> assertThat(members).containsExactly(user.withTeamId(teamId)))
       .verifyComplete();
   }
 
@@ -111,35 +106,21 @@ class UserAdministrationIT extends BaseIT {
   }
 
   @ParameterizedTest
-  @MethodSource(
-    "org.owasp.herder.test.util.TestConstants#validDisplayNameProvider"
-  )
+  @MethodSource("org.owasp.herder.test.util.TestConstants#validDisplayNameProvider")
   @DisplayName("Can create team with display name")
   void canCreateTeam(final String displayName) {
     StepVerifier
-      .create(
-        userService
-          .createTeam(displayName)
-          .flatMap(userService::findTeamById)
-          .map(TeamEntity::getDisplayName)
-      )
+      .create(userService.createTeam(displayName).flatMap(userService::findTeamById).map(TeamEntity::getDisplayName))
       .expectNext(displayName)
       .verifyComplete();
   }
 
   @ParameterizedTest
-  @MethodSource(
-    "org.owasp.herder.test.util.TestConstants#validDisplayNameProvider"
-  )
+  @MethodSource("org.owasp.herder.test.util.TestConstants#validDisplayNameProvider")
   @DisplayName("Can create user with display name")
   void canCreateUser(final String displayName) {
     StepVerifier
-      .create(
-        userService
-          .create(displayName)
-          .flatMap(userService::findById)
-          .map(UserEntity::getDisplayName)
-      )
+      .create(userService.create(displayName).flatMap(userService::findById).map(UserEntity::getDisplayName))
       .expectNext(displayName)
       .verifyComplete();
   }
@@ -149,11 +130,8 @@ class UserAdministrationIT extends BaseIT {
   void canCreateValidUserWithCreatePasswordUser() {
     final String displayName = "Test user";
     final String loginName = "testUser";
-    final String passwordHash =
-      "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
-    final String userId = userService
-      .createPasswordUser(displayName, loginName, passwordHash)
-      .block();
+    final String passwordHash = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
+    final String userId = userService.createPasswordUser(displayName, loginName, passwordHash).block();
 
     StepVerifier
       .create(userService.findById(userId))
@@ -176,9 +154,7 @@ class UserAdministrationIT extends BaseIT {
       .block();
 
     userService.delete(userId).block();
-    StepVerifier
-      .create(passwordAuthRepository.findByUserId(userId))
-      .verifyComplete();
+    StepVerifier.create(passwordAuthRepository.findByUserId(userId)).verifyComplete();
   }
 
   @Test
@@ -206,9 +182,7 @@ class UserAdministrationIT extends BaseIT {
   @Test
   @DisplayName("Can delete user")
   void canDeleteUser() {
-    final String userId = userService
-      .create(TestConstants.TEST_USER_DISPLAY_NAME)
-      .block();
+    final String userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
     userService.delete(userId).block();
     StepVerifier
       .create(userRepository.findById(userId))
@@ -231,10 +205,7 @@ class UserAdministrationIT extends BaseIT {
 
     final String teamId2 = userService.createTeam("Test team 2").block();
 
-    StepVerifier
-      .create(userService.addUserToTeam(userId, teamId2))
-      .expectError(IllegalStateException.class)
-      .verify();
+    StepVerifier.create(userService.addUserToTeam(userId, teamId2)).expectError(IllegalStateException.class).verify();
   }
 
   @Test
@@ -259,21 +230,11 @@ class UserAdministrationIT extends BaseIT {
       .recordWith(HashSet::new)
       .expectNextCount(5)
       .consumeRecordedWith(principals -> {
-        assertThat(principals)
-          .filteredOn(principal -> principal.getId().equals(teamId1))
-          .hasSize(1);
-        assertThat(principals)
-          .filteredOn(principal -> principal.getId().equals(teamId2))
-          .hasSize(1);
-        assertThat(principals)
-          .filteredOn(principal -> principal.getId().equals(teamId3))
-          .hasSize(1);
-        assertThat(principals)
-          .filteredOn(principal -> principal.getId().equals(teamId4))
-          .hasSize(1);
-        assertThat(principals)
-          .filteredOn(principal -> principal.getId().equals(userId4))
-          .hasSize(1);
+        assertThat(principals).filteredOn(principal -> principal.getId().equals(teamId1)).hasSize(1);
+        assertThat(principals).filteredOn(principal -> principal.getId().equals(teamId2)).hasSize(1);
+        assertThat(principals).filteredOn(principal -> principal.getId().equals(teamId3)).hasSize(1);
+        assertThat(principals).filteredOn(principal -> principal.getId().equals(teamId4)).hasSize(1);
+        assertThat(principals).filteredOn(principal -> principal.getId().equals(userId4)).hasSize(1);
 
         assertThat(principals)
           .filteredOn(principal -> principal.getId().equals(teamId1))
@@ -300,9 +261,7 @@ class UserAdministrationIT extends BaseIT {
   }
 
   @Test
-  @DisplayName(
-    "Can list principals consisting of a single team with a single user"
-  )
+  @DisplayName("Can list principals consisting of a single team with a single user")
   void canListPrincipalsWithOneTeamAndUser() {
     final String userId = integrationTestUtils.createTestUser();
     final String teamId = integrationTestUtils.createTestTeam();
@@ -310,12 +269,10 @@ class UserAdministrationIT extends BaseIT {
     StepVerifier
       .create(userService.findAllPrincipals())
       .assertNext(team -> {
-        assertThat(team.getMembers())
-          .hasAtLeastOneElementOfType(UserEntity.class);
+        assertThat(team.getMembers()).hasAtLeastOneElementOfType(UserEntity.class);
         assertThat(team.getMembers().iterator().next().getDisplayName())
           .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
-        assertThat(team.getDisplayName())
-          .isEqualTo(TestConstants.TEST_TEAM_DISPLAY_NAME);
+        assertThat(team.getDisplayName()).isEqualTo(TestConstants.TEST_TEAM_DISPLAY_NAME);
       })
       .verifyComplete();
   }
@@ -327,8 +284,7 @@ class UserAdministrationIT extends BaseIT {
     StepVerifier
       .create(userService.findAllPrincipals())
       .assertNext(user -> {
-        assertThat(user.getDisplayName())
-          .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+        assertThat(user.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
       })
       .verifyComplete();
   }
@@ -336,9 +292,7 @@ class UserAdministrationIT extends BaseIT {
   @Test
   @DisplayName("Can remove user from team when deleting user")
   void canRemoveUserFromTeamWhenDeletingUser() {
-    final String userId = userService
-      .create(TestConstants.TEST_USER_DISPLAY_NAME)
-      .block();
+    final String userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
     final String teamId = integrationTestUtils.createTestTeam();
 
     userService.addUserToTeam(userId, teamId).block();

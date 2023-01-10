@@ -37,14 +37,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 @DisplayName("Can reject an invalid module locator")
 class ModuleLocatorValidationIT extends BaseIT {
 
-  private static final String LOCATOR_IS_NULL =
-    "Module locator must not be null";
+  private static final String LOCATOR_IS_NULL = "Module locator must not be null";
   private static final String LOCATOR_INVALID_PATTERN =
     "Module locator can only contain lowercase alphanumeric text and hyphens";
-  private static final String LOCATOR_TOO_SHORT =
-    "Module locator must be at least 2 characters long";
-  private static final String LOCATOR_TOO_LONG =
-    "Module locator must not be longer than 80 characters";
+  private static final String LOCATOR_TOO_SHORT = "Module locator must be at least 2 characters long";
+  private static final String LOCATOR_TOO_LONG = "Module locator must not be longer than 80 characters";
 
   static Stream<Arguments> invalidModuleLocatorSource() {
     return Stream.of(
@@ -68,16 +65,9 @@ class ModuleLocatorValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidModuleLocatorSource")
   @DisplayName("in moduleService.findByLocatorWithSolutionStatus()")
-  void findByLocatorWithSolutionStatus(
-    final String moduleLocator,
-    final String containingMessage
-  ) {
+  void findByLocatorWithSolutionStatus(final String moduleLocator, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-      () ->
-        moduleService.findListItemByLocator(
-          TestConstants.TEST_USER_ID,
-          moduleLocator
-        ),
+      () -> moduleService.findListItemByLocator(TestConstants.TEST_USER_ID, moduleLocator),
       containingMessage
     );
   }
@@ -85,10 +75,7 @@ class ModuleLocatorValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidModuleLocatorSource")
   @DisplayName("in moduleService.create()")
-  void moduleService_create(
-    final String moduleLocator,
-    final String containingMessage
-  ) {
+  void moduleService_create(final String moduleLocator, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
       () -> moduleService.create(TestConstants.TEST_MODULE_NAME, moduleLocator),
       containingMessage
@@ -98,10 +85,7 @@ class ModuleLocatorValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidModuleLocatorSource")
   @DisplayName("in moduleService.existsByLocator()")
-  void moduleService_existsByLocator(
-    final String moduleLocator,
-    final String containingMessage
-  ) {
+  void moduleService_existsByLocator(final String moduleLocator, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
       () -> moduleService.existsByLocator(moduleLocator),
       containingMessage
@@ -111,13 +95,7 @@ class ModuleLocatorValidationIT extends BaseIT {
   @ParameterizedTest
   @MethodSource("invalidModuleLocatorSource")
   @DisplayName("in moduleService.findByLocator()")
-  void moduleService_findByLocator(
-    final String moduleLocator,
-    final String containingMessage
-  ) {
-    integrationTestUtils.checkConstraintViolation(
-      () -> moduleService.findByLocator(moduleLocator),
-      containingMessage
-    );
+  void moduleService_findByLocator(final String moduleLocator, final String containingMessage) {
+    integrationTestUtils.checkConstraintViolation(() -> moduleService.findByLocator(moduleLocator), containingMessage);
   }
 }

@@ -115,18 +115,11 @@ class FlagControllerIT extends BaseIT {
 
     when(controllerAuthentication.getUserId()).thenReturn(Mono.just(userId));
 
-    flagController
-      .submitFlag(
-        TestConstants.TEST_MODULE_LOCATOR,
-        TestConstants.TEST_STATIC_FLAG
-      )
-      .block();
+    flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, TestConstants.TEST_STATIC_FLAG).block();
 
     StepVerifier
       .create(moduleService.findAllModuleLists())
-      .assertNext(moduleList ->
-        assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
-      )
+      .assertNext(moduleList -> assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue())
       .verifyComplete();
   }
 
@@ -137,9 +130,7 @@ class FlagControllerIT extends BaseIT {
     // Bypass the rate limiter
     final Bucket mockBucket = mock(Bucket.class);
     when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
+    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
   }
 }

@@ -89,13 +89,7 @@ class FlagSubmissionIT extends BaseIT {
     moduleService.close(moduleId).block();
 
     StepVerifier
-      .create(
-        submissionService.submitFlag(
-          userId,
-          moduleId,
-          TestConstants.TEST_STATIC_FLAG
-        )
-      )
+      .create(submissionService.submitFlag(userId, moduleId, TestConstants.TEST_STATIC_FLAG))
       .expectError(ModuleClosedException.class)
       .verify();
   }
@@ -111,9 +105,7 @@ class FlagSubmissionIT extends BaseIT {
     // Bypass all rate limiters
     final Bucket mockBucket = mock(Bucket.class);
     when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
+    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
   }
 }

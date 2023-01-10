@@ -68,14 +68,8 @@ class LoginControllerTest extends BaseTest {
     final String userName = "user";
     final String password = "password";
     final String badCredentials = "Invalid username or password";
-    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(
-      userName,
-      password
-    );
-    final LoginResponse loginResponse = LoginResponse
-      .builder()
-      .errorMessage(badCredentials)
-      .build();
+    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(userName, password);
+    final LoginResponse loginResponse = LoginResponse.builder().errorMessage(badCredentials).build();
 
     final ResponseEntity<LoginResponse> badCredentialsResponse = new ResponseEntity<>(
       loginResponse,
@@ -84,20 +78,14 @@ class LoginControllerTest extends BaseTest {
 
     when(userService.authenticate(userName, password))
       .thenReturn(Mono.error(new BadCredentialsException(badCredentials)));
-    StepVerifier
-      .create(loginController.login(passwordLoginDto))
-      .expectNext(badCredentialsResponse)
-      .verifyComplete();
+    StepVerifier.create(loginController.login(passwordLoginDto)).expectNext(badCredentialsResponse).verifyComplete();
   }
 
   @Test
   void login_ValidCredentials_ReturnsToken() {
     final String userName = "user";
     final String password = "password";
-    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(
-      userName,
-      password
-    );
+    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(userName, password);
     final String mockJwt = "token";
     final Boolean mockUserIsAdmin = false;
     final String mockUserId = "id";
@@ -113,19 +101,11 @@ class LoginControllerTest extends BaseTest {
       .accessToken(mockJwt)
       .displayName(userName)
       .build();
-    final ResponseEntity<LoginResponse> tokenResponse = new ResponseEntity<>(
-      loginResponse,
-      HttpStatus.OK
-    );
+    final ResponseEntity<LoginResponse> tokenResponse = new ResponseEntity<>(loginResponse, HttpStatus.OK);
 
-    when(userService.authenticate(userName, password))
-      .thenReturn(Mono.just(mockAuthResponse));
-    when(webTokenService.generateToken(mockUserId, mockUserIsAdmin))
-      .thenReturn(mockJwt);
-    StepVerifier
-      .create(loginController.login(passwordLoginDto))
-      .expectNext(tokenResponse)
-      .verifyComplete();
+    when(userService.authenticate(userName, password)).thenReturn(Mono.just(mockAuthResponse));
+    when(webTokenService.generateToken(mockUserId, mockUserIsAdmin)).thenReturn(mockJwt);
+    StepVerifier.create(loginController.login(passwordLoginDto)).expectNext(tokenResponse).verifyComplete();
   }
 
   @Test
@@ -141,22 +121,13 @@ class LoginControllerTest extends BaseTest {
     );
     final String mockUserId = "id";
     when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
-    when(userService.createPasswordUser(displayName, userName, encodedPassword))
-      .thenReturn(Mono.just(mockUserId));
-    StepVerifier
-      .create(loginController.register(passwordRegistrationDto))
-      .verifyComplete();
+    when(userService.createPasswordUser(displayName, userName, encodedPassword)).thenReturn(Mono.just(mockUserId));
+    StepVerifier.create(loginController.register(passwordRegistrationDto)).verifyComplete();
   }
 
   @BeforeEach
   void setup() {
     // Set up the system under test
-    loginController =
-      new LoginController(
-        userService,
-        webTokenService,
-        passwordEncoder,
-        controllerAuthentication
-      );
+    loginController = new LoginController(userService, webTokenService, passwordEncoder, controllerAuthentication);
   }
 }

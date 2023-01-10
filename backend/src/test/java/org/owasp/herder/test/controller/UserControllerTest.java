@@ -54,11 +54,8 @@ class UserControllerTest extends BaseTest {
 
   @Test
   void deleteById_ValidId_CallsUserService() {
-    when(userService.delete(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.empty());
-    StepVerifier
-      .create(userController.deleteById(TestConstants.TEST_USER_ID))
-      .verifyComplete();
+    when(userService.delete(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
+    StepVerifier.create(userController.deleteById(TestConstants.TEST_USER_ID)).verifyComplete();
     verify(userService, times(1)).delete(TestConstants.TEST_USER_ID);
   }
 
@@ -76,8 +73,7 @@ class UserControllerTest extends BaseTest {
     final UserEntity user3 = mock(UserEntity.class);
     final UserEntity user4 = mock(UserEntity.class);
 
-    when(userService.findAllUsers())
-      .thenReturn(Flux.just(user1, user2, user3, user4));
+    when(userService.findAllUsers()).thenReturn(Flux.just(user1, user2, user3, user4));
     StepVerifier
       .create(userController.findAll())
       .expectNext(user1)
@@ -90,14 +86,11 @@ class UserControllerTest extends BaseTest {
 
   @Test
   void findById_InvalidUserId_ReturnsUserNotFoundException() {
-    final ConstraintViolationException mockConstraintViolation = mock(
-      ConstraintViolationException.class
-    );
+    final ConstraintViolationException mockConstraintViolation = mock(ConstraintViolationException.class);
     final String testMessage = "Invalid id";
     when(mockConstraintViolation.getMessage()).thenReturn(testMessage);
 
-    when(userService.findById(TestConstants.TEST_USER_ID))
-      .thenThrow(mockConstraintViolation);
+    when(userService.findById(TestConstants.TEST_USER_ID)).thenThrow(mockConstraintViolation);
     StepVerifier
       .create(userController.findById(TestConstants.TEST_USER_ID))
       .expectError(UserNotFoundException.class)
@@ -107,8 +100,7 @@ class UserControllerTest extends BaseTest {
 
   @Test
   void findById_UserIdDoesNotExist_ReturnsUserNotFoundException() {
-    when(userService.findById(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.empty());
+    when(userService.findById(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
     StepVerifier
       .create(userController.findById(TestConstants.TEST_USER_ID))
       .expectError(UserNotFoundException.class)
@@ -120,12 +112,8 @@ class UserControllerTest extends BaseTest {
   void findById_UserIdExists_ReturnsUser() {
     final UserEntity mockUser = mock(UserEntity.class);
 
-    when(userService.findById(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
-    StepVerifier
-      .create(userController.findById(TestConstants.TEST_USER_ID))
-      .expectNext(mockUser)
-      .verifyComplete();
+    when(userService.findById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    StepVerifier.create(userController.findById(TestConstants.TEST_USER_ID)).expectNext(mockUser).verifyComplete();
     verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
   }
 

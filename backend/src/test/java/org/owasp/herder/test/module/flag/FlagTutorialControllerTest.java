@@ -54,13 +54,9 @@ class FlagTutorialControllerTest extends BaseTest {
 
   @Test
   void getFlag_UserNotAuthenticated_ReturnsException() {
-    when(controllerAuthentication.getUserId())
-      .thenReturn(Mono.error(new NotAuthenticatedException()));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.error(new NotAuthenticatedException()));
 
-    StepVerifier
-      .create(flagTutorialController.getFlag())
-      .expectError(NotAuthenticatedException.class)
-      .verify();
+    StepVerifier.create(flagTutorialController.getFlag()).expectError(NotAuthenticatedException.class).verify();
 
     verify(controllerAuthentication, times(1)).getUserId();
   }
@@ -68,8 +64,7 @@ class FlagTutorialControllerTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    flagTutorialController =
-      new FlagTutorialController(flagTutorial, controllerAuthentication);
+    flagTutorialController = new FlagTutorialController(flagTutorial, controllerAuthentication);
   }
 
   @Test
@@ -77,19 +72,12 @@ class FlagTutorialControllerTest extends BaseTest {
     final String mockUserId = "id";
     final String flag = "validflag";
 
-    when(controllerAuthentication.getUserId())
-      .thenReturn(Mono.just(mockUserId));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
     when(flagTutorial.getFlag(mockUserId)).thenReturn(Mono.just(flag));
 
-    FlagTutorialResult mockFlag = FlagTutorialResult
-      .builder()
-      .flag(flag)
-      .build();
+    FlagTutorialResult mockFlag = FlagTutorialResult.builder().flag(flag).build();
 
-    StepVerifier
-      .create(flagTutorialController.getFlag())
-      .expectNext(mockFlag)
-      .verifyComplete();
+    StepVerifier.create(flagTutorialController.getFlag()).expectNext(mockFlag).verifyComplete();
 
     verify(controllerAuthentication, times(1)).getUserId();
     verify(flagTutorial, times(1)).getFlag(mockUserId);

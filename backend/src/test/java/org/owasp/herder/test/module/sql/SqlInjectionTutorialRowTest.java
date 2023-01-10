@@ -46,9 +46,7 @@ class SqlInjectionTutorialRowTest {
   void buildComment_ValidComment_Builds() {
     final SqlInjectionTutorialRowBuilder sqlInjectionTutorialRowBuilder = SqlInjectionTutorialRow.builder();
     for (final String comment : TestConstants.STRINGS) {
-      final SqlInjectionTutorialRow sqlInjectionTutorialRow = sqlInjectionTutorialRowBuilder
-        .comment(comment)
-        .build();
+      final SqlInjectionTutorialRow sqlInjectionTutorialRow = sqlInjectionTutorialRowBuilder.comment(comment).build();
       assertThat(sqlInjectionTutorialRow.getComment()).isEqualTo(comment);
     }
   }
@@ -57,9 +55,7 @@ class SqlInjectionTutorialRowTest {
   void buildError_ValidError_Builds() {
     final SqlInjectionTutorialRowBuilder sqlInjectionTutorialRowBuilder = SqlInjectionTutorialRow.builder();
     for (final String error : TestConstants.STRINGS) {
-      final SqlInjectionTutorialRow sqlInjectionTutorialRow = sqlInjectionTutorialRowBuilder
-        .error(error)
-        .build();
+      final SqlInjectionTutorialRow sqlInjectionTutorialRow = sqlInjectionTutorialRowBuilder.error(error).build();
       assertThat(sqlInjectionTutorialRow.getError()).isEqualTo(error);
     }
   }
@@ -81,9 +77,7 @@ class SqlInjectionTutorialRowTest {
   void buildName_ValidName_Builds() {
     final SqlInjectionTutorialRowBuilder sqlInjectionTutorialRowBuilder = SqlInjectionTutorialRow.builder();
     for (final String name : TestConstants.STRINGS) {
-      final SqlInjectionTutorialRow sqlInjectionTutorialRow = sqlInjectionTutorialRowBuilder
-        .name(name)
-        .build();
+      final SqlInjectionTutorialRow sqlInjectionTutorialRow = sqlInjectionTutorialRowBuilder.name(name).build();
       assertThat(sqlInjectionTutorialRow.getName()).isEqualTo(name);
     }
   }
@@ -94,8 +88,7 @@ class SqlInjectionTutorialRowTest {
       .builder()
       .name("TestSqlInjectionTutorialRow")
       .build();
-    assertThat(sqlInjectionTutorialRow.getName())
-      .isEqualTo("TestSqlInjectionTutorialRow");
+    assertThat(sqlInjectionTutorialRow.getName()).isEqualTo("TestSqlInjectionTutorialRow");
   }
 
   @Test
@@ -110,8 +103,6 @@ class SqlInjectionTutorialRowTest {
       .name("TestSqlInjectionTutorialRow")
       .build();
     assertThat(testSqlInjectionTutorialRow)
-      .hasToString(
-        "SqlInjectionTutorialRow(name=TestSqlInjectionTutorialRow, comment=null, error=null)"
-      );
+      .hasToString("SqlInjectionTutorialRow(name=TestSqlInjectionTutorialRow, comment=null, error=null)");
   }
 }

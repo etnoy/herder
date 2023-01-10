@@ -44,51 +44,32 @@ public class ConfigurationService {
 
   private final KeyService keyService;
 
-  private Mono<Configuration> create(
-    @NotNull @NotEmpty final String key,
-    @NotNull @NotEmpty final String value
-  ) {
+  private Mono<Configuration> create(@NotNull @NotEmpty final String key, @NotNull @NotEmpty final String value) {
     log.debug("Creating configuration key " + key + " with value " + value);
-    return configurationRepository.save(
-      Configuration.builder().key(key).value(value).build()
-    );
+    return configurationRepository.save(Configuration.builder().key(key).value(value).build());
   }
 
   private Mono<Boolean> existsByKey(@NotNull @NotEmpty final String key) {
-    return configurationRepository
-      .findByKey(key)
-      .map(u -> true)
-      .defaultIfEmpty(false);
+    return configurationRepository.findByKey(key).map(u -> true).defaultIfEmpty(false);
   }
 
   private Mono<String> getByKey(@NotNull @NotEmpty final String key) {
     return configurationRepository
       .findByKey(key)
-      .switchIfEmpty(
-        Mono.error(
-          new ConfigurationKeyNotFoundException(
-            "Configuration key " + key + " not found"
-          )
-        )
-      )
+      .switchIfEmpty(Mono.error(new ConfigurationKeyNotFoundException("Configuration key " + key + " not found")))
       .map(Configuration::getValue);
   }
 
   public Mono<byte[]> getServerKey() {
     return getByKey("serverKey")
       .map(Base64.getDecoder()::decode)
-      .onErrorResume(
-        ConfigurationKeyNotFoundException.class,
-        notFound -> refreshServerKey()
-      );
+      .onErrorResume(ConfigurationKeyNotFoundException.class, notFound -> refreshServerKey());
   }
 
   public Mono<byte[]> refreshServerKey() {
     final String serverKeyConfigurationKey = "serverKey";
     log.info("Refreshing server key");
-    final String newServerKey = Base64
-      .getEncoder()
-      .encodeToString(keyService.generateRandomBytes(16));
+    final String newServerKey = Base64.getEncoder().encodeToString(keyService.generateRandomBytes(16));
     return existsByKey(serverKeyConfigurationKey)
       .flatMap(exists -> {
         if (Boolean.TRUE.equals(exists)) {
@@ -101,24 +82,13 @@ public class ConfigurationService {
       .map(Base64.getDecoder()::decode);
   }
 
-  private Mono<Configuration> setValue(
-    @NotNull @NotEmpty final String key,
-    @NotNull @NotEmpty final String value
-  ) {
+  private Mono<Configuration> setValue(@NotNull @NotEmpty final String key, @NotNull @NotEmpty final String value) {
     log.debug("Setting configuration key " + key + " to value " + value);
     return Mono
       .just(key)
       .filterWhen(this::existsByKey)
-      .switchIfEmpty(
-        Mono.error(
-          new ConfigurationKeyNotFoundException(
-            "Configuration key " + key + " not found"
-          )
-        )
-      )
+      .switchIfEmpty(Mono.error(new ConfigurationKeyNotFoundException("Configuration key " + key + " not found")))
       .flatMap(configurationRepository::findByKey)
-      .flatMap(configuration ->
-        configurationRepository.save(configuration.withValue(value))
-      );
+      .flatMap(configuration -> configurationRepository.save(configuration.withValue(value)));
   }
 }

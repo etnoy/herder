@@ -52,18 +52,15 @@ class CryptoServiceTest extends BaseTest {
   CryptoFactory cryptoFactory;
 
   @Test
-  void hmac_GetHmacThrowsNoSuchAlgorithmException_ThrowsCryptographicException()
-    throws NoSuchAlgorithmException {
+  void hmac_GetHmacThrowsNoSuchAlgorithmException_ThrowsCryptographicException() throws NoSuchAlgorithmException {
     final byte[] key = { -91, -79, 67 };
     final byte[] message = { 120, 56 };
     when(cryptoFactory.getHmac()).thenThrow(new NoSuchAlgorithmException());
-    assertThatExceptionOfType(CryptographicException.class)
-      .isThrownBy(() -> cryptoService.hmac(key, message));
+    assertThatExceptionOfType(CryptographicException.class).isThrownBy(() -> cryptoService.hmac(key, message));
   }
 
   @Test
-  void hmac_InvalidKeyException_ThrowsCryptographicException()
-    throws Exception {
+  void hmac_InvalidKeyException_ThrowsCryptographicException() throws Exception {
     final byte[] key = { -91 };
     final byte[] message = { 120, 56, 111 };
 
@@ -75,24 +72,21 @@ class CryptoServiceTest extends BaseTest {
 
     doThrow(new InvalidKeyException()).when(mockMac).init(mockSecretKeySpec);
 
-    assertThatExceptionOfType(CryptographicException.class)
-      .isThrownBy(() -> cryptoService.hmac(key, message));
+    assertThatExceptionOfType(CryptographicException.class).isThrownBy(() -> cryptoService.hmac(key, message));
   }
 
   @Test
   void hmac_NullKey_ThrowsNullPointerException() {
     final byte[] message = { 120, 56, 111, -98, -118, 44, -65, -127, 39, 35 };
 
-    assertThatExceptionOfType(NullPointerException.class)
-      .isThrownBy(() -> cryptoService.hmac(null, message));
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> cryptoService.hmac(null, message));
   }
 
   @Test
   void hmac_NullMessage_ThrowsNullPointerException() {
     final byte[] key = { -91, -79, 67, -107, 9, 91, 62, -95, 80, 78 };
 
-    assertThatExceptionOfType(NullPointerException.class)
-      .isThrownBy(() -> cryptoService.hmac(key, null));
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> cryptoService.hmac(key, null));
   }
 
   @Test

@@ -64,17 +64,11 @@ class ControllerAuthenticationTest extends BaseTest {
   void getUserId_UserAuthenticated_ReturnsUserId() {
     final String mockUserId = "id";
     when(authentication.getPrincipal()).thenReturn(mockUserId);
-    StepVerifier
-      .create(controllerAuthentication.getUserId())
-      .expectNext(mockUserId)
-      .verifyComplete();
+    StepVerifier.create(controllerAuthentication.getUserId()).expectNext(mockUserId).verifyComplete();
   }
 
   @Test
   void getUserId_UserNotAuthenticated_ReturnsNotAuthenticatedException() {
-    StepVerifier
-      .create(controllerAuthentication.getUserId())
-      .expectError(NotAuthenticatedException.class)
-      .verify();
+    StepVerifier.create(controllerAuthentication.getUserId()).expectError(NotAuthenticatedException.class).verify();
   }
 }

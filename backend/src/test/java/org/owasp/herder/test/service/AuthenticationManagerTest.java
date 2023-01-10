@@ -76,14 +76,12 @@ class AuthenticationManagerTest {
     final String invalidToken = "Invalid token";
     when(mockAuthentication.getCredentials()).thenReturn(mockToken);
 
-    when(webTokenService.parseToken(mockToken))
-      .thenThrow(new BadCredentialsException(invalidToken));
+    when(webTokenService.parseToken(mockToken)).thenThrow(new BadCredentialsException(invalidToken));
 
     StepVerifier
       .create(authenticationManager.authenticate(mockAuthentication))
       .expectErrorMatches(throwable ->
-        throwable instanceof BadCredentialsException &&
-        throwable.getMessage().equals(invalidToken)
+        throwable instanceof BadCredentialsException && throwable.getMessage().equals(invalidToken)
       )
       .verify();
   }

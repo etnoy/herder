@@ -36,8 +36,6 @@ public class SqlInjectionDatabaseClientFactory {
       .option("DB_CLOSE_DELAY=60")
       .build();
 
-    return DatabaseClient.create(
-      new H2ConnectionFactory(h2ConnectionConfiguration)
-    );
+    return DatabaseClient.create(new H2ConnectionFactory(h2ConnectionConfiguration));
   }
 }

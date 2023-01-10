@@ -79,9 +79,7 @@ class WebTokenServiceIT extends BaseIT {
     );
 
     final Clock rightBeforeTheTokenExpires = Clock.fixed(
-      TestConstants.year2000Clock
-        .instant()
-        .plusMillis(webTokenService.getExpirationTime() - 1),
+      TestConstants.year2000Clock.instant().plusMillis(webTokenService.getExpirationTime() - 1),
       ZoneId.of("Z")
     );
 
@@ -95,17 +93,12 @@ class WebTokenServiceIT extends BaseIT {
   }
 
   @Test
-  @DisplayName(
-    "It should be possible to generate a new token after an old one was invalidated"
-  )
+  @DisplayName("It should be possible to generate a new token after an old one was invalidated")
   void canGenerateNewAccessTokenAfterOldTokenIsInvalidated() {
     final String userId = integrationTestUtils.createTestUser();
 
     // Create a token (we don't save it)
-    integrationTestUtils.performAPILoginWithToken(
-      TestConstants.TEST_USER_LOGIN_NAME,
-      TestConstants.TEST_USER_PASSWORD
-    );
+    integrationTestUtils.performAPILoginWithToken(TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     // Invalidate the token
     webTokenKeyManager.invalidateAccessToken(userId);
@@ -115,20 +108,16 @@ class WebTokenServiceIT extends BaseIT {
       TestConstants.TEST_USER_PASSWORD
     );
 
-    final Authentication authentication = webTokenService.parseToken(
-      accessToken
-    );
+    final Authentication authentication = webTokenService.parseToken(accessToken);
 
-    assertThat(authentication)
-      .isInstanceOf(UsernamePasswordAuthenticationToken.class);
+    assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
     assertThat(authentication.getPrincipal()).isEqualTo(userId);
     assertThat(authentication.getCredentials()).isEqualTo(accessToken);
 
     // AssertJ cannot do list asserts on Collection<? extends ... >
     @SuppressWarnings("unchecked")
     Collection<SimpleGrantedAuthority> authorityList = (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
-    assertThat(authorityList)
-      .containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
+    assertThat(authorityList).containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
   }
 
   @Test
@@ -142,8 +131,7 @@ class WebTokenServiceIT extends BaseIT {
     );
     Authentication authentication = webTokenService.parseToken(accessToken);
 
-    assertThat(authentication)
-      .isInstanceOf(UsernamePasswordAuthenticationToken.class);
+    assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
     assertThat(authentication.getPrincipal()).isEqualTo(userId);
     assertThat(authentication.getCredentials()).isEqualTo(accessToken);
 
@@ -151,10 +139,7 @@ class WebTokenServiceIT extends BaseIT {
     @SuppressWarnings("unchecked")
     Collection<SimpleGrantedAuthority> authorityList = (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
     assertThat(authorityList)
-      .containsExactlyInAnyOrder(
-        new SimpleGrantedAuthority("ROLE_USER"),
-        new SimpleGrantedAuthority("ROLE_ADMIN")
-      );
+      .containsExactlyInAnyOrder(new SimpleGrantedAuthority("ROLE_USER"), new SimpleGrantedAuthority("ROLE_ADMIN"));
   }
 
   @Test
@@ -168,16 +153,14 @@ class WebTokenServiceIT extends BaseIT {
     );
     Authentication authentication = webTokenService.parseToken(accessToken);
 
-    assertThat(authentication)
-      .isInstanceOf(UsernamePasswordAuthenticationToken.class);
+    assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
     assertThat(authentication.getPrincipal()).isEqualTo(userId);
     assertThat(authentication.getCredentials()).isEqualTo(accessToken);
 
     // AssertJ cannot do list asserts on Collection<? extends ... >
     @SuppressWarnings("unchecked")
     Collection<SimpleGrantedAuthority> authorityList = (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
-    assertThat(authorityList)
-      .containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
+    assertThat(authorityList).containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
   }
 
   @Test
@@ -213,9 +196,7 @@ class WebTokenServiceIT extends BaseIT {
     );
 
     final Clock rightAfterTheTokenExpires = Clock.fixed(
-      TestConstants.year2000Clock
-        .instant()
-        .plusMillis(webTokenService.getExpirationTime() + 1),
+      TestConstants.year2000Clock.instant().plusMillis(webTokenService.getExpirationTime() + 1),
       ZoneId.systemDefault()
     );
 
@@ -236,24 +217,12 @@ class WebTokenServiceIT extends BaseIT {
   }
 
   private void setClock(final Clock testClock) {
-    when(webTokenClock.now())
-      .thenReturn(
-        Date.from(
-          LocalDateTime.now(testClock).atZone(ZoneId.of("Z")).toInstant()
-        )
-      );
+    when(webTokenClock.now()).thenReturn(Date.from(LocalDateTime.now(testClock).atZone(ZoneId.of("Z")).toInstant()));
   }
 
   private void resetClock() {
     when(webTokenClock.now())
-      .thenReturn(
-        Date.from(
-          LocalDateTime
-            .now(Clock.systemDefaultZone())
-            .atZone(ZoneId.systemDefault())
-            .toInstant()
-        )
-      );
+      .thenReturn(Date.from(LocalDateTime.now(Clock.systemDefaultZone()).atZone(ZoneId.systemDefault()).toInstant()));
   }
 
   @Test
@@ -262,23 +231,17 @@ class WebTokenServiceIT extends BaseIT {
     final String adminId = integrationTestUtils.createTestAdmin();
     final String userId = integrationTestUtils.createTestUser();
 
-    final String accessToken = webTokenService.generateImpersonationToken(
-      adminId,
-      userId,
-      false
-    );
+    final String accessToken = webTokenService.generateImpersonationToken(adminId, userId, false);
 
     Authentication authentication = webTokenService.parseToken(accessToken);
 
-    assertThat(authentication)
-      .isInstanceOf(UsernamePasswordAuthenticationToken.class);
+    assertThat(authentication).isInstanceOf(UsernamePasswordAuthenticationToken.class);
     assertThat(authentication.getPrincipal()).isEqualTo(userId);
     assertThat(authentication.getCredentials()).isEqualTo(accessToken);
 
     // AssertJ cannot do list asserts on Collection<? extends ... >
     @SuppressWarnings("unchecked")
     Collection<SimpleGrantedAuthority> authorityList = (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
-    assertThat(authorityList)
-      .containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
+    assertThat(authorityList).containsExactly(new SimpleGrantedAuthority("ROLE_USER"));
   }
 }

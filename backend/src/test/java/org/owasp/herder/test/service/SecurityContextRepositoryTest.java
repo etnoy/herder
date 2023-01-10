@@ -56,69 +56,47 @@ class SecurityContextRepositoryTest extends BaseTest {
 
   @Test
   void load_InvalidHeader_ReturnsSecurityContext() {
-    final ServerWebExchange mockServerWebExchange = mock(
-      ServerWebExchange.class
-    );
+    final ServerWebExchange mockServerWebExchange = mock(ServerWebExchange.class);
     final String token = "authToken";
-    final ServerHttpRequest mockServerHttpRequest = mock(
-      ServerHttpRequest.class
-    );
+    final ServerHttpRequest mockServerHttpRequest = mock(ServerHttpRequest.class);
     when(mockServerWebExchange.getRequest()).thenReturn(mockServerHttpRequest);
     final HttpHeaders mockHttpHeaders = mock(HttpHeaders.class);
     when(mockServerHttpRequest.getHeaders()).thenReturn(mockHttpHeaders);
     final String mockAuthorizationHeader = "Hello World" + token;
-    when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION))
-      .thenReturn(mockAuthorizationHeader);
+    when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION)).thenReturn(mockAuthorizationHeader);
     StepVerifier
-      .create(
-        securityContextRepository
-          .load(mockServerWebExchange)
-          .map(SecurityContext::getAuthentication)
-      )
+      .create(securityContextRepository.load(mockServerWebExchange).map(SecurityContext::getAuthentication))
       .verifyComplete();
   }
 
   @Test
   void load_NullHeader_ReturnsSecurityContext() {
-    final ServerWebExchange mockServerWebExchange = mock(
-      ServerWebExchange.class
-    );
+    final ServerWebExchange mockServerWebExchange = mock(ServerWebExchange.class);
 
-    final ServerHttpRequest mockServerHttpRequest = mock(
-      ServerHttpRequest.class
-    );
+    final ServerHttpRequest mockServerHttpRequest = mock(ServerHttpRequest.class);
     when(mockServerWebExchange.getRequest()).thenReturn(mockServerHttpRequest);
     final HttpHeaders mockHttpHeaders = mock(HttpHeaders.class);
     when(mockServerHttpRequest.getHeaders()).thenReturn(mockHttpHeaders);
     when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION)).thenReturn(null);
 
     StepVerifier
-      .create(
-        securityContextRepository
-          .load(mockServerWebExchange)
-          .map(SecurityContext::getAuthentication)
-      )
+      .create(securityContextRepository.load(mockServerWebExchange).map(SecurityContext::getAuthentication))
       .verifyComplete();
   }
 
   @Test
   void load_ValidHeader_ReturnsSecurityContext() {
     final Long mockUserId = 581L;
-    final ServerWebExchange mockServerWebExchange = mock(
-      ServerWebExchange.class
-    );
+    final ServerWebExchange mockServerWebExchange = mock(ServerWebExchange.class);
 
     final String token = "authToken";
 
-    final ServerHttpRequest mockServerHttpRequest = mock(
-      ServerHttpRequest.class
-    );
+    final ServerHttpRequest mockServerHttpRequest = mock(ServerHttpRequest.class);
     when(mockServerWebExchange.getRequest()).thenReturn(mockServerHttpRequest);
     final HttpHeaders mockHttpHeaders = mock(HttpHeaders.class);
     when(mockServerHttpRequest.getHeaders()).thenReturn(mockHttpHeaders);
     final String mockAuthorizationHeader = "Bearer " + token;
-    when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION))
-      .thenReturn(mockAuthorizationHeader);
+    when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION)).thenReturn(mockAuthorizationHeader);
 
     final List<SimpleGrantedAuthority> mockAuthorities = Arrays.asList(
       new SimpleGrantedAuthority[] { new SimpleGrantedAuthority("ROLE_USER") }
@@ -130,19 +108,11 @@ class SecurityContextRepositoryTest extends BaseTest {
       mockAuthorities
     );
 
-    when(
-      authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(null, token)
-      )
-    )
+    when(authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(null, token)))
       .thenReturn(Mono.just(mockAuthentication));
 
     StepVerifier
-      .create(
-        securityContextRepository
-          .load(mockServerWebExchange)
-          .map(SecurityContext::getAuthentication)
-      )
+      .create(securityContextRepository.load(mockServerWebExchange).map(SecurityContext::getAuthentication))
       .expectNext(mockAuthentication)
       .verifyComplete();
   }
@@ -158,7 +128,6 @@ class SecurityContextRepositoryTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    securityContextRepository =
-      new SecurityContextRepository(authenticationManager);
+    securityContextRepository = new SecurityContextRepository(authenticationManager);
   }
 }

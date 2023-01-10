@@ -97,105 +97,68 @@ class UserServiceTest extends BaseTest {
 
   @Test
   void authenticate_InvalidUsername_ReturnsFalse() {
-    when(
-      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
-    )
-      .thenReturn(Mono.empty());
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)).thenReturn(Mono.empty());
     StepVerifier
-      .create(
-        userService.authenticate(
-          TestConstants.TEST_USER_LOGIN_NAME,
-          TestConstants.TEST_USER_PASSWORD
-        )
-      )
+      .create(userService.authenticate(TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD))
       .expectErrorMatches(throwable ->
-        throwable instanceof AuthenticationException &&
-        throwable.getMessage().equals("Invalid username or password")
+        throwable instanceof AuthenticationException && throwable.getMessage().equals("Invalid username or password")
       )
       .verify();
-    verify(passwordAuthRepository, times(1))
-      .findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
+    verify(passwordAuthRepository, times(1)).findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
   }
 
   @Test
   void authenticate_UserSuspended_ReturnsLockedException() {
-    when(
-      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
-    )
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
       .thenReturn(Mono.just(mockPasswordAuth));
-    when(mockPasswordAuth.getHashedPassword())
-      .thenReturn(TestConstants.HASHED_TEST_PASSWORD);
+    when(mockPasswordAuth.getHashedPassword()).thenReturn(TestConstants.HASHED_TEST_PASSWORD);
     when(mockPasswordAuth.getUserId()).thenReturn(TestConstants.TEST_USER_ID);
     when(mockUser.isEnabled()).thenReturn(true);
 
     LocalDateTime futureDate = LocalDateTime.MAX;
     when(mockUser.getSuspendedUntil()).thenReturn(futureDate);
 
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
 
     setClock(TestConstants.year2000Clock);
 
     StepVerifier
-      .create(
-        userService.authenticate(
-          TestConstants.TEST_USER_LOGIN_NAME,
-          TestConstants.TEST_USER_PASSWORD
-        )
-      )
+      .create(userService.authenticate(TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD))
       .expectErrorMatches(throwable ->
         throwable instanceof LockedException &&
-        throwable
-          .getMessage()
-          .equals("Account suspended until +999999999-12-31T23:59:59.999999999")
+        throwable.getMessage().equals("Account suspended until +999999999-12-31T23:59:59.999999999")
       )
       .verify();
   }
 
   @Test
   void authenticate_ValidUsernameAndPassword_Authenticates() {
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
-    when(
-      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
-    )
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
       .thenReturn(Mono.just(mockPasswordAuth));
-    when(mockPasswordAuth.getHashedPassword())
-      .thenReturn(TestConstants.HASHED_TEST_PASSWORD);
+    when(mockPasswordAuth.getHashedPassword()).thenReturn(TestConstants.HASHED_TEST_PASSWORD);
     when(mockPasswordAuth.getUserId()).thenReturn(TestConstants.TEST_USER_ID);
     when(mockUser.isEnabled()).thenReturn(true);
-    when(mockUser.getDisplayName())
-      .thenReturn(TestConstants.TEST_USER_DISPLAY_NAME);
+    when(mockUser.getDisplayName()).thenReturn(TestConstants.TEST_USER_DISPLAY_NAME);
     when(mockUser.getSuspendedUntil()).thenReturn(null);
 
     StepVerifier
-      .create(
-        userService.authenticate(
-          TestConstants.TEST_USER_LOGIN_NAME,
-          TestConstants.TEST_USER_PASSWORD
-        )
-      )
+      .create(userService.authenticate(TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD))
       .assertNext(authResponse -> {
-        assertThat(authResponse.getUserId())
-          .isEqualTo(TestConstants.TEST_USER_ID);
+        assertThat(authResponse.getUserId()).isEqualTo(TestConstants.TEST_USER_ID);
       })
       .verifyComplete();
 
-    verify(passwordAuthRepository, times(1))
-      .findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
+    verify(passwordAuthRepository, times(1)).findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
   }
 
   @Test
   void authenticate_ValidUsernameAndPasswordButUserNotEnabled_ReturnsDisabledException() {
-    when(
-      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
-    )
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
       .thenReturn(Mono.just(mockPasswordAuth));
-    when(mockPasswordAuth.getHashedPassword())
-      .thenReturn(TestConstants.HASHED_TEST_PASSWORD);
+    when(mockPasswordAuth.getHashedPassword()).thenReturn(TestConstants.HASHED_TEST_PASSWORD);
     when(mockPasswordAuth.getUserId()).thenReturn(TestConstants.TEST_USER_ID);
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
     when(mockUser.isEnabled()).thenReturn(false);
 
     LocalDateTime longAgo = LocalDateTime.MIN;
@@ -204,74 +167,39 @@ class UserServiceTest extends BaseTest {
     setClock(TestConstants.year2000Clock);
 
     StepVerifier
-      .create(
-        userService.authenticate(
-          TestConstants.TEST_USER_LOGIN_NAME,
-          TestConstants.TEST_USER_PASSWORD
-        )
-      )
+      .create(userService.authenticate(TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD))
       .expectErrorMatches(throwable ->
-        throwable instanceof DisabledException &&
-        throwable.getMessage().equals("Account disabled")
+        throwable instanceof DisabledException && throwable.getMessage().equals("Account disabled")
       )
       .verify();
 
-    verify(passwordAuthRepository, times(1))
-      .findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
+    verify(passwordAuthRepository, times(1)).findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
   }
 
   @Test
   void authenticate_ValidUsernameButInvalidPassword_DoesNotAuthenticate() {
-    when(
-      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
-    )
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
       .thenReturn(Mono.just(mockPasswordAuth));
-    when(mockPasswordAuth.getHashedPassword())
-      .thenReturn(TestConstants.HASHED_TEST_PASSWORD);
+    when(mockPasswordAuth.getHashedPassword()).thenReturn(TestConstants.HASHED_TEST_PASSWORD);
 
     StepVerifier
-      .create(
-        userService.authenticate(
-          TestConstants.TEST_USER_LOGIN_NAME,
-          "wrong password"
-        )
-      )
+      .create(userService.authenticate(TestConstants.TEST_USER_LOGIN_NAME, "wrong password"))
       .expectErrorMatches(throwable ->
-        throwable instanceof BadCredentialsException &&
-        throwable.getMessage().equals("Invalid username or password")
+        throwable instanceof BadCredentialsException && throwable.getMessage().equals("Invalid username or password")
       )
       .verify();
 
-    verify(passwordAuthRepository, times(1))
-      .findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
+    verify(passwordAuthRepository, times(1)).findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
   }
 
   @Test
   @DisplayName("create() can return exception if display name already exists")
   void create_DisplayNameAlreadyExists_ReturnsDuplicateUserDisplayNameException() {
-    final byte[] testRandomBytes = {
-      -108,
-      101,
-      -7,
-      -36,
-      17,
-      -26,
-      -24,
-      0,
-      -32,
-      -117,
-      75,
-      -127,
-      22,
-      62,
-      9,
-      19,
-    };
+    final byte[] testRandomBytes = { -108, 101, -7, -36, 17, -26, -24, 0, -32, -117, 75, -127, 22, 62, 9, 19 };
 
     when(keyService.generateRandomBytes(16)).thenReturn(testRandomBytes);
 
-    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME)).thenReturn(Mono.just(mockUser));
 
     setClock(TestConstants.year2000Clock);
 
@@ -280,45 +208,20 @@ class UserServiceTest extends BaseTest {
       .expectError(DuplicateUserDisplayNameException.class)
       .verify();
 
-    verify(userRepository, times(1))
-      .findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME);
+    verify(userRepository, times(1)).findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME);
   }
 
   @Test
   @DisplayName("Can create a user")
   void create_ValidDisplayName_CreatesUser() {
-    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME))
-      .thenReturn(Mono.empty());
+    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME)).thenReturn(Mono.empty());
 
-    final byte[] testRandomBytes = {
-      -108,
-      101,
-      -7,
-      -36,
-      17,
-      -26,
-      -24,
-      0,
-      -32,
-      -117,
-      75,
-      -127,
-      22,
-      62,
-      9,
-      19,
-    };
+    final byte[] testRandomBytes = { -108, 101, -7, -36, 17, -26, -24, 0, -32, -117, 75, -127, 22, 62, 9, 19 };
 
     when(keyService.generateRandomBytes(16)).thenReturn(testRandomBytes);
 
     when(userRepository.save(any(UserEntity.class)))
-      .thenAnswer(user ->
-        Mono.just(
-          user
-            .getArgument(0, UserEntity.class)
-            .withId(TestConstants.TEST_USER_ID)
-        )
-      );
+      .thenAnswer(user -> Mono.just(user.getArgument(0, UserEntity.class).withId(TestConstants.TEST_USER_ID)));
 
     setClock(TestConstants.year2000Clock);
 
@@ -327,20 +230,15 @@ class UserServiceTest extends BaseTest {
       .expectNext(TestConstants.TEST_USER_ID)
       .verifyComplete();
 
-    verify(userRepository, times(1))
-      .findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME);
+    verify(userRepository, times(1)).findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME);
     verify(userRepository, times(1)).save(any(UserEntity.class));
 
-    ArgumentCaptor<UserEntity> argument = ArgumentCaptor.forClass(
-      UserEntity.class
-    );
+    ArgumentCaptor<UserEntity> argument = ArgumentCaptor.forClass(UserEntity.class);
     verify(userRepository, times(1)).save(argument.capture());
 
     final UserEntity createdUser = argument.getValue();
-    assertThat(createdUser.getDisplayName())
-      .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
-    assertThat(createdUser.getCreationTime())
-      .isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
+    assertThat(createdUser.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+    assertThat(createdUser.getCreationTime()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
     assertThat(createdUser.getId()).isNull();
     assertThat(createdUser.getKey()).isEqualTo(testRandomBytes);
     assertThat(createdUser.isAdmin()).isFalse();
@@ -351,8 +249,7 @@ class UserServiceTest extends BaseTest {
 
   @Test
   void createPasswordUser_DuplicateDisplayName_ReturnsDuplicateUserDisplayNameException() {
-    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME)).thenReturn(Mono.just(mockUser));
 
     StepVerifier
       .create(
@@ -365,18 +262,14 @@ class UserServiceTest extends BaseTest {
       .expectError(DuplicateUserDisplayNameException.class)
       .verify();
 
-    verify(userRepository, times(1))
-      .findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME);
+    verify(userRepository, times(1)).findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME);
   }
 
   @Test
   void createPasswordUser_DuplicateLoginName_ReturnsDuplicateClassNameException() {
-    when(
-      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
-    )
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
       .thenReturn(Mono.just(mockPasswordAuth));
-    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME))
-      .thenReturn(Mono.empty());
+    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME)).thenReturn(Mono.empty());
 
     StepVerifier
       .create(
@@ -389,10 +282,8 @@ class UserServiceTest extends BaseTest {
       .expectError(DuplicateUserLoginNameException.class)
       .verify();
 
-    verify(passwordAuthRepository, times(1))
-      .findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
-    verify(userRepository, times(1))
-      .findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME);
+    verify(passwordAuthRepository, times(1)).findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
+    verify(userRepository, times(1)).findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME);
   }
 
   @Test
@@ -405,47 +296,14 @@ class UserServiceTest extends BaseTest {
 
   @Test
   void createPasswordUser_ValidData_Succeeds() {
-    final byte[] testRandomBytes = {
-      -108,
-      101,
-      -7,
-      -36,
-      17,
-      -26,
-      -24,
-      0,
-      -32,
-      -117,
-      75,
-      -127,
-      22,
-      62,
-      9,
-      19,
-    };
+    final byte[] testRandomBytes = { -108, 101, -7, -36, 17, -26, -24, 0, -32, -117, 75, -127, 22, 62, 9, 19 };
     when(keyService.generateRandomBytes(16)).thenReturn(testRandomBytes);
-    when(
-      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
-    )
-      .thenReturn(Mono.empty());
-    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME))
-      .thenReturn(Mono.empty());
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)).thenReturn(Mono.empty());
+    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME)).thenReturn(Mono.empty());
     when(userRepository.save(any(UserEntity.class)))
-      .thenAnswer(user ->
-        Mono.just(
-          user
-            .getArgument(0, UserEntity.class)
-            .withId(TestConstants.TEST_USER_ID)
-        )
-      );
+      .thenAnswer(user -> Mono.just(user.getArgument(0, UserEntity.class).withId(TestConstants.TEST_USER_ID)));
     when(passwordAuthRepository.save(any(PasswordAuth.class)))
-      .thenAnswer(user ->
-        Mono.just(
-          user
-            .getArgument(0, PasswordAuth.class)
-            .withId(TestConstants.TEST_USER_ID)
-        )
-      );
+      .thenAnswer(user -> Mono.just(user.getArgument(0, PasswordAuth.class).withId(TestConstants.TEST_USER_ID)));
 
     setClock(TestConstants.year2000Clock);
 
@@ -460,56 +318,41 @@ class UserServiceTest extends BaseTest {
       .expectNext(TestConstants.TEST_USER_ID)
       .verifyComplete();
 
-    verify(passwordAuthRepository, times(1))
-      .findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
-    verify(userRepository, times(1))
-      .findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME);
+    verify(passwordAuthRepository, times(1)).findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
+    verify(userRepository, times(1)).findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME);
     verify(userRepository, times(1)).save(any(UserEntity.class));
     verify(passwordAuthRepository, times(1)).save(any(PasswordAuth.class));
 
-    ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(
-      UserEntity.class
-    );
+    ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(UserEntity.class);
     verify(userRepository, times(1)).save(userArgumentCaptor.capture());
     assertThat(userArgumentCaptor.getValue().getId()).isNull();
-    assertThat(userArgumentCaptor.getValue().getDisplayName())
-      .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+    assertThat(userArgumentCaptor.getValue().getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
 
-    ArgumentCaptor<PasswordAuth> passwordAuthArgumentCaptor = ArgumentCaptor.forClass(
-      PasswordAuth.class
-    );
-    verify(passwordAuthRepository, times(1))
-      .save(passwordAuthArgumentCaptor.capture());
-    assertThat(passwordAuthArgumentCaptor.getValue().getUserId())
-      .isEqualTo(TestConstants.TEST_USER_ID);
-    assertThat(passwordAuthArgumentCaptor.getValue().getLoginName())
-      .isEqualTo(TestConstants.TEST_USER_LOGIN_NAME);
-    assertThat(passwordAuthArgumentCaptor.getValue().getHashedPassword())
-      .isEqualTo(TestConstants.HASHED_TEST_PASSWORD);
+    ArgumentCaptor<PasswordAuth> passwordAuthArgumentCaptor = ArgumentCaptor.forClass(PasswordAuth.class);
+    verify(passwordAuthRepository, times(1)).save(passwordAuthArgumentCaptor.capture());
+    assertThat(passwordAuthArgumentCaptor.getValue().getUserId()).isEqualTo(TestConstants.TEST_USER_ID);
+    assertThat(passwordAuthArgumentCaptor.getValue().getLoginName()).isEqualTo(TestConstants.TEST_USER_LOGIN_NAME);
+    assertThat(passwordAuthArgumentCaptor.getValue().getHashedPassword()).isEqualTo(TestConstants.HASHED_TEST_PASSWORD);
   }
 
   @Test
   @DisplayName("Can return error when deleting nonexistent user")
   void deleteById_NonexistentUserId_SavesDeletedPlaceholder() {
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.empty());
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
 
     StepVerifier
       .create(userService.delete(TestConstants.TEST_USER_ID))
       .expectError(UserNotFoundException.class)
       .verify();
 
-    verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
+    verify(userRepository, times(1)).findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
   }
 
   @Test
   @DisplayName("Can delete user")
   void deleteById_ValidUserId_SavesDeletedPlaceholder() {
-    when(passwordAuthRepository.deleteByUserId(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.empty());
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
+    when(passwordAuthRepository.deleteByUserId(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
     when(userRepository.save(mockUser)).thenReturn(Mono.just(mockUser));
     when(mockUser.withTeamId(null)).thenReturn(mockUser);
     when(mockUser.withEnabled(false)).thenReturn(mockUser);
@@ -518,12 +361,9 @@ class UserServiceTest extends BaseTest {
     when(mockUser.withSuspensionMessage(null)).thenReturn(mockUser);
     when(mockUser.withAdmin(false)).thenReturn(mockUser);
 
-    StepVerifier
-      .create(userService.delete(TestConstants.TEST_USER_ID))
-      .verifyComplete();
+    StepVerifier.create(userService.delete(TestConstants.TEST_USER_ID)).verifyComplete();
 
-    verify(passwordAuthRepository, times(1))
-      .deleteByUserId(TestConstants.TEST_USER_ID);
+    verify(passwordAuthRepository, times(1)).deleteByUserId(TestConstants.TEST_USER_ID);
   }
 
   @Test
@@ -540,33 +380,23 @@ class UserServiceTest extends BaseTest {
           return Mono.just(auth.getArgument(0, UserEntity.class));
         } else {
           // We are saving the newly created auth to db
-          return Mono.just(
-            auth.getArgument(0, UserEntity.class).withId(mockAuthId)
-          );
+          return Mono.just(auth.getArgument(0, UserEntity.class).withId(mockAuthId));
         }
       });
 
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
 
     when(mockUser.withAdmin(false)).thenReturn(mockDemotedUser);
 
-    Mockito
-      .doNothing()
-      .when(webTokenKeyManager)
-      .invalidateAccessToken(TestConstants.TEST_USER_ID);
+    Mockito.doNothing().when(webTokenKeyManager).invalidateAccessToken(TestConstants.TEST_USER_ID);
 
-    StepVerifier
-      .create(userService.demote(TestConstants.TEST_USER_ID))
-      .verifyComplete();
+    StepVerifier.create(userService.demote(TestConstants.TEST_USER_ID)).verifyComplete();
 
-    verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
+    verify(userRepository, times(1)).findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
 
     verify(mockUser, times(1)).withAdmin(false);
     verify(userRepository, times(1)).save(mockDemotedUser);
-    verify(webTokenKeyManager, times(1))
-      .invalidateAccessToken(TestConstants.TEST_USER_ID);
+    verify(webTokenKeyManager, times(1)).invalidateAccessToken(TestConstants.TEST_USER_ID);
   }
 
   @Test
@@ -578,25 +408,17 @@ class UserServiceTest extends BaseTest {
           return Mono.just(savedUser.getArgument(0, UserEntity.class));
         } else {
           // We are saving the newly created user to db
-          return Mono.just(
-            savedUser
-              .getArgument(0, UserEntity.class)
-              .withId(TestConstants.TEST_USER_ID)
-          );
+          return Mono.just(savedUser.getArgument(0, UserEntity.class).withId(TestConstants.TEST_USER_ID));
         }
       });
 
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
     when(mockUser.withAdmin(false)).thenReturn(mockUser);
 
-    StepVerifier
-      .create(userService.demote(TestConstants.TEST_USER_ID))
-      .verifyComplete();
+    StepVerifier.create(userService.demote(TestConstants.TEST_USER_ID)).verifyComplete();
 
     verify(userRepository, times(1)).save(mockUser);
-    verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
+    verify(userRepository, times(1)).findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
     verify(mockUser, times(1)).withAdmin(false);
   }
 
@@ -613,8 +435,7 @@ class UserServiceTest extends BaseTest {
     final UserEntity mockUser2 = mock(UserEntity.class);
     final UserEntity mockUser3 = mock(UserEntity.class);
 
-    when(userRepository.findAll())
-      .thenReturn(Flux.just(mockUser1, mockUser2, mockUser3));
+    when(userRepository.findAll()).thenReturn(Flux.just(mockUser1, mockUser2, mockUser3));
 
     StepVerifier
       .create(userService.findAllUsers())
@@ -629,155 +450,96 @@ class UserServiceTest extends BaseTest {
   @Test
   void findById_ExistingUserId_ReturnsUserEntity() {
     final UserEntity mockUser = mock(UserEntity.class);
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
 
-    StepVerifier
-      .create(userService.findById(TestConstants.TEST_USER_ID))
-      .expectNext(mockUser)
-      .verifyComplete();
+    StepVerifier.create(userService.findById(TestConstants.TEST_USER_ID)).expectNext(mockUser).verifyComplete();
 
-    verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
+    verify(userRepository, times(1)).findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
   }
 
   @Test
   void findById_NonExistentUserId_ReturnsEmpty() {
     final String nonExistentUserId = "id";
-    when(userRepository.findByIdAndIsDeletedFalse(nonExistentUserId))
-      .thenReturn(Mono.empty());
-    StepVerifier
-      .create(userService.findById(nonExistentUserId))
-      .verifyComplete();
-    verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(nonExistentUserId);
+    when(userRepository.findByIdAndIsDeletedFalse(nonExistentUserId)).thenReturn(Mono.empty());
+    StepVerifier.create(userService.findById(nonExistentUserId)).verifyComplete();
+    verify(userRepository, times(1)).findByIdAndIsDeletedFalse(nonExistentUserId);
   }
 
   @Test
   void findByLoginName_LoginNameDoesNotExist_ReturnsEmptyMono() {
     final String nonExistentLoginName = "NonExistentUser";
-    when(passwordAuthRepository.findByLoginName(nonExistentLoginName))
-      .thenReturn(Mono.empty());
+    when(passwordAuthRepository.findByLoginName(nonExistentLoginName)).thenReturn(Mono.empty());
 
-    StepVerifier
-      .create(userService.findUserIdByLoginName(nonExistentLoginName))
-      .verifyComplete();
+    StepVerifier.create(userService.findUserIdByLoginName(nonExistentLoginName)).verifyComplete();
 
-    verify(passwordAuthRepository, times(1))
-      .findByLoginName(nonExistentLoginName);
+    verify(passwordAuthRepository, times(1)).findByLoginName(nonExistentLoginName);
   }
 
   @Test
   void findByLoginName_UserExists_ReturnsUser() {
     final PasswordAuth mockPasswordAuth = mock(PasswordAuth.class);
 
-    when(
-      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
-    )
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
       .thenReturn(Mono.just(mockPasswordAuth));
     when(mockPasswordAuth.getUserId()).thenReturn(TestConstants.TEST_USER_ID);
 
     StepVerifier
-      .create(
-        userService.findUserIdByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
-      )
+      .create(userService.findUserIdByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
       .expectNext(TestConstants.TEST_USER_ID)
       .verifyComplete();
 
-    verify(passwordAuthRepository, times(1))
-      .findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
+    verify(passwordAuthRepository, times(1)).findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
   }
 
   @Test
   void findPasswordAuthByLoginName_ExistingLoginName_ReturnsPasswordAuth() {
-    when(
-      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
-    )
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
       .thenReturn(Mono.just(mockPasswordAuth));
 
     StepVerifier
-      .create(
-        userService.findPasswordAuthByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
+      .create(userService.findPasswordAuthByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
       .expectNext(mockPasswordAuth)
       .verifyComplete();
 
-    verify(passwordAuthRepository, times(1))
-      .findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
+    verify(passwordAuthRepository, times(1)).findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
   }
 
   @Test
   void findPasswordAuthByLoginName_NonExistentLoginName_ReturnsEmpty() {
-    when(
-      passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)
-    )
-      .thenReturn(Mono.empty());
-    StepVerifier
-      .create(
-        userService.findPasswordAuthByLoginName(
-          TestConstants.TEST_USER_LOGIN_NAME
-        )
-      )
-      .verifyComplete();
-    verify(passwordAuthRepository, times(1))
-      .findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)).thenReturn(Mono.empty());
+    StepVerifier.create(userService.findPasswordAuthByLoginName(TestConstants.TEST_USER_LOGIN_NAME)).verifyComplete();
+    verify(passwordAuthRepository, times(1)).findByLoginName(TestConstants.TEST_USER_LOGIN_NAME);
   }
 
   @Test
   void findPasswordAuthByUserId_NoPasswordAuthExists_ReturnsEmpty() {
-    when(passwordAuthRepository.findByUserId(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.empty());
+    when(passwordAuthRepository.findByUserId(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
 
-    StepVerifier
-      .create(userService.findPasswordAuthByUserId(TestConstants.TEST_USER_ID))
-      .verifyComplete();
+    StepVerifier.create(userService.findPasswordAuthByUserId(TestConstants.TEST_USER_ID)).verifyComplete();
 
-    verify(passwordAuthRepository, times(1))
-      .findByUserId(TestConstants.TEST_USER_ID);
+    verify(passwordAuthRepository, times(1)).findByUserId(TestConstants.TEST_USER_ID);
   }
 
   @Test
   void findPasswordAuthByUserId_PasswordAuthExists_ReturnsPasswordAuth() {
-    when(passwordAuthRepository.findByUserId(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockPasswordAuth));
+    when(passwordAuthRepository.findByUserId(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockPasswordAuth));
 
     StepVerifier
       .create(userService.findPasswordAuthByUserId(TestConstants.TEST_USER_ID))
       .expectNext(mockPasswordAuth)
       .verifyComplete();
 
-    verify(passwordAuthRepository, times(1))
-      .findByUserId(TestConstants.TEST_USER_ID);
+    verify(passwordAuthRepository, times(1)).findByUserId(TestConstants.TEST_USER_ID);
   }
 
   @Test
   void getKeyById_KeyExists_ReturnsKey() {
     // Establish a random key
-    final byte[] testRandomBytes = {
-      -108,
-      101,
-      -7,
-      -36,
-      17,
-      -26,
-      -24,
-      0,
-      -32,
-      -117,
-      75,
-      -127,
-      22,
-      62,
-      9,
-      19,
-    };
+    final byte[] testRandomBytes = { -108, 101, -7, -36, 17, -26, -24, 0, -32, -117, 75, -127, 22, 62, 9, 19 };
 
     when(mockUser.getKey()).thenReturn(testRandomBytes);
 
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
 
     StepVerifier
       .create(userService.findKeyById(TestConstants.TEST_USER_ID))
@@ -786,9 +548,7 @@ class UserServiceTest extends BaseTest {
 
     final InOrder order = inOrder(mockUser, userRepository);
     // userService should query the repository
-    order
-      .verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
+    order.verify(userRepository, times(1)).findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
     // and then extract the key
     order.verify(mockUser, times(1)).getKey();
   }
@@ -796,24 +556,7 @@ class UserServiceTest extends BaseTest {
   @Test
   void getKeyById_NoKeyExists_GeneratesKey() {
     // Establish a random key
-    final byte[] testRandomBytes = {
-      -108,
-      101,
-      -7,
-      -36,
-      17,
-      -26,
-      -24,
-      0,
-      -32,
-      -117,
-      75,
-      -127,
-      22,
-      62,
-      9,
-      19,
-    };
+    final byte[] testRandomBytes = { -108, 101, -7, -36, 17, -26, -24, 0, -32, -117, 75, -127, 22, 62, 9, 19 };
 
     // This user does not have a key
     final UserEntity mockUserWithoutKey = mock(UserEntity.class);
@@ -825,12 +568,10 @@ class UserServiceTest extends BaseTest {
       .thenReturn(Mono.just(mockUserWithoutKey));
     when(mockUserWithoutKey.getKey()).thenReturn(null);
 
-    when(mockUserWithoutKey.withKey(testRandomBytes))
-      .thenReturn(mockUserWithKey);
+    when(mockUserWithoutKey.withKey(testRandomBytes)).thenReturn(mockUserWithKey);
 
     // Set up the mock repository
-    when(userRepository.save(mockUserWithKey))
-      .thenReturn(Mono.just(mockUserWithKey));
+    when(userRepository.save(mockUserWithKey)).thenReturn(Mono.just(mockUserWithKey));
 
     // Set up the mock key service
     when(keyService.generateRandomBytes(16)).thenReturn(testRandomBytes);
@@ -842,16 +583,13 @@ class UserServiceTest extends BaseTest {
       .expectNext(testRandomBytes)
       .verifyComplete();
 
-    verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
+    verify(userRepository, times(1)).findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
     verify(mockUserWithoutKey, times(1)).getKey();
     verify(keyService, times(1)).generateRandomBytes(16);
     verify(mockUserWithoutKey, times(1)).withKey(testRandomBytes);
     verify(mockUserWithKey, times(1)).getKey();
 
-    ArgumentCaptor<UserEntity> argument = ArgumentCaptor.forClass(
-      UserEntity.class
-    );
+    ArgumentCaptor<UserEntity> argument = ArgumentCaptor.forClass(UserEntity.class);
 
     verify(userRepository, times(1)).save(argument.capture());
 
@@ -871,23 +609,17 @@ class UserServiceTest extends BaseTest {
           return Mono.just(auth.getArgument(0, UserEntity.class));
         } else {
           // We are saving the newly created auth to db
-          return Mono.just(
-            auth.getArgument(0, UserEntity.class).withId(mockAuthId)
-          );
+          return Mono.just(auth.getArgument(0, UserEntity.class).withId(mockAuthId));
         }
       });
 
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
     when(mockUser.withAdmin(true)).thenReturn(mockUser);
 
-    StepVerifier
-      .create(userService.promote(TestConstants.TEST_USER_ID))
-      .verifyComplete();
+    StepVerifier.create(userService.promote(TestConstants.TEST_USER_ID)).verifyComplete();
 
     verify(passwordAuthRepository, never()).findByUserId(any(String.class));
-    verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
+    verify(userRepository, times(1)).findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
     verify(mockUser, times(1)).withAdmin(true);
     verify(userRepository, times(1)).save(mockUser);
   }
@@ -896,8 +628,7 @@ class UserServiceTest extends BaseTest {
   void setClassId_NonExistentClassId_ReturnsClassIdNotFoundException() {
     final String mockClassId = "classid";
 
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
     when(classService.existsById(mockClassId)).thenReturn(Mono.just(false));
 
     StepVerifier
@@ -905,8 +636,7 @@ class UserServiceTest extends BaseTest {
       .expectError(ClassIdNotFoundException.class)
       .verify();
 
-    verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
+    verify(userRepository, times(1)).findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
     verify(classService, times(1)).existsById(mockClassId);
   }
 
@@ -915,13 +645,11 @@ class UserServiceTest extends BaseTest {
     final String mockClassId = "classid";
     final UserEntity mockUserWithClass = mock(UserEntity.class);
 
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
     when(classService.existsById(mockClassId)).thenReturn(Mono.just(true));
 
     when(mockUser.withClassId(mockClassId)).thenReturn(mockUserWithClass);
-    when(userRepository.save(mockUserWithClass))
-      .thenReturn(Mono.just(mockUserWithClass));
+    when(userRepository.save(mockUserWithClass)).thenReturn(Mono.just(mockUserWithClass));
     when(mockUserWithClass.getClassId()).thenReturn(mockClassId);
 
     StepVerifier
@@ -929,8 +657,7 @@ class UserServiceTest extends BaseTest {
       .expectNextMatches(user -> user.getClassId() == mockClassId)
       .verifyComplete();
 
-    verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
+    verify(userRepository, times(1)).findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
     verify(classService, times(1)).existsById(mockClassId);
 
     verify(mockUser, times(1)).withClassId(mockClassId);
@@ -944,24 +671,15 @@ class UserServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName(
-    "Can return exception when setting display name of user id that does not exist"
-  )
+  @DisplayName("Can return exception when setting display name of user id that does not exist")
   void setDisplayName_UserIdDoesNotExist_ReturnsUserIdNotFoundException() {
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.empty());
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
 
     StepVerifier
-      .create(
-        userService.setDisplayName(
-          TestConstants.TEST_USER_ID,
-          TestConstants.TEST_USER_DISPLAY_NAME
-        )
-      )
+      .create(userService.setDisplayName(TestConstants.TEST_USER_ID, TestConstants.TEST_USER_DISPLAY_NAME))
       .expectError(UserNotFoundException.class)
       .verify();
-    verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
+    verify(userRepository, times(1)).findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
   }
 
   @Test
@@ -969,26 +687,20 @@ class UserServiceTest extends BaseTest {
   void setDisplayName_ValidDisplayName_DisplayNameIsSet() {
     String newDisplayName = "newDisplayName";
 
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUser));
-    when(userRepository.findByDisplayName(newDisplayName))
-      .thenReturn(Mono.empty());
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(userRepository.findByDisplayName(newDisplayName)).thenReturn(Mono.empty());
 
     when(mockUser.withDisplayName(newDisplayName)).thenReturn(mockUser);
-    when(userRepository.save(any(UserEntity.class)))
-      .thenReturn(Mono.just(mockUser));
+    when(userRepository.save(any(UserEntity.class))).thenReturn(Mono.just(mockUser));
     when(mockUser.getDisplayName()).thenReturn(newDisplayName);
 
     StepVerifier
-      .create(
-        userService.setDisplayName(TestConstants.TEST_USER_ID, newDisplayName)
-      )
+      .create(userService.setDisplayName(TestConstants.TEST_USER_ID, newDisplayName))
       .expectNextMatches(user -> user.getDisplayName().equals(newDisplayName))
       .as("Display name should change to supplied value")
       .verifyComplete();
 
-    verify(userRepository, times(1))
-      .findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
+    verify(userRepository, times(1)).findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID);
     verify(userRepository, times(1)).findByDisplayName(newDisplayName);
 
     verify(mockUser, times(1)).withDisplayName(newDisplayName);

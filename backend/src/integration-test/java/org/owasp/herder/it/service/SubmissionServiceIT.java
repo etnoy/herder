@@ -93,13 +93,7 @@ class SubmissionServiceIT extends BaseIT {
     userId = integrationTestUtils.createTestUser();
     moduleId = integrationTestUtils.createStaticTestModule();
     StepVerifier
-      .create(
-        submissionService.submitFlag(
-          userId,
-          moduleId,
-          TestConstants.TEST_STATIC_FLAG
-        )
-      )
+      .create(submissionService.submitFlag(userId, moduleId, TestConstants.TEST_STATIC_FLAG))
       .assertNext(submission -> {
         assertThat(submission.getUserId()).isEqualTo(userId);
         assertThat(submission.getModuleId()).isEqualTo(moduleId);
@@ -147,8 +141,7 @@ class SubmissionServiceIT extends BaseIT {
       .create(submissionService.findAllRankedByTeamId(teamId))
       .assertNext(rankedSubmission -> {
         assertThat(rankedSubmission.getId()).isEqualTo(team.getId());
-        assertThat(rankedSubmission.getPrincipalType())
-          .isEqualTo(PrincipalType.TEAM);
+        assertThat(rankedSubmission.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
         assertThat(rankedSubmission.getRank()).isEqualTo(1L);
       })
       .verifyComplete();
@@ -171,16 +164,13 @@ class SubmissionServiceIT extends BaseIT {
       .assertNext(submission -> {
         assertThat(submission.getRank()).isEqualTo(1);
         assertThat(submission.getId()).isEqualTo(user.getId());
-        assertThat(submission.getModuleLocator())
-          .isEqualTo(module.getLocator());
+        assertThat(submission.getModuleLocator()).isEqualTo(module.getLocator());
       })
       .verifyComplete();
   }
 
   @Test
-  @DisplayName(
-    "Duplicate submission of a static flag should throw an exception"
-  )
+  @DisplayName("Duplicate submission of a static flag should throw an exception")
   void canRejectDuplicateSubmissionsOfValidStaticFlags() {
     userId = integrationTestUtils.createTestUser();
     moduleId = integrationTestUtils.createStaticTestModule();

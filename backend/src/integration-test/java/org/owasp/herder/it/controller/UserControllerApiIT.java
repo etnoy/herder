@@ -56,12 +56,9 @@ class UserControllerApiIT extends BaseIT {
   @Test
   void getUserList_AuthenticatedUser_Forbidden() {
     final String loginName = "test";
-    final String hashedPassword =
-      "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
+    final String hashedPassword = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
 
-    userService
-      .createPasswordUser("Test User", loginName, hashedPassword)
-      .block();
+    userService.createPasswordUser("Test User", loginName, hashedPassword).block();
 
     String token = JsonPath
       .parse(
@@ -72,11 +69,7 @@ class UserControllerApiIT extends BaseIT {
             .contentType(MediaType.APPLICATION_JSON)
             .body(
               BodyInserters.fromPublisher(
-                Mono.just(
-                  "{\"userName\": \"" +
-                  loginName +
-                  "\", \"password\": \"test\"}"
-                ),
+                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"test\"}"),
                 String.class
               )
             )
@@ -103,12 +96,9 @@ class UserControllerApiIT extends BaseIT {
   @Test
   void getUserList_UserPromotedToAdmin_Success() {
     final String loginName = "test";
-    final String hashedPassword =
-      "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
+    final String hashedPassword = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
 
-    final String userId = userService
-      .createPasswordUser("Test User", loginName, hashedPassword)
-      .block();
+    final String userId = userService.createPasswordUser("Test User", loginName, hashedPassword).block();
 
     final String token = JsonPath
       .parse(
@@ -119,11 +109,7 @@ class UserControllerApiIT extends BaseIT {
             .contentType(MediaType.APPLICATION_JSON)
             .body(
               BodyInserters.fromPublisher(
-                Mono.just(
-                  "{\"userName\": \"" +
-                  loginName +
-                  "\", \"password\": \"test\"}"
-                ),
+                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"test\"}"),
                 String.class
               )
             )
@@ -158,11 +144,7 @@ class UserControllerApiIT extends BaseIT {
             .contentType(MediaType.APPLICATION_JSON)
             .body(
               BodyInserters.fromPublisher(
-                Mono.just(
-                  "{\"userName\": \"" +
-                  loginName +
-                  "\", \"password\": \"test\"}"
-                ),
+                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"test\"}"),
                 String.class
               )
             )
@@ -198,15 +180,7 @@ class UserControllerApiIT extends BaseIT {
       .post()
       .uri("/api/v1/register")
       .contentType(MediaType.APPLICATION_JSON)
-      .body(
-        BodyInserters.fromValue(
-          new PasswordRegistrationDto(
-            "TestUserDisplayName",
-            loginName,
-            password
-          )
-        )
-      )
+      .body(BodyInserters.fromValue(new PasswordRegistrationDto("TestUserDisplayName", loginName, password)))
       .exchange()
       .expectStatus()
       .isCreated();
@@ -227,13 +201,7 @@ class UserControllerApiIT extends BaseIT {
             .contentType(MediaType.APPLICATION_JSON)
             .body(
               BodyInserters.fromPublisher(
-                Mono.just(
-                  "{\"userName\": \"" +
-                  loginName +
-                  "\", \"password\": \"" +
-                  password +
-                  "\"}"
-                ),
+                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"" + password + "\"}"),
                 String.class
               )
             )
@@ -251,15 +219,7 @@ class UserControllerApiIT extends BaseIT {
       .post()
       .uri("/api/v1/register")
       .contentType(MediaType.APPLICATION_JSON)
-      .body(
-        BodyInserters.fromValue(
-          new PasswordRegistrationDto(
-            "TestUser2",
-            "loginName2",
-            "paLswOrdha17£@£sh"
-          )
-        )
-      )
+      .body(BodyInserters.fromValue(new PasswordRegistrationDto("TestUser2", "loginName2", "paLswOrdha17£@£sh")))
       .exchange()
       .expectStatus()
       .isCreated();
@@ -270,15 +230,7 @@ class UserControllerApiIT extends BaseIT {
       .post()
       .uri("/api/v1/register")
       .contentType(MediaType.APPLICATION_JSON)
-      .body(
-        BodyInserters.fromValue(
-          new PasswordRegistrationDto(
-            "TestUser3",
-            "loginName3",
-            "paLswOrdha17£@£sh"
-          )
-        )
-      )
+      .body(BodyInserters.fromValue(new PasswordRegistrationDto("TestUser3", "loginName3", "paLswOrdha17£@£sh")))
       .exchange()
       .expectStatus()
       .isCreated();
@@ -348,13 +300,7 @@ class UserControllerApiIT extends BaseIT {
             .contentType(MediaType.APPLICATION_JSON)
             .body(
               BodyInserters.fromPublisher(
-                Mono.just(
-                  "{\"userName\": \"" +
-                  loginName +
-                  "\", \"password\": \"" +
-                  password +
-                  "\"}"
-                ),
+                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"" + password + "\"}"),
                 String.class
               )
             )

@@ -54,17 +54,12 @@ public class LoginController {
   private final ControllerAuthentication controllerAuthentication;
 
   @PostMapping(value = "/login")
-  public Mono<ResponseEntity<LoginResponse>> login(
-    @RequestBody @Valid PasswordLoginDto loginDto
-  ) {
+  public Mono<ResponseEntity<LoginResponse>> login(@RequestBody @Valid PasswordLoginDto loginDto) {
     final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
     return userService
       .authenticate(loginDto.getUserName(), loginDto.getPassword())
       .map(authResponse -> {
-        final String accessToken = webTokenService.generateToken(
-          authResponse.getUserId(),
-          authResponse.isAdmin()
-        );
+        final String accessToken = webTokenService.generateToken(authResponse.getUserId(), authResponse.isAdmin());
         final LoginResponse loginResponse = loginResponseBuilder
           .accessToken(accessToken)
           .displayName(authResponse.getDisplayName())
@@ -75,12 +70,8 @@ public class LoginController {
       .onErrorResume(
         AuthenticationException.class,
         throwable -> {
-          final LoginResponse loginResponse = loginResponseBuilder
-            .errorMessage(throwable.getMessage())
-            .build();
-          return Mono.just(
-            new ResponseEntity<>(loginResponse, HttpStatus.UNAUTHORIZED)
-          );
+          final LoginResponse loginResponse = loginResponseBuilder.errorMessage(throwable.getMessage()).build();
+          return Mono.just(new ResponseEntity<>(loginResponse, HttpStatus.UNAUTHORIZED));
         }
       );
   }
@@ -93,13 +84,7 @@ public class LoginController {
     final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
     return controllerAuthentication
       .getUserId()
-      .map(userId ->
-        webTokenService.generateImpersonationToken(
-          userId,
-          impersonatedUserId.getImpersonatedId(),
-          false
-        )
-      )
+      .map(userId -> webTokenService.generateImpersonationToken(userId, impersonatedUserId.getImpersonatedId(), false))
       .zipWith(userService.getById(impersonatedUserId.getImpersonatedId()))
       .map(tuple -> {
         final LoginResponse loginResponse = loginResponseBuilder
@@ -113,9 +98,7 @@ public class LoginController {
 
   @PostMapping(path = "/register")
   @ResponseStatus(HttpStatus.CREATED)
-  public Mono<Void> register(
-    @Valid @RequestBody final PasswordRegistrationDto registrationDto
-  ) {
+  public Mono<Void> register(@Valid @RequestBody final PasswordRegistrationDto registrationDto) {
     return userService
       .createPasswordUser(
         registrationDto.getDisplayName(),

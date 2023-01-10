@@ -73,8 +73,7 @@ class FlagTutorialApiIT extends BaseIT {
   void setup() {
     integrationTestUtils.resetState();
 
-    moduleInitializer =
-      new ModuleInitializer(applicationContext, moduleService);
+    moduleInitializer = new ModuleInitializer(applicationContext, moduleService);
 
     flagTutorial = new FlagTutorial(flagHandler);
 
@@ -114,11 +113,7 @@ class FlagTutorialApiIT extends BaseIT {
     StepVerifier
       .create(
         integrationTestUtils
-          .submitFlagApiAndReturnSubmission(
-            flagTutorial.getLocator(),
-            accessToken,
-            flag
-          )
+          .submitFlagApiAndReturnSubmission(flagTutorial.getLocator(), accessToken, flag)
           .map(Submission::isValid)
       )
       .expectNext(true)

@@ -98,14 +98,8 @@ class RefresherServiceIT extends BaseIT {
 
     refresherService.afterUserUpdate(userId).block();
 
-    StepVerifier
-      .create(userService.findAllUsers())
-      .expectNext(user)
-      .verifyComplete();
-    StepVerifier
-      .create(userService.findAllTeams())
-      .expectNext(team)
-      .verifyComplete();
+    StepVerifier.create(userService.findAllUsers()).expectNext(user).verifyComplete();
+    StepVerifier.create(userService.findAllTeams()).expectNext(team).verifyComplete();
   }
 
   @Test
@@ -159,9 +153,7 @@ class RefresherServiceIT extends BaseIT {
     moduleService.setModuleName(moduleId, newModuleName).block();
 
     StepVerifier
-      .create(
-        submissionService.findAllSubmissions().map(Submission::getModuleId)
-      )
+      .create(submissionService.findAllSubmissions().map(Submission::getModuleId))
       .expectNext(moduleId)
       .expectNext(moduleId)
       .verifyComplete();
@@ -203,8 +195,7 @@ class RefresherServiceIT extends BaseIT {
     StepVerifier
       .create(teamRepository.findAll())
       .assertNext(team -> {
-        assertThat(team.getMembers().get(0).getDisplayName())
-          .isEqualTo(newDisplayName);
+        assertThat(team.getMembers().get(0).getDisplayName()).isEqualTo(newDisplayName);
       })
       .verifyComplete();
   }
@@ -267,9 +258,7 @@ class RefresherServiceIT extends BaseIT {
     // Bypass the rate limiter
     final Bucket mockBucket = mock(Bucket.class);
     when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
+    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
   }
 }

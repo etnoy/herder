@@ -46,26 +46,15 @@ public class CsrfService {
       .then(Mono.empty());
   }
 
-  public Mono<String> getPseudonym(
-    final String userId,
-    final String moduleLocator
-  ) {
+  public Mono<String> getPseudonym(final String userId, final String moduleLocator) {
     return flagHandler.getSaltedHmac(userId, moduleLocator, "csrfPseudonym");
   }
 
-  public Mono<Boolean> validatePseudonym(
-    final String pseudonym,
-    final String moduleLocator
-  ) {
-    return csrfAttackRepository
-      .countByPseudonymAndModuleLocator(pseudonym, moduleLocator)
-      .map(count -> count > 0);
+  public Mono<Boolean> validatePseudonym(final String pseudonym, final String moduleLocator) {
+    return csrfAttackRepository.countByPseudonymAndModuleLocator(pseudonym, moduleLocator).map(count -> count > 0);
   }
 
-  public Mono<Boolean> validate(
-    final String pseudonym,
-    final String moduleLocator
-  ) {
+  public Mono<Boolean> validate(final String pseudonym, final String moduleLocator) {
     return csrfAttackRepository
       .findByPseudonymAndModuleLocator(pseudonym, moduleLocator)
       .map(attack -> attack.getFinished() != null)

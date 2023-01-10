@@ -127,9 +127,7 @@ class ScoreboardControllerIT extends BaseIT {
   @DisplayName("Can return error if nonexistent module locator is given")
   void canReturnErrorForNonExistentModuleLocator() {
     StepVerifier
-      .create(
-        scoreboardController.getSubmissionsByModuleLocator("non-existent")
-      )
+      .create(scoreboardController.getSubmissionsByModuleLocator("non-existent"))
       .expectError(ModuleNotFoundException.class)
       .verify();
   }
@@ -139,9 +137,7 @@ class ScoreboardControllerIT extends BaseIT {
   @DisplayName("Can return error for nonexistent user id")
   void canReturnErrorForNonExistentUserId() {
     StepVerifier
-      .create(
-        scoreboardController.getSubmissionsByUserId(TestConstants.TEST_USER_ID)
-      )
+      .create(scoreboardController.getSubmissionsByUserId(TestConstants.TEST_USER_ID))
       .expectError(UserNotFoundException.class)
       .verify();
   }
@@ -152,11 +148,7 @@ class ScoreboardControllerIT extends BaseIT {
   void canReturnZeroSubmissionsForModuleWithoutSubmissions() {
     integrationTestUtils.createStaticTestModule();
     StepVerifier
-      .create(
-        scoreboardController.getSubmissionsByModuleLocator(
-          TestConstants.TEST_MODULE_LOCATOR
-        )
-      )
+      .create(scoreboardController.getSubmissionsByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
       .verifyComplete();
   }
 
@@ -165,9 +157,7 @@ class ScoreboardControllerIT extends BaseIT {
   @DisplayName("Can return zero submissions for user without submissions")
   void canReturnZeroSubmissionsForUserWithoutSubmissions() {
     final String userId = integrationTestUtils.createTestUser();
-    StepVerifier
-      .create(scoreboardController.getSubmissionsByUserId(userId))
-      .verifyComplete();
+    StepVerifier.create(scoreboardController.getSubmissionsByUserId(userId)).verifyComplete();
   }
 
   @BeforeEach
@@ -177,9 +167,7 @@ class ScoreboardControllerIT extends BaseIT {
     // Bypass the rate limiter
     final Bucket mockBucket = mock(Bucket.class);
     when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
+    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
   }
 }

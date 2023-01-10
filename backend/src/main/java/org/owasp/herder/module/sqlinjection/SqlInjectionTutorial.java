@@ -54,10 +54,7 @@ public class SqlInjectionTutorial implements BaseModule {
 
   private final FlagHandler flagHandler;
 
-  public static final BiFunction<Row, RowMetadata, SqlInjectionTutorialRow> MAPPING_FUNCTION = (
-      row,
-      rowMetaData
-    ) ->
+  public static final BiFunction<Row, RowMetadata, SqlInjectionTutorialRow> MAPPING_FUNCTION = (row, rowMetaData) ->
     SqlInjectionTutorialRow
       .builder()
       .name(row.get("name", String.class))
@@ -71,21 +68,14 @@ public class SqlInjectionTutorial implements BaseModule {
    * @param injectionQuery the query to be executed
    * @return the result of the query
    */
-  public Flux<SqlInjectionTutorialRow> submitQuery(
-    final String userId,
-    final String injectionQuery
-  ) {
+  public Flux<SqlInjectionTutorialRow> submitQuery(final String userId, final String injectionQuery) {
     // Each module and user has a unique in-memory database
     final String dbName = String.format("%s-uid-%s", getName(), userId);
 
-    final DatabaseClient databaseClient = sqlInjectionDatabaseClientFactory.create(
-      dbName
-    );
+    final DatabaseClient databaseClient = sqlInjectionDatabaseClientFactory.create(dbName);
 
     // A randomly chosen "username" that contains the flag
-    final String hiddenName = Base64
-      .getEncoder()
-      .encodeToString(keyService.generateRandomBytes(16));
+    final String hiddenName = Base64.getEncoder().encodeToString(keyService.generateRandomBytes(16));
 
     // Create the SQL query used to populate the database
     final Mono<String> populationQuery =
@@ -112,10 +102,7 @@ public class SqlInjectionTutorial implements BaseModule {
     // The query to be executed on the database. Note: if a vulnerability scanner has
     // issues with this line, please ignore. This is *supposed* to be vulnerable, it's a CTF after
     // all!
-    final String vulnerableQuery = String.format(
-      "SELECT * FROM sqlinjection.users WHERE name = '%s'",
-      injectionQuery
-    );
+    final String vulnerableQuery = String.format("SELECT * FROM sqlinjection.users WHERE name = '%s'", injectionQuery);
 
     return populationQuery
       // Execute the population query on the in-memory database
@@ -133,10 +120,7 @@ public class SqlInjectionTutorial implements BaseModule {
         ) {
           return Flux.just(
             // Build a row with only the error field filled in
-            SqlInjectionTutorialRow
-              .builder()
-              .error(exception.getCause().getCause().getMessage())
-              .build()
+            SqlInjectionTutorialRow.builder().error(exception.getCause().getCause().getMessage()).build()
           );
         } else {
           // All other errors are handled in the usual way

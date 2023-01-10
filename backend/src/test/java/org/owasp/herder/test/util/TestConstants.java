@@ -55,10 +55,7 @@ public final class TestConstants {
     Long.MIN_VALUE,
   };
 
-  public static final Long[] LONGS_WITH_NULL = ArrayUtils.addAll(
-    LONGS,
-    (Long) null
-  );
+  public static final Long[] LONGS_WITH_NULL = ArrayUtils.addAll(LONGS, (Long) null);
 
   public static final LocalDateTime INITIAL_LOCALDATETIME = LocalDateTime.MIN;
 
@@ -82,18 +79,7 @@ public final class TestConstants {
     (LocalDateTime) null
   );
 
-  public static final byte[] TEST_BYTE_ARRAY = {
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-  };
+  public static final byte[] TEST_BYTE_ARRAY = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
   public static final String[] STRINGS = {
     "Test",
@@ -137,18 +123,11 @@ public final class TestConstants {
 
   public static final String INITIAL_NAME = "id";
 
-  public static final String[] NAMES = {
-    INITIAL_NAME,
-    "id-with-hyphen",
-    "abc123",
-  };
+  public static final String[] NAMES = { INITIAL_NAME, "id-with-hyphen", "abc123" };
 
   public static final String[] INVALID_NAMES = { "", null };
 
-  public static final String[] STRINGS_WITH_NULL = ArrayUtils.addAll(
-    STRINGS,
-    (String) null
-  );
+  public static final String[] STRINGS_WITH_NULL = ArrayUtils.addAll(STRINGS, (String) null);
 
   public static final String TEST_TEAM_DISPLAY_NAME = "Test Team";
 
@@ -161,8 +140,7 @@ public final class TestConstants {
   public static final String TEST_USER_PASSWORD = "test";
 
   // The password "test" hashed with BCrypt
-  public static final String HASHED_TEST_PASSWORD =
-    "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
+  public static final String HASHED_TEST_PASSWORD = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
 
   public static final String TEST_MODULE_LOCATOR = "test-module";
   public static final String TEST_MODULE_ID = "abcdef123456789012345678";
@@ -179,21 +157,11 @@ public final class TestConstants {
   public static final String VERY_LONG_STRING =
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-  public static final Clock year2000Clock = Clock.fixed(
-    Instant.parse("2000-01-01T10:00:00.00Z"),
-    ZoneId.of("Z")
-  );
-  public static final WebTokenClock year2000WebTokenClock = new WebTokenClock(
-    year2000Clock
-  );
+  public static final Clock year2000Clock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+  public static final WebTokenClock year2000WebTokenClock = new WebTokenClock(year2000Clock);
 
-  public static final Clock year2100Clock = Clock.fixed(
-    Instant.parse("2100-01-01T10:00:00.00Z"),
-    ZoneId.of("Z")
-  );
-  public static final WebTokenClock year2100WebTokenClock = new WebTokenClock(
-    year2100Clock
-  );
+  public static final Clock year2100Clock = Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+  public static final WebTokenClock year2100WebTokenClock = new WebTokenClock(year2100Clock);
 
   public static Stream<String> testStringProvider() {
     return Stream.of(STRINGS);

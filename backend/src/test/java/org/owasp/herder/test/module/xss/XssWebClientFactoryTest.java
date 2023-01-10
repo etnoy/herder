@@ -40,14 +40,12 @@ class XssWebClientFactoryTest {
 
   @Test
   void createAlertHandler_ReturnsAlertHandler() {
-    assertThat(xssWebClientFactory.createAlertHandler())
-      .isInstanceOf(CollectingAlertHandler.class);
+    assertThat(xssWebClientFactory.createAlertHandler()).isInstanceOf(CollectingAlertHandler.class);
   }
 
   @Test
   void createWebClient_ReturnsWebClient() {
-    assertThat(xssWebClientFactory.createWebClient())
-      .isInstanceOf(WebClient.class);
+    assertThat(xssWebClientFactory.createWebClient()).isInstanceOf(WebClient.class);
   }
 
   @BeforeEach

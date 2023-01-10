@@ -51,9 +51,7 @@ public class WebTokenKeyManager {
   public Key getKeyForUser(@ValidUserId final String userId) {
     if (!userToKeyMap.containsKey(userId)) {
       // No key found, generate new key for user and store it
-      throw new SignatureException(
-        "Signing key is not registred for the subject"
-      );
+      throw new SignatureException("Signing key is not registred for the subject");
     } else {
       return userToKeyMap.get(userId);
     }

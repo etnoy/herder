@@ -44,20 +44,14 @@ public class ModuleController {
   @GetMapping(path = "modules")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Mono<ModuleList> findAllByUserId() {
-    return controllerAuthentication
-      .getUserId()
-      .flatMap(moduleService::findModuleListByUserId);
+    return controllerAuthentication.getUserId().flatMap(moduleService::findModuleListByUserId);
   }
 
   @GetMapping(path = "module/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Mono<ModuleListItem> findByName(
-    @PathVariable final String moduleLocator
-  ) {
+  public Mono<ModuleListItem> findByName(@PathVariable final String moduleLocator) {
     return controllerAuthentication
       .getUserId()
-      .flatMap(userId ->
-        moduleService.findListItemByLocator(userId, moduleLocator)
-      );
+      .flatMap(userId -> moduleService.findListItemByLocator(userId, moduleLocator));
   }
 }

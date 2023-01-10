@@ -75,10 +75,7 @@ class ModuleInitializerIT extends BaseIT {
     @HerderModule("wrong-base")
     class TestModuleWrongBase {}
 
-    applicationContext.registerBean(
-      TestModuleWrongBase.class,
-      () -> new TestModuleWrongBase()
-    );
+    applicationContext.registerBean(TestModuleWrongBase.class, () -> new TestModuleWrongBase());
     assertThatThrownBy(() -> moduleInitializer.initializeModules())
       .isInstanceOf(InvalidHerderModuleTypeException.class);
   }
@@ -143,13 +140,9 @@ class ModuleInitializerIT extends BaseIT {
     class TestModuleNameCollision implements BaseModule {}
 
     applicationContext.registerBean(TestModule.class, () -> new TestModule());
-    applicationContext.registerBean(
-      TestModuleNameCollision.class,
-      () -> new TestModuleNameCollision()
-    );
+    applicationContext.registerBean(TestModuleNameCollision.class, () -> new TestModuleNameCollision());
 
-    assertThatThrownBy(() -> moduleInitializer.initializeModules())
-      .isInstanceOf(DuplicateModuleNameException.class);
+    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(DuplicateModuleNameException.class);
   }
 
   @Test
@@ -163,16 +156,10 @@ class ModuleInitializerIT extends BaseIT {
     @Tag(key = "topic", value = "production")
     class MultipleTagsWithSameName implements BaseModule {}
 
-    applicationContext.registerBean(
-      MultipleTagsWithSameName.class,
-      () -> new MultipleTagsWithSameName()
-    );
+    applicationContext.registerBean(MultipleTagsWithSameName.class, () -> new MultipleTagsWithSameName());
     moduleInitializer.initializeModules();
 
-    final String moduleId = moduleService
-      .findByLocator(moduleLocator)
-      .block()
-      .getId();
+    final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
     Multimap<String, String> expectedTags = ArrayListMultimap.create();
 
     expectedTags.put("topic", "testing");
@@ -197,16 +184,10 @@ class ModuleInitializerIT extends BaseIT {
     @Locator(moduleLocator)
     class MultipleTagsModule implements BaseModule {}
 
-    applicationContext.registerBean(
-      MultipleTagsModule.class,
-      () -> new MultipleTagsModule()
-    );
+    applicationContext.registerBean(MultipleTagsModule.class, () -> new MultipleTagsModule());
     moduleInitializer.initializeModules();
 
-    final String moduleId = moduleService
-      .findByLocator(moduleLocator)
-      .block()
-      .getId();
+    final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
 
     Multimap<String, String> expectedTags = ArrayListMultimap.create();
 
@@ -231,16 +212,10 @@ class ModuleInitializerIT extends BaseIT {
     @Tag(key = "topic", value = "testing")
     class SingleTagModule implements BaseModule {}
 
-    applicationContext.registerBean(
-      SingleTagModule.class,
-      () -> new SingleTagModule()
-    );
+    applicationContext.registerBean(SingleTagModule.class, () -> new SingleTagModule());
     moduleInitializer.initializeModules();
 
-    final String moduleId = moduleService
-      .findByLocator(moduleLocator)
-      .block()
-      .getId();
+    final String moduleId = moduleService.findByLocator(moduleLocator).block().getId();
 
     Multimap<String, String> expectedTags = ArrayListMultimap.create();
 
@@ -266,14 +241,11 @@ class ModuleInitializerIT extends BaseIT {
     integrationTestUtils.resetState();
 
     // Remove all other herder modules
-    for (final String beanName : applicationContext
-      .getBeansWithAnnotation(HerderModule.class)
-      .keySet()) {
+    for (final String beanName : applicationContext.getBeansWithAnnotation(HerderModule.class).keySet()) {
       applicationContext.removeBeanDefinition(beanName);
     }
 
     // Set up the system under test
-    moduleInitializer =
-      new ModuleInitializer(applicationContext, moduleService);
+    moduleInitializer = new ModuleInitializer(applicationContext, moduleService);
   }
 }

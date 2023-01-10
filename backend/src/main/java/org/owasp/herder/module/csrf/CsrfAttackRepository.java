@@ -26,15 +26,8 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface CsrfAttackRepository
-  extends ReactiveMongoRepository<CsrfAttack, Long> {
-  public Mono<CsrfAttack> findByPseudonymAndModuleLocator(
-    String pseudonym,
-    String moduleLocator
-  );
+public interface CsrfAttackRepository extends ReactiveMongoRepository<CsrfAttack, Long> {
+  public Mono<CsrfAttack> findByPseudonymAndModuleLocator(String pseudonym, String moduleLocator);
 
-  public Mono<Long> countByPseudonymAndModuleLocator(
-    String pseudonym,
-    String moduleLocator
-  );
+  public Mono<Long> countByPseudonymAndModuleLocator(String pseudonym, String moduleLocator);
 }

@@ -29,8 +29,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface UserRepository
-  extends ReactiveMongoRepository<UserEntity, String> {
+public interface UserRepository extends ReactiveMongoRepository<UserEntity, String> {
   public Mono<UserEntity> findByDisplayName(final String displayName);
 
   public Mono<UserEntity> findByIdAndIsDeletedFalse(final String id);

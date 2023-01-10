@@ -58,19 +58,13 @@ public class FlagController {
   @PostMapping(path = "flag/submit/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Mono<ResponseEntity<Submission>> submitFlag(
-    @PathVariable(
-      "moduleLocator"
-    ) @ValidModuleLocator final String moduleLocator,
+    @PathVariable("moduleLocator") @ValidModuleLocator final String moduleLocator,
     @RequestBody final String flag
   ) {
     return controllerAuthentication
       .getUserId()
-      .zipWith(
-        moduleService.findByLocator(moduleLocator).map(ModuleEntity::getId)
-      )
-      .flatMap(tuple ->
-        submissionService.submitFlag(tuple.getT1(), tuple.getT2(), flag)
-      )
+      .zipWith(moduleService.findByLocator(moduleLocator).map(ModuleEntity::getId))
+      .flatMap(tuple -> submissionService.submitFlag(tuple.getT1(), tuple.getT2(), flag))
       .flatMap(u ->
         refresherService
           .refreshModuleLists()
@@ -81,8 +75,7 @@ public class FlagController {
       .map(submission -> new ResponseEntity<>(submission, HttpStatus.OK))
       .onErrorResume(
         RateLimitException.class,
-        throwable ->
-          Mono.just(new ResponseEntity<>(null, HttpStatus.TOO_MANY_REQUESTS))
+        throwable -> Mono.just(new ResponseEntity<>(null, HttpStatus.TOO_MANY_REQUESTS))
       );
   }
 }

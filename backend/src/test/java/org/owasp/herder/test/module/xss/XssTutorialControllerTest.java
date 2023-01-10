@@ -60,16 +60,11 @@ class XssTutorialControllerTest extends BaseTest {
     final XssTutorialResponse xssTutorialRow = mock(XssTutorialResponse.class);
 
     final String query = "xss";
-    when(controllerAuthentication.getUserId())
-      .thenReturn(Mono.just(mockUserId));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
 
-    when(xssTutorial.submitQuery(mockUserId, query))
-      .thenReturn(Mono.just(xssTutorialRow));
+    when(xssTutorial.submitQuery(mockUserId, query)).thenReturn(Mono.just(xssTutorialRow));
 
-    StepVerifier
-      .create(xssTutorialController.search(query))
-      .expectNext(xssTutorialRow)
-      .verifyComplete();
+    StepVerifier.create(xssTutorialController.search(query)).expectNext(xssTutorialRow).verifyComplete();
 
     verify(controllerAuthentication, times(1)).getUserId();
     verify(xssTutorial, times(1)).submitQuery(mockUserId, query);
@@ -78,19 +73,14 @@ class XssTutorialControllerTest extends BaseTest {
   @Test
   void search_NotAutenticated_CallsModule() {
     final String query = "xss";
-    when(controllerAuthentication.getUserId())
-      .thenReturn(Mono.error(new NotAuthenticatedException()));
-    StepVerifier
-      .create(xssTutorialController.search(query))
-      .expectError(NotAuthenticatedException.class)
-      .verify();
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.error(new NotAuthenticatedException()));
+    StepVerifier.create(xssTutorialController.search(query)).expectError(NotAuthenticatedException.class).verify();
     verify(controllerAuthentication, times(1)).getUserId();
   }
 
   @BeforeEach
   void setup() {
     // Set up the system under test
-    xssTutorialController =
-      new XssTutorialController(xssTutorial, controllerAuthentication);
+    xssTutorialController = new XssTutorialController(xssTutorial, controllerAuthentication);
   }
 }

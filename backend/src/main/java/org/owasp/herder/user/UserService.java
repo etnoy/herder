@@ -80,16 +80,11 @@ public class UserService {
 
   private final Clock clock;
 
-  public Mono<Void> addUserToTeam(
-    @ValidUserId final String userId,
-    @ValidTeamId final String teamId
-  ) {
+  public Mono<Void> addUserToTeam(@ValidUserId final String userId, @ValidTeamId final String teamId) {
     log.debug("Adding user with id " + userId + " to team with id " + teamId);
     final Mono<UserEntity> userMono = getById(userId)
       .filter(user -> user.getTeamId() == null)
-      .switchIfEmpty(
-        Mono.error(new IllegalStateException("User already belongs to a team"))
-      );
+      .switchIfEmpty(Mono.error(new IllegalStateException("User already belongs to a team")));
 
     return Mono
       .zip(userMono, getTeamById(teamId))
@@ -111,26 +106,17 @@ public class UserService {
    * @param password the supplied password
    * @return an AuthResponse Mono that shows whether login was successful or not
    */
-  public Mono<AuthResponse> authenticate(
-    @ValidLoginName final String loginName,
-    @ValidPassword final String password
-  ) {
+  public Mono<AuthResponse> authenticate(@ValidLoginName final String loginName, @ValidPassword final String password) {
     // Initialize the encoder
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(16);
 
     final Mono<PasswordAuth> passwordAuthMono = findPasswordAuthByLoginName( // Find the password auth
       loginName
     )
-      .filter(passwordAuth ->
-        encoder.matches(password, passwordAuth.getHashedPassword())
-      )
-      .switchIfEmpty(
-        Mono.error(new BadCredentialsException("Invalid username or password"))
-      );
+      .filter(passwordAuth -> encoder.matches(password, passwordAuth.getHashedPassword()))
+      .switchIfEmpty(Mono.error(new BadCredentialsException("Invalid username or password")));
 
-    final Mono<UserEntity> userMono = passwordAuthMono
-      .map(PasswordAuth::getUserId)
-      .flatMap(this::getById);
+    final Mono<UserEntity> userMono = passwordAuthMono.map(PasswordAuth::getUserId).flatMap(this::getById);
 
     final AuthResponseBuilder authResponseBuilder = AuthResponse.builder();
 
@@ -142,8 +128,7 @@ public class UserService {
         if (suspendedUntil == null) {
           isSuspended = false;
         } else {
-          isSuspended =
-            tuple.getT2().getSuspendedUntil().isAfter(LocalDateTime.now(clock));
+          isSuspended = tuple.getT2().getSuspendedUntil().isAfter(LocalDateTime.now(clock));
         }
 
         if (!tuple.getT2().isEnabled()) {
@@ -154,10 +139,7 @@ public class UserService {
           final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
           throw new LockedException(
-            String.format(
-              "Account suspended until %s",
-              tuple.getT2().getSuspendedUntil().format(formatter)
-            )
+            String.format("Account suspended until %s", tuple.getT2().getSuspendedUntil().format(formatter))
           );
         } else {
           authResponseBuilder.displayName(tuple.getT2().getDisplayName());
@@ -203,11 +185,7 @@ public class UserService {
       .just(displayName)
       .filterWhen(this::doesNotExistByDisplayName)
       .switchIfEmpty(
-        Mono.error(
-          new DuplicateUserDisplayNameException(
-            "Display name " + displayName + " already exists"
-          )
-        )
+        Mono.error(new DuplicateUserDisplayNameException("Display name " + displayName + " already exists"))
       )
       .flatMap(u -> userRepository.save(userEntity))
       .map(UserEntity::getId);
@@ -226,12 +204,7 @@ public class UserService {
     @ValidLoginName final String loginName,
     final String passwordHash
   ) {
-    log.info(
-      "Creating new password login user with display name " +
-      displayName +
-      " and login name " +
-      loginName
-    );
+    log.info("Creating new password login user with display name " + displayName + " and login name " + loginName);
 
     final Mono<String> loginNameMono = Mono
       .just(loginName)
@@ -242,11 +215,7 @@ public class UserService {
       .just(displayName)
       .filterWhen(this::doesNotExistByDisplayName)
       .switchIfEmpty(
-        Mono.error(
-          new DuplicateUserDisplayNameException(
-            "Display name " + displayName + " already exists"
-          )
-        )
+        Mono.error(new DuplicateUserDisplayNameException("Display name " + displayName + " already exists"))
       );
 
     return Mono
@@ -260,19 +229,13 @@ public class UserService {
           .creationTime(LocalDateTime.now(clock))
           .build();
 
-        final Mono<String> userIdMono = userRepository
-          .save(userEntity)
-          .map(UserEntity::getId);
+        final Mono<String> userIdMono = userRepository.save(userEntity).map(UserEntity::getId);
 
         final PasswordAuthBuilder passwordAuthBuilder = PasswordAuth.builder();
         passwordAuthBuilder.loginName(tuple.getT2());
         passwordAuthBuilder.hashedPassword(passwordHash);
 
-        return userIdMono.delayUntil(userId ->
-          passwordAuthRepository.save(
-            passwordAuthBuilder.userId(userId).build()
-          )
-        );
+        return userIdMono.delayUntil(userId -> passwordAuthRepository.save(passwordAuthBuilder.userId(userId).build()));
       });
   }
 
@@ -289,11 +252,7 @@ public class UserService {
       .just(displayName)
       .filterWhen(this::teamDoesNotExistByDisplayName)
       .switchIfEmpty(
-        Mono.error(
-          new DuplicateTeamDisplayNameException(
-            "Team display name " + displayName + " already exists"
-          )
-        )
+        Mono.error(new DuplicateTeamDisplayNameException("Team display name " + displayName + " already exists"))
       )
       .flatMap(name ->
         teamRepository.save(
@@ -379,22 +338,12 @@ public class UserService {
       .then();
   }
 
-  private Mono<Boolean> doesNotExistByDisplayName(
-    @ValidDisplayName final String displayName
-  ) {
-    return userRepository
-      .findByDisplayName(displayName)
-      .map(u -> false)
-      .defaultIfEmpty(true);
+  private Mono<Boolean> doesNotExistByDisplayName(@ValidDisplayName final String displayName) {
+    return userRepository.findByDisplayName(displayName).map(u -> false).defaultIfEmpty(true);
   }
 
-  private Mono<Boolean> doesNotExistByLoginName(
-    @ValidLoginName final String loginName
-  ) {
-    return passwordAuthRepository
-      .findByLoginName(loginName)
-      .map(u -> false)
-      .defaultIfEmpty(true);
+  private Mono<Boolean> doesNotExistByLoginName(@ValidLoginName final String loginName) {
+    return passwordAuthRepository.findByLoginName(loginName).map(u -> false).defaultIfEmpty(true);
   }
 
   /**
@@ -419,13 +368,8 @@ public class UserService {
    * @param displayName
    * @return
    */
-  public Mono<Boolean> existsByDisplayName(
-    @ValidDisplayName final String displayName
-  ) {
-    return userRepository
-      .findByDisplayName(displayName)
-      .map(u -> true)
-      .defaultIfEmpty(false);
+  public Mono<Boolean> existsByDisplayName(@ValidDisplayName final String displayName) {
+    return userRepository.findByDisplayName(displayName).map(u -> true).defaultIfEmpty(false);
   }
 
   /**
@@ -444,13 +388,8 @@ public class UserService {
    * @param loginName
    * @return
    */
-  public Mono<Boolean> existsByLoginName(
-    @ValidLoginName final String loginName
-  ) {
-    return passwordAuthRepository
-      .findByLoginName(loginName)
-      .map(u -> true)
-      .defaultIfEmpty(false);
+  public Mono<Boolean> existsByLoginName(@ValidLoginName final String loginName) {
+    return passwordAuthRepository.findByLoginName(loginName).map(u -> true).defaultIfEmpty(false);
   }
 
   /**
@@ -535,23 +474,17 @@ public class UserService {
       .flatMap(user -> {
         final byte[] key = user.getKey();
         if (key == null) {
-          return userRepository
-            .save(user.withKey(keyService.generateRandomBytes(16)))
-            .map(UserEntity::getKey);
+          return userRepository.save(user.withKey(keyService.generateRandomBytes(16))).map(UserEntity::getKey);
         }
         return Mono.just(key);
       });
   }
 
-  public Mono<PasswordAuth> findPasswordAuthByLoginName(
-    @ValidLoginName final String loginName
-  ) {
+  public Mono<PasswordAuth> findPasswordAuthByLoginName(@ValidLoginName final String loginName) {
     return passwordAuthRepository.findByLoginName(loginName);
   }
 
-  public Mono<PasswordAuth> findPasswordAuthByUserId(
-    @ValidUserId final String userId
-  ) {
+  public Mono<PasswordAuth> findPasswordAuthByUserId(@ValidUserId final String userId) {
     return passwordAuthRepository.findByUserId(userId);
   }
 
@@ -565,12 +498,8 @@ public class UserService {
     return teamRepository.findById(teamId);
   }
 
-  public Mono<String> findUserIdByLoginName(
-    @ValidLoginName final String loginName
-  ) {
-    return passwordAuthRepository
-      .findByLoginName(loginName)
-      .map(PasswordAuth::getUserId);
+  public Mono<String> findUserIdByLoginName(@ValidLoginName final String loginName) {
+    return passwordAuthRepository.findByLoginName(loginName).map(PasswordAuth::getUserId);
   }
 
   /**
@@ -580,22 +509,13 @@ public class UserService {
    * @return the UserEntity if found. Throws a mono exception if not found
    */
   public Mono<UserEntity> getById(@ValidUserId final String userId) {
-    return findById(userId)
-      .switchIfEmpty(
-        Mono.error(
-          new UserNotFoundException("User id " + userId + " not found")
-        )
-      );
+    return findById(userId).switchIfEmpty(Mono.error(new UserNotFoundException("User id " + userId + " not found")));
   }
 
   public Mono<TeamEntity> getTeamById(@ValidTeamId final String teamId) {
     return teamRepository
       .findById(teamId)
-      .switchIfEmpty(
-        Mono.error(
-          new TeamNotFoundException("Team id " + teamId + " not found")
-        )
-      );
+      .switchIfEmpty(Mono.error(new TeamNotFoundException("Team id " + teamId + " not found")));
   }
 
   public Mono<TeamEntity> getTeamByUserId(@ValidUserId final String userId) {
@@ -616,14 +536,8 @@ public class UserService {
     webTokenKeyManager.invalidateAccessToken(userId);
   }
 
-  private Mono<String> loginNameAlreadyExists(
-    @ValidLoginName final String loginName
-  ) {
-    return Mono.error(
-      new DuplicateUserLoginNameException(
-        "Login name " + loginName + " already exists"
-      )
-    );
+  private Mono<String> loginNameAlreadyExists(@ValidLoginName final String loginName) {
+    return Mono.error(new DuplicateUserLoginNameException("Login name " + loginName + " already exists"));
   }
 
   public Mono<Void> promote(@ValidUserId final String userId) {
@@ -636,10 +550,7 @@ public class UserService {
       .then();
   }
 
-  public Mono<UserEntity> setClassId(
-    @ValidUserId final String userId,
-    @ValidClassId final String classId
-  ) {
+  public Mono<UserEntity> setClassId(@ValidUserId final String userId, @ValidClassId final String classId) {
     final Mono<String> classIdMono = Mono
       .just(classId)
       .filterWhen(classService::existsById)
@@ -654,23 +565,14 @@ public class UserService {
       .doOnSuccess(u -> kick(userId));
   }
 
-  public Mono<UserEntity> setDisplayName(
-    @ValidUserId final String userId,
-    @ValidDisplayName final String displayName
-  ) {
-    log.info(
-      "Setting display name of user id " + userId + " to " + displayName
-    );
+  public Mono<UserEntity> setDisplayName(@ValidUserId final String userId, @ValidDisplayName final String displayName) {
+    log.info("Setting display name of user id " + userId + " to " + displayName);
 
     final Mono<String> displayNameMono = Mono
       .just(displayName)
       .filterWhen(this::doesNotExistByDisplayName)
       .switchIfEmpty(
-        Mono.error(
-          new DuplicateUserDisplayNameException(
-            "Display name " + displayName + " already exists"
-          )
-        )
+        Mono.error(new DuplicateUserDisplayNameException("Display name " + displayName + " already exists"))
       );
 
     return getById(userId)
@@ -680,10 +582,7 @@ public class UserService {
   }
 
   // TODO: validate durations etc. for these functions
-  public Mono<Void> suspendUntil(
-    @ValidUserId final String userId,
-    final Duration duration
-  ) {
+  public Mono<Void> suspendUntil(@ValidUserId final String userId, final Duration duration) {
     return suspendUntil(userId, LocalDateTime.now(clock).plus(duration), null);
   }
 
@@ -692,17 +591,10 @@ public class UserService {
     final Duration duration,
     final String suspensionMessage
   ) {
-    return suspendUntil(
-      userId,
-      LocalDateTime.now(clock).plus(duration),
-      suspensionMessage
-    );
+    return suspendUntil(userId, LocalDateTime.now(clock).plus(duration), suspensionMessage);
   }
 
-  public Mono<Void> suspendUntil(
-    @ValidUserId final String userId,
-    final LocalDateTime suspensionDate
-  ) {
+  public Mono<Void> suspendUntil(@ValidUserId final String userId, final LocalDateTime suspensionDate) {
     return suspendUntil(userId, suspensionDate, null);
   }
 
@@ -712,36 +604,20 @@ public class UserService {
     final String suspensionMessage
   ) {
     if (suspensionDate.isBefore(LocalDateTime.now(clock))) {
-      return Mono.error(
-        new IllegalArgumentException("Suspension date must be in the future")
-      );
+      return Mono.error(new IllegalArgumentException("Suspension date must be in the future"));
     }
 
-    log.info(
-      "Suspending user with id " +
-      userId +
-      " until " +
-      suspensionDate.toString()
-    );
+    log.info("Suspending user with id " + userId + " until " + suspensionDate.toString());
 
     return getById(userId)
-      .map(user ->
-        user
-          .withSuspendedUntil(suspensionDate)
-          .withSuspensionMessage(suspensionMessage)
-      )
+      .map(user -> user.withSuspendedUntil(suspensionDate).withSuspensionMessage(suspensionMessage))
       .flatMap(userRepository::save)
       .doOnSuccess(u -> kick(userId))
       .then();
   }
 
-  private Mono<Boolean> teamDoesNotExistByDisplayName(
-    @ValidDisplayName final String displayName
-  ) {
-    return teamRepository
-      .findByDisplayName(displayName)
-      .map(u -> false)
-      .defaultIfEmpty(true);
+  private Mono<Boolean> teamDoesNotExistByDisplayName(@ValidDisplayName final String displayName) {
+    return teamRepository.findByDisplayName(displayName).map(u -> false).defaultIfEmpty(true);
   }
 
   /**
@@ -750,13 +626,8 @@ public class UserService {
    * @param displayName
    * @return
    */
-  public Mono<Boolean> teamExistsByDisplayName(
-    @ValidDisplayName final String displayName
-  ) {
-    return teamRepository
-      .findByDisplayName(displayName)
-      .map(u -> true)
-      .defaultIfEmpty(false);
+  public Mono<Boolean> teamExistsByDisplayName(@ValidDisplayName final String displayName) {
+    return teamRepository.findByDisplayName(displayName).map(u -> true).defaultIfEmpty(false);
   }
 
   /**

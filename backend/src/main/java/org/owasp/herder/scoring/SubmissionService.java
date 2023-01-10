@@ -62,37 +62,23 @@ public class SubmissionService {
 
   private final Clock clock;
 
-  public Flux<SanitizedRankedSubmission> findAllRankedByModuleLocator(
-    @ValidModuleLocator final String moduleLocator
-  ) {
-    return rankedSubmissionRepository
-      .findAllByModuleLocator(moduleLocator)
-      .map(this::sanitizeRankedSubmission);
+  public Flux<SanitizedRankedSubmission> findAllRankedByModuleLocator(@ValidModuleLocator final String moduleLocator) {
+    return rankedSubmissionRepository.findAllByModuleLocator(moduleLocator).map(this::sanitizeRankedSubmission);
   }
 
-  public Flux<SanitizedRankedSubmission> findAllRankedByTeamId(
-    @ValidTeamId final String teamId
-  ) {
-    return rankedSubmissionRepository
-      .findAllByTeamId(teamId)
-      .map(this::sanitizeRankedSubmission);
+  public Flux<SanitizedRankedSubmission> findAllRankedByTeamId(@ValidTeamId final String teamId) {
+    return rankedSubmissionRepository.findAllByTeamId(teamId).map(this::sanitizeRankedSubmission);
   }
 
-  public Flux<SanitizedRankedSubmission> findAllRankedByUserId(
-    @ValidUserId final String userId
-  ) {
-    return rankedSubmissionRepository
-      .findAllByUserId(userId)
-      .map(this::sanitizeRankedSubmission);
+  public Flux<SanitizedRankedSubmission> findAllRankedByUserId(@ValidUserId final String userId) {
+    return rankedSubmissionRepository.findAllByUserId(userId).map(this::sanitizeRankedSubmission);
   }
 
   public Flux<Submission> findAllSubmissions() {
     return submissionRepository.findAll();
   }
 
-  public Flux<Submission> findAllValidByUserId(
-    @ValidUserId final String userId
-  ) {
+  public Flux<Submission> findAllValidByUserId(@ValidUserId final String userId) {
     return submissionRepository.findAllByUserIdAndIsValidTrue(userId);
   }
 
@@ -100,19 +86,14 @@ public class SubmissionService {
     @ValidUserId final String userId,
     @ValidModuleName final String moduleName
   ) {
-    return submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(
-      userId,
-      moduleName
-    );
+    return submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(userId, moduleName);
   }
 
   public Flux<UnrankedScoreboardEntry> getUnrankedScoreboard() {
     return rankedSubmissionRepository.getUnrankedScoreboard();
   }
 
-  private SanitizedRankedSubmission sanitizeRankedSubmission(
-    final RankedSubmission rankedSubmission
-  ) {
+  private SanitizedRankedSubmission sanitizeRankedSubmission(final RankedSubmission rankedSubmission) {
     final SanitizedRankedSubmissionBuilder builder = SanitizedRankedSubmission.builder();
 
     if (rankedSubmission.getTeam() != null) {
@@ -163,17 +144,11 @@ public class SubmissionService {
         return submissionBuilder.isValid(isValid);
       })
       // Has this module been solved by this user? In that case, throw exception.
-      .filterWhen(u ->
-        validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleId)
-      )
+      .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleId))
       .switchIfEmpty(
         Mono.error(
           new ModuleAlreadySolvedException(
-            String.format(
-              "User %s has already finished module with id %s",
-              userId,
-              moduleId
-            )
+            String.format("User %s has already finished module with id %s", userId, moduleId)
           )
         )
       )
@@ -181,17 +156,11 @@ public class SubmissionService {
       .zipWith(moduleService.getById(moduleId))
       .filter(tuple -> tuple.getT2().isOpen())
       .switchIfEmpty(
-        Mono.error(
-          new ModuleClosedException(
-            String.format("Module %s is closed for submissions", moduleId)
-          )
-        )
+        Mono.error(new ModuleClosedException(String.format("Module %s is closed for submissions", moduleId)))
       )
       .map(tuple -> tuple.getT1().moduleId(moduleId))
       .zipWith(userService.getById(userId))
-      .map(tuple ->
-        tuple.getT1().userId(userId).teamId(tuple.getT2().getTeamId())
-      )
+      .map(tuple -> tuple.getT1().userId(userId).teamId(tuple.getT2().getTeamId()))
       .map(SubmissionBuilder::build)
       .flatMap(submissionRepository::save);
   }
@@ -200,8 +169,6 @@ public class SubmissionService {
     @ValidUserId final String userId,
     @ValidModuleName final String moduleId
   ) {
-    return submissionRepository
-      .existsByUserIdAndModuleIdAndIsValidTrue(userId, moduleId)
-      .map(exists -> !exists);
+    return submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(userId, moduleId).map(exists -> !exists);
   }
 }

@@ -39,10 +39,7 @@ public class KeyService {
 
   private final CryptoFactory cryptoFactory;
 
-  private byte[] byteGenerator(
-    final SecureRandom strongPRNG,
-    final int numberOfBytes
-  ) {
+  private byte[] byteGenerator(final SecureRandom strongPRNG, final int numberOfBytes) {
     byte[] randomBytes = new byte[numberOfBytes];
     strongPRNG.nextBytes(randomBytes);
     return randomBytes;
@@ -56,8 +53,7 @@ public class KeyService {
     return Hex.encodeHexString(bytes, true);
   }
 
-  public byte[] hexStringToBytes(final String stringFlag)
-    throws DecoderException {
+  public byte[] hexStringToBytes(final String stringFlag) throws DecoderException {
     return Hex.decodeHex(stringFlag);
   }
 

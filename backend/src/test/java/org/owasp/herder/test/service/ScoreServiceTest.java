@@ -68,13 +68,7 @@ class ScoreServiceTest extends BaseTest {
     final ScoreboardEntry mockScoreboardEntry3 = mock(ScoreboardEntry.class);
 
     when(scoreboardRepository.findAll())
-      .thenReturn(
-        Flux.just(
-          mockScoreboardEntry1,
-          mockScoreboardEntry2,
-          mockScoreboardEntry3
-        )
-      );
+      .thenReturn(Flux.just(mockScoreboardEntry1, mockScoreboardEntry2, mockScoreboardEntry3));
 
     StepVerifier
       .create(scoreboardService.getScoreboard())

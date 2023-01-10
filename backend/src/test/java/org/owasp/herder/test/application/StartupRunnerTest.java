@@ -93,13 +93,10 @@ class StartupRunnerTest extends BaseTest {
 
     when(userService.promote(mockUserId)).thenReturn(Mono.empty());
 
-    when(userService.existsByLoginName(any(String.class)))
-      .thenReturn(Mono.just(false));
-    when(userService.existsByDisplayName(any(String.class)))
-      .thenReturn(Mono.just(false));
+    when(userService.existsByLoginName(any(String.class))).thenReturn(Mono.just(false));
+    when(userService.existsByDisplayName(any(String.class))).thenReturn(Mono.just(false));
 
-    when(userService.teamExistsByDisplayName("Team 1"))
-      .thenReturn(Mono.just(true));
+    when(userService.teamExistsByDisplayName("Team 1")).thenReturn(Mono.just(true));
     when(refresherService.refreshModuleLists()).thenReturn(Mono.empty());
     when(refresherService.refreshSubmissionRanks()).thenReturn(Mono.empty());
     when(refresherService.refreshScoreboard()).thenReturn(Mono.empty());
@@ -111,13 +108,6 @@ class StartupRunnerTest extends BaseTest {
   void setup() {
     // Set up the system under test
 
-    startupRunner =
-      new StartupRunner(
-        userService,
-        moduleService,
-        submissionService,
-        refresherService,
-        flagTutorial
-      );
+    startupRunner = new StartupRunner(userService, moduleService, submissionService, refresherService, flagTutorial);
   }
 }

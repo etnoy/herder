@@ -34,18 +34,9 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = {})
-@NotNull(message = "{org.owasp.herder.ValidModuleLocator.NullMessage}") @Size(
-  min = 2,
-  message = "{org.owasp.herder.ValidModuleLocator.TooShortMessage}"
-)
-@Size(
-  max = 80,
-  message = "{org.owasp.herder.ValidModuleLocator.TooLongMessage}"
-)
-@Pattern(
-  regexp = "^[a-z0-9-]*$",
-  message = "{org.owasp.herder.ValidModuleLocator.PatternMessage}"
-)
+@NotNull(message = "{org.owasp.herder.ValidModuleLocator.NullMessage}") @Size(min = 2, message = "{org.owasp.herder.ValidModuleLocator.TooShortMessage}")
+@Size(max = 80, message = "{org.owasp.herder.ValidModuleLocator.TooLongMessage}")
+@Pattern(regexp = "^[a-z0-9-]*$", message = "{org.owasp.herder.ValidModuleLocator.PatternMessage}")
 public @interface ValidModuleLocator {
   String message() default "{org.owasp.herder.ValidModuleLocator.message}";
 

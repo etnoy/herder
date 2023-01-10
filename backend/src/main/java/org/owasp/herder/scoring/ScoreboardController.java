@@ -61,83 +61,43 @@ public class ScoreboardController {
 
   @GetMapping(path = "scoreboard/user/{userId}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<SanitizedRankedSubmission> getSubmissionsByUserId(
-    @PathVariable final String userId
-  ) {
+  public Flux<SanitizedRankedSubmission> getSubmissionsByUserId(@PathVariable final String userId) {
     try {
       return userService
         .existsById(userId)
         .filter(exists -> exists)
-        .switchIfEmpty(
-          Mono.error(
-            new UserNotFoundException("User id " + userId + " not found.")
-          )
-        )
+        .switchIfEmpty(Mono.error(new UserNotFoundException("User id " + userId + " not found.")))
         .flatMapMany(u -> submissionService.findAllRankedByUserId(userId));
     } catch (ConstraintViolationException e) {
-      return Flux.error(
-        new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Invalid user id",
-          e
-        )
-      );
+      return Flux.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user id", e));
     }
   }
 
   @GetMapping(path = "scoreboard/module/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<SanitizedRankedSubmission> getSubmissionsByModuleLocator(
-    @PathVariable final String moduleLocator
-  ) {
+  public Flux<SanitizedRankedSubmission> getSubmissionsByModuleLocator(@PathVariable final String moduleLocator) {
     try {
       return moduleService
         .existsByLocator(moduleLocator)
         .filter(exists -> exists)
-        .switchIfEmpty(
-          Mono.error(
-            new ModuleNotFoundException(
-              "No module with locator " + moduleLocator + " found."
-            )
-          )
-        )
-        .flatMapMany(u ->
-          submissionService.findAllRankedByModuleLocator(moduleLocator)
-        );
+        .switchIfEmpty(Mono.error(new ModuleNotFoundException("No module with locator " + moduleLocator + " found.")))
+        .flatMapMany(u -> submissionService.findAllRankedByModuleLocator(moduleLocator));
     } catch (ConstraintViolationException e) {
-      return Flux.error(
-        new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Invalid module locator",
-          e
-        )
-      );
+      return Flux.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid module locator", e));
     }
   }
 
   @GetMapping(path = "scoreboard/team/{teamId}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<SanitizedRankedSubmission> getSubmissionsByTeamId(
-    @PathVariable final String teamId
-  ) {
+  public Flux<SanitizedRankedSubmission> getSubmissionsByTeamId(@PathVariable final String teamId) {
     try {
       return userService
         .teamExistsById(teamId)
         .filter(exists -> exists)
-        .switchIfEmpty(
-          Mono.error(
-            new TeamNotFoundException("Team id " + teamId + " not found.")
-          )
-        )
+        .switchIfEmpty(Mono.error(new TeamNotFoundException("Team id " + teamId + " not found.")))
         .flatMapMany(u -> submissionService.findAllRankedByTeamId(teamId));
     } catch (ConstraintViolationException e) {
-      return Flux.error(
-        new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Invalid team id",
-          e
-        )
-      );
+      return Flux.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid team id", e));
     }
   }
 }

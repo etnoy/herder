@@ -68,8 +68,7 @@ class CsrfTutorialTest extends BaseTest {
 
     final String mockTarget = "abcd123";
 
-    when(csrfService.validatePseudonym(mockTarget, locator))
-      .thenReturn(Mono.just(false));
+    when(csrfService.validatePseudonym(mockTarget, locator)).thenReturn(Mono.just(false));
     when(mockModule.isFlagStatic()).thenReturn(false);
     when(mockModule.getLocator()).thenReturn(locator);
 
@@ -91,10 +90,8 @@ class CsrfTutorialTest extends BaseTest {
     final String mockTarget = "abcd123";
     final String mockAttacker = "xyz789";
 
-    when(csrfService.getPseudonym(attackerUserId, locator))
-      .thenReturn(Mono.just(mockAttacker));
-    when(csrfService.validatePseudonym(mockTarget, locator))
-      .thenReturn(Mono.just(true));
+    when(csrfService.getPseudonym(attackerUserId, locator)).thenReturn(Mono.just(mockAttacker));
+    when(csrfService.validatePseudonym(mockTarget, locator)).thenReturn(Mono.just(true));
     when(mockModule.isFlagStatic()).thenReturn(false);
     when(mockModule.getLocator()).thenReturn(locator);
     when(csrfService.attack(mockTarget, locator)).thenReturn(Mono.empty());
@@ -116,10 +113,8 @@ class CsrfTutorialTest extends BaseTest {
 
     final String pseudonym = "xyz789";
 
-    when(csrfService.getPseudonym(userId, locator))
-      .thenReturn(Mono.just(pseudonym));
-    when(csrfService.validatePseudonym(pseudonym, locator))
-      .thenReturn(Mono.just(true));
+    when(csrfService.getPseudonym(userId, locator)).thenReturn(Mono.just(pseudonym));
+    when(csrfService.validatePseudonym(pseudonym, locator)).thenReturn(Mono.just(true));
     when(mockModule.isFlagStatic()).thenReturn(false);
     when(mockModule.getLocator()).thenReturn(locator);
 
@@ -140,16 +135,13 @@ class CsrfTutorialTest extends BaseTest {
     final String mockPseudonym = "abcd123";
     final String flag = "flag";
 
-    when(csrfService.getPseudonym(mockUserId, locator))
-      .thenReturn(Mono.just(mockPseudonym));
+    when(csrfService.getPseudonym(mockUserId, locator)).thenReturn(Mono.just(mockPseudonym));
 
     when(mockModule.isFlagStatic()).thenReturn(false);
     when(mockModule.getName()).thenReturn(locator);
 
-    when(flagHandler.getDynamicFlag(mockUserId, locator))
-      .thenReturn(Mono.just(flag));
-    when(csrfService.validate(mockPseudonym, locator))
-      .thenReturn(Mono.just(true));
+    when(flagHandler.getDynamicFlag(mockUserId, locator)).thenReturn(Mono.just(flag));
+    when(csrfService.validate(mockPseudonym, locator)).thenReturn(Mono.just(true));
 
     StepVerifier
       .create(csrfTutorial.getTutorial(mockUserId))
@@ -166,11 +158,9 @@ class CsrfTutorialTest extends BaseTest {
     final String mockPseudonym = "abcd123";
     final Mono<String> flag = Mono.just("flag");
 
-    when(csrfService.getPseudonym(mockUserId, locator))
-      .thenReturn(Mono.just(mockPseudonym));
+    when(csrfService.getPseudonym(mockUserId, locator)).thenReturn(Mono.just(mockPseudonym));
     when(mockModule.isFlagStatic()).thenReturn(false);
-    when(csrfService.validate(mockPseudonym, locator))
-      .thenReturn(Mono.just(false));
+    when(csrfService.validate(mockPseudonym, locator)).thenReturn(Mono.just(false));
     when(flagHandler.getDynamicFlag(mockUserId, locator)).thenReturn(flag);
 
     StepVerifier

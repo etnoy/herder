@@ -100,11 +100,7 @@ class XssTutorialIT extends BaseIT {
 
     // Submit the flag we got from the sql injection and make sure it validates
     StepVerifier
-      .create(
-        flagMono
-          .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag))
-          .map(Submission::isValid)
-      )
+      .create(flagMono.flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag)).map(Submission::isValid))
       .expectNext(true)
       .verifyComplete();
   }
@@ -121,9 +117,7 @@ class XssTutorialIT extends BaseIT {
     StepVerifier
       .create(
         flagMono
-          .flatMap(flag ->
-            submissionService.submitFlag(userId, moduleId, flag + "wrong")
-          )
+          .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag + "wrong"))
           .map(Submission::isValid)
       )
       .expectNext(false)

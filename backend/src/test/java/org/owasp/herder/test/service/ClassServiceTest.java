@@ -53,59 +53,38 @@ class ClassServiceTest extends BaseTest {
   private ClassRepository classRepository;
 
   @Test
-  @DisplayName(
-    "count() call the count function of ClassRepository and return its same value"
-  )
+  @DisplayName("count() call the count function of ClassRepository and return its same value")
   void count_FiniteNumberOfClasses_ReturnsCount() {
     final long mockedClassCount = 156L;
 
     when(classRepository.count()).thenReturn(Mono.just(mockedClassCount));
 
-    StepVerifier
-      .create(classService.count())
-      .expectNext(mockedClassCount)
-      .verifyComplete();
+    StepVerifier.create(classService.count()).expectNext(mockedClassCount).verifyComplete();
 
     verify(classRepository, times(1)).count();
   }
 
   @Test
-  @DisplayName(
-    "create() should return DuplicateClassNameException when the given name is already taken"
-  )
+  @DisplayName("create() should return DuplicateClassNameException when the given name is already taken")
   void create_DuplicateName_ReturnsDuplicateClassNameException() {
     final String mockClassName = "TestClass";
     final ClassEntity mockClass = mock(ClassEntity.class);
 
-    when(classRepository.findByName(mockClassName))
-      .thenReturn(Mono.just(mockClass));
+    when(classRepository.findByName(mockClassName)).thenReturn(Mono.just(mockClass));
 
-    StepVerifier
-      .create(classService.create(mockClassName))
-      .expectError(DuplicateClassNameException.class)
-      .verify();
+    StepVerifier.create(classService.create(mockClassName)).expectError(DuplicateClassNameException.class).verify();
   }
 
   @Test
-  @DisplayName(
-    "create() should return IllegalArgumentException when called with an empty name"
-  )
+  @DisplayName("create() should return IllegalArgumentException when called with an empty name")
   void create_EmptyArgument_ReturnsIllegalArgumentException() {
-    StepVerifier
-      .create(classService.create(""))
-      .expectError(IllegalArgumentException.class)
-      .verify();
+    StepVerifier.create(classService.create("")).expectError(IllegalArgumentException.class).verify();
   }
 
   @Test
-  @DisplayName(
-    "create() should return NullPointerException when called with null name"
-  )
+  @DisplayName("create() should return NullPointerException when called with null name")
   void create_NullArgument_ReturnsNullPointerException() {
-    StepVerifier
-      .create(classService.create(null))
-      .expectError(NullPointerException.class)
-      .verify();
+    StepVerifier.create(classService.create(null)).expectError(NullPointerException.class).verify();
   }
 
   @Test
@@ -117,9 +96,7 @@ class ClassServiceTest extends BaseTest {
     when(classRepository.findByName(mockClassName)).thenReturn(Mono.empty());
 
     when(classRepository.save(any(ClassEntity.class)))
-      .thenAnswer(user ->
-        Mono.just(user.getArgument(0, ClassEntity.class).withId(mockClassId))
-      );
+      .thenAnswer(user -> Mono.just(user.getArgument(0, ClassEntity.class).withId(mockClassId)));
 
     StepVerifier
       .create(classService.create(mockClassName))
@@ -140,10 +117,7 @@ class ClassServiceTest extends BaseTest {
 
     when(classRepository.existsById(mockClassId)).thenReturn(Mono.just(true));
 
-    StepVerifier
-      .create(classService.existsById(mockClassId))
-      .expectNext(true)
-      .verifyComplete();
+    StepVerifier.create(classService.existsById(mockClassId)).expectNext(true).verifyComplete();
 
     verify(classRepository, times(1)).existsById(mockClassId);
   }
@@ -155,10 +129,7 @@ class ClassServiceTest extends BaseTest {
 
     when(classRepository.existsById(mockClassId)).thenReturn(Mono.just(false));
 
-    StepVerifier
-      .create(classService.existsById(mockClassId))
-      .expectNext(false)
-      .verifyComplete();
+    StepVerifier.create(classService.existsById(mockClassId)).expectNext(false).verifyComplete();
 
     verify(classRepository, times(1)).existsById(mockClassId);
   }
@@ -174,8 +145,7 @@ class ClassServiceTest extends BaseTest {
     when(classRepository.existsById(mockClassId)).thenReturn(Mono.just(true));
 
     when(mockClass.getName()).thenReturn(mockName);
-    when(classRepository.findById(mockClassId))
-      .thenReturn(Mono.just(mockClass));
+    when(classRepository.findById(mockClassId)).thenReturn(Mono.just(mockClass));
 
     StepVerifier
       .create(classService.getById(mockClassId))
@@ -188,9 +158,7 @@ class ClassServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName(
-    "Setting a class name to a name that is taken should return DuplicateClassNameException"
-  )
+  @DisplayName("Setting a class name to a name that is taken should return DuplicateClassNameException")
   void setName_DuplicateName_ReturnsDuplicateClassNameException() {
     final ClassEntity mockClass = mock(ClassEntity.class);
     final String newName = "newTestClass";
@@ -199,8 +167,7 @@ class ClassServiceTest extends BaseTest {
 
     when(classRepository.existsById(mockClassId)).thenReturn(Mono.just(true));
 
-    when(classRepository.findById(mockClassId))
-      .thenReturn(Mono.just(mockClass));
+    when(classRepository.findById(mockClassId)).thenReturn(Mono.just(mockClass));
     when(classRepository.findByName(newName)).thenReturn(Mono.just(mockClass));
 
     StepVerifier
@@ -210,9 +177,7 @@ class ClassServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName(
-    "Setting the name of a class that does not exist should return ClassIdNotFoundException"
-  )
+  @DisplayName("Setting the name of a class that does not exist should return ClassIdNotFoundException")
   void setName_NonExistentId_ReturnsClassIdNotFoundException() {
     final String newName = "newTestClass";
 
@@ -236,16 +201,14 @@ class ClassServiceTest extends BaseTest {
 
     final String mockClassId = "id";
 
-    when(classRepository.findById(mockClassId))
-      .thenReturn(Mono.just(mockClass));
+    when(classRepository.findById(mockClassId)).thenReturn(Mono.just(mockClass));
     when(classRepository.existsById(mockClassId)).thenReturn(Mono.just(true));
 
     when(classRepository.findByName(newName)).thenReturn(Mono.empty());
     when(mockClass.withName(newName)).thenReturn(mockClassWithName);
     when(mockClassWithName.getName()).thenReturn(newName);
 
-    when(classRepository.save(mockClassWithName))
-      .thenReturn(Mono.just(mockClassWithName));
+    when(classRepository.save(mockClassWithName)).thenReturn(Mono.just(mockClassWithName));
 
     StepVerifier
       .create(classService.setName(mockClassId, newName))

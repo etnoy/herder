@@ -65,8 +65,7 @@ class ScoreAdjustmentServiceTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    scoreAdjustmentService =
-      new ScoreAdjustmentService(scoreAdjustmentRepository, userService, clock);
+    scoreAdjustmentService = new ScoreAdjustmentService(scoreAdjustmentRepository, userService, clock);
   }
 
   @Test
@@ -76,26 +75,17 @@ class ScoreAdjustmentServiceTest extends BaseTest {
     final String description = "Bonus";
 
     when(scoreAdjustmentRepository.save(any(ScoreAdjustment.class)))
-      .thenAnswer(scoreAdjustment ->
-        Mono.just(scoreAdjustment.getArgument(0, ScoreAdjustment.class))
-      );
+      .thenAnswer(scoreAdjustment -> Mono.just(scoreAdjustment.getArgument(0, ScoreAdjustment.class)));
 
     setClock(TestConstants.year2000Clock);
 
     StepVerifier
-      .create(
-        scoreAdjustmentService.submitUserAdjustment(
-          mockUserId,
-          amount,
-          description
-        )
-      )
+      .create(scoreAdjustmentService.submitUserAdjustment(mockUserId, amount, description))
       .assertNext(scoreAdjustment -> {
         assertThat(scoreAdjustment.getUserIds()).contains(mockUserId);
         assertThat(scoreAdjustment.getAmount()).isEqualTo(amount);
         assertThat(scoreAdjustment.getDescription()).isEqualTo(description);
-        assertThat(scoreAdjustment.getTime())
-          .isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
+        assertThat(scoreAdjustment.getTime()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
       })
       .verifyComplete();
   }

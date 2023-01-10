@@ -100,19 +100,11 @@ class ScoreboardControllerTest extends BaseTest {
   void getScoreboardByUserId_ValidUserId_ReturnsScoreboardForUser() {
     final String mockUserId = "id";
 
-    final SanitizedRankedSubmission rankedSubmission1 = mock(
-      SanitizedRankedSubmission.class
-    );
-    final SanitizedRankedSubmission rankedSubmission2 = mock(
-      SanitizedRankedSubmission.class
-    );
+    final SanitizedRankedSubmission rankedSubmission1 = mock(SanitizedRankedSubmission.class);
+    final SanitizedRankedSubmission rankedSubmission2 = mock(SanitizedRankedSubmission.class);
 
-    final Flux<SanitizedRankedSubmission> rankedSubmissions = Flux.just(
-      rankedSubmission1,
-      rankedSubmission2
-    );
-    when(submissionService.findAllRankedByUserId(mockUserId))
-      .thenReturn(rankedSubmissions);
+    final Flux<SanitizedRankedSubmission> rankedSubmissions = Flux.just(rankedSubmission1, rankedSubmission2);
+    when(submissionService.findAllRankedByUserId(mockUserId)).thenReturn(rankedSubmissions);
     when(userService.existsById(mockUserId)).thenReturn(Mono.just(true));
 
     StepVerifier
@@ -127,12 +119,6 @@ class ScoreboardControllerTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    scoreboardController =
-      new ScoreboardController(
-        scoreboardService,
-        userService,
-        submissionService,
-        moduleService
-      );
+    scoreboardController = new ScoreboardController(scoreboardService, userService, submissionService, moduleService);
   }
 }

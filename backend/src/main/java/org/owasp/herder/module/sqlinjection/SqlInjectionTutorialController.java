@@ -42,8 +42,6 @@ public class SqlInjectionTutorialController {
   @PostMapping(path = "search")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Flux<SqlInjectionTutorialRow> search(@RequestBody final String query) {
-    return controllerAuthentication
-      .getUserId()
-      .flatMapMany(userId -> sqlInjectionTutorial.submitQuery(userId, query));
+    return controllerAuthentication.getUserId().flatMapMany(userId -> sqlInjectionTutorial.submitQuery(userId, query));
   }
 }

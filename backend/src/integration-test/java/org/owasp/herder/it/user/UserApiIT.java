@@ -150,8 +150,7 @@ class UserApiIT extends BaseIT {
           .getResponseBody()
       )
       .assertNext(user -> {
-        assertThat(user.getDisplayName())
-          .isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+        assertThat(user.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
       })
       .verifyComplete();
   }

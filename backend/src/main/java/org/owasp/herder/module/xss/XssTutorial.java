@@ -43,10 +43,7 @@ public class XssTutorial implements BaseModule {
 
   private final XssService xssService;
 
-  public Mono<XssTutorialResponse> submitQuery(
-    final String userId,
-    final String query
-  ) {
+  public Mono<XssTutorialResponse> submitQuery(final String userId, final String query) {
     final String htmlTarget = String.format(
       "<html><head><title>Alert</title></head><body><p>Result: %s</p></body></html>",
       query
@@ -57,9 +54,7 @@ public class XssTutorial implements BaseModule {
     final XssTutorialResponseBuilder xssTutorialResponseBuilder = XssTutorialResponse.builder();
 
     if (alerts.isEmpty()) {
-      xssTutorialResponseBuilder.result(
-        String.format("Sorry, found no result for %s", query)
-      );
+      xssTutorialResponseBuilder.result(String.format("Sorry, found no result for %s", query));
       return Mono.just(xssTutorialResponseBuilder.build());
     } else {
       xssTutorialResponseBuilder.alert(alerts.get(0));

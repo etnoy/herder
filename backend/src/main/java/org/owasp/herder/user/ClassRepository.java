@@ -28,8 +28,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface ClassRepository
-  extends ReactiveMongoRepository<ClassEntity, String> {
+public interface ClassRepository extends ReactiveMongoRepository<ClassEntity, String> {
   public void deleteByName(@Param("name") final String name);
 
   public Mono<ClassEntity> findByName(@Param("name") final String name);

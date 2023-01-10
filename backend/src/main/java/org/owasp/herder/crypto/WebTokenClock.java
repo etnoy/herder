@@ -36,8 +36,6 @@ public class WebTokenClock implements io.jsonwebtoken.Clock {
 
   @Override
   public Date now() {
-    return Date.from(
-      LocalDateTime.now(clock).atZone(ZoneId.systemDefault()).toInstant()
-    );
+    return Date.from(LocalDateTime.now(clock).atZone(ZoneId.systemDefault()).toInstant());
   }
 }

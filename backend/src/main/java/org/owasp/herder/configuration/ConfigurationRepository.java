@@ -27,8 +27,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface ConfigurationRepository
-  extends ReactiveMongoRepository<Configuration, String> {
+public interface ConfigurationRepository extends ReactiveMongoRepository<Configuration, String> {
   public void deleteByKey(final String key);
 
   public Mono<Boolean> existsByKey(final String key);

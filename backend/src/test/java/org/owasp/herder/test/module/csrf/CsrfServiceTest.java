@@ -74,18 +74,10 @@ class CsrfServiceTest extends BaseTest {
     final String mockTarget = "abcd123";
     final String mockModuleName = "csrf-module";
 
-    when(
-      csrfAttackRepository.findByPseudonymAndModuleLocator(
-        mockTarget,
-        mockModuleName
-      )
-    )
+    when(csrfAttackRepository.findByPseudonymAndModuleLocator(mockTarget, mockModuleName))
       .thenReturn(Mono.error(new IOException()));
 
-    StepVerifier
-      .create(csrfService.attack(mockTarget, mockModuleName))
-      .expectError(IOException.class)
-      .verify();
+    StepVerifier.create(csrfService.attack(mockTarget, mockModuleName)).expectError(IOException.class).verify();
   }
 
   private void setClock(final Clock testClock) {
@@ -98,17 +90,9 @@ class CsrfServiceTest extends BaseTest {
     final String mockTarget = "abcd123";
     final String mockModuleName = "csrf-module";
 
-    when(
-      csrfAttackRepository.findByPseudonymAndModuleLocator(
-        mockTarget,
-        mockModuleName
-      )
-    )
-      .thenReturn(Mono.empty());
+    when(csrfAttackRepository.findByPseudonymAndModuleLocator(mockTarget, mockModuleName)).thenReturn(Mono.empty());
 
-    StepVerifier
-      .create(csrfService.attack(mockTarget, mockModuleName))
-      .verifyComplete();
+    StepVerifier.create(csrfService.attack(mockTarget, mockModuleName)).verifyComplete();
   }
 
   @Test
@@ -116,36 +100,22 @@ class CsrfServiceTest extends BaseTest {
     final String mockTarget = "abcd123";
     final String mockModuleName = "csrf-module";
 
-    final Clock fixedClock = Clock.fixed(
-      Instant.parse("2000-01-01T10:00:00.00Z"),
-      ZoneId.systemDefault()
-    );
+    final Clock fixedClock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
 
     final CsrfAttack mockCsrfAttack = mock(CsrfAttack.class);
 
-    when(
-      csrfAttackRepository.findByPseudonymAndModuleLocator(
-        mockTarget,
-        mockModuleName
-      )
-    )
+    when(csrfAttackRepository.findByPseudonymAndModuleLocator(mockTarget, mockModuleName))
       .thenReturn(Mono.just(mockCsrfAttack));
 
-    when(mockCsrfAttack.withFinished(LocalDateTime.now(fixedClock)))
-      .thenReturn(mockCsrfAttack);
+    when(mockCsrfAttack.withFinished(LocalDateTime.now(fixedClock))).thenReturn(mockCsrfAttack);
 
-    when(csrfAttackRepository.save(mockCsrfAttack))
-      .thenReturn(Mono.just(mockCsrfAttack));
+    when(csrfAttackRepository.save(mockCsrfAttack)).thenReturn(Mono.just(mockCsrfAttack));
 
     setClock(fixedClock);
 
-    StepVerifier
-      .create(csrfService.attack(mockTarget, mockModuleName))
-      .verifyComplete();
+    StepVerifier.create(csrfService.attack(mockTarget, mockModuleName)).verifyComplete();
 
-    ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(
-      LocalDateTime.class
-    );
+    ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);
     verify(mockCsrfAttack).withFinished(captor.capture());
     assertThat(captor.getValue()).isEqualTo(LocalDateTime.now(fixedClock));
   }
@@ -157,13 +127,9 @@ class CsrfServiceTest extends BaseTest {
     final String mockModuleName = "csrf-module";
     final String mockFlag = "flag";
 
-    when(flagHandler.getSaltedHmac(mockUserId, mockModuleName, "csrfPseudonym"))
-      .thenReturn(Mono.just(mockFlag));
+    when(flagHandler.getSaltedHmac(mockUserId, mockModuleName, "csrfPseudonym")).thenReturn(Mono.just(mockFlag));
 
-    StepVerifier
-      .create(csrfService.getPseudonym(mockUserId, mockModuleName))
-      .expectNext(mockFlag)
-      .verifyComplete();
+    StepVerifier.create(csrfService.getPseudonym(mockUserId, mockModuleName)).expectNext(mockFlag).verifyComplete();
   }
 
   @Test
@@ -172,18 +138,10 @@ class CsrfServiceTest extends BaseTest {
     final String mockPseudonym = "abc123";
     final String mockModuleName = "csrf-module";
 
-    when(
-      csrfAttackRepository.countByPseudonymAndModuleLocator(
-        mockPseudonym,
-        mockModuleName
-      )
-    )
+    when(csrfAttackRepository.countByPseudonymAndModuleLocator(mockPseudonym, mockModuleName))
       .thenReturn(Mono.just(1L));
 
-    StepVerifier
-      .create(csrfService.validatePseudonym(mockPseudonym, mockModuleName))
-      .expectNext(true)
-      .verifyComplete();
+    StepVerifier.create(csrfService.validatePseudonym(mockPseudonym, mockModuleName)).expectNext(true).verifyComplete();
   }
 
   @Test
@@ -192,12 +150,7 @@ class CsrfServiceTest extends BaseTest {
     final String mockPseudonym = "abc123";
     final String mockModuleName = "csrf-module";
 
-    when(
-      csrfAttackRepository.countByPseudonymAndModuleLocator(
-        mockPseudonym,
-        mockModuleName
-      )
-    )
+    when(csrfAttackRepository.countByPseudonymAndModuleLocator(mockPseudonym, mockModuleName))
       .thenReturn(Mono.just(0L));
 
     StepVerifier
@@ -213,24 +166,15 @@ class CsrfServiceTest extends BaseTest {
     final String mockModuleName = "csrf-module";
     final CsrfAttack mockCsrfAttack = mock(CsrfAttack.class);
 
-    when(
-      csrfAttackRepository.findByPseudonymAndModuleLocator(
-        mockPseudonym,
-        mockModuleName
-      )
-    )
+    when(csrfAttackRepository.findByPseudonymAndModuleLocator(mockPseudonym, mockModuleName))
       .thenReturn(Mono.just(mockCsrfAttack));
 
     when(mockCsrfAttack.getFinished()).thenReturn(null);
 
-    when(csrfAttackRepository.save(any(CsrfAttack.class)))
-      .thenReturn(Mono.just(mockCsrfAttack));
+    when(csrfAttackRepository.save(any(CsrfAttack.class))).thenReturn(Mono.just(mockCsrfAttack));
     setClock(TestConstants.year2000Clock);
 
-    StepVerifier
-      .create(csrfService.validate(mockPseudonym, mockModuleName))
-      .expectNext(false)
-      .verifyComplete();
+    StepVerifier.create(csrfService.validate(mockPseudonym, mockModuleName)).expectNext(false).verifyComplete();
   }
 
   @Test
@@ -240,24 +184,15 @@ class CsrfServiceTest extends BaseTest {
     final String mockModuleName = "csrf-module";
     final CsrfAttack mockCsrfAttack = mock(CsrfAttack.class);
 
-    when(
-      csrfAttackRepository.findByPseudonymAndModuleLocator(
-        mockPseudonym,
-        mockModuleName
-      )
-    )
+    when(csrfAttackRepository.findByPseudonymAndModuleLocator(mockPseudonym, mockModuleName))
       .thenReturn(Mono.just(mockCsrfAttack));
 
     when(mockCsrfAttack.getFinished()).thenReturn(LocalDateTime.MAX);
 
-    when(csrfAttackRepository.save(any(CsrfAttack.class)))
-      .thenReturn(Mono.just(mockCsrfAttack));
+    when(csrfAttackRepository.save(any(CsrfAttack.class))).thenReturn(Mono.just(mockCsrfAttack));
 
     setClock(TestConstants.year2000Clock);
 
-    StepVerifier
-      .create(csrfService.validate(mockPseudonym, mockModuleName))
-      .expectNext(true)
-      .verifyComplete();
+    StepVerifier.create(csrfService.validate(mockPseudonym, mockModuleName)).expectNext(true).verifyComplete();
   }
 }

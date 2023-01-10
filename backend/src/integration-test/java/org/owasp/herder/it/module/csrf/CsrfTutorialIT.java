@@ -90,9 +90,7 @@ class CsrfTutorialIT extends BaseIT {
     final String userId1 = userService.create("TestUser1").block();
     final String userId2 = userService.create("TestUser2").block();
 
-    final CsrfTutorialResult tutorialResult = csrfTutorial
-      .getTutorial(userId1)
-      .block();
+    final CsrfTutorialResult tutorialResult = csrfTutorial.getTutorial(userId1).block();
 
     csrfTutorial.attack(userId2, tutorialResult.getPseudonym()).block();
 
@@ -120,9 +118,7 @@ class CsrfTutorialIT extends BaseIT {
   void getTutorial_SelfActivation_NotAllowed() {
     final String userId = userService.create("TestUser").block();
 
-    final CsrfTutorialResult tutorialResult = csrfTutorial
-      .getTutorial(userId)
-      .block();
+    final CsrfTutorialResult tutorialResult = csrfTutorial.getTutorial(userId).block();
 
     StepVerifier
       .create(csrfTutorial.attack(userId, tutorialResult.getPseudonym()))

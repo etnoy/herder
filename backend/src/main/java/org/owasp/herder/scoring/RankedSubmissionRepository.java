@@ -28,8 +28,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 
 @Repository
-public interface RankedSubmissionRepository
-  extends ReactiveMongoRepository<RankedSubmission, String> {
+public interface RankedSubmissionRepository extends ReactiveMongoRepository<RankedSubmission, String> {
   public Flux<RankedSubmission> findAllByTeamId(String teamId);
 
   public Flux<RankedSubmission> findAllByUserId(String userId);

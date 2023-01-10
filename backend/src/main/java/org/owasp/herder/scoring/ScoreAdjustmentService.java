@@ -81,12 +81,7 @@ public class ScoreAdjustmentService {
     return userService
       .getTeamById(teamId)
       .map(TeamEntity::getMembers)
-      .map(members ->
-        members
-          .stream()
-          .map(UserEntity::getId)
-          .collect(Collectors.toCollection(ArrayList::new))
-      )
+      .map(members -> members.stream().map(UserEntity::getId).collect(Collectors.toCollection(ArrayList::new)))
       .map(scoreAdjustmentBuilder::userIds)
       .map(builder -> builder.build())
       .flatMap(scoreAdjustmentRepository::save);
