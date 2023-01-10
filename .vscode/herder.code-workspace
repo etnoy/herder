@@ -21,6 +21,8 @@
 			"editor.defaultFormatter": "mwpb.java-prettier-formatter"
 		},
 		"java.compile.nullAnalysis.mode": "automatic",
-		"editor.tabSize": 2
+		"editor.tabSize": 2,
+		"editor.insertSpaces": true,
+		"prettier.printWidth": 120,
 	}
 }

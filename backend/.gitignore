@@ -3,7 +3,6 @@
 /.project
 /bin/
 /.settings/
-.settings/
 .sts4-cache/
 .gradle
 /build/
