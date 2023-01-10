@@ -53,11 +53,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - run: sh ./gradlew dependencies > .debricked-gradle-dependencies.txt
-      - uses: debricked/actions/scan@v1
-        env:
-          DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}
-
       - name: Test
         run: ./gradlew build jacocoTestReport sonarqube -x spotlessCheck
         env:
