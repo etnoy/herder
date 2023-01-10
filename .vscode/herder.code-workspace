@@ -1,28 +1,31 @@
 {
-	"folders": [
-		{
-			"path": "../backend"
-		},
-		{
-			"path": "../frontend"
-		},
-		{
-			"path": "."
-		},
-		{
-			"path": "../.github"
-		}
-	],
-	"settings": {
-		"java.configuration.updateBuildConfiguration": "automatic",
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
-		"java.format.enabled": true,
-		"[java]": {
-			"editor.defaultFormatter": "mwpb.java-prettier-formatter"
-		},
-		"java.compile.nullAnalysis.mode": "automatic",
-		"editor.tabSize": 2,
-		"editor.insertSpaces": true,
-		"prettier.printWidth": 120,
-	}
+  "folders": [
+    {
+      "path": "../backend"
+    },
+    {
+      "path": "../frontend"
+    },
+    {
+      "path": "."
+    },
+    {
+      "path": "../.github"
+    }
+  ],
+  "settings": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "java.format.enabled": true,
+    "[java]": {
+      "editor.defaultFormatter": "mwpb.java-prettier-formatter"
+    },
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "prettier.printWidth": 120,
+    "files.associations": {
+      "*.gradle": "groovy"
+    },
+    "groovyLint.fix.trigger": "onSave",
+    "groovyLint.format.useDocumentIndentSize": false
+  }
 }
