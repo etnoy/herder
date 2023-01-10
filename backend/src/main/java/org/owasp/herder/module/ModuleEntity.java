@@ -47,9 +47,11 @@ public class ModuleEntity implements Serializable {
   @Id
   private String id;
 
-  @NonNull private String name;
+  @NonNull
+  private String name;
 
-  @NonNull private String locator;
+  @NonNull
+  private String locator;
 
   @JsonProperty("isFlagStatic")
   private boolean isFlagStatic;
@@ -58,7 +60,8 @@ public class ModuleEntity implements Serializable {
   private String staticFlag;
 
   @ToString.Exclude
-  @NonNull private byte[] key;
+  @NonNull
+  private byte[] key;
 
   @JsonProperty("isOpen")
   private boolean isOpen;

@@ -239,7 +239,7 @@ class ScoreboardServiceIT extends BaseIT {
           assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
           assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
           assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isEqualTo(0L);
+          assertThat(scoreboardEntry.getScore()).isZero();
           assertThat(scoreboardEntry.getGoldMedals()).isOne();
           assertThat(scoreboardEntry.getSilverMedals()).isZero();
           assertThat(scoreboardEntry.getBronzeMedals()).isZero();

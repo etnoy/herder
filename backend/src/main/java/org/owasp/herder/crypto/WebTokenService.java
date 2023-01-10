@@ -50,6 +50,12 @@ import org.springframework.validation.annotation.Validated;
 @RequiredArgsConstructor
 public class WebTokenService {
 
+  private static final String IMPERSONATOR = "impersonator";
+
+  private static final String ADMIN = "admin";
+
+  private static final String HERDER = "herder";
+
   private final WebTokenKeyManager webTokenKeyManager;
 
   // How many seconds a JWT token should last before expiring
@@ -65,15 +71,20 @@ public class WebTokenService {
     return generateToken(userId, false);
   }
 
-  public String generateToken(@ValidUserId final String userId, final boolean isAdmin) {
+  public String generateToken(
+    @ValidUserId final String userId,
+    final boolean isAdmin
+  ) {
     final Date creationTime = webTokenClock.now();
-    final Date expirationTime = new Date(creationTime.getTime() + getExpirationTime());
+    final Date expirationTime = new Date(
+      creationTime.getTime() + getExpirationTime()
+    );
     final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(userId);
 
     String role;
 
     if (isAdmin) {
-      role = "admin";
+      role = ADMIN;
     } else {
       role = "user";
     }
@@ -81,7 +92,7 @@ public class WebTokenService {
     return Jwts
       .builder()
       .claim("role", role)
-      .setIssuer("herder")
+      .setIssuer(HERDER)
       .setSubject(userId)
       .setIssuedAt(creationTime)
       .setExpiration(expirationTime)
@@ -95,13 +106,17 @@ public class WebTokenService {
     final boolean impersonateAnAdmin
   ) {
     final Date creationTime = webTokenClock.now();
-    final Date expirationTime = new Date(creationTime.getTime() + getExpirationTime());
-    final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(impersonatorUserId);
+    final Date expirationTime = new Date(
+      creationTime.getTime() + getExpirationTime()
+    );
+    final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(
+      impersonatorUserId
+    );
 
     String role;
 
     if (impersonateAnAdmin) {
-      role = "admin";
+      role = ADMIN;
     } else {
       role = "user";
     }
@@ -109,8 +124,8 @@ public class WebTokenService {
     return Jwts
       .builder()
       .claim("role", role)
-      .claim("impersonator", impersonatorUserId)
-      .setIssuer("herder")
+      .claim(IMPERSONATOR, impersonatorUserId)
+      .setIssuer(HERDER)
       .setSubject(impersonatedUserId)
       .setIssuedAt(creationTime)
       .setExpiration(expirationTime)
@@ -118,7 +133,8 @@ public class WebTokenService {
       .compact();
   }
 
-  public Authentication parseToken(@NotNull @NotEmpty String token) throws AuthenticationException {
+  public Authentication parseToken(@NotNull @NotEmpty String token)
+    throws AuthenticationException {
     final Claims parsedClaims;
 
     try {
@@ -128,15 +144,20 @@ public class WebTokenService {
           .setSigningKeyResolver(
             new SigningKeyResolverAdapter() {
               @Override
-              public Key resolveSigningKey(@SuppressWarnings("rawtypes") JwsHeader header, Claims claims) {
+              public Key resolveSigningKey(
+                @SuppressWarnings("rawtypes") JwsHeader header,
+                Claims claims
+              ) {
                 String subjectId;
 
-                if (claims.containsKey("impersonator")) {
-                  subjectId = claims.get("impersonator", String.class);
+                if (claims.containsKey(IMPERSONATOR)) {
+                  subjectId = claims.get(IMPERSONATOR, String.class);
                 } else {
                   subjectId = claims.getSubject();
                 }
-                if (subjectId == null || subjectId.isEmpty()) throw new MissingClaimException(
+                if (
+                  subjectId == null || subjectId.isEmpty()
+                ) throw new MissingClaimException(
                   header,
                   claims,
                   "Subject is not provided in token"
@@ -145,7 +166,7 @@ public class WebTokenService {
               }
             }
           )
-          .requireIssuer("herder")
+          .requireIssuer(HERDER)
           .setClock(webTokenClock)
           .build()
           .parseClaimsJws(token)
@@ -159,7 +180,8 @@ public class WebTokenService {
     final String userId = parsedClaims.getSubject();
 
     if (userId == null || userId.isEmpty()) {
-      final String userIdErrorMessage = "Invalid userid " + userId + " found in token";
+      final String userIdErrorMessage =
+        "Invalid userid " + userId + " found in token";
 
       log.debug(userIdErrorMessage);
       throw new BadCredentialsException(userIdErrorMessage);
@@ -169,7 +191,7 @@ public class WebTokenService {
 
     ArrayList<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-    if (role.equals("admin")) {
+    if (role.equals(ADMIN)) {
       authorities.add(new SimpleGrantedAuthority(Role.ROLE_ADMIN.name()));
       authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
     } else if (role.equals("user")) {

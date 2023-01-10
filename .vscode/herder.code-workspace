@@ -26,6 +26,8 @@
       "*.gradle": "groovy"
     },
     "groovyLint.fix.trigger": "onSave",
-    "groovyLint.format.useDocumentIndentSize": false
+    "groovyLint.format.useDocumentIndentSize": false,
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true
   }
 }
