@@ -19,12 +19,3 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-import { Directive, ViewContainerRef } from '@angular/core';
-
-@Directive({
-  selector: '[appModuleUrl]',
-})
-export class ModuleDirective {
-  constructor(public viewContainerRef: ViewContainerRef) {}
-}

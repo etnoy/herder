@@ -1,6 +1,7 @@
 {
   "root": true,
   "ignorePatterns": ["projects/**/*"],
+  "plugins": ["license-header"],
   "overrides": [
     {
       "files": ["*.ts"],
@@ -19,6 +20,7 @@
         "prettier/prettier": ["error", { "endOfLine": "auto" }],
         "no-unused-vars": "off",
         "@typescript-eslint/no-unused-vars": ["error"],
+        "license-header/header": ["error", "./license-header.ts"],
         "@angular-eslint/directive-selector": [
           "error",
           {
