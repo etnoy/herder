@@ -4,5 +4,9 @@
   },
   "[groovy]": {
     "editor.defaultFormatter": "NicolasVuillamy.vscode-groovy-lint"
+  },
+  "sonarlint.connectedMode.project": {
+    "connectionId": "VSCode MF",
+    "projectKey": "etnoy_herder"
   }
 }

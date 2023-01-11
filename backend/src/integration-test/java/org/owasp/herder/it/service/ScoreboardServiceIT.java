@@ -132,6 +132,7 @@ class ScoreboardServiceIT extends BaseIT {
 
     @Test
     @DisplayName("with users with no strictly positive scores")
+    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoreboardWithNoStrictlyPositiveScores() {
       moduleService.setBaseScore(moduleId1, 100).block();
 
@@ -258,6 +259,7 @@ class ScoreboardServiceIT extends BaseIT {
 
     @Test
     @DisplayName("with teams with score adjustment remaining after user leaves team")
+    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoreboardWithTeamScoreAdjustmentRemainingAfterUserLeavingTeam() {
       moduleService.setBaseScore(moduleId1, 100).block();
 
@@ -395,6 +397,7 @@ class ScoreboardServiceIT extends BaseIT {
 
     @Test
     @DisplayName("with users with score adjustments")
+    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoreboardWithUserScoreAdjustments() {
       moduleService.setBaseScore(moduleId1, 100).block();
 
@@ -460,6 +463,7 @@ class ScoreboardServiceIT extends BaseIT {
 
     @Test
     @DisplayName("with users with zero score submissions")
+    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoreboardWithZeroScoreSubmissions() {
       Clock testClock = TestConstants.year2000Clock;
       setClock(testClock);
@@ -519,6 +523,7 @@ class ScoreboardServiceIT extends BaseIT {
 
     @Test
     @DisplayName("before any submissions are made")
+    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoresWithoutSubmissions() {
       refresherService.refreshSubmissionRanks().block();
 
@@ -567,6 +572,7 @@ class ScoreboardServiceIT extends BaseIT {
 
     @Test
     @DisplayName("with a single submission")
+    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoresWithSingleSubmissions() {
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
 
@@ -671,6 +677,7 @@ class ScoreboardServiceIT extends BaseIT {
 
     @Test
     @DisplayName("with users that have left a team")
+    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoresWithUserThatLeftTeam() {
       final String teamId = integrationTestUtils.createTestTeam();
       userService.addUserToTeam(userId1, teamId).block();

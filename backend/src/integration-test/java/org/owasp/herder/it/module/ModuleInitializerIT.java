@@ -70,10 +70,23 @@ class ModuleInitializerIT extends BaseIT {
   Map<String, Object> beans;
 
   @Test
-  @DisplayName("Can throw error if module does not extend BaseModule")
-  void canThrowErrorIfHerderModuleIsOfWrongType() {
-    @HerderModule("wrong-base")
-    class TestModuleWrongBase {}
+  @DisplayName("Can throw error if module does not implement any interface")
+  void canThrowErrorIfHerderModuleDoesNotImplementAnyInterface() {
+    @HerderModule("no-interface")
+    class TestModuleNoSuperClass {}
+
+    applicationContext.registerBean(TestModuleNoSuperClass.class, () -> new TestModuleNoSuperClass());
+    assertThatThrownBy(() -> moduleInitializer.initializeModules())
+      .isInstanceOf(InvalidHerderModuleTypeException.class);
+  }
+
+  @Test
+  @DisplayName("Can throw error if module does not implement BaseModule")
+  void canThrowErrorIfHerderModuleDoesNotImplementBaseModule() {
+    interface NotABaseModule {}
+
+    @HerderModule("wrong-interface")
+    class TestModuleWrongBase implements NotABaseModule {}
 
     applicationContext.registerBean(TestModuleWrongBase.class, () -> new TestModuleWrongBase());
     assertThatThrownBy(() -> moduleInitializer.initializeModules())
