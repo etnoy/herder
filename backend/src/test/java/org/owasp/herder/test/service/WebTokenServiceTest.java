@@ -238,6 +238,7 @@ class WebTokenServiceTest {
   }
 
   @Test
+  @java.lang.SuppressWarnings("squid:S5838")
   void parseToken_ValidAdminRoleToken_ReturnsAdminAuthority() {
     when(webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())).thenReturn(testKey);
 
@@ -263,17 +264,18 @@ class WebTokenServiceTest {
   }
 
   @Test
+  @java.lang.SuppressWarnings("squid:S5838")
   void parseToken_ValidUserRoleToken_ReturnsUserAuthority() {
     when(webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID.toString())).thenReturn(testKey);
 
     final String testToken = Jwts
-      .builder() //
-      .claim("role", "user") //
-      .setIssuer("herder") //
-      .setSubject(TestConstants.TEST_USER_ID.toString()) //
-      .setIssuedAt(TestConstants.year2000WebTokenClock.now()) //
-      .setExpiration(new Date(Long.MAX_VALUE)) //
-      .signWith(testKey) //
+      .builder()
+      .claim("role", "user")
+      .setIssuer("herder")
+      .setSubject(TestConstants.TEST_USER_ID.toString())
+      .setIssuedAt(TestConstants.year2000WebTokenClock.now())
+      .setExpiration(new Date(Long.MAX_VALUE))
+      .signWith(testKey)
       .compact();
 
     setClock(TestConstants.year2000Clock);
