@@ -66,6 +66,12 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserService {
 
+  private static final String DISPLAY_NAME_ALREADY_EXISTS = "Display name %s already exists";
+
+  private static final String LOGIN_NAME_ALREADY_EXISTS = "Login name %s already exists";
+
+  private static final String TEAM_DISPLAY_NAME_ALREADY_EXISTS = "Team display name %s already exists";
+
   private final UserRepository userRepository;
 
   private final TeamRepository teamRepository;
@@ -185,7 +191,7 @@ public class UserService {
       .just(displayName)
       .filterWhen(this::doesNotExistByDisplayName)
       .switchIfEmpty(
-        Mono.error(new DuplicateUserDisplayNameException("Display name " + displayName + " already exists"))
+        Mono.error(new DuplicateUserDisplayNameException(String.format(DISPLAY_NAME_ALREADY_EXISTS, displayName)))
       )
       .flatMap(u -> userRepository.save(userEntity))
       .map(UserEntity::getId);
@@ -215,7 +221,7 @@ public class UserService {
       .just(displayName)
       .filterWhen(this::doesNotExistByDisplayName)
       .switchIfEmpty(
-        Mono.error(new DuplicateUserDisplayNameException("Display name " + displayName + " already exists"))
+        Mono.error(new DuplicateUserDisplayNameException(String.format(DISPLAY_NAME_ALREADY_EXISTS, displayName)))
       );
 
     return Mono
@@ -252,7 +258,7 @@ public class UserService {
       .just(displayName)
       .filterWhen(this::teamDoesNotExistByDisplayName)
       .switchIfEmpty(
-        Mono.error(new DuplicateTeamDisplayNameException("Team display name " + displayName + " already exists"))
+        Mono.error(new DuplicateTeamDisplayNameException(String.format(TEAM_DISPLAY_NAME_ALREADY_EXISTS, displayName)))
       )
       .flatMap(name ->
         teamRepository.save(
@@ -537,7 +543,7 @@ public class UserService {
   }
 
   private Mono<String> loginNameAlreadyExists(@ValidLoginName final String loginName) {
-    return Mono.error(new DuplicateUserLoginNameException("Login name " + loginName + " already exists"));
+    return Mono.error(new DuplicateUserLoginNameException(String.format(LOGIN_NAME_ALREADY_EXISTS, loginName)));
   }
 
   public Mono<Void> promote(@ValidUserId final String userId) {
@@ -572,7 +578,7 @@ public class UserService {
       .just(displayName)
       .filterWhen(this::doesNotExistByDisplayName)
       .switchIfEmpty(
-        Mono.error(new DuplicateUserDisplayNameException("Display name " + displayName + " already exists"))
+        Mono.error(new DuplicateUserDisplayNameException(String.format(DISPLAY_NAME_ALREADY_EXISTS, displayName)))
       );
 
     return getById(userId)
