@@ -186,9 +186,9 @@ public class RefresherService {
 
           // Remove the current scoreboard user from the list of zero score users and teams
           principals =
-            principals.filter(principal -> {
-              return (!principal.getId().equals(principalId) || !principal.getPrincipalType().equals(principalType));
-            });
+            principals.filter(principal ->
+              !principal.getId().equals(principalId) || !principal.getPrincipalType().equals(principalType)
+            );
 
           // Add the current scoreboard entry to the scoreboard
           scoreboard.add(scoreboardEntryBuilder.build());
