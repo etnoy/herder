@@ -24,11 +24,9 @@ package org.owasp.herder.scoring;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@Repository
 public interface SubmissionRepository extends ReactiveMongoRepository<Submission, String> {
   @Aggregation({ "{$match:{'module._id':?0}}" })
   public Flux<Submission> findAllByModuleId(String moduleId);

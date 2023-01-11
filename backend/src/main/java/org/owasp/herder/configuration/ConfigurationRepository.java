@@ -23,10 +23,8 @@ package org.owasp.herder.configuration;
 
 import org.owasp.herder.model.Configuration;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
-@Repository
 public interface ConfigurationRepository extends ReactiveMongoRepository<Configuration, String> {
   public void deleteByKey(final String key);
 

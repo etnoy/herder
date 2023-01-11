@@ -83,7 +83,7 @@ public class ScoreAdjustmentService {
       .map(TeamEntity::getMembers)
       .map(members -> members.stream().map(UserEntity::getId).collect(Collectors.toCollection(ArrayList::new)))
       .map(scoreAdjustmentBuilder::userIds)
-      .map(builder -> builder.build())
+      .map(ScoreAdjustmentBuilder::build)
       .flatMap(scoreAdjustmentRepository::save);
   }
 }

@@ -25,10 +25,8 @@ import org.owasp.herder.module.ModuleList;
 import org.owasp.herder.module.ModuleListItem;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
-@Repository
 public interface ModuleListRepository extends ReactiveMongoRepository<ModuleList, String> {
   @Aggregation(
     {

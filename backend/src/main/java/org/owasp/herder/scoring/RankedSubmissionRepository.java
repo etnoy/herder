@@ -24,10 +24,8 @@ package org.owasp.herder.scoring;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 
-@Repository
 public interface RankedSubmissionRepository extends ReactiveMongoRepository<RankedSubmission, String> {
   public Flux<RankedSubmission> findAllByTeamId(String teamId);
 
