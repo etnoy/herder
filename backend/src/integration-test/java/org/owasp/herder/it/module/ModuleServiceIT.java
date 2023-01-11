@@ -91,7 +91,7 @@ class ModuleServiceIT extends BaseIT {
     @Test
     @DisplayName("for single module with tags")
     void canGetModuleWithTags() {
-      Multimap<String, String> tags = ArrayListMultimap.create();
+      ArrayListMultimap<String, String> tags = ArrayListMultimap.create();
 
       tags.put("key", "value");
       tags.put("usage", "test");

@@ -22,7 +22,6 @@
 package org.owasp.herder.module;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import java.io.Serializable;
 import lombok.Builder;
 import lombok.NonNull;
@@ -43,7 +42,7 @@ public class ModuleListItem implements Serializable {
   @NonNull String locator;
 
   @Builder.Default
-  Multimap<String, String> tags = ArrayListMultimap.create();
+  ArrayListMultimap<String, String> tags = ArrayListMultimap.create();
 
   @Builder.Default
   Boolean isSolved = false;
