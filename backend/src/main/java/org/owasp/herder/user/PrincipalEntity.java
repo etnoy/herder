@@ -41,15 +41,18 @@ public final class PrincipalEntity implements Serializable {
 
   private static final long serialVersionUID = 8843939402741609352L;
 
-  @NonNull @ValidDisplayName
+  @NonNull
+  @ValidDisplayName
   String displayName;
 
   @ValidPrincipalId
   String id;
 
-  @NonNull PrincipalType principalType;
+  @NonNull
+  PrincipalType principalType;
 
-  @NonNull LocalDateTime creationTime;
+  @NonNull
+  LocalDateTime creationTime;
 
   @Builder.Default
   HashSet<UserEntity> members = new HashSet<>();

@@ -42,13 +42,16 @@ public class ScoreAdjustment implements Serializable {
   @Id
   String id;
 
-  @NonNull ArrayList<String> userIds;
+  @NonNull
+  ArrayList<String> userIds;
 
   String teamId;
 
-  @NonNull Long amount;
+  @NonNull
+  Long amount;
 
-  @NonNull LocalDateTime time;
+  @NonNull
+  LocalDateTime time;
 
   String description;
 }

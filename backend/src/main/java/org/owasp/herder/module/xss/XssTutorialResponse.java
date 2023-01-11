@@ -34,7 +34,8 @@ public class XssTutorialResponse implements Serializable {
 
   private static final long serialVersionUID = 7515754390732953464L;
 
-  @NonNull private String result;
+  @NonNull
+  private String result;
 
   private String alert;
 }

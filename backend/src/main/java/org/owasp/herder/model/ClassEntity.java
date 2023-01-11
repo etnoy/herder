@@ -40,5 +40,6 @@ public class ClassEntity implements Serializable {
   @Id
   private Integer id;
 
-  @NonNull private String name;
+  @NonNull
+  private String name;
 }

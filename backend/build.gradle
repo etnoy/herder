@@ -173,7 +173,6 @@ spotless {
     removeUnusedImports()
     trimTrailingWhitespace()
     endWithNewline()
-    formatAnnotations()
     licenseHeaderFile "${project.rootDir}/license.template"
   }
 }

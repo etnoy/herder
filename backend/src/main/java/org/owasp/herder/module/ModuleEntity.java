@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
@@ -47,9 +47,11 @@ public class ModuleEntity implements Serializable {
   @Id
   private String id;
 
-  @NonNull private String name;
+  @NonNull
+  private String name;
 
-  @NonNull private String locator;
+  @NonNull
+  private String locator;
 
   @JsonProperty("isFlagStatic")
   private boolean isFlagStatic;
@@ -58,15 +60,17 @@ public class ModuleEntity implements Serializable {
   private String staticFlag;
 
   @ToString.Exclude
-  @NonNull private byte[] key;
+  @NonNull
+  private byte[] key;
 
   @JsonProperty("isOpen")
   private boolean isOpen;
 
   private int baseScore;
 
-  private ArrayList<Integer> bonusScores;
+  private List<Integer> bonusScores;
 
+  @java.lang.SuppressWarnings("squid:S1948")
   @Builder.Default
   private Multimap<String, String> tags = ArrayListMultimap.create();
 }

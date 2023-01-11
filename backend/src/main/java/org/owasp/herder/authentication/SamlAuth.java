@@ -40,7 +40,9 @@ public class SamlAuth implements Serializable {
   @Id
   private Integer id;
 
-  @NonNull private Integer userId;
+  @NonNull
+  private Integer userId;
 
-  @NonNull private String samlId;
+  @NonNull
+  private String samlId;
 }

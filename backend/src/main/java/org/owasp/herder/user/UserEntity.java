@@ -47,7 +47,8 @@ public final class UserEntity implements Serializable {
   @Id
   String id;
 
-  @NonNull String displayName;
+  @NonNull
+  String displayName;
 
   @ValidClassId
   String classId;
@@ -72,5 +73,6 @@ public final class UserEntity implements Serializable {
   String suspensionMessage;
 
   @ToString.Exclude
-  @NonNull byte[] key;
+  @NonNull
+  byte[] key;
 }

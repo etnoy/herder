@@ -34,20 +34,28 @@ public class UserScoreDto implements Serializable {
 
   private static final long serialVersionUID = 8494108113674100571L;
 
-  @NonNull private Long submissionId;
+  @NonNull
+  private Long submissionId;
 
-  @NonNull private String moduleName;
+  @NonNull
+  private String moduleName;
 
-  @NonNull private Long rank;
+  @NonNull
+  private Long rank;
 
-  @NonNull private Long score;
+  @NonNull
+  private Long score;
 
-  @NonNull private Long bonus;
+  @NonNull
+  private Long bonus;
 
-  @NonNull private LocalDateTime time;
+  @NonNull
+  private LocalDateTime time;
 
   @JsonProperty("isValid")
-  @NonNull private Boolean isValid;
+  @NonNull
+  private Boolean isValid;
 
-  @NonNull private String flag;
+  @NonNull
+  private String flag;
 }

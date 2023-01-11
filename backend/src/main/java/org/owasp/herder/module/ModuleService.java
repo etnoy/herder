@@ -22,7 +22,7 @@
 package org.owasp.herder.module;
 
 import com.google.common.collect.Multimap;
-import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.KeyService;
@@ -182,7 +182,7 @@ public class ModuleService {
     return getById(moduleId).map(module -> module.withBaseScore(baseScore)).flatMap(moduleRepository::save).then();
   }
 
-  public Mono<Void> setBonusScores(@ValidModuleId final String moduleId, final ArrayList<Integer> scores) {
+  public Mono<Void> setBonusScores(@ValidModuleId final String moduleId, final List<Integer> scores) {
     // TODO: validation of scores
     return getById(moduleId).map(module -> module.withBonusScores(scores)).flatMap(moduleRepository::save).then();
   }

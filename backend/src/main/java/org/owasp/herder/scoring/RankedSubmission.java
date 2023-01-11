@@ -44,13 +44,16 @@ public class RankedSubmission implements Serializable {
 
   UserEntity user;
 
-  @NonNull ModuleEntity module;
+  @NonNull
+  ModuleEntity module;
 
   TeamEntity team;
 
-  @NonNull Long rank;
+  @NonNull
+  Long rank;
 
-  @NonNull LocalDateTime time;
+  @NonNull
+  LocalDateTime time;
 
   String flag;
 

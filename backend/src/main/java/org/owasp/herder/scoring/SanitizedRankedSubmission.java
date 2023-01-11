@@ -38,26 +38,36 @@ public class SanitizedRankedSubmission implements Serializable {
 
   private static final long serialVersionUID = 1059641731788037532L;
 
-  @NonNull String id;
+  @NonNull
+  String id;
 
-  @NonNull PrincipalType principalType;
+  @NonNull
+  PrincipalType principalType;
 
-  @NonNull String displayName;
+  @NonNull
+  String displayName;
 
-  @NonNull String moduleLocator;
+  @NonNull
+  String moduleLocator;
 
-  @NonNull String moduleName;
+  @NonNull
+  String moduleName;
 
-  @NonNull Long rank;
+  @NonNull
+  Long rank;
 
-  @NonNull LocalDateTime time;
+  @NonNull
+  LocalDateTime time;
 
   @ToString.Exclude
   String flag;
 
-  @NonNull Long baseScore;
+  @NonNull
+  Long baseScore;
 
-  @NonNull Long bonusScore;
+  @NonNull
+  Long bonusScore;
 
-  @NonNull Long score;
+  @NonNull
+  Long score;
 }

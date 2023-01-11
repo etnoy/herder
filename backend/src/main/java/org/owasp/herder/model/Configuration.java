@@ -40,7 +40,9 @@ public class Configuration implements Serializable {
   @Id
   private String id;
 
-  @NonNull private String key;
+  @NonNull
+  private String key;
 
-  @NonNull private String value;
+  @NonNull
+  private String value;
 }

@@ -45,13 +45,16 @@ public class Submission implements Serializable {
   @Id
   String id;
 
-  @NonNull String userId;
+  @NonNull
+  String userId;
 
   String teamId;
 
-  @NonNull String moduleId;
+  @NonNull
+  String moduleId;
 
-  @NonNull LocalDateTime time;
+  @NonNull
+  LocalDateTime time;
 
   @JsonProperty("isValid")
   boolean isValid;

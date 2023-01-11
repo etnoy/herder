@@ -43,5 +43,6 @@ public class ModuleList implements Serializable {
 
   String teamId;
 
-  @NonNull ArrayList<ModuleListItem> modules;
+  @NonNull
+  ArrayList<ModuleListItem> modules;
 }

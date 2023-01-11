@@ -37,25 +37,34 @@ public class UnrankedScoreboardEntry implements Serializable {
 
   private static final long serialVersionUID = 902640084501001329L;
 
-  @NonNull UserEntity user;
+  @NonNull
+  UserEntity user;
 
   TeamEntity team;
 
-  @NonNull String displayName;
+  @NonNull
+  String displayName;
 
-  @NonNull Long score;
+  @NonNull
+  Long score;
 
-  @NonNull Long scoreAdjustment;
+  @NonNull
+  Long scoreAdjustment;
 
-  @NonNull Long bonusScore;
+  @NonNull
+  Long bonusScore;
 
-  @NonNull Long baseScore;
+  @NonNull
+  Long baseScore;
 
-  @NonNull Long goldMedals;
+  @NonNull
+  Long goldMedals;
 
-  @NonNull Long silverMedals;
+  @NonNull
+  Long silverMedals;
 
-  @NonNull Long bronzeMedals;
+  @NonNull
+  Long bronzeMedals;
 
   @Builder.Default
   ArrayList<ScoreAdjustment> adjustments = new ArrayList<>();

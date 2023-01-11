@@ -44,9 +44,11 @@ public final class TeamEntity implements Serializable {
   @Id
   String id;
 
-  @NonNull String displayName;
+  @NonNull
+  String displayName;
 
   LocalDateTime creationTime;
 
-  @NonNull ArrayList<UserEntity> members;
+  @NonNull
+  ArrayList<UserEntity> members;
 }

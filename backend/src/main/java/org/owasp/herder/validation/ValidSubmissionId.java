@@ -34,7 +34,8 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = {})
-@NotNull(message = "{org.owasp.herder.ValidSubmissionId.NullMessage}") @Size(min = 24, max = 24, message = "{org.owasp.herder.ValidSubmissionId.WrongLengthMessage}")
+@NotNull(message = "{org.owasp.herder.ValidSubmissionId.NullMessage}")
+@Size(min = 24, max = 24, message = "{org.owasp.herder.ValidSubmissionId.WrongLengthMessage}")
 @Pattern(regexp = "^[a-f0-9]*$", message = "{org.owasp.herder.ValidSubmissionId.PatternMessage}")
 public @interface ValidSubmissionId {
   String message() default "{org.owasp.herder.ValidSubmissionId.message}";

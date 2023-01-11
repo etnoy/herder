@@ -39,11 +39,14 @@ public final class PasswordAuth implements Serializable {
   @Id
   private String id;
 
-  @NonNull private String userId;
+  @NonNull
+  private String userId;
 
-  @NonNull private String loginName;
+  @NonNull
+  private String loginName;
 
-  @NonNull private String hashedPassword;
+  @NonNull
+  private String hashedPassword;
 
   @JsonProperty("isPasswordNonExpired")
   private boolean isPasswordNonExpired;

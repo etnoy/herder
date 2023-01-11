@@ -40,23 +40,33 @@ public class ScoreboardEntry implements Serializable {
   @Id
   String id;
 
-  @NonNull Long rank;
+  @NonNull
+  Long rank;
 
-  @NonNull String principalId;
+  @NonNull
+  String principalId;
 
-  @NonNull PrincipalType principalType;
+  @NonNull
+  PrincipalType principalType;
 
-  @NonNull String displayName;
+  @NonNull
+  String displayName;
 
-  @NonNull Long score;
+  @NonNull
+  Long score;
 
-  @NonNull Long bonusScore;
+  @NonNull
+  Long bonusScore;
 
-  @NonNull Long baseScore;
+  @NonNull
+  Long baseScore;
 
-  @NonNull Long goldMedals;
+  @NonNull
+  Long goldMedals;
 
-  @NonNull Long silverMedals;
+  @NonNull
+  Long silverMedals;
 
-  @NonNull Long bronzeMedals;
+  @NonNull
+  Long bronzeMedals;
 }

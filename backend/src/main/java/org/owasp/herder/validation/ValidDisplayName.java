@@ -33,7 +33,8 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = {})
-@NotNull(message = "{org.owasp.herder.ValidDisplayName.NullMessage}") @Size(min = 2, message = "{org.owasp.herder.ValidDisplayName.TooShortMessage}")
+@NotNull(message = "{org.owasp.herder.ValidDisplayName.NullMessage}")
+@Size(min = 2, message = "{org.owasp.herder.ValidDisplayName.TooShortMessage}")
 @Size(max = 64, message = "{org.owasp.herder.ValidDisplayName.TooLongMessage}")
 public @interface ValidDisplayName {
   String message() default "{org.owasp.herder.ValidDisplayName.message}";

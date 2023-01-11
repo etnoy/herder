@@ -22,6 +22,7 @@
 package org.owasp.herder.module;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import java.io.Serializable;
 import lombok.Builder;
 import lombok.NonNull;
@@ -35,14 +36,18 @@ public class ModuleListItem implements Serializable {
 
   private static final long serialVersionUID = -5011105798343266330L;
 
-  @NonNull String id;
+  @NonNull
+  String id;
 
-  @NonNull String name;
+  @NonNull
+  String name;
 
-  @NonNull String locator;
+  @NonNull
+  String locator;
 
+  @java.lang.SuppressWarnings("squid:S1948")
   @Builder.Default
-  ArrayListMultimap<String, String> tags = ArrayListMultimap.create();
+  Multimap<String, String> tags = ArrayListMultimap.create();
 
   @Builder.Default
   Boolean isSolved = false;
