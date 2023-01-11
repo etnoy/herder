@@ -31,6 +31,9 @@ import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.user.ModuleListRepository;
+import org.owasp.herder.validation.ValidModuleBaseScore;
+import org.owasp.herder.validation.ValidModuleBonusScore;
+import org.owasp.herder.validation.ValidModuleBonusScores;
 import org.owasp.herder.validation.ValidModuleId;
 import org.owasp.herder.validation.ValidModuleLocator;
 import org.owasp.herder.validation.ValidModuleName;
@@ -177,14 +180,21 @@ public class ModuleService {
     return getById(moduleId).map(module -> module.withOpen(true)).flatMap(moduleRepository::save);
   }
 
-  public Mono<Void> setBaseScore(@ValidModuleId final String moduleId, final int baseScore) {
-    // TODO: validation of score
-    return getById(moduleId).map(module -> module.withBaseScore(baseScore)).flatMap(moduleRepository::save).then();
+  public Mono<ModuleEntity> setBaseScore(
+    @ValidModuleId final String moduleId,
+    @ValidModuleBaseScore final int baseScore
+  ) {
+    if (baseScore < 0) {
+      return Mono.error(new IllegalArgumentException("Module base score cannot be a negative number"));
+    }
+    return getById(moduleId).map(module -> module.withBaseScore(baseScore)).flatMap(moduleRepository::save);
   }
 
-  public Mono<Void> setBonusScores(@ValidModuleId final String moduleId, final List<Integer> scores) {
-    // TODO: validation of scores
-    return getById(moduleId).map(module -> module.withBonusScores(scores)).flatMap(moduleRepository::save).then();
+  public Mono<ModuleEntity> setBonusScores(
+    @ValidModuleId final String moduleId,
+    @ValidModuleBonusScores final List<@ValidModuleBonusScore Integer> scores
+  ) {
+    return getById(moduleId).map(module -> module.withBonusScores(scores)).flatMap(moduleRepository::save);
   }
 
   public Mono<ModuleEntity> setDynamicFlag(@ValidModuleId final String moduleId) {

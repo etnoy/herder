@@ -19,13 +19,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.exception;
+package org.owasp.herder.validation;
 
-public class InvalidHerderModuleTypeException extends RuntimeException {
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import jakarta.validation.constraints.NotEmpty;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-  private static final long serialVersionUID = -3877302037908349146L;
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = {})
+@NotEmpty(message = "{org.owasp.herder.ValidModuleBonusScores.EmptyMessage}")
+public @interface ValidModuleBonusScores {
+  String message() default "{org.owasp.herder.ValidModuleBonusScores.message}";
 
-  public InvalidHerderModuleTypeException(String message) {
-    super(message);
-  }
+  Class<?>[] groups() default {};
+
+  Class<? extends Payload>[] payload() default {};
 }

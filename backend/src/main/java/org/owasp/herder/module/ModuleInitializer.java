@@ -24,6 +24,7 @@ package org.owasp.herder.module;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.ConstraintViolationException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,7 +33,6 @@ import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.exception.DuplicateModuleNameException;
-import org.owasp.herder.exception.InvalidHerderModuleTypeException;
 import org.owasp.herder.exception.ModuleInitializationException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
@@ -58,6 +58,7 @@ public final class ModuleInitializer implements ApplicationContextAware {
     Set<String> uniqueNames = new HashSet<>();
     List<BaseModule> duplicateModules = new ArrayList<>();
 
+    // Find all beans annotated with @HerderModule
     for (final Object moduleCandidate : applicationContext.getBeansWithAnnotation(HerderModule.class).values()) {
       if (moduleCandidate instanceof BaseModule baseModule) {
         final String moduleName = baseModule.getName();
@@ -66,27 +67,29 @@ public final class ModuleInitializer implements ApplicationContextAware {
           duplicateModules.add(baseModule);
         }
       } else {
-        throw new InvalidHerderModuleTypeException(
-          "Module " + moduleCandidate.toString() + " does not extend BaseModule"
+        throw new IllegalArgumentException(
+          "Herder Module " + moduleCandidate.toString() + " does not implement BaseModule"
         );
       }
     }
 
     if (!duplicateModules.isEmpty()) {
       throw new DuplicateModuleNameException(
-        "The following modules have colliding module names: " + duplicateModules.toString()
+        "The following modules have colliding names: " + duplicateModules.toString()
       );
     }
 
     for (final BaseModule module : modules) {
-      initializeModule(module).block();
+      try {
+        initializeModule(module).block();
+      } catch (ConstraintViolationException e) {
+        throw new IllegalArgumentException(e);
+      }
     }
   }
 
   public Mono<String> initializeModule(final BaseModule module) {
     final HerderModule herderModuleAnnotation = module.getClass().getAnnotation(HerderModule.class);
-
-    // TODO: check for null here
 
     final Score scoreAnnotation = module.getClass().getAnnotation(Score.class);
 
@@ -97,15 +100,16 @@ public final class ModuleInitializer implements ApplicationContextAware {
 
     final String moduleLocator = locatorAnnotation.value();
 
+    if (herderModuleAnnotation == null) {
+      throw new ModuleInitializationException("Module is missing the @HerderModule annotation");
+    }
+
     // Find the module name declared in the annotation
     final String moduleName = herderModuleAnnotation.value();
-
-    // TODO: Do sanity checks on the module name
 
     log.debug("Initializing module " + moduleName);
 
     // Find all tag annotations
-
     final Set<Tag> tagAnnotations = Set.of(module.getClass().getAnnotationsByType(Tag.class));
 
     if (Boolean.TRUE.equals(moduleService.existsByLocator(moduleLocator).block())) {
@@ -130,7 +134,8 @@ public final class ModuleInitializer implements ApplicationContextAware {
           scoreMono =
             moduleService
               .setBaseScore(moduleId, scoreAnnotation.baseScore())
-              .then(moduleService.setBonusScores(moduleId, bonusScores));
+              .then(moduleService.setBonusScores(moduleId, bonusScores))
+              .then();
         }
 
         Mono<Void> tagMono = Mono.empty();

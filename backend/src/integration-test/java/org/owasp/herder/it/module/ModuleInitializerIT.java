@@ -33,7 +33,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.exception.DuplicateModuleNameException;
-import org.owasp.herder.exception.InvalidHerderModuleTypeException;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.BaseModule;
@@ -76,8 +75,7 @@ class ModuleInitializerIT extends BaseIT {
     class TestModuleNoSuperClass {}
 
     applicationContext.registerBean(TestModuleNoSuperClass.class, () -> new TestModuleNoSuperClass());
-    assertThatThrownBy(() -> moduleInitializer.initializeModules())
-      .isInstanceOf(InvalidHerderModuleTypeException.class);
+    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -89,11 +87,76 @@ class ModuleInitializerIT extends BaseIT {
     class TestModuleWrongBase implements NotABaseModule {}
 
     applicationContext.registerBean(TestModuleWrongBase.class, () -> new TestModuleWrongBase());
-    assertThatThrownBy(() -> moduleInitializer.initializeModules())
-      .isInstanceOf(InvalidHerderModuleTypeException.class);
+    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
   }
 
   // TODO: test for invalid score configurations
+
+  @Test
+  @DisplayName("Can throw error when a Herder module registers an invalid base score")
+  void canThrowErrorIfHerderModuleHasInvalidBaseScore() {
+    final String moduleLocator = "scored-module";
+
+    @HerderModule("Invalid base score module")
+    @Locator(moduleLocator)
+    @Score(baseScore = -1)
+    class TestModuleWithInvalidBaseScore implements BaseModule {}
+
+    applicationContext.registerBean(TestModuleWithInvalidBaseScore.class, () -> new TestModuleWithInvalidBaseScore());
+
+    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  @DisplayName("Can throw error when a Herder module has an invalid gold bonus")
+  void canThrowErrorIfHerderModuleHasInvalidGoldBonus() {
+    final String moduleLocator = "scored-module";
+
+    @HerderModule("Invalid gold bonus module")
+    @Locator(moduleLocator)
+    @Score(baseScore = 100, goldBonus = -1)
+    class TestModuleWithInvalidGoldBonus implements BaseModule {}
+
+    applicationContext.registerBean(TestModuleWithInvalidGoldBonus.class, () -> new TestModuleWithInvalidGoldBonus());
+
+    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  @DisplayName("Can throw error when a Herder module has an invalid silver bonus")
+  void canThrowErrorIfHerderModuleHasInvalidSilverBonus() {
+    final String moduleLocator = "scored-module";
+
+    @HerderModule("Invalid silver bonus module")
+    @Locator(moduleLocator)
+    @Score(baseScore = 100, silverBonus = -1)
+    class TestModuleWithInvalidSilverBonus implements BaseModule {}
+
+    applicationContext.registerBean(
+      TestModuleWithInvalidSilverBonus.class,
+      () -> new TestModuleWithInvalidSilverBonus()
+    );
+
+    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  @DisplayName("Can throw error when a Herder module has an invalid bronze bonus")
+  void canThrowErrorIfHerderModuleHasInvalidBronzeBonus() {
+    final String moduleLocator = "scored-module";
+
+    @HerderModule("Invalid bronze bonus module")
+    @Locator(moduleLocator)
+    @Score(baseScore = 100, bronzeBonus = -1)
+    class TestModuleWithInvalidBronzeBonus implements BaseModule {}
+
+    applicationContext.registerBean(
+      TestModuleWithInvalidBronzeBonus.class,
+      () -> new TestModuleWithInvalidBronzeBonus()
+    );
+
+    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
+  }
 
   @Test
   @DisplayName("Can register a Herder module with scores")
@@ -103,9 +166,9 @@ class ModuleInitializerIT extends BaseIT {
     @HerderModule("Scored module")
     @Locator(moduleLocator)
     @Score(baseScore = 100, goldBonus = 50, silverBonus = 30, bronzeBonus = 10)
-    class TestModule implements BaseModule {}
+    class TestModuleWithScores implements BaseModule {}
 
-    applicationContext.registerBean(TestModule.class, () -> new TestModule());
+    applicationContext.registerBean(TestModuleWithScores.class, () -> new TestModuleWithScores());
     moduleInitializer.initializeModules();
 
     final long baseScore = 100L;
