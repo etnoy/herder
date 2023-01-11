@@ -71,14 +71,9 @@ public class WebTokenService {
     return generateToken(userId, false);
   }
 
-  public String generateToken(
-    @ValidUserId final String userId,
-    final boolean isAdmin
-  ) {
+  public String generateToken(@ValidUserId final String userId, final boolean isAdmin) {
     final Date creationTime = webTokenClock.now();
-    final Date expirationTime = new Date(
-      creationTime.getTime() + getExpirationTime()
-    );
+    final Date expirationTime = new Date(creationTime.getTime() + getExpirationTime());
     final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(userId);
 
     String role;
@@ -106,12 +101,8 @@ public class WebTokenService {
     final boolean impersonateAnAdmin
   ) {
     final Date creationTime = webTokenClock.now();
-    final Date expirationTime = new Date(
-      creationTime.getTime() + getExpirationTime()
-    );
-    final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(
-      impersonatorUserId
-    );
+    final Date expirationTime = new Date(creationTime.getTime() + getExpirationTime());
+    final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(impersonatorUserId);
 
     String role;
 
@@ -133,8 +124,7 @@ public class WebTokenService {
       .compact();
   }
 
-  public Authentication parseToken(@NotNull @NotEmpty String token)
-    throws AuthenticationException {
+  public Authentication parseToken(@NotNull @NotEmpty String token) throws AuthenticationException {
     final Claims parsedClaims;
 
     try {
@@ -144,10 +134,7 @@ public class WebTokenService {
           .setSigningKeyResolver(
             new SigningKeyResolverAdapter() {
               @Override
-              public Key resolveSigningKey(
-                @SuppressWarnings("rawtypes") JwsHeader header,
-                Claims claims
-              ) {
+              public Key resolveSigningKey(@SuppressWarnings("rawtypes") JwsHeader header, Claims claims) {
                 String subjectId;
 
                 if (claims.containsKey(IMPERSONATOR)) {
@@ -155,9 +142,7 @@ public class WebTokenService {
                 } else {
                   subjectId = claims.getSubject();
                 }
-                if (
-                  subjectId == null || subjectId.isEmpty()
-                ) throw new MissingClaimException(
+                if (subjectId == null || subjectId.isEmpty()) throw new MissingClaimException(
                   header,
                   claims,
                   "Subject is not provided in token"
@@ -180,8 +165,7 @@ public class WebTokenService {
     final String userId = parsedClaims.getSubject();
 
     if (userId == null || userId.isEmpty()) {
-      final String userIdErrorMessage =
-        "Invalid userid " + userId + " found in token";
+      final String userIdErrorMessage = "Invalid userid " + userId + " found in token";
 
       log.debug(userIdErrorMessage);
       throw new BadCredentialsException(userIdErrorMessage);

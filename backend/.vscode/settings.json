@@ -1,10 +1,8 @@
 {
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[gradle]": {
     "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle"
   },
   "[groovy]": {
     "editor.defaultFormatter": "NicolasVuillamy.vscode-groovy-lint"
-  },
-  "editor.tabSize": 2,
+  }
 }

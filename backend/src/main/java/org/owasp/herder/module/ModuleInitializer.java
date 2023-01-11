@@ -40,12 +40,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-@ConditionalOnProperty(
-  prefix = "application.runner",
-  value = "enabled",
-  havingValue = "true",
-  matchIfMissing = true
-)
+@ConditionalOnProperty(prefix = "application.runner", value = "enabled", havingValue = "true", matchIfMissing = true)
 @Slf4j
 @AllArgsConstructor
 @Service
@@ -63,9 +58,7 @@ public final class ModuleInitializer implements ApplicationContextAware {
     Set<String> uniqueNames = new HashSet<>();
     List<BaseModule> duplicateModules = new ArrayList<>();
 
-    for (final Object moduleCandidate : applicationContext
-      .getBeansWithAnnotation(HerderModule.class)
-      .values()) {
+    for (final Object moduleCandidate : applicationContext.getBeansWithAnnotation(HerderModule.class).values()) {
       if (moduleCandidate instanceof BaseModule baseModule) {
         final String moduleName = baseModule.getName();
         modules.add(baseModule);
@@ -81,8 +74,7 @@ public final class ModuleInitializer implements ApplicationContextAware {
 
     if (!duplicateModules.isEmpty()) {
       throw new DuplicateModuleNameException(
-        "The following modules have colliding module names: " +
-        duplicateModules.toString()
+        "The following modules have colliding module names: " + duplicateModules.toString()
       );
     }
 
@@ -92,23 +84,15 @@ public final class ModuleInitializer implements ApplicationContextAware {
   }
 
   public Mono<String> initializeModule(final BaseModule module) {
-    final HerderModule herderModuleAnnotation = module
-      .getClass()
-      .getAnnotation(HerderModule.class);
+    final HerderModule herderModuleAnnotation = module.getClass().getAnnotation(HerderModule.class);
 
     // TODO: check for null here
 
     final Score scoreAnnotation = module.getClass().getAnnotation(Score.class);
 
-    final Locator locatorAnnotation = module
-      .getClass()
-      .getAnnotation(Locator.class);
+    final Locator locatorAnnotation = module.getClass().getAnnotation(Locator.class);
     if (locatorAnnotation == null) {
-      return Mono.error(
-        new ModuleInitializationException(
-          "Missing @Locator on module " + module.getName()
-        )
-      );
+      return Mono.error(new ModuleInitializationException("Missing @Locator on module " + module.getName()));
     }
 
     final String moduleLocator = locatorAnnotation.value();
@@ -122,13 +106,9 @@ public final class ModuleInitializer implements ApplicationContextAware {
 
     // Find all tag annotations
 
-    final Set<Tag> tagAnnotations = Set.of(
-      module.getClass().getAnnotationsByType(Tag.class)
-    );
+    final Set<Tag> tagAnnotations = Set.of(module.getClass().getAnnotationsByType(Tag.class));
 
-    if (
-      Boolean.TRUE.equals(moduleService.existsByLocator(moduleLocator).block())
-    ) {
+    if (Boolean.TRUE.equals(moduleService.existsByLocator(moduleLocator).block())) {
       // If the module already exists in the database, do nothing.
       // This case can happen on, for instance, application restart
       return Mono.empty();

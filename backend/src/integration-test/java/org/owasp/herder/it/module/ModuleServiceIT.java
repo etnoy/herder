@@ -70,12 +70,7 @@ class ModuleServiceIT extends BaseIT {
     @DisplayName("for single module with no solutions or tags")
     void canGetModule() {
       StepVerifier
-        .create(
-          moduleService.findListItemByLocator(
-            userId,
-            TestConstants.TEST_MODULE_LOCATOR
-          )
-        )
+        .create(moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
         .expectNext(moduleListItem)
         .verifyComplete();
     }
@@ -88,12 +83,7 @@ class ModuleServiceIT extends BaseIT {
       submissionService.submitFlag(userId, moduleId, "invalidflag2").block();
 
       StepVerifier
-        .create(
-          moduleService.findListItemByLocator(
-            userId,
-            TestConstants.TEST_MODULE_LOCATOR
-          )
-        )
+        .create(moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
         .expectNext(moduleListItem)
         .verifyComplete();
     }
@@ -112,12 +102,7 @@ class ModuleServiceIT extends BaseIT {
       refresherService.refreshModuleLists().block();
 
       StepVerifier
-        .create(
-          moduleService.findListItemByLocator(
-            userId,
-            TestConstants.TEST_MODULE_LOCATOR
-          )
-        )
+        .create(moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
         .expectNext(moduleListItem.withTags(tags))
         .verifyComplete();
     }
@@ -130,12 +115,7 @@ class ModuleServiceIT extends BaseIT {
       refresherService.refreshModuleLists().block();
 
       StepVerifier
-        .create(
-          moduleService.findListItemByLocator(
-            userId,
-            TestConstants.TEST_MODULE_LOCATOR
-          )
-        )
+        .create(moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
         .expectNext(moduleListItem.withIsSolved(true))
         .verifyComplete();
     }
@@ -204,10 +184,7 @@ class ModuleServiceIT extends BaseIT {
     @DisplayName("for user with no module solutions or tags")
     void canListModule() {
       refresherService.refreshModuleLists().block();
-      StepVerifier
-        .create(moduleService.findModuleListByUserId(userId))
-        .expectNext(moduleList)
-        .verifyComplete();
+      StepVerifier.create(moduleService.findModuleListByUserId(userId)).expectNext(moduleList).verifyComplete();
     }
 
     @Test
@@ -218,10 +195,7 @@ class ModuleServiceIT extends BaseIT {
 
       refresherService.refreshModuleLists().block();
 
-      StepVerifier
-        .create(moduleService.findModuleListByUserId(userId))
-        .expectNext(moduleList)
-        .verifyComplete();
+      StepVerifier.create(moduleService.findModuleListByUserId(userId)).expectNext(moduleList).verifyComplete();
     }
 
     @Test
@@ -239,9 +213,7 @@ class ModuleServiceIT extends BaseIT {
 
       StepVerifier
         .create(moduleService.findModuleListByUserId(userId))
-        .assertNext(moduleList ->
-          assertThat(moduleList.getModules().get(0).getTags()).isEqualTo(tags)
-        )
+        .assertNext(moduleList -> assertThat(moduleList.getModules().get(0).getTags()).isEqualTo(tags))
         .verifyComplete();
     }
 
@@ -280,11 +252,7 @@ class ModuleServiceIT extends BaseIT {
         .create(moduleService.findModuleListByUserId(userId))
         .assertNext(moduleList ->
           assertThat(moduleList.getModules())
-            .containsExactlyInAnyOrder(
-              moduleListItem1,
-              moduleListItem2,
-              moduleListItem3
-            )
+            .containsExactlyInAnyOrder(moduleListItem1, moduleListItem2, moduleListItem3)
         )
         .verifyComplete();
     }
@@ -298,9 +266,7 @@ class ModuleServiceIT extends BaseIT {
 
       StepVerifier
         .create(moduleService.findModuleListByUserId(userId))
-        .assertNext(moduleList ->
-          assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
-        )
+        .assertNext(moduleList -> assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue())
         .verifyComplete();
     }
 
@@ -320,9 +286,7 @@ class ModuleServiceIT extends BaseIT {
 
       StepVerifier
         .create(moduleService.findModuleListByUserId(userId2))
-        .assertNext(moduleList ->
-          assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
-        )
+        .assertNext(moduleList -> assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue())
         .verifyComplete();
     }
 
@@ -339,9 +303,7 @@ class ModuleServiceIT extends BaseIT {
 
       StepVerifier
         .create(moduleService.findModuleListByTeamId(teamId))
-        .assertNext(moduleList ->
-          assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue()
-        )
+        .assertNext(moduleList -> assertThat(moduleList.getModules().get(0).getIsSolved()).isTrue())
         .verifyComplete();
     }
 
@@ -360,11 +322,7 @@ class ModuleServiceIT extends BaseIT {
         .build();
 
       moduleList =
-        ModuleList
-          .builder()
-          .id(userId)
-          .modules(new ArrayList<ModuleListItem>(List.of(moduleListItem)))
-          .build();
+        ModuleList.builder().id(userId).modules(new ArrayList<ModuleListItem>(List.of(moduleListItem))).build();
     }
   }
 
@@ -393,28 +351,18 @@ class ModuleServiceIT extends BaseIT {
   SubmissionService submissionService;
 
   @Test
-  @DisplayName(
-    "Can throw DuplicateModuleLocatorException when module locator isn't unique"
-  )
+  @DisplayName("Can throw DuplicateModuleLocatorException when module locator isn't unique")
   void canReturnDuplicateModuleLocatorException() {
-    moduleService
-      .create("First module", TestConstants.TEST_MODULE_LOCATOR)
-      .block();
+    moduleService.create("First module", TestConstants.TEST_MODULE_LOCATOR).block();
     StepVerifier
-      .create(
-        moduleService.create("Second module", TestConstants.TEST_MODULE_LOCATOR)
-      )
+      .create(moduleService.create("Second module", TestConstants.TEST_MODULE_LOCATOR))
       .expectError(DuplicateModuleLocatorException.class)
       .verify();
   }
 
   @ParameterizedTest
-  @MethodSource(
-    "org.owasp.herder.test.util.TestConstants#validModuleNameProvider"
-  )
-  @DisplayName(
-    "Can throw DuplicateModuleNameException when module name isn't unique"
-  )
+  @MethodSource("org.owasp.herder.test.util.TestConstants#validModuleNameProvider")
+  @DisplayName("Can throw DuplicateModuleNameException when module name isn't unique")
   void canReturnDuplicateModuleNameException(final String moduleName) {
     moduleService.create(moduleName, "first-module").block();
     StepVerifier
@@ -424,14 +372,10 @@ class ModuleServiceIT extends BaseIT {
   }
 
   @ParameterizedTest
-  @MethodSource(
-    "org.owasp.herder.test.util.TestConstants#validModuleNameProvider"
-  )
+  @MethodSource("org.owasp.herder.test.util.TestConstants#validModuleNameProvider")
   @DisplayName("Can create a module with valid name")
   void create_FreshModule_Success(final String moduleName) {
-    final String moduleId = moduleService
-      .create(moduleName, TestConstants.TEST_MODULE_LOCATOR)
-      .block();
+    final String moduleId = moduleService.create(moduleName, TestConstants.TEST_MODULE_LOCATOR).block();
     StepVerifier
       .create(moduleRepository.findById(moduleId))
       .expectNextMatches(module -> module.getName().equals(moduleName))
@@ -445,9 +389,7 @@ class ModuleServiceIT extends BaseIT {
     // Bypass the rate limiter
     final Bucket mockBucket = mock(Bucket.class);
     when(mockBucket.tryConsume(1)).thenReturn(true);
-    when(flagSubmissionRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(any(String.class)))
-      .thenReturn(mockBucket);
+    when(flagSubmissionRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
+    when(invalidFlagRateLimiter.resolveBucket(any(String.class))).thenReturn(mockBucket);
   }
 }
