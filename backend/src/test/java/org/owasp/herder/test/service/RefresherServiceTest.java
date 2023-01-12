@@ -86,6 +86,8 @@ class RefresherServiceTest extends BaseTest {
 
   int testUserIndex;
 
+  UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder;
+
   @BeforeEach
   void setup() {
     // Set up the system under test
@@ -100,6 +102,16 @@ class RefresherServiceTest extends BaseTest {
       );
 
     testUserIndex = 1;
+
+    unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
+
+    unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
+    unrankedScoreboardEntryBuilder.score(0L);
+    unrankedScoreboardEntryBuilder.baseScore(0L);
+    unrankedScoreboardEntryBuilder.bonusScore(0L);
+    unrankedScoreboardEntryBuilder.goldMedals(0L);
+    unrankedScoreboardEntryBuilder.silverMedals(0L);
+    unrankedScoreboardEntryBuilder.bronzeMedals(0L);
   }
 
   private PrincipalEntity createPrincipalEntityFromUser(final UserEntity userEntity) {
@@ -129,14 +141,11 @@ class RefresherServiceTest extends BaseTest {
     final UserEntity testUser2 = createTestUser();
     final UserEntity testUser3 = createTestUser();
 
-    final UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
-
     unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
     unrankedScoreboardEntryBuilder.user(testUser1);
     unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
     unrankedScoreboardEntryBuilder.score(10L);
     unrankedScoreboardEntryBuilder.baseScore(10L);
-    unrankedScoreboardEntryBuilder.bonusScore(0L);
     unrankedScoreboardEntryBuilder.goldMedals(10L);
     unrankedScoreboardEntryBuilder.silverMedals(10L);
     unrankedScoreboardEntryBuilder.bronzeMedals(10L);
@@ -193,17 +202,12 @@ class RefresherServiceTest extends BaseTest {
       final UserEntity testUser3 = createTestUser();
       final UserEntity testUser4 = createTestUser();
 
-      final UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
-
       unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
       unrankedScoreboardEntryBuilder.user(testUser1);
       unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
       unrankedScoreboardEntryBuilder.score(1000L);
       unrankedScoreboardEntryBuilder.baseScore(1000L);
-      unrankedScoreboardEntryBuilder.bonusScore(0L);
-      unrankedScoreboardEntryBuilder.goldMedals(0L);
-      unrankedScoreboardEntryBuilder.silverMedals(0L);
-      unrankedScoreboardEntryBuilder.bronzeMedals(0L);
+
       final UnrankedScoreboardEntry unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
 
       unrankedScoreboardEntryBuilder.user(testUser2);
@@ -239,22 +243,17 @@ class RefresherServiceTest extends BaseTest {
 
     @Test
     @DisplayName("Can produce a scoreboard with users scoring positive, zero, and negative scores")
-    void refreshScoreboard_PositiveZeroAndNegativeScoresd_CreatesScoreboard() {
+    void refreshScoreboard_PositiveZeroAndNegativeScores_CreatesScoreboard() {
       final UserEntity testUser1 = createTestUser();
       final UserEntity testUser2 = createTestUser();
       final UserEntity testUser3 = createTestUser();
-
-      final UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
 
       unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
       unrankedScoreboardEntryBuilder.user(testUser1);
       unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
       unrankedScoreboardEntryBuilder.score(1000L);
       unrankedScoreboardEntryBuilder.baseScore(1000L);
-      unrankedScoreboardEntryBuilder.bonusScore(0L);
-      unrankedScoreboardEntryBuilder.goldMedals(0L);
-      unrankedScoreboardEntryBuilder.silverMedals(0L);
-      unrankedScoreboardEntryBuilder.bronzeMedals(0L);
+
       final UnrankedScoreboardEntry unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
 
       unrankedScoreboardEntryBuilder.user(testUser2);
@@ -326,6 +325,79 @@ class RefresherServiceTest extends BaseTest {
       assertThat(computedScoreboard)
         .extracting(ScoreboardEntry::getPrincipalId)
         .containsExactly(testUser1.getId(), testUser2.getId());
+    }
+
+    @Nested
+    @DisplayName("Can produce a scoreboard with two users that differ only by")
+    class tiebreakWithMedals {
+
+      UnrankedScoreboardEntry unrankedScoreboardEntry2;
+
+      UserEntity testUser1;
+      UserEntity testUser2;
+
+      @BeforeEach
+      void setup() {
+        testUser1 = createTestUser();
+        testUser2 = createTestUser();
+
+        when(userService.findAllPrincipals())
+          .thenReturn(Flux.just(testUser1, testUser2).map(u -> createPrincipalEntityFromUser(u)));
+
+        unrankedScoreboardEntryBuilder.user(testUser2);
+        unrankedScoreboardEntryBuilder.displayName(testUser2.getDisplayName());
+
+        unrankedScoreboardEntry2 = unrankedScoreboardEntryBuilder.build();
+
+        unrankedScoreboardEntryBuilder.user(testUser1);
+        unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
+      }
+
+      private void testScoreboard() {
+        StepVerifier.create(refresherService.refreshScoreboard()).verifyComplete();
+
+        verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
+        ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
+
+        assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L);
+
+        assertThat(computedScoreboard)
+          .extracting(ScoreboardEntry::getPrincipalId)
+          .containsExactly(testUser1.getId(), testUser2.getId());
+      }
+
+      @Test
+      @DisplayName("gold medals")
+      void refreshScoreboard_TwoUsersDifferingGoldMedals_CreatesScoreboard() {
+        unrankedScoreboardEntryBuilder.goldMedals(1L);
+
+        when(rankedSubmissionRepository.getUnrankedScoreboard())
+          .thenReturn(Flux.just(unrankedScoreboardEntryBuilder.build(), unrankedScoreboardEntry2));
+
+        testScoreboard();
+      }
+
+      @Test
+      @DisplayName("bronze medals")
+      void refreshScoreboard_TwoUsersDifferingSilverMedals_CreatesScoreboard() {
+        unrankedScoreboardEntryBuilder.silverMedals(1L);
+
+        when(rankedSubmissionRepository.getUnrankedScoreboard())
+          .thenReturn(Flux.just(unrankedScoreboardEntryBuilder.build(), unrankedScoreboardEntry2));
+
+        testScoreboard();
+      }
+
+      @Test
+      @DisplayName("bronze medals")
+      void refreshScoreboard_TwoUsersDifferingBronzeMedals_CreatesScoreboard() {
+        unrankedScoreboardEntryBuilder.bronzeMedals(1L);
+
+        when(rankedSubmissionRepository.getUnrankedScoreboard())
+          .thenReturn(Flux.just(unrankedScoreboardEntryBuilder.build(), unrankedScoreboardEntry2));
+
+        testScoreboard();
+      }
     }
 
     @Test
