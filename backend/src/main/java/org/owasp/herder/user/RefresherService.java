@@ -26,7 +26,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.scoring.PrincipalType;
 import org.owasp.herder.scoring.RankedSubmissionRepository;
@@ -62,6 +65,151 @@ public class RefresherService {
 
   private final UserRepository userRepository;
 
+  @NoArgsConstructor
+  private final class ScoreboardEntryState {
+
+    long currentScore = 0;
+    long currentGoldMedals = 0;
+    long currentSilverMedals = 0;
+    long currentBronzeMedals = 0;
+    long currentRank = 1L;
+    long entryRank = 1L;
+
+    // The rank given to all users and teams without submissions
+    long zeroScoreRank = 0;
+
+    // At what position to insert all zero score users and teams
+    @Getter
+    long zeroScorePosition = 0;
+
+    boolean negativeScoresFound = false;
+
+    Long entryScore;
+    Long entryGoldMedals;
+    Long entrySilverMedals;
+    Long entryBronzeMedals;
+
+    @Setter
+    Long idleUserCount;
+
+    public void readFirstScoreboardEntry(final UnrankedScoreboardEntry firstEntry) {
+      currentScore = firstEntry.getScore();
+      currentGoldMedals = firstEntry.getGoldMedals();
+      currentSilverMedals = firstEntry.getSilverMedals();
+      currentBronzeMedals = firstEntry.getBronzeMedals();
+    }
+
+    private boolean isCurrentlyZero() {
+      return currentScore == 0 && currentGoldMedals == 0 && currentSilverMedals == 0 && currentBronzeMedals == 0;
+    }
+
+    public ScoreboardEntry processCurrentEntry(UnrankedScoreboardEntry currentEntry) {
+      entryScore = currentEntry.getScore();
+      entryGoldMedals = currentEntry.getGoldMedals();
+      entrySilverMedals = currentEntry.getSilverMedals();
+      entryBronzeMedals = currentEntry.getBronzeMedals();
+
+      // Check if the current score is below zero for the first time
+      if (!negativeScoresFound && (entryScore < 0)) {
+        negativeScoresFound = true;
+        if (isCurrentlyZero()) {
+          // Set the rank of all zero score users and teams to the current rank
+          zeroScoreRank = entryRank;
+        } else {
+          zeroScoreRank = currentRank;
+        }
+        zeroScorePosition = currentRank;
+
+        currentScore = 0;
+        currentGoldMedals = 0;
+        currentSilverMedals = 0;
+        currentBronzeMedals = 0;
+
+        // Increment the rank counter with the number of zero score users and teams
+        currentRank += idleUserCount;
+      }
+
+      // Compare current score and medals with previous entry
+      if (
+        !entryScore.equals(currentScore) ||
+        (!entryGoldMedals.equals(currentGoldMedals)) ||
+        (!entrySilverMedals.equals(currentSilverMedals)) ||
+        (!entryBronzeMedals.equals(currentBronzeMedals))
+      ) {
+        // Only advance the entry rank if score and medal count differs from previous
+        // entry
+        entryRank = currentRank;
+      }
+
+      // Construct the current scoreboard entry
+      final ScoreboardEntryBuilder scoreboardEntryBuilder = ScoreboardEntry.builder();
+
+      String principalId;
+      PrincipalType principalType;
+
+      if (currentEntry.getTeam() != null) {
+        principalId = currentEntry.getTeam().getId();
+        principalType = PrincipalType.TEAM;
+        scoreboardEntryBuilder.displayName(currentEntry.getTeam().getDisplayName());
+      } else {
+        principalId = currentEntry.getUser().getId();
+        principalType = PrincipalType.USER;
+        scoreboardEntryBuilder.displayName(currentEntry.getUser().getDisplayName());
+      }
+      scoreboardEntryBuilder.principalId(principalId);
+      scoreboardEntryBuilder.principalType(principalType);
+
+      scoreboardEntryBuilder.baseScore(currentEntry.getBaseScore());
+      scoreboardEntryBuilder.bonusScore(currentEntry.getBonusScore());
+      scoreboardEntryBuilder.score(entryScore);
+
+      scoreboardEntryBuilder.goldMedals(entryGoldMedals);
+      scoreboardEntryBuilder.silverMedals(entrySilverMedals);
+      scoreboardEntryBuilder.bronzeMedals(entryBronzeMedals);
+
+      scoreboardEntryBuilder.rank(entryRank);
+
+      // Advance the current rank value
+      currentRank++;
+
+      // Update the previous state
+      currentScore = entryScore;
+      currentGoldMedals = entryGoldMedals;
+      currentSilverMedals = entrySilverMedals;
+      currentBronzeMedals = entryBronzeMedals;
+
+      return scoreboardEntryBuilder.build();
+    }
+
+    public Stream<ScoreboardEntry> loadRemainingPrincipals(final Stream<PrincipalEntity> remainingPrincipals) {
+      if (!negativeScoresFound) {
+        zeroScoreRank = currentRank;
+        zeroScorePosition = currentRank;
+      }
+      // Create scoreboard entries for all zero score principals
+
+      ScoreboardEntryBuilder zeroScoreboardEntryBuilder = ScoreboardEntry.builder();
+      zeroScoreboardEntryBuilder.baseScore(0L);
+      zeroScoreboardEntryBuilder.bonusScore(0L);
+      zeroScoreboardEntryBuilder.score(0L);
+
+      zeroScoreboardEntryBuilder.goldMedals(0L);
+      zeroScoreboardEntryBuilder.silverMedals(0L);
+      zeroScoreboardEntryBuilder.bronzeMedals(0L);
+
+      // All zero score principals have the same rank
+      zeroScoreboardEntryBuilder.rank(zeroScoreRank);
+
+      // Create a stream of principals that will be inserted in the scoreboard
+      return remainingPrincipals.map(principal -> {
+        zeroScoreboardEntryBuilder.displayName(principal.getDisplayName());
+        zeroScoreboardEntryBuilder.principalId(principal.getId());
+        zeroScoreboardEntryBuilder.principalType(principal.getPrincipalType());
+        return zeroScoreboardEntryBuilder.build();
+      });
+    }
+  }
+
   /**
    * Refresh the scoreboard. Reads all ranked submissions from db and stores a scoreboard with ranks
    * and medal counts of all users and teams in the db.
@@ -84,158 +232,53 @@ public class RefresherService {
 
         // The complete list of users and teams. We need this here because we want users
         // without submissions to be listed on the scoreboard with zero score and medals
-        Stream<PrincipalEntity> principals = tuple.getT2().stream();
+        Stream<PrincipalEntity> remainingPrincipals = tuple.getT2().stream();
 
-        long currentScore = 0;
-        long currentGoldMedals = 0;
-        long currentSilverMedals = 0;
-        long currentBronzeMedals = 0;
-        long currentRank = 1L;
-        long entryRank = 1L;
+        final ScoreboardEntryState scoreboardEntryState = new ScoreboardEntryState();
 
-        // The rank given to all users and teams without submissions
-        long zeroScoreRank = 0;
+        scoreboardEntryState.setIdleUserCount(Long.valueOf(tuple.getT2().size()) - unrankedScoreboard.size());
 
-        // At what position to insert all zero score users and teams
-        long zeroScorePosition = 0;
-
-        boolean negativeScoresFound = false;
+        if (!unrankedScoreboard.isEmpty()) {
+          scoreboardEntryState.readFirstScoreboardEntry(unrankedScoreboard.get(0));
+        }
 
         // Create the empty scoreboard
         final ArrayList<ScoreboardEntry> scoreboard = new ArrayList<>();
 
         final Iterator<UnrankedScoreboardEntry> scoreboardIterator = unrankedScoreboard.iterator();
 
-        if (scoreboardIterator.hasNext()) {
-          // Get initial values from first entry
-          final UnrankedScoreboardEntry firstEntry = unrankedScoreboard.get(0);
-          currentScore = firstEntry.getScore();
-          currentGoldMedals = firstEntry.getGoldMedals();
-          currentSilverMedals = firstEntry.getSilverMedals();
-          currentBronzeMedals = firstEntry.getBronzeMedals();
-        }
-
         while (scoreboardIterator.hasNext()) {
-          // Iterate over all unranked scoreboard entries
-          final UnrankedScoreboardEntry scoreboardEntry = scoreboardIterator.next();
-
           // Get the current score and medal count
-          final Long entryScore = scoreboardEntry.getScore();
-          final Long entryGoldMedals = scoreboardEntry.getGoldMedals();
-          final Long entrySilverMedals = scoreboardEntry.getSilverMedals();
-          final Long entryBronzeMedals = scoreboardEntry.getBronzeMedals();
-
-          // Check if the current score is below zero for the first time
-          if (!negativeScoresFound && (entryScore < 0)) {
-            negativeScoresFound = true;
-            if (currentScore == 0 && currentGoldMedals == 0 && currentSilverMedals == 0 && currentBronzeMedals == 0) {
-              // Set the rank of all zero score users and teams to the current rank
-              zeroScoreRank = entryRank;
-            } else {
-              zeroScoreRank = currentRank;
-            }
-            zeroScorePosition = currentRank;
-
-            currentScore = 0;
-            currentGoldMedals = 0;
-            currentSilverMedals = 0;
-            currentBronzeMedals = 0;
-
-            // Increment the rank counter with the number of zero score users and teams
-            currentRank += tuple.getT2().size() - unrankedScoreboard.size();
-          }
-
-          // Compare current score and medals with previous entry
-          if (
-            !entryScore.equals(currentScore) ||
-            (!entryGoldMedals.equals(currentGoldMedals)) ||
-            (!entrySilverMedals.equals(currentSilverMedals)) ||
-            (!entryBronzeMedals.equals(currentBronzeMedals))
-          ) {
-            // Only advance the entry rank if score and medal count differs from previous
-            // entry
-            entryRank = currentRank;
-          }
-
-          // Construct the current scoreboard entry
-          ScoreboardEntryBuilder scoreboardEntryBuilder = ScoreboardEntry.builder();
-          scoreboardEntryBuilder.baseScore(scoreboardEntry.getBaseScore());
-          scoreboardEntryBuilder.bonusScore(scoreboardEntry.getBonusScore());
-          scoreboardEntryBuilder.score(entryScore);
-
-          scoreboardEntryBuilder.goldMedals(entryGoldMedals);
-          scoreboardEntryBuilder.silverMedals(entrySilverMedals);
-          scoreboardEntryBuilder.bronzeMedals(entryBronzeMedals);
-
-          scoreboardEntryBuilder.rank(entryRank);
-
-          String principalId;
-          PrincipalType principalType;
-
-          if (scoreboardEntry.getTeam() != null) {
-            principalId = scoreboardEntry.getTeam().getId();
-            principalType = PrincipalType.TEAM;
-            scoreboardEntryBuilder.displayName(scoreboardEntry.getTeam().getDisplayName());
-          } else {
-            principalId = scoreboardEntry.getUser().getId();
-            principalType = PrincipalType.USER;
-            scoreboardEntryBuilder.displayName(scoreboardEntry.getUser().getDisplayName());
-          }
-          scoreboardEntryBuilder.principalId(principalId);
-          scoreboardEntryBuilder.principalType(principalType);
-
-          // Remove the current scoreboard user from the list of zero score users and teams
-          principals =
-            principals.filter(principal ->
-              !principal.getId().equals(principalId) || !principal.getPrincipalType().equals(principalType)
-            );
+          final ScoreboardEntry newScoreboardEntry = scoreboardEntryState.processCurrentEntry(
+            scoreboardIterator.next()
+          );
 
           // Add the current scoreboard entry to the scoreboard
-          scoreboard.add(scoreboardEntryBuilder.build());
+          scoreboard.add(newScoreboardEntry);
 
-          // Advance the current rank value
-          currentRank++;
-
-          // Update the previous state
-          currentScore = entryScore;
-          currentGoldMedals = entryGoldMedals;
-          currentSilverMedals = entrySilverMedals;
-          currentBronzeMedals = entryBronzeMedals;
+          // Remove the current scoreboard user from the list of zero score users and teams
+          remainingPrincipals =
+            remainingPrincipals.filter(principal ->
+              !principal.getId().equals(newScoreboardEntry.getPrincipalId()) ||
+              !principal.getPrincipalType().equals(newScoreboardEntry.getPrincipalType())
+            );
         }
 
-        // Were there users with negative scores? (This can happen due to a negative score
+        // Were there principals with negative scores? (This can happen due to a negative score
         // adjustment)
-        if (!negativeScoresFound) {
-          zeroScoreRank = currentRank;
-          zeroScorePosition = currentRank;
-        }
-
-        // Create scoreboard entries for all zero score principals
-        ScoreboardEntryBuilder zeroScoreboardEntryBuilder = ScoreboardEntry.builder();
-        zeroScoreboardEntryBuilder.baseScore(0L);
-        zeroScoreboardEntryBuilder.bonusScore(0L);
-        zeroScoreboardEntryBuilder.score(0L);
-
-        zeroScoreboardEntryBuilder.goldMedals(0L);
-        zeroScoreboardEntryBuilder.silverMedals(0L);
-        zeroScoreboardEntryBuilder.bronzeMedals(0L);
-
-        // All zero score principals have the same rank
-        zeroScoreboardEntryBuilder.rank(zeroScoreRank);
-
-        // Create a stream of principals that will be inserted in the scoreboard
-        final Stream<ScoreboardEntry> zeroScoreboardPrincipals = principals.map(principal -> {
-          zeroScoreboardEntryBuilder.displayName(principal.getDisplayName());
-          zeroScoreboardEntryBuilder.principalId(principal.getId());
-          zeroScoreboardEntryBuilder.principalType(principal.getPrincipalType());
-          return zeroScoreboardEntryBuilder.build();
-        });
+        final Stream<ScoreboardEntry> zeroScoreboardPrincipals = scoreboardEntryState.loadRemainingPrincipals(
+          remainingPrincipals
+        );
 
         // All scoreboard entries before the zero score principals
-        final Stream<ScoreboardEntry> scoreboardAboveZeroStream = scoreboard.stream().limit(zeroScorePosition - 1);
+        final Stream<ScoreboardEntry> scoreboardAboveZeroStream = scoreboard
+          .stream()
+          .limit(scoreboardEntryState.getZeroScorePosition() - 1);
 
         // All scoreboard entries after the zero score principals
-        final Stream<ScoreboardEntry> scoreboardBelowZeroStream = scoreboard.stream().skip(zeroScorePosition - 1);
+        final Stream<ScoreboardEntry> scoreboardBelowZeroStream = scoreboard
+          .stream()
+          .skip(scoreboardEntryState.getZeroScorePosition() - 1);
 
         // Concatenate the scoreboard and create an array list
         return Stream
