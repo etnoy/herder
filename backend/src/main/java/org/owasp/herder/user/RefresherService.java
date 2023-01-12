@@ -203,7 +203,7 @@ public class RefresherService {
       // All zero score principals have the same rank
       zeroScoreboardEntryBuilder.rank(zeroScoreRank);
 
-      // Create a stream of principals that will be inserted in the scoreboard
+      // Build the scoreboard entries
       return remainingPrincipals.map(principal -> {
         zeroScoreboardEntryBuilder.displayName(principal.getDisplayName());
         zeroScoreboardEntryBuilder.principalId(principal.getId());
@@ -283,9 +283,20 @@ public class RefresherService {
           .stream()
           .skip(scoreboardEntryState.getZeroScorePosition() - 1);
         // Concatenate the scoreboard and create an array list
-        return Stream
+        final List<ScoreboardEntry> rankedScoreboard = Stream
           .concat(Stream.concat(scoreboardAboveZeroStream, zeroScoreboardPrincipals), scoreboardBelowZeroStream)
           .collect(Collectors.toCollection(ArrayList::new));
+
+        // Sanity check. The remaining principals should match the idle principal count
+        if (
+          rankedScoreboard.size() -
+          unrankedScoreboard.size() !=
+          Long.valueOf(tuple.getT2().size()) -
+          unrankedScoreboard.size()
+        ) {
+          throw new IllegalStateException("Idle user count does not match remaining principal count!");
+        }
+        return rankedScoreboard;
       })
       // Clear the scoreboard and save all scoreboard entries
       .flatMapMany(scoreboard -> scoreboardRepository.deleteAll().thenMany(scoreboardRepository.saveAll(scoreboard)))
