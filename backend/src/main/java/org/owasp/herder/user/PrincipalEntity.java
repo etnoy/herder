@@ -41,12 +41,12 @@ public final class PrincipalEntity implements Serializable {
 
   private static final long serialVersionUID = 8843939402741609352L;
 
+  @ValidPrincipalId
+  String id;
+
   @NonNull
   @ValidDisplayName
   String displayName;
-
-  @ValidPrincipalId
-  String id;
 
   @NonNull
   PrincipalType principalType;

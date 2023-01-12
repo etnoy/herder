@@ -50,6 +50,10 @@ public final class UserEntity implements Serializable {
   @NonNull
   String displayName;
 
+  @ToString.Exclude
+  @NonNull
+  byte[] key;
+
   @ValidClassId
   String classId;
 
@@ -71,8 +75,4 @@ public final class UserEntity implements Serializable {
   LocalDateTime suspendedUntil;
 
   String suspensionMessage;
-
-  @ToString.Exclude
-  @NonNull
-  byte[] key;
 }
