@@ -26,10 +26,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.scoring.PrincipalType;
 import org.owasp.herder.scoring.RankedSubmissionRepository;
@@ -66,6 +68,7 @@ public class RefresherService {
   private final UserRepository userRepository;
 
   @NoArgsConstructor
+  @FieldDefaults(level = AccessLevel.PRIVATE)
   private final class ScoreboardEntryState {
 
     long currentScore = 0;
@@ -279,7 +282,6 @@ public class RefresherService {
         final Stream<ScoreboardEntry> scoreboardBelowZeroStream = scoreboard
           .stream()
           .skip(scoreboardEntryState.getZeroScorePosition() - 1);
-
         // Concatenate the scoreboard and create an array list
         return Stream
           .concat(Stream.concat(scoreboardAboveZeroStream, zeroScoreboardPrincipals), scoreboardBelowZeroStream)
