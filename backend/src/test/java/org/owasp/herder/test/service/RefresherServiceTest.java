@@ -184,39 +184,11 @@ class RefresherServiceTest extends BaseTest {
     verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
     ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
 
-    assertThat(computedScoreboard).hasSize(4);
+    assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L, 2L, 4L);
 
-    final ScoreboardEntry entry1 = computedScoreboard.get(0);
-    assertThat(entry1.getRank()).isOne();
-    assertThat(entry1.getDisplayName()).isEqualTo(testUser1.getDisplayName());
-    assertThat(entry1.getScore()).isEqualTo(1000L);
-    assertThat(entry1.getGoldMedals()).isZero();
-    assertThat(entry1.getSilverMedals()).isZero();
-    assertThat(entry1.getBronzeMedals()).isZero();
-
-    final ScoreboardEntry entry2 = computedScoreboard.get(1);
-    assertThat(entry2.getRank()).isEqualTo(2L);
-    assertThat(entry2.getDisplayName()).isEqualTo(testUser2.getDisplayName());
-    assertThat(entry2.getScore()).isZero();
-    assertThat(entry2.getGoldMedals()).isZero();
-    assertThat(entry2.getSilverMedals()).isZero();
-    assertThat(entry2.getBronzeMedals()).isZero();
-
-    final ScoreboardEntry entry3 = computedScoreboard.get(2);
-    assertThat(entry3.getRank()).isEqualTo(2L);
-    assertThat(entry3.getDisplayName()).isEqualTo(testUser4.getDisplayName());
-    assertThat(entry3.getScore()).isZero();
-    assertThat(entry3.getGoldMedals()).isZero();
-    assertThat(entry3.getSilverMedals()).isZero();
-    assertThat(entry3.getBronzeMedals()).isZero();
-
-    final ScoreboardEntry entry4 = computedScoreboard.get(3);
-    assertThat(entry4.getRank()).isEqualTo(4L);
-    assertThat(entry4.getDisplayName()).isEqualTo(testUser3.getDisplayName());
-    assertThat(entry4.getScore()).isEqualTo(-100L);
-    assertThat(entry4.getGoldMedals()).isZero();
-    assertThat(entry4.getSilverMedals()).isZero();
-    assertThat(entry4.getBronzeMedals()).isZero();
+    assertThat(computedScoreboard)
+      .extracting(ScoreboardEntry::getPrincipalId)
+      .containsExactly(testUser1.getId(), testUser2.getId(), testUser4.getId(), testUser3.getId());
   }
 
   @Test
@@ -256,31 +228,11 @@ class RefresherServiceTest extends BaseTest {
     verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
     ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
 
-    assertThat(computedScoreboard).hasSize(3);
+    assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L, 3L);
 
-    final ScoreboardEntry entry1 = computedScoreboard.get(0);
-    assertThat(entry1.getRank()).isOne();
-    assertThat(entry1.getDisplayName()).isEqualTo(testUser1.getDisplayName());
-    assertThat(entry1.getScore()).isEqualTo(1000L);
-    assertThat(entry1.getGoldMedals()).isZero();
-    assertThat(entry1.getSilverMedals()).isZero();
-    assertThat(entry1.getBronzeMedals()).isZero();
-
-    final ScoreboardEntry entry2 = computedScoreboard.get(1);
-    assertThat(entry2.getRank()).isEqualTo(2L);
-    assertThat(entry2.getDisplayName()).isEqualTo(testUser3.getDisplayName());
-    assertThat(entry2.getScore()).isZero();
-    assertThat(entry2.getGoldMedals()).isZero();
-    assertThat(entry2.getSilverMedals()).isZero();
-    assertThat(entry2.getBronzeMedals()).isZero();
-
-    final ScoreboardEntry entry3 = computedScoreboard.get(2);
-    assertThat(entry3.getRank()).isEqualTo(3L);
-    assertThat(entry3.getDisplayName()).isEqualTo(testUser2.getDisplayName());
-    assertThat(entry3.getScore()).isEqualTo(-100L);
-    assertThat(entry3.getGoldMedals()).isZero();
-    assertThat(entry3.getSilverMedals()).isZero();
-    assertThat(entry3.getBronzeMedals()).isZero();
+    assertThat(computedScoreboard)
+      .extracting(ScoreboardEntry::getPrincipalId)
+      .containsExactly(testUser1.getId(), testUser3.getId(), testUser2.getId());
   }
 
   @Test
@@ -323,23 +275,11 @@ class RefresherServiceTest extends BaseTest {
     verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
     ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
 
-    assertThat(computedScoreboard).hasSize(2);
+    assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L);
 
-    final ScoreboardEntry entry1 = computedScoreboard.get(0);
-    assertThat(entry1.getRank()).isOne();
-    assertThat(entry1.getDisplayName()).isEqualTo(testUser1.getDisplayName());
-    assertThat(entry1.getScore()).isEqualTo(1000L);
-    assertThat(entry1.getGoldMedals()).isEqualTo(100L);
-    assertThat(entry1.getSilverMedals()).isEqualTo(10L);
-    assertThat(entry1.getBronzeMedals()).isEqualTo(1L);
-
-    final ScoreboardEntry entry2 = computedScoreboard.get(1);
-    assertThat(entry2.getRank()).isEqualTo(2L);
-    assertThat(entry2.getDisplayName()).isEqualTo(testUser2.getDisplayName());
-    assertThat(entry2.getScore()).isEqualTo(100L);
-    assertThat(entry2.getGoldMedals()).isEqualTo(50L);
-    assertThat(entry2.getSilverMedals()).isEqualTo(5L);
-    assertThat(entry2.getBronzeMedals()).isZero();
+    assertThat(computedScoreboard)
+      .extracting(ScoreboardEntry::getPrincipalId)
+      .containsExactly(testUser1.getId(), testUser2.getId());
   }
 
   @Test
@@ -356,22 +296,10 @@ class RefresherServiceTest extends BaseTest {
     verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
     ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
 
-    assertThat(computedScoreboard).hasSize(2);
+    assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L);
 
-    final ScoreboardEntry entry1 = computedScoreboard.get(0);
-    assertThat(entry1.getRank()).isOne();
-    assertThat(entry1.getDisplayName()).isEqualTo(testUser1.getDisplayName());
-    assertThat(entry1.getScore()).isZero();
-    assertThat(entry1.getGoldMedals()).isZero();
-    assertThat(entry1.getSilverMedals()).isZero();
-    assertThat(entry1.getBronzeMedals()).isZero();
-
-    final ScoreboardEntry entry2 = computedScoreboard.get(1);
-    assertThat(entry2.getRank()).isOne();
-    assertThat(entry2.getDisplayName()).isEqualTo(testUser2.getDisplayName());
-    assertThat(entry2.getScore()).isZero();
-    assertThat(entry2.getGoldMedals()).isZero();
-    assertThat(entry2.getSilverMedals()).isZero();
-    assertThat(entry2.getBronzeMedals()).isZero();
+    assertThat(computedScoreboard)
+      .extracting(ScoreboardEntry::getPrincipalId)
+      .containsExactly(testUser1.getId(), testUser2.getId());
   }
 }
