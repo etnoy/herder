@@ -31,6 +31,14 @@
     "editor.formatOnType": true,
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "automatic",
-    "java.debug.settings.onBuildFailureProceed": true
+    "java.debug.settings.onBuildFailureProceed": true,
+    "coverage-gutters.coverageFileNames": [
+      "lcov.info",
+      "cov.xml",
+      "coverage.xml",
+      "jacoco.xml",
+      "jacocoTestReport.xml",
+      "coverage.cobertura.xml"
+    ]
   }
 }
