@@ -90,8 +90,6 @@ class ModuleInitializerIT extends BaseIT {
     assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
   }
 
-  // TODO: test for invalid score configurations
-
   @Test
   @DisplayName("Can throw error when a Herder module registers an invalid base score")
   void canThrowErrorIfHerderModuleHasInvalidBaseScore() {
