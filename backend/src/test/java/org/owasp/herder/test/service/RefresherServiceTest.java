@@ -141,6 +141,85 @@ class RefresherServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can produce a scoreboard with users scoring positive, zero, zero-adjusted, and negative scores")
+  void refreshScoreboard_PositiveZeroZeroAdjustedAndNegativeScores_CreatesScoreboard() {
+    final UserEntity testUser1 = createTestUser();
+    final UserEntity testUser2 = createTestUser();
+    final UserEntity testUser3 = createTestUser();
+    final UserEntity testUser4 = createTestUser();
+
+    final UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
+
+    unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
+    unrankedScoreboardEntryBuilder.user(testUser1);
+    unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
+    unrankedScoreboardEntryBuilder.score(1000L);
+    unrankedScoreboardEntryBuilder.baseScore(1000L);
+    unrankedScoreboardEntryBuilder.bonusScore(0L);
+    unrankedScoreboardEntryBuilder.goldMedals(0L);
+    unrankedScoreboardEntryBuilder.silverMedals(0L);
+    unrankedScoreboardEntryBuilder.bronzeMedals(0L);
+    final UnrankedScoreboardEntry unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
+
+    unrankedScoreboardEntryBuilder.user(testUser2);
+    unrankedScoreboardEntryBuilder.displayName(testUser2.getDisplayName());
+    unrankedScoreboardEntryBuilder.score(0L);
+    unrankedScoreboardEntryBuilder.baseScore(0L);
+    final UnrankedScoreboardEntry unrankedScoreboardEntry2 = unrankedScoreboardEntryBuilder.build();
+
+    unrankedScoreboardEntryBuilder.user(testUser3);
+    unrankedScoreboardEntryBuilder.displayName(testUser3.getDisplayName());
+    unrankedScoreboardEntryBuilder.score(-100L);
+    unrankedScoreboardEntryBuilder.baseScore(-100L);
+    final UnrankedScoreboardEntry unrankedScoreboardEntry3 = unrankedScoreboardEntryBuilder.build();
+
+    when(rankedSubmissionRepository.getUnrankedScoreboard())
+      .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2, unrankedScoreboardEntry3));
+
+    when(userService.findAllPrincipals())
+      .thenReturn(Flux.just(testUser1, testUser2, testUser3, testUser4).map(this::createPrincipalEntityFromUser));
+
+    StepVerifier.create(refresherService.refreshScoreboard()).verifyComplete();
+
+    verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
+    ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
+
+    assertThat(computedScoreboard).hasSize(4);
+
+    final ScoreboardEntry entry1 = computedScoreboard.get(0);
+    assertThat(entry1.getRank()).isOne();
+    assertThat(entry1.getDisplayName()).isEqualTo(testUser1.getDisplayName());
+    assertThat(entry1.getScore()).isEqualTo(1000L);
+    assertThat(entry1.getGoldMedals()).isZero();
+    assertThat(entry1.getSilverMedals()).isZero();
+    assertThat(entry1.getBronzeMedals()).isZero();
+
+    final ScoreboardEntry entry2 = computedScoreboard.get(1);
+    assertThat(entry2.getRank()).isEqualTo(2L);
+    assertThat(entry2.getDisplayName()).isEqualTo(testUser2.getDisplayName());
+    assertThat(entry2.getScore()).isZero();
+    assertThat(entry2.getGoldMedals()).isZero();
+    assertThat(entry2.getSilverMedals()).isZero();
+    assertThat(entry2.getBronzeMedals()).isZero();
+
+    final ScoreboardEntry entry3 = computedScoreboard.get(2);
+    assertThat(entry3.getRank()).isEqualTo(2L);
+    assertThat(entry3.getDisplayName()).isEqualTo(testUser4.getDisplayName());
+    assertThat(entry3.getScore()).isZero();
+    assertThat(entry3.getGoldMedals()).isZero();
+    assertThat(entry3.getSilverMedals()).isZero();
+    assertThat(entry3.getBronzeMedals()).isZero();
+
+    final ScoreboardEntry entry4 = computedScoreboard.get(3);
+    assertThat(entry4.getRank()).isEqualTo(4L);
+    assertThat(entry4.getDisplayName()).isEqualTo(testUser3.getDisplayName());
+    assertThat(entry4.getScore()).isEqualTo(-100L);
+    assertThat(entry4.getGoldMedals()).isZero();
+    assertThat(entry4.getSilverMedals()).isZero();
+    assertThat(entry4.getBronzeMedals()).isZero();
+  }
+
+  @Test
   @DisplayName("Can produce a scoreboard with users scoring positive, zero, and negative scores")
   void refreshScoreboard_PositiveZeroAndNegativeScoresd_CreatesScoreboard() {
     final UserEntity testUser1 = createTestUser();
