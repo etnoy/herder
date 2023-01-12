@@ -83,6 +83,8 @@ class RefresherServiceTest extends BaseTest {
 
   ArgumentCaptor<ArrayList<ScoreboardEntry>> scoreboardCaptor;
 
+  int testUserIndex;
+
   @BeforeEach
   void setup() {
     // Set up the system under test
@@ -103,6 +105,8 @@ class RefresherServiceTest extends BaseTest {
 
     when(rankedSubmissionRepository.getUnrankedScoreboard()).thenReturn(Flux.empty());
     when(userService.findAllPrincipals()).thenReturn(Flux.empty());
+
+    testUserIndex = 1;
   }
 
   @Test
@@ -116,26 +120,104 @@ class RefresherServiceTest extends BaseTest {
     assertThat(newScoreboard).isEmpty();
   }
 
-  @Test
-  void refreshScoreboard_ScoreboardWithOnlyUsers_CreatesEmptyScoreboard() {
+  private PrincipalEntity createPrincipalEntityFromUser(final UserEntity userEntity) {
+    final PrincipalEntityBuilder principalEntityBuilder = PrincipalEntity.builder();
+    principalEntityBuilder.creationTime(LocalDateTime.MIN);
+    principalEntityBuilder.principalType(PrincipalType.USER);
+
+    principalEntityBuilder.displayName(userEntity.getDisplayName());
+    principalEntityBuilder.id(userEntity.getId());
+    return principalEntityBuilder.build();
+  }
+
+  private UserEntity createTestUser() {
     final UserEntityBuilder userEntityBuilder = UserEntity.builder();
     userEntityBuilder.key(TestConstants.TEST_BYTE_ARRAY);
+    userEntityBuilder.id("id" + testUserIndex);
+    userEntityBuilder.displayName("Test User " + testUserIndex);
 
-    String displayName1 = "User 1";
-    userEntityBuilder.id("id1");
-    userEntityBuilder.displayName(displayName1);
-    final UserEntity userEntity1 = userEntityBuilder.build();
+    this.testUserIndex++;
+    return userEntityBuilder.build();
+  }
 
-    String displayName2 = "User 2";
-    userEntityBuilder.id("id2");
-    userEntityBuilder.displayName(displayName2);
-    final UserEntity userEntity2 = userEntityBuilder.build();
+  @Test
+  @DisplayName("Can produce a scoreboard with users scoring positive, zero, and negative scores")
+  void refreshScoreboard_PositiveZeroAndNegativeScoresd_CreatesScoreboard() {
+    final UserEntity testUser1 = createTestUser();
+    final UserEntity testUser2 = createTestUser();
+    final UserEntity testUser3 = createTestUser();
+
+    final UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
+
+    unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
+    unrankedScoreboardEntryBuilder.user(testUser1);
+    unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
+    unrankedScoreboardEntryBuilder.score(1000L);
+    unrankedScoreboardEntryBuilder.baseScore(1000L);
+    unrankedScoreboardEntryBuilder.bonusScore(0L);
+    unrankedScoreboardEntryBuilder.goldMedals(0L);
+    unrankedScoreboardEntryBuilder.silverMedals(0L);
+    unrankedScoreboardEntryBuilder.bronzeMedals(0L);
+    final UnrankedScoreboardEntry unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
+
+    unrankedScoreboardEntryBuilder.user(testUser2);
+    unrankedScoreboardEntryBuilder.displayName(testUser2.getDisplayName());
+    unrankedScoreboardEntryBuilder.score(-100L);
+    unrankedScoreboardEntryBuilder.baseScore(0L);
+    final UnrankedScoreboardEntry unrankedScoreboardEntry2 = unrankedScoreboardEntryBuilder.build();
+
+    when(rankedSubmissionRepository.getUnrankedScoreboard())
+      .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
+
+    when(userService.findAllPrincipals())
+      .thenReturn(Flux.just(testUser1, testUser2, testUser3).map(this::createPrincipalEntityFromUser));
+
+    StepVerifier.create(refresherService.refreshScoreboard()).verifyComplete();
+
+    verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
+    ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
+
+    assertThat(computedScoreboard).hasSize(3);
+
+    final ScoreboardEntry entry1 = computedScoreboard.get(0);
+    assertThat(entry1.getRank()).isOne();
+    assertThat(entry1.getDisplayName()).isEqualTo(testUser1.getDisplayName());
+    assertThat(entry1.getScore()).isEqualTo(1000L);
+    assertThat(entry1.getGoldMedals()).isZero();
+    assertThat(entry1.getSilverMedals()).isZero();
+    assertThat(entry1.getBronzeMedals()).isZero();
+
+    final ScoreboardEntry entry2 = computedScoreboard.get(1);
+    assertThat(entry2.getRank()).isEqualTo(2L);
+    assertThat(entry2.getDisplayName()).isEqualTo(testUser3.getDisplayName());
+    assertThat(entry2.getScore()).isZero();
+    assertThat(entry2.getGoldMedals()).isZero();
+    assertThat(entry2.getSilverMedals()).isZero();
+    assertThat(entry2.getBronzeMedals()).isZero();
+
+    final ScoreboardEntry entry3 = computedScoreboard.get(2);
+    assertThat(entry3.getRank()).isEqualTo(3L);
+    assertThat(entry3.getDisplayName()).isEqualTo(testUser2.getDisplayName());
+    assertThat(entry3.getScore()).isEqualTo(-100L);
+    assertThat(entry3.getGoldMedals()).isZero();
+    assertThat(entry3.getSilverMedals()).isZero();
+    assertThat(entry3.getBronzeMedals()).isZero();
+  }
+
+  @Test
+  @DisplayName("Can produce a scoreboard with two users with positive scores")
+  void refreshScoreboard_TwoUsersWithPositiveScores_CreatesScoreboard() {
+    final UserEntity testUser1 = createTestUser();
+    final UserEntity testUser2 = createTestUser();
+
+    when(userService.findAllPrincipals())
+      .thenReturn(Flux.just(testUser1, testUser2).map(this::createPrincipalEntityFromUser));
 
     UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
     unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
 
-    unrankedScoreboardEntryBuilder.user(userEntity1);
-    unrankedScoreboardEntryBuilder.displayName(userEntity1.getDisplayName());
+    unrankedScoreboardEntryBuilder.user(testUser1);
+    unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
     unrankedScoreboardEntryBuilder.score(1000L);
     unrankedScoreboardEntryBuilder.baseScore(1000L);
     unrankedScoreboardEntryBuilder.bonusScore(0L);
@@ -144,8 +226,8 @@ class RefresherServiceTest extends BaseTest {
     unrankedScoreboardEntryBuilder.bronzeMedals(1L);
     final UnrankedScoreboardEntry unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
 
-    unrankedScoreboardEntryBuilder.user(userEntity2);
-    unrankedScoreboardEntryBuilder.displayName(userEntity2.getDisplayName());
+    unrankedScoreboardEntryBuilder.user(testUser2);
+    unrankedScoreboardEntryBuilder.displayName(testUser2.getDisplayName());
     unrankedScoreboardEntryBuilder.score(100L);
     unrankedScoreboardEntryBuilder.baseScore(100L);
     unrankedScoreboardEntryBuilder.bonusScore(0L);
@@ -160,20 +242,21 @@ class RefresherServiceTest extends BaseTest {
     StepVerifier.create(refresherService.refreshScoreboard()).verifyComplete();
 
     verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
+    ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
 
-    ArrayList<ScoreboardEntry> newScoreboard = scoreboardCaptor.getValue();
+    assertThat(computedScoreboard).hasSize(2);
 
-    final ScoreboardEntry entry1 = newScoreboard.get(0);
+    final ScoreboardEntry entry1 = computedScoreboard.get(0);
     assertThat(entry1.getRank()).isOne();
-    assertThat(entry1.getDisplayName()).isEqualTo(displayName1);
+    assertThat(entry1.getDisplayName()).isEqualTo(testUser1.getDisplayName());
     assertThat(entry1.getScore()).isEqualTo(1000L);
     assertThat(entry1.getGoldMedals()).isEqualTo(100L);
     assertThat(entry1.getSilverMedals()).isEqualTo(10L);
     assertThat(entry1.getBronzeMedals()).isEqualTo(1L);
 
-    final ScoreboardEntry entry2 = newScoreboard.get(1);
+    final ScoreboardEntry entry2 = computedScoreboard.get(1);
     assertThat(entry2.getRank()).isEqualTo(2L);
-    assertThat(entry2.getDisplayName()).isEqualTo(displayName2);
+    assertThat(entry2.getDisplayName()).isEqualTo(testUser2.getDisplayName());
     assertThat(entry2.getScore()).isEqualTo(100L);
     assertThat(entry2.getGoldMedals()).isEqualTo(50L);
     assertThat(entry2.getSilverMedals()).isEqualTo(5L);
@@ -182,39 +265,31 @@ class RefresherServiceTest extends BaseTest {
 
   @Test
   @DisplayName("Can produce a scoreboard with zero-score users when no submissions are present")
-  void refreshScoreboard_UsersButNoSubmissions_CreatesZeroedScoreboard() {
-    final PrincipalEntityBuilder principalEntityBuilder = PrincipalEntity.builder();
-    principalEntityBuilder.creationTime(LocalDateTime.MIN);
-    principalEntityBuilder.principalType(PrincipalType.USER);
+  void refreshScoreboard_TwoUsersWithoutSubmissions_CreatesZeroedScoreboard() {
+    final UserEntity testUser1 = createTestUser();
+    final UserEntity testUser2 = createTestUser();
 
-    String displayName1 = "User 1";
-    principalEntityBuilder.displayName(displayName1);
-    principalEntityBuilder.id("id1");
-    final PrincipalEntity principalEntity1 = principalEntityBuilder.build();
-
-    String displayName2 = "User 2";
-    principalEntityBuilder.displayName(displayName2);
-    principalEntityBuilder.id("id2");
-    final PrincipalEntity principalEntity2 = principalEntityBuilder.build();
-
-    when(userService.findAllPrincipals()).thenReturn(Flux.just(principalEntity1, principalEntity2));
+    when(userService.findAllPrincipals())
+      .thenReturn(Flux.just(testUser1, testUser2).map(this::createPrincipalEntityFromUser));
 
     StepVerifier.create(refresherService.refreshScoreboard()).verifyComplete();
 
     verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
-    ArrayList<ScoreboardEntry> newScoreboard = scoreboardCaptor.getValue();
+    ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
 
-    final ScoreboardEntry entry1 = newScoreboard.get(0);
+    assertThat(computedScoreboard).hasSize(2);
+
+    final ScoreboardEntry entry1 = computedScoreboard.get(0);
     assertThat(entry1.getRank()).isOne();
-    assertThat(entry1.getDisplayName()).isEqualTo(displayName1);
+    assertThat(entry1.getDisplayName()).isEqualTo(testUser1.getDisplayName());
     assertThat(entry1.getScore()).isZero();
     assertThat(entry1.getGoldMedals()).isZero();
     assertThat(entry1.getSilverMedals()).isZero();
     assertThat(entry1.getBronzeMedals()).isZero();
 
-    final ScoreboardEntry entry2 = newScoreboard.get(1);
+    final ScoreboardEntry entry2 = computedScoreboard.get(1);
     assertThat(entry2.getRank()).isOne();
-    assertThat(entry2.getDisplayName()).isEqualTo(displayName2);
+    assertThat(entry2.getDisplayName()).isEqualTo(testUser2.getDisplayName());
     assertThat(entry2.getScore()).isZero();
     assertThat(entry2.getGoldMedals()).isZero();
     assertThat(entry2.getSilverMedals()).isZero();
