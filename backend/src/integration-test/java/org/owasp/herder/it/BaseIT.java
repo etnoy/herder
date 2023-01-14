@@ -28,6 +28,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
@@ -37,6 +38,7 @@ import reactor.core.publisher.Hooks;
 @AutoConfigureWebTestClient
 @Slf4j
 @Execution(ExecutionMode.SAME_THREAD)
+@DirtiesContext
 public abstract class BaseIT {
 
   @BeforeAll
