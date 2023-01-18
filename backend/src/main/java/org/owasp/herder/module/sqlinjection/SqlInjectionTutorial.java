@@ -54,7 +54,7 @@ public class SqlInjectionTutorial implements BaseModule {
 
   private final FlagHandler flagHandler;
 
-  public static final BiFunction<Row, RowMetadata, SqlInjectionTutorialRow> MAPPING_FUNCTION = (row, rowMetaData) ->
+  private static final BiFunction<Row, RowMetadata, SqlInjectionTutorialRow> MAPPING_FUNCTION = (row, rowMetaData) ->
     SqlInjectionTutorialRow
       .builder()
       .name(row.get("name", String.class))
