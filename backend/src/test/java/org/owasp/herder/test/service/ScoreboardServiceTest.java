@@ -472,7 +472,6 @@ class ScoreboardServiceTest extends BaseTest {
     @Test
     @DisplayName("Can produce a scoreboard with two teams with positive scores")
     void refreshScoreboard_TwoTeamsWithPositiveScores_CreatesScoreboard() {
-      //TODO WIP
       final TeamEntity testTeam1 = createTestTeam();
       final TeamEntity testTeam2 = createTestTeam();
 
