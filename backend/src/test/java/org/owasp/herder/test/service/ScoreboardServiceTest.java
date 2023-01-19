@@ -49,6 +49,8 @@ import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.PrincipalEntity;
 import org.owasp.herder.user.PrincipalEntity.PrincipalEntityBuilder;
+import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.TeamEntity.TeamEntityBuilder;
 import org.owasp.herder.user.TeamRepository;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserEntity.UserEntityBuilder;
@@ -88,12 +90,15 @@ class ScoreboardServiceTest extends BaseTest {
 
   int testUserIndex;
 
+  int testTeamIndex;
+
   UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder;
 
   @BeforeEach
   void setup() {
     // Set up the system under test
     testUserIndex = 1;
+    testTeamIndex = 1;
 
     unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
 
@@ -128,6 +133,16 @@ class ScoreboardServiceTest extends BaseTest {
     return principalEntityBuilder.build();
   }
 
+  private PrincipalEntity createPrincipalEntityFromTeam(final TeamEntity teamEntity) {
+    final PrincipalEntityBuilder principalEntityBuilder = PrincipalEntity.builder();
+    principalEntityBuilder.creationTime(LocalDateTime.MIN);
+    principalEntityBuilder.principalType(PrincipalType.TEAM);
+
+    principalEntityBuilder.displayName(teamEntity.getDisplayName());
+    principalEntityBuilder.id(teamEntity.getId());
+    return principalEntityBuilder.build();
+  }
+
   private UserEntity createTestUser() {
     final UserEntityBuilder userEntityBuilder = UserEntity.builder();
     userEntityBuilder.key(TestConstants.TEST_BYTE_ARRAY);
@@ -136,6 +151,20 @@ class ScoreboardServiceTest extends BaseTest {
 
     testUserIndex++;
     return userEntityBuilder.build();
+  }
+
+  private TeamEntity createTestTeam() {
+    final ArrayList<UserEntity> members = new ArrayList<>();
+    members.add(createTestUser());
+    members.add(createTestUser());
+
+    final TeamEntityBuilder teamEntityBuilder = TeamEntity.builder();
+    teamEntityBuilder.id("id" + testTeamIndex);
+    teamEntityBuilder.displayName("Test User " + testTeamIndex);
+    teamEntityBuilder.members(members);
+
+    testTeamIndex++;
+    return teamEntityBuilder.build();
   }
 
   @Test
@@ -231,7 +260,9 @@ class ScoreboardServiceTest extends BaseTest {
         .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2, unrankedScoreboardEntry3));
 
       when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2, testUser3, testUser4).map(u -> createPrincipalEntityFromUser(u)));
+        .thenReturn(
+          Flux.just(testUser1, testUser2, testUser3, testUser4).map(user -> createPrincipalEntityFromUser(user))
+        );
 
       StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
@@ -270,7 +301,7 @@ class ScoreboardServiceTest extends BaseTest {
         .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
 
       when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2, testUser3).map(u -> createPrincipalEntityFromUser(u)));
+        .thenReturn(Flux.just(testUser1, testUser2, testUser3).map(user -> createPrincipalEntityFromUser(user)));
 
       StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
@@ -285,13 +316,265 @@ class ScoreboardServiceTest extends BaseTest {
     }
 
     @Test
+    @DisplayName("Can produce a scoreboard with a zero-score (+ bronze) user followed by a negative score")
+    void refreshScoreboard_ZeroScoreBronzeAndNegativeScore_CreatesScoreboard() {
+      final UserEntity testUser1 = createTestUser();
+      final UserEntity testUser2 = createTestUser();
+
+      unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
+      unrankedScoreboardEntryBuilder.user(testUser1);
+      unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(0L);
+      unrankedScoreboardEntryBuilder.baseScore(0L);
+      unrankedScoreboardEntryBuilder.bronzeMedals(1L);
+
+      final UnrankedScoreboardEntry unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
+
+      unrankedScoreboardEntryBuilder.user(testUser2);
+      unrankedScoreboardEntryBuilder.displayName(testUser2.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(-100L);
+      unrankedScoreboardEntryBuilder.baseScore(0L);
+      final UnrankedScoreboardEntry unrankedScoreboardEntry2 = unrankedScoreboardEntryBuilder.build();
+
+      when(rankedSubmissionRepository.getUnrankedScoreboard())
+        .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
+
+      when(userService.findAllPrincipals())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+
+      StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
+
+      verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
+      ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
+
+      assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L);
+
+      assertThat(computedScoreboard)
+        .extracting(ScoreboardEntry::getPrincipalId)
+        .containsExactly(testUser1.getId(), testUser2.getId());
+    }
+
+    @Test
+    @DisplayName("Can produce a scoreboard with a zero-score (+ silver) user followed by a negative score")
+    void refreshScoreboard_ZeroScoreSilverAndNegativeScore_CreatesScoreboard() {
+      final UserEntity testUser1 = createTestUser();
+      final UserEntity testUser2 = createTestUser();
+
+      unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
+      unrankedScoreboardEntryBuilder.user(testUser1);
+      unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(0L);
+      unrankedScoreboardEntryBuilder.baseScore(0L);
+      unrankedScoreboardEntryBuilder.silverMedals(1L);
+      final UnrankedScoreboardEntry unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
+
+      unrankedScoreboardEntryBuilder.user(testUser2);
+      unrankedScoreboardEntryBuilder.displayName(testUser2.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(-100L);
+      unrankedScoreboardEntryBuilder.baseScore(0L);
+      final UnrankedScoreboardEntry unrankedScoreboardEntry2 = unrankedScoreboardEntryBuilder.build();
+
+      when(rankedSubmissionRepository.getUnrankedScoreboard())
+        .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
+
+      when(userService.findAllPrincipals())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+
+      StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
+
+      verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
+      ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
+
+      assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L);
+
+      assertThat(computedScoreboard)
+        .extracting(ScoreboardEntry::getPrincipalId)
+        .containsExactly(testUser1.getId(), testUser2.getId());
+    }
+
+    @Test
+    @DisplayName("Can produce a scoreboard if two users have negative scores")
+    void refreshScoreboard_TwoUsersWithNegativeScores_CreatesScoreboard() {
+      final UserEntity testUser1 = createTestUser();
+      final UserEntity testUser2 = createTestUser();
+
+      unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
+      unrankedScoreboardEntryBuilder.user(testUser1);
+      unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(-100L);
+      unrankedScoreboardEntryBuilder.baseScore(0L);
+
+      final UnrankedScoreboardEntry unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
+
+      unrankedScoreboardEntryBuilder.user(testUser2);
+      unrankedScoreboardEntryBuilder.displayName(testUser2.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(-500L);
+      unrankedScoreboardEntryBuilder.baseScore(0L);
+      final UnrankedScoreboardEntry unrankedScoreboardEntry2 = unrankedScoreboardEntryBuilder.build();
+
+      when(rankedSubmissionRepository.getUnrankedScoreboard())
+        .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
+      when(userService.findAllPrincipals())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+
+      StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
+
+      verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
+      ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
+
+      assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L);
+
+      assertThat(computedScoreboard)
+        .extracting(ScoreboardEntry::getPrincipalId)
+        .containsExactly(testUser1.getId(), testUser2.getId());
+    }
+
+    @Test
+    @DisplayName("Can produce a scoreboard with a zero-score (+ silver and gold) user followed by a negative score")
+    void refreshScoreboard_ZeroScoreGoldSilverAndNegativeScore_CreatesScoreboard() {
+      final UserEntity testUser1 = createTestUser();
+      final UserEntity testUser2 = createTestUser();
+
+      unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
+      unrankedScoreboardEntryBuilder.user(testUser1);
+      unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(0L);
+      unrankedScoreboardEntryBuilder.baseScore(0L);
+      unrankedScoreboardEntryBuilder.goldMedals(1L);
+      unrankedScoreboardEntryBuilder.silverMedals(1L);
+
+      final UnrankedScoreboardEntry unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
+
+      unrankedScoreboardEntryBuilder.user(testUser2);
+      unrankedScoreboardEntryBuilder.displayName(testUser2.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(-100L);
+      unrankedScoreboardEntryBuilder.baseScore(0L);
+      final UnrankedScoreboardEntry unrankedScoreboardEntry2 = unrankedScoreboardEntryBuilder.build();
+
+      when(rankedSubmissionRepository.getUnrankedScoreboard())
+        .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
+
+      when(userService.findAllPrincipals())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+
+      StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
+
+      verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
+      ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
+
+      assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L);
+
+      assertThat(computedScoreboard)
+        .extracting(ScoreboardEntry::getPrincipalId)
+        .containsExactly(testUser1.getId(), testUser2.getId());
+    }
+
+    @Test
+    @DisplayName("Can produce a scoreboard with two teams with positive scores")
+    void refreshScoreboard_TwoTeamsWithPositiveScores_CreatesScoreboard() {
+      //TODO WIP
+      final TeamEntity testTeam1 = createTestTeam();
+      final TeamEntity testTeam2 = createTestTeam();
+
+      when(userService.findAllPrincipals())
+        .thenReturn(Flux.just(testTeam1, testTeam2).map(team -> createPrincipalEntityFromTeam(team)));
+
+      UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
+      unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
+
+      unrankedScoreboardEntryBuilder.user(testTeam1.getMembers().get(0));
+      unrankedScoreboardEntryBuilder.team(testTeam1);
+      unrankedScoreboardEntryBuilder.displayName(testTeam1.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(1000L);
+      unrankedScoreboardEntryBuilder.baseScore(1000L);
+      unrankedScoreboardEntryBuilder.bonusScore(0L);
+      unrankedScoreboardEntryBuilder.goldMedals(100L);
+      unrankedScoreboardEntryBuilder.silverMedals(10L);
+      unrankedScoreboardEntryBuilder.bronzeMedals(1L);
+      final UnrankedScoreboardEntry unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
+
+      unrankedScoreboardEntryBuilder.user(testTeam2.getMembers().get(0));
+      unrankedScoreboardEntryBuilder.team(testTeam2);
+      unrankedScoreboardEntryBuilder.displayName(testTeam2.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(100L);
+      unrankedScoreboardEntryBuilder.baseScore(100L);
+      unrankedScoreboardEntryBuilder.bonusScore(0L);
+      unrankedScoreboardEntryBuilder.goldMedals(50L);
+      unrankedScoreboardEntryBuilder.silverMedals(5L);
+      unrankedScoreboardEntryBuilder.bronzeMedals(0L);
+      final UnrankedScoreboardEntry unrankedScoreboardEntry2 = unrankedScoreboardEntryBuilder.build();
+
+      when(rankedSubmissionRepository.getUnrankedScoreboard())
+        .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
+
+      StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
+
+      verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
+      ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
+
+      assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L);
+
+      assertThat(computedScoreboard)
+        .extracting(ScoreboardEntry::getPrincipalId)
+        .containsExactly(testTeam1.getId(), testTeam2.getId());
+    }
+
+    @Test
+    @DisplayName("Can produce a scoreboard with a user and team with identical principal id")
+    void refreshScoreboard_TwoPrincipalsWithSameID_CreatesScoreboard() {
+      final UserEntity testUser1 = createTestUser().withId("collision");
+      final TeamEntity testTeam1 = createTestTeam().withId("collision");
+
+      when(userService.findAllPrincipals())
+        .thenReturn(Flux.just(createPrincipalEntityFromUser(testUser1), createPrincipalEntityFromTeam(testTeam1)));
+
+      UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
+      unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
+
+      unrankedScoreboardEntryBuilder.user(testUser1);
+      unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(1000L);
+      unrankedScoreboardEntryBuilder.baseScore(1000L);
+      unrankedScoreboardEntryBuilder.bonusScore(0L);
+      unrankedScoreboardEntryBuilder.goldMedals(100L);
+      unrankedScoreboardEntryBuilder.silverMedals(10L);
+      unrankedScoreboardEntryBuilder.bronzeMedals(1L);
+      final UnrankedScoreboardEntry unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
+
+      unrankedScoreboardEntryBuilder.user(testTeam1.getMembers().get(0));
+      unrankedScoreboardEntryBuilder.team(testTeam1);
+      unrankedScoreboardEntryBuilder.displayName(testTeam1.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(100L);
+      unrankedScoreboardEntryBuilder.baseScore(100L);
+      unrankedScoreboardEntryBuilder.bonusScore(0L);
+      unrankedScoreboardEntryBuilder.goldMedals(50L);
+      unrankedScoreboardEntryBuilder.silverMedals(5L);
+      unrankedScoreboardEntryBuilder.bronzeMedals(0L);
+      final UnrankedScoreboardEntry unrankedScoreboardEntry2 = unrankedScoreboardEntryBuilder.build();
+
+      when(rankedSubmissionRepository.getUnrankedScoreboard())
+        .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
+
+      StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
+
+      verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
+      ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
+
+      assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L);
+
+      assertThat(computedScoreboard)
+        .extracting(ScoreboardEntry::getPrincipalType)
+        .containsExactly(PrincipalType.USER, PrincipalType.TEAM);
+    }
+
+    @Test
     @DisplayName("Can produce a scoreboard with two users with positive scores")
     void refreshScoreboard_TwoUsersWithPositiveScores_CreatesScoreboard() {
       final UserEntity testUser1 = createTestUser();
       final UserEntity testUser2 = createTestUser();
 
       when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2).map(u -> createPrincipalEntityFromUser(u)));
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
 
       UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
       unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
@@ -346,7 +629,7 @@ class ScoreboardServiceTest extends BaseTest {
         testUser2 = createTestUser();
 
         when(userService.findAllPrincipals())
-          .thenReturn(Flux.just(testUser1, testUser2).map(u -> createPrincipalEntityFromUser(u)));
+          .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
 
         unrankedScoreboardEntryBuilder.user(testUser2);
         unrankedScoreboardEntryBuilder.displayName(testUser2.getDisplayName());
@@ -382,7 +665,7 @@ class ScoreboardServiceTest extends BaseTest {
       }
 
       @Test
-      @DisplayName("bronze medals")
+      @DisplayName("silver medals")
       void refreshScoreboard_TwoUsersDifferingSilverMedals_CreatesScoreboard() {
         unrankedScoreboardEntryBuilder.silverMedals(1L);
 
@@ -411,7 +694,7 @@ class ScoreboardServiceTest extends BaseTest {
       final UserEntity testUser2 = createTestUser();
 
       when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2).map(u -> createPrincipalEntityFromUser(u)));
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
 
       StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 

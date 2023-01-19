@@ -97,7 +97,7 @@ public class ScoreboardService {
       entryBronzeMedals = currentEntry.getBronzeMedals();
 
       // Check if the current score is below zero for the first time
-      if (!negativeScoresFound && (entryScore < 0)) {
+      if ((entryScore < 0) && !negativeScoresFound) {
         negativeScoresFound = true;
         if (isCurrentlyZero()) {
           // Set the rank of all zero score users and teams to the current rank
