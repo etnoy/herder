@@ -91,7 +91,7 @@ class ScoreboardServiceIT extends BaseIT {
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       refresherService.refreshSubmissionRanks().block();
-      refresherService.refreshScoreboard().block();
+      scoreboardService.refreshScoreboard().block();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
@@ -153,7 +153,7 @@ class ScoreboardServiceIT extends BaseIT {
       scoreAdjustmentService.submitUserAdjustment(userId3, -1000, "Penalty for cheating").block();
 
       refresherService.refreshSubmissionRanks().block();
-      refresherService.refreshScoreboard().block();
+      scoreboardService.refreshScoreboard().block();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
@@ -222,7 +222,7 @@ class ScoreboardServiceIT extends BaseIT {
       refresherService.afterUserUpdate(userId1).block();
       refresherService.afterUserUpdate(userId3).block();
       refresherService.refreshSubmissionRanks().block();
-      refresherService.refreshScoreboard().block();
+      scoreboardService.refreshScoreboard().block();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
@@ -289,7 +289,7 @@ class ScoreboardServiceIT extends BaseIT {
 
       refresherService.refreshSubmissionRanks().block();
 
-      refresherService.refreshScoreboard().block();
+      scoreboardService.refreshScoreboard().block();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
@@ -360,7 +360,7 @@ class ScoreboardServiceIT extends BaseIT {
 
       refresherService.refreshSubmissionRanks().block();
 
-      refresherService.refreshScoreboard().block();
+      scoreboardService.refreshScoreboard().block();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
@@ -418,7 +418,7 @@ class ScoreboardServiceIT extends BaseIT {
 
       refresherService.refreshSubmissionRanks().block();
 
-      refresherService.refreshScoreboard().block();
+      scoreboardService.refreshScoreboard().block();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
@@ -478,7 +478,7 @@ class ScoreboardServiceIT extends BaseIT {
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       refresherService.refreshSubmissionRanks().block();
-      refresherService.refreshScoreboard().block();
+      scoreboardService.refreshScoreboard().block();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
@@ -527,7 +527,7 @@ class ScoreboardServiceIT extends BaseIT {
     void canGetScoresWithoutSubmissions() {
       refresherService.refreshSubmissionRanks().block();
 
-      refresherService.refreshScoreboard().block();
+      scoreboardService.refreshScoreboard().block();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
@@ -577,7 +577,7 @@ class ScoreboardServiceIT extends BaseIT {
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
 
       refresherService.refreshSubmissionRanks().block();
-      refresherService.refreshScoreboard().block();
+      scoreboardService.refreshScoreboard().block();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
@@ -641,7 +641,7 @@ class ScoreboardServiceIT extends BaseIT {
       refresherService.afterUserUpdate(userId3).block();
 
       refresherService.refreshSubmissionRanks().block();
-      refresherService.refreshScoreboard().block();
+      scoreboardService.refreshScoreboard().block();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
@@ -703,7 +703,7 @@ class ScoreboardServiceIT extends BaseIT {
       refresherService.afterUserUpdate(userId3).block();
 
       refresherService.refreshSubmissionRanks().block();
-      refresherService.refreshScoreboard().block();
+      scoreboardService.refreshScoreboard().block();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())

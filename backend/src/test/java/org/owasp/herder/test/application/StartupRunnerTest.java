@@ -38,6 +38,7 @@ import org.owasp.herder.module.csrf.CsrfTutorial;
 import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.xss.XssTutorial;
+import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.user.RefresherService;
@@ -77,6 +78,9 @@ class StartupRunnerTest extends BaseTest {
   @Mock
   private FlagHandler flagHandler;
 
+  @Mock
+  private ScoreboardService scoreboardService;
+
   @Test
   void run_NoArguments_Success() {
     final String mockUserId = "id";
@@ -99,7 +103,7 @@ class StartupRunnerTest extends BaseTest {
     when(userService.teamExistsByDisplayName("Team 1")).thenReturn(Mono.just(true));
     when(refresherService.refreshModuleLists()).thenReturn(Mono.empty());
     when(refresherService.refreshSubmissionRanks()).thenReturn(Mono.empty());
-    when(refresherService.refreshScoreboard()).thenReturn(Mono.empty());
+    when(scoreboardService.refreshScoreboard()).thenReturn(Mono.empty());
 
     assertDoesNotThrow(() -> startupRunner.run(null));
   }
@@ -108,6 +112,14 @@ class StartupRunnerTest extends BaseTest {
   void setup() {
     // Set up the system under test
 
-    startupRunner = new StartupRunner(userService, moduleService, submissionService, refresherService, flagTutorial);
+    startupRunner =
+      new StartupRunner(
+        userService,
+        moduleService,
+        submissionService,
+        refresherService,
+        scoreboardService,
+        flagTutorial
+      );
   }
 }

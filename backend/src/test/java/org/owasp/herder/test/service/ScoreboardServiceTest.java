@@ -23,6 +23,7 @@ package org.owasp.herder.test.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,6 +41,7 @@ import org.owasp.herder.scoring.PrincipalType;
 import org.owasp.herder.scoring.RankedSubmissionRepository;
 import org.owasp.herder.scoring.ScoreboardEntry;
 import org.owasp.herder.scoring.ScoreboardRepository;
+import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.UnrankedScoreboardEntry;
 import org.owasp.herder.scoring.UnrankedScoreboardEntry.UnrankedScoreboardEntryBuilder;
@@ -47,7 +49,6 @@ import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.PrincipalEntity;
 import org.owasp.herder.user.PrincipalEntity.PrincipalEntityBuilder;
-import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.TeamRepository;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserEntity.UserEntityBuilder;
@@ -60,9 +61,7 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unchecked")
 @DisplayName("RefresherService unit tests")
-class RefresherServiceTest extends BaseTest {
-
-  private RefresherService refresherService;
+class ScoreboardServiceTest extends BaseTest {
 
   @Mock
   SubmissionRepository submissionRepository;
@@ -82,6 +81,9 @@ class RefresherServiceTest extends BaseTest {
   @Mock
   UserRepository userRepository;
 
+  @Mock
+  ScoreboardService scoreboardService;
+
   ArgumentCaptor<ArrayList<ScoreboardEntry>> scoreboardCaptor;
 
   int testUserIndex;
@@ -91,16 +93,6 @@ class RefresherServiceTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    refresherService =
-      new RefresherService(
-        submissionRepository,
-        scoreboardRepository,
-        rankedSubmissionRepository,
-        userService,
-        teamRepository,
-        userRepository
-      );
-
     testUserIndex = 1;
 
     unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
@@ -112,6 +104,18 @@ class RefresherServiceTest extends BaseTest {
     unrankedScoreboardEntryBuilder.goldMedals(0L);
     unrankedScoreboardEntryBuilder.silverMedals(0L);
     unrankedScoreboardEntryBuilder.bronzeMedals(0L);
+
+    scoreboardService = new ScoreboardService(scoreboardRepository, rankedSubmissionRepository, userService);
+  }
+
+  @Test
+  @DisplayName("Can get scoreboard")
+  void getScoreboard_ThreeUsersToScore_CallsRepository() {
+    when(scoreboardRepository.findAll()).thenReturn(Flux.empty());
+
+    StepVerifier.create(scoreboardService.getScoreboard()).verifyComplete();
+
+    verify(scoreboardRepository, times(1)).findAll();
   }
 
   private PrincipalEntity createPrincipalEntityFromUser(final UserEntity userEntity) {
@@ -166,7 +170,7 @@ class RefresherServiceTest extends BaseTest {
     when(userService.findAllPrincipals())
       .thenReturn(Flux.just(testUser1, testUser2).map(this::createPrincipalEntityFromUser));
 
-    StepVerifier.create(refresherService.refreshScoreboard()).expectError(IllegalStateException.class).verify();
+    StepVerifier.create(scoreboardService.refreshScoreboard()).expectError(IllegalStateException.class).verify();
   }
 
   @Nested
@@ -186,7 +190,7 @@ class RefresherServiceTest extends BaseTest {
     @Test
     @DisplayName("Can produce an empty scoreboard when no users or submissions are present")
     void refreshScoreboard_NoUsersAndNoSubmissions_CreatesEmptyScoreboard() {
-      StepVerifier.create(refresherService.refreshScoreboard()).verifyComplete();
+      StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
       verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
       ArrayList<ScoreboardEntry> newScoreboard = scoreboardCaptor.getValue();
@@ -229,7 +233,7 @@ class RefresherServiceTest extends BaseTest {
       when(userService.findAllPrincipals())
         .thenReturn(Flux.just(testUser1, testUser2, testUser3, testUser4).map(u -> createPrincipalEntityFromUser(u)));
 
-      StepVerifier.create(refresherService.refreshScoreboard()).verifyComplete();
+      StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
       verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
       ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
@@ -268,7 +272,7 @@ class RefresherServiceTest extends BaseTest {
       when(userService.findAllPrincipals())
         .thenReturn(Flux.just(testUser1, testUser2, testUser3).map(u -> createPrincipalEntityFromUser(u)));
 
-      StepVerifier.create(refresherService.refreshScoreboard()).verifyComplete();
+      StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
       verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
       ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
@@ -315,7 +319,7 @@ class RefresherServiceTest extends BaseTest {
       when(rankedSubmissionRepository.getUnrankedScoreboard())
         .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
 
-      StepVerifier.create(refresherService.refreshScoreboard()).verifyComplete();
+      StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
       verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
       ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
@@ -354,7 +358,7 @@ class RefresherServiceTest extends BaseTest {
       }
 
       private void testScoreboard() {
-        StepVerifier.create(refresherService.refreshScoreboard()).verifyComplete();
+        StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
         verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
         ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();
@@ -409,7 +413,7 @@ class RefresherServiceTest extends BaseTest {
       when(userService.findAllPrincipals())
         .thenReturn(Flux.just(testUser1, testUser2).map(u -> createPrincipalEntityFromUser(u)));
 
-      StepVerifier.create(refresherService.refreshScoreboard()).verifyComplete();
+      StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
       verify(scoreboardRepository).saveAll(scoreboardCaptor.capture());
       ArrayList<ScoreboardEntry> computedScoreboard = scoreboardCaptor.getValue();

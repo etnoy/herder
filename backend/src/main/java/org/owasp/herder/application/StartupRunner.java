@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.flag.FlagTutorial;
+import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.UserService;
@@ -45,6 +46,8 @@ public class StartupRunner implements ApplicationRunner {
   private final SubmissionService submissionService;
 
   private final RefresherService refresherService;
+
+  private final ScoreboardService scoreboardService;
 
   private final FlagTutorial flagTutorial;
 
@@ -98,6 +101,6 @@ public class StartupRunner implements ApplicationRunner {
     }
     refresherService.refreshModuleLists().block();
     refresherService.refreshSubmissionRanks().block();
-    refresherService.refreshScoreboard().block();
+    scoreboardService.refreshScoreboard().block();
   }
 }

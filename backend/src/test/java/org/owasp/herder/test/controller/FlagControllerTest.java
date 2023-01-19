@@ -38,6 +38,7 @@ import org.owasp.herder.exception.NotAuthenticatedException;
 import org.owasp.herder.flag.FlagController;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.BaseTest;
@@ -65,10 +66,20 @@ class FlagControllerTest extends BaseTest {
   @Mock
   private RefresherService refresherService;
 
+  @Mock
+  private ScoreboardService scoreboardService;
+
   @BeforeEach
   void setup() {
     // Set up the system under test
-    flagController = new FlagController(controllerAuthentication, moduleService, submissionService, refresherService);
+    flagController =
+      new FlagController(
+        controllerAuthentication,
+        moduleService,
+        submissionService,
+        refresherService,
+        scoreboardService
+      );
   }
 
   @Test
@@ -114,7 +125,7 @@ class FlagControllerTest extends BaseTest {
 
     when(refresherService.refreshModuleLists()).thenReturn(Mono.empty());
     when(refresherService.refreshSubmissionRanks()).thenReturn(Mono.empty());
-    when(refresherService.refreshScoreboard()).thenReturn(Mono.empty());
+    when(scoreboardService.refreshScoreboard()).thenReturn(Mono.empty());
 
     StepVerifier
       .create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag).map(ResponseEntity::getBody))

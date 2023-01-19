@@ -26,6 +26,7 @@ import org.owasp.herder.authentication.ControllerAuthentication;
 import org.owasp.herder.exception.RateLimitException;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.user.RefresherService;
@@ -55,6 +56,8 @@ public class FlagController {
 
   private final RefresherService refresherService;
 
+  private final ScoreboardService scoreboardService;
+
   @PostMapping(path = "flag/submit/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
   public Mono<ResponseEntity<Submission>> submitFlag(
@@ -69,7 +72,7 @@ public class FlagController {
         refresherService
           .refreshModuleLists()
           .then(refresherService.refreshSubmissionRanks())
-          .then(refresherService.refreshScoreboard())
+          .then(scoreboardService.refreshScoreboard())
           .then(Mono.just(u))
       )
       .map(submission -> new ResponseEntity<>(submission, HttpStatus.OK))
