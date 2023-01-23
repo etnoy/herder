@@ -90,7 +90,51 @@ public class ScoreboardService {
       return currentScore == 0 && currentGoldMedals == 0 && currentSilverMedals == 0 && currentBronzeMedals == 0;
     }
 
+    private boolean hasCorrectSort(UnrankedScoreboardEntry nextEntry) {
+      if (nextEntry.getScore() > currentScore) {
+        // If the next score is greater than the current score then we have a bad sort
+        return false;
+      }
+      if (nextEntry.getScore() < currentScore) {
+        // If the next score is less than the current score then all is good
+        return true;
+      }
+
+      // From now on, next score is equal to current score
+      if (nextEntry.getGoldMedals() > currentGoldMedals) {
+        // If the next gold medal count is greater than the current gold medal count then we have a bad sort
+        return false;
+      }
+      if (nextEntry.getGoldMedals() < currentGoldMedals) {
+        // If the next gold medal count is less than the current gold medal count then all is good
+        return true;
+      }
+
+      // From now on, next gold medal count is equal to current gold medal count
+      if (nextEntry.getSilverMedals() > currentSilverMedals) {
+        // If the next silver medal count is greater than the current silver medal count then we have a bad sort
+        return false;
+      }
+      if (nextEntry.getSilverMedals() < currentSilverMedals) {
+        // If the next silver medal count is less than the current silver medal count then all is good
+        return true;
+      }
+
+      // From now on, next silver medal count is equal to current silver medal count
+      if (nextEntry.getBronzeMedals() > currentBronzeMedals) {
+        // If the next gold medal count is greater than the current gold medal count then we have a bad sort
+        return false;
+      }
+      // At this point, next bronze medal count is less to or equal to the current count, so all is good
+      return true;
+    }
+
     public ScoreboardEntry processCurrentEntry(UnrankedScoreboardEntry currentEntry) {
+      // Sanity check: The unranked scoreboard is assumed to be sorted
+      if (!hasCorrectSort(currentEntry)) {
+        throw new IllegalArgumentException("Unranked scoreboard is not correctly sorted");
+      }
+
       entryScore = currentEntry.getScore();
       entryGoldMedals = currentEntry.getGoldMedals();
       entrySilverMedals = currentEntry.getSilverMedals();

@@ -113,6 +113,82 @@ class ScoreboardServiceTest extends BaseTest {
     scoreboardService = new ScoreboardService(scoreboardRepository, rankedSubmissionRepository, userService);
   }
 
+  @Nested
+  @DisplayName("Can throw error when unranked scoreboard is incorrectly sorted")
+  class badSort {
+
+    UnrankedScoreboardEntry unrankedScoreboardEntry1;
+
+    UserEntity testUser1;
+    UserEntity testUser2;
+
+    @BeforeEach
+    void setup() {
+      testUser1 = createTestUser();
+      testUser2 = createTestUser();
+
+      when(userService.findAllPrincipals())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+
+      unrankedScoreboardEntryBuilder.user(testUser1);
+      unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(100L);
+      unrankedScoreboardEntryBuilder.baseScore(100L);
+
+      unrankedScoreboardEntry1 = unrankedScoreboardEntryBuilder.build();
+
+      unrankedScoreboardEntryBuilder.user(testUser2);
+      unrankedScoreboardEntryBuilder.displayName(testUser2.getDisplayName());
+      unrankedScoreboardEntryBuilder.score(100L);
+      unrankedScoreboardEntryBuilder.baseScore(100L);
+    }
+
+    @Test
+    @DisplayName("according to score")
+    void refreshScoreboard_BadSortByScore_ThrowsException() {
+      unrankedScoreboardEntryBuilder.score(200L);
+      unrankedScoreboardEntryBuilder.baseScore(200L);
+
+      when(rankedSubmissionRepository.getUnrankedScoreboard())
+        .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntryBuilder.build()));
+
+      StepVerifier.create(scoreboardService.refreshScoreboard()).expectError(IllegalArgumentException.class).verify();
+    }
+
+    @Test
+    @DisplayName("according to gold medals")
+    void refreshScoreboard_BadSortByGoldMedals_ThrowsException() {
+      unrankedScoreboardEntryBuilder.goldMedals(1L);
+
+      when(rankedSubmissionRepository.getUnrankedScoreboard())
+        .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntryBuilder.build()));
+
+      StepVerifier.create(scoreboardService.refreshScoreboard()).expectError(IllegalArgumentException.class).verify();
+    }
+
+    @Test
+    @DisplayName("according to silver medals")
+    void refreshScoreboard_BadSortBySilverMedals_ThrowsException() {
+      unrankedScoreboardEntryBuilder.silverMedals(1L);
+
+      when(rankedSubmissionRepository.getUnrankedScoreboard())
+        .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntryBuilder.build()));
+
+      StepVerifier.create(scoreboardService.refreshScoreboard()).expectError(IllegalArgumentException.class).verify();
+    }
+
+    @Test
+    @DisplayName("according to bronze medals")
+    void refreshScoreboard_BadSortByBronzeMedals_ThrowsException() {
+      unrankedScoreboardEntryBuilder.bronzeMedals(1L);
+
+      when(rankedSubmissionRepository.getUnrankedScoreboard())
+        .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntryBuilder.build()));
+
+      StepVerifier.create(scoreboardService.refreshScoreboard()).expectError(IllegalArgumentException.class).verify();
+    }
+  }
+
   @Test
   @DisplayName("Can get scoreboard")
   void getScoreboard_ThreeUsersToScore_CallsRepository() {
@@ -478,7 +554,6 @@ class ScoreboardServiceTest extends BaseTest {
       when(userService.findAllPrincipals())
         .thenReturn(Flux.just(testTeam1, testTeam2).map(team -> createPrincipalEntityFromTeam(team)));
 
-      UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
       unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
 
       unrankedScoreboardEntryBuilder.user(testTeam1.getMembers().get(0));
@@ -527,7 +602,6 @@ class ScoreboardServiceTest extends BaseTest {
       when(userService.findAllPrincipals())
         .thenReturn(Flux.just(createPrincipalEntityFromUser(testUser1), createPrincipalEntityFromTeam(testTeam1)));
 
-      UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
       unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
 
       unrankedScoreboardEntryBuilder.user(testUser1);
@@ -575,7 +649,6 @@ class ScoreboardServiceTest extends BaseTest {
       when(userService.findAllPrincipals())
         .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
 
-      UnrankedScoreboardEntryBuilder unrankedScoreboardEntryBuilder = UnrankedScoreboardEntry.builder();
       unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
 
       unrankedScoreboardEntryBuilder.user(testUser1);

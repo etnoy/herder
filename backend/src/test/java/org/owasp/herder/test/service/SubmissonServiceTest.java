@@ -81,30 +81,6 @@ class SubmissonServiceTest extends BaseTest {
 
   UserEntity mockUser;
 
-  //  @Test
-  //  void findAllRankedByUserId_RankedSubmissionsExist_ReturnsRankedSubmissions() {
-  //
-  //    final RankedSubmission mockRankedSubmission1 = mock(RankedSubmission.class);
-  //    final RankedSubmission mockRankedSubmission2 = mock(RankedSubmission.class);
-  //    final RankedSubmission mockRankedSubmission3 = mock(RankedSubmission.class);
-  //    final RankedSubmission mockRankedSubmission4 = mock(RankedSubmission.class);
-  //
-  //    when(submissionRepository.findAllRankedByUserId(TestConstants.TEST_USER_ID))
-  //        .thenReturn(
-  //            Flux.just(
-  //                mockRankedSubmission1,
-  //                mockRankedSubmission2,
-  //                mockRankedSubmission3,
-  //                mockRankedSubmission4));
-  //
-  //    StepVerifier.create(submissionService.findAllRankedByUserId(TestConstants.TEST_USER_ID))
-  //        .expectNext(mockRankedSubmission1)
-  //        .expectNext(mockRankedSubmission2)
-  //        .expectNext(mockRankedSubmission3)
-  //        .expectNext(mockRankedSubmission4)
-  //        .verifyComplete();
-  //  }
-
   ModuleEntity mockModule;
 
   TeamEntity mockTeam;
