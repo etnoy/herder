@@ -46,6 +46,7 @@ import org.owasp.herder.scoring.PrincipalType;
 import org.owasp.herder.user.PrincipalEntity.PrincipalEntityBuilder;
 import org.owasp.herder.validation.ValidClassId;
 import org.owasp.herder.validation.ValidDisplayName;
+import org.owasp.herder.validation.ValidDuration;
 import org.owasp.herder.validation.ValidLoginName;
 import org.owasp.herder.validation.ValidPassword;
 import org.owasp.herder.validation.ValidTeamId;
@@ -587,14 +588,13 @@ public class UserService {
       .flatMap(userRepository::save);
   }
 
-  // TODO: validate durations etc. for these functions
-  public Mono<Void> suspendUntil(@ValidUserId final String userId, final Duration duration) {
+  public Mono<Void> suspendUntil(@ValidUserId final String userId, @ValidDuration final Duration duration) {
     return suspendUntil(userId, LocalDateTime.now(clock).plus(duration), null);
   }
 
-  public Mono<Void> suspendUntil(
+  public Mono<Void> suspendForDuration(
     @ValidUserId final String userId,
-    final Duration duration,
+    @ValidDuration final Duration duration,
     final String suspensionMessage
   ) {
     return suspendUntil(userId, LocalDateTime.now(clock).plus(duration), suspensionMessage);

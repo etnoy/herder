@@ -29,9 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -123,31 +121,43 @@ class SubmissonServiceTest extends BaseTest {
 
   @Test
   void findAllValidByUserIdAndModuleName_NoSubmissionsExist_ReturnsEmpty() {
-    final String mockModuleName = "id";
-    when(submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, mockModuleName))
+    when(
+      submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(
+        TestConstants.TEST_USER_ID,
+        TestConstants.TEST_MODULE_NAME
+      )
+    )
       .thenReturn(Mono.empty());
     StepVerifier
-      .create(submissionService.findAllValidByUserIdAndModuleName(TestConstants.TEST_USER_ID, mockModuleName))
+      .create(
+        submissionService.findAllValidByUserIdAndModuleName(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_NAME)
+      )
       .verifyComplete();
 
     verify(submissionRepository, times(1))
-      .findAllByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, mockModuleName);
+      .findAllByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_NAME);
   }
 
   @Test
   void findAllValidByUserIdAndModuleName_SubmissionsExist_ReturnsSubmissions() {
-    final String mockModuleName = "id";
     final Submission mockSubmission = mock(Submission.class);
 
-    when(submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, mockModuleName))
+    when(
+      submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(
+        TestConstants.TEST_USER_ID,
+        TestConstants.TEST_MODULE_NAME
+      )
+    )
       .thenReturn(Mono.just(mockSubmission));
     StepVerifier
-      .create(submissionService.findAllValidByUserIdAndModuleName(TestConstants.TEST_USER_ID, mockModuleName))
+      .create(
+        submissionService.findAllValidByUserIdAndModuleName(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_NAME)
+      )
       .expectNext(mockSubmission)
       .verifyComplete();
 
     verify(submissionRepository, times(1))
-      .findAllByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, mockModuleName);
+      .findAllByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_NAME);
   }
 
   private void setClock(final Clock testClock) {
@@ -177,13 +187,11 @@ class SubmissonServiceTest extends BaseTest {
   void submit_InvalidFlag_ReturnsInvalidSubmission() {
     final String mockSubmissionId = "submissionId";
 
-    final String flag = "invalidFlag";
+    setClock(TestConstants.year2000Clock);
 
-    final Clock fixedClock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
-
-    setClock(fixedClock);
-
-    when(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
+    when(
+      flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG)
+    )
       .thenReturn(Mono.just(false));
 
     when(
@@ -203,36 +211,40 @@ class SubmissonServiceTest extends BaseTest {
     when(mockModule.isOpen()).thenReturn(true);
 
     StepVerifier
-      .create(submissionService.submitFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
+      .create(
+        submissionService.submitFlag(
+          TestConstants.TEST_USER_ID,
+          TestConstants.TEST_MODULE_ID,
+          TestConstants.TEST_STATIC_FLAG
+        )
+      )
       .assertNext(submission -> {
         assertThat(submission.getId()).isEqualTo(mockSubmissionId);
         assertThat(submission.getUserId()).isEqualTo(TestConstants.TEST_USER_ID);
         assertThat(submission.getModuleId()).isEqualTo(TestConstants.TEST_MODULE_ID);
-        assertThat(submission.getFlag()).isEqualTo(flag);
-        assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(fixedClock));
+        assertThat(submission.getFlag()).isEqualTo(TestConstants.TEST_STATIC_FLAG);
+        assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
         assertThat(submission.isValid()).isFalse();
       })
       .verifyComplete();
 
-    verify(flagHandler, times(1)).verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag);
+    verify(flagHandler, times(1))
+      .verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG);
     verify(submissionRepository, times(1))
       .existsByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID);
     verify(submissionRepository, times(1)).save(any(Submission.class));
   }
 
-  // TODO: module does not exist error handling
-
   @Test
   void submit_ModuleAlreadySolvedByUser_ReturnsModuleAlreadySolvedException() {
-    final String flag = "validFlag";
     final UserEntity mockUser = mock(UserEntity.class);
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    final Clock fixedClock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.systemDefault());
+    setClock(TestConstants.year2000Clock);
 
-    setClock(fixedClock);
-
-    when(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
+    when(
+      flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG)
+    )
       .thenReturn(Mono.just(true));
 
     when(
@@ -247,11 +259,18 @@ class SubmissonServiceTest extends BaseTest {
     when(moduleService.getById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
 
     StepVerifier
-      .create(submissionService.submitFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
+      .create(
+        submissionService.submitFlag(
+          TestConstants.TEST_USER_ID,
+          TestConstants.TEST_MODULE_ID,
+          TestConstants.TEST_STATIC_FLAG
+        )
+      )
       .expectError(ModuleAlreadySolvedException.class)
       .verify();
 
-    verify(flagHandler, times(1)).verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag);
+    verify(flagHandler, times(1))
+      .verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG);
     verify(submissionRepository, times(1))
       .existsByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID);
   }
@@ -260,13 +279,11 @@ class SubmissonServiceTest extends BaseTest {
   void submit_ValidFlag_ReturnsValidSubmission() {
     final String mockSubmissionId = "sub-id";
 
-    final String flag = "validFlag";
+    setClock(TestConstants.year2000Clock);
 
-    final Clock fixedClock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
-
-    setClock(fixedClock);
-
-    when(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
+    when(
+      flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG)
+    )
       .thenReturn(Mono.just(true));
 
     when(
@@ -286,18 +303,25 @@ class SubmissonServiceTest extends BaseTest {
     when(mockModule.isOpen()).thenReturn(true);
 
     StepVerifier
-      .create(submissionService.submitFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
+      .create(
+        submissionService.submitFlag(
+          TestConstants.TEST_USER_ID,
+          TestConstants.TEST_MODULE_ID,
+          TestConstants.TEST_STATIC_FLAG
+        )
+      )
       .assertNext(submission -> {
         assertThat(submission.getId()).isEqualTo(mockSubmissionId);
         assertThat(submission.getUserId()).isEqualTo(TestConstants.TEST_USER_ID);
         assertThat(submission.getModuleId()).isEqualTo(TestConstants.TEST_MODULE_ID);
-        assertThat(submission.getFlag()).isEqualTo(flag);
-        assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(fixedClock));
+        assertThat(submission.getFlag()).isEqualTo(TestConstants.TEST_STATIC_FLAG);
+        assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
         assertThat(submission.isValid()).isTrue();
       })
       .verifyComplete();
 
-    verify(flagHandler, times(1)).verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag);
+    verify(flagHandler, times(1))
+      .verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG);
     verify(submissionRepository, times(1))
       .existsByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID);
     verify(submissionRepository, times(1)).save(any(Submission.class));

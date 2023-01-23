@@ -21,8 +21,6 @@
  */
 package org.owasp.herder.scoring;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +33,7 @@ import org.owasp.herder.scoring.Submission.SubmissionBuilder;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
+import org.owasp.herder.validation.ValidFlag;
 import org.owasp.herder.validation.ValidModuleId;
 import org.owasp.herder.validation.ValidModuleLocator;
 import org.owasp.herder.validation.ValidModuleName;
@@ -120,11 +119,10 @@ public class SubmissionService {
     return builder.build();
   }
 
-  // TODO: add flag validation annotation
   public Mono<Submission> submitFlag(
     @ValidUserId final String userId,
     @ValidModuleId final String moduleId,
-    @NotEmpty @NotNull final String flag
+    @ValidFlag final String flag
   ) {
     final SubmissionBuilder submissionBuilder = Submission.builder();
 

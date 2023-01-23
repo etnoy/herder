@@ -122,7 +122,6 @@ class CsrfServiceTest extends BaseTest {
 
   @Test
   void getPseudonym_ValidArguments_CallsFlagHandler() {
-    // TODO: check what happens with bad arguments
     final String mockUserId = "id";
     final String mockModuleName = "csrf-module";
     final String mockFlag = "flag";
@@ -134,7 +133,6 @@ class CsrfServiceTest extends BaseTest {
 
   @Test
   void validatePseudonym_ValidPseudonym_ReturnsTrue() {
-    // TODO: check what happens with bad arguments
     final String mockPseudonym = "abc123";
     final String mockModuleName = "csrf-module";
 
@@ -146,7 +144,6 @@ class CsrfServiceTest extends BaseTest {
 
   @Test
   void validatePseudonym_InvalidPseudonym_ReturnsTrue() {
-    // TODO: check what happens with bad arguments
     final String mockPseudonym = "abc123";
     final String mockModuleName = "csrf-module";
 
@@ -161,7 +158,6 @@ class CsrfServiceTest extends BaseTest {
 
   @Test
   void validate_InitializedButNotCompleted_ReturnsFalse() {
-    // TODO: check what happens with bad arguments
     final String mockPseudonym = "abc123";
     final String mockModuleName = "csrf-module";
     final CsrfAttack mockCsrfAttack = mock(CsrfAttack.class);
@@ -179,7 +175,6 @@ class CsrfServiceTest extends BaseTest {
 
   @Test
   void validate_AssignmentCompleted_ReturnsTrue() {
-    // TODO: check what happens with bad arguments
     final String mockPseudonym = "abc123";
     final String mockModuleName = "csrf-module";
     final CsrfAttack mockCsrfAttack = mock(CsrfAttack.class);

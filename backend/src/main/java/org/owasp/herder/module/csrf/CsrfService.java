@@ -25,6 +25,9 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.owasp.herder.flag.FlagHandler;
+import org.owasp.herder.validation.ValidModuleLocator;
+import org.owasp.herder.validation.ValidModuleName;
+import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -38,7 +41,7 @@ public class CsrfService {
 
   private final Clock clock;
 
-  public Mono<Void> attack(final String pseudonym, final String moduleName) {
+  public Mono<Void> attack(final String pseudonym, @ValidModuleName final String moduleName) {
     return csrfAttackRepository
       .findByPseudonymAndModuleLocator(pseudonym, moduleName)
       .map(attack -> attack.withFinished(LocalDateTime.now(clock)))
@@ -46,15 +49,15 @@ public class CsrfService {
       .then(Mono.empty());
   }
 
-  public Mono<String> getPseudonym(final String userId, final String moduleLocator) {
+  public Mono<String> getPseudonym(@ValidUserId final String userId, @ValidModuleLocator final String moduleLocator) {
     return flagHandler.getSaltedHmac(userId, moduleLocator, "csrfPseudonym");
   }
 
-  public Mono<Boolean> validatePseudonym(final String pseudonym, final String moduleLocator) {
+  public Mono<Boolean> validatePseudonym(final String pseudonym, @ValidModuleLocator final String moduleLocator) {
     return csrfAttackRepository.countByPseudonymAndModuleLocator(pseudonym, moduleLocator).map(count -> count > 0);
   }
 
-  public Mono<Boolean> validate(final String pseudonym, final String moduleLocator) {
+  public Mono<Boolean> validate(final String pseudonym, @ValidModuleLocator final String moduleLocator) {
     return csrfAttackRepository
       .findByPseudonymAndModuleLocator(pseudonym, moduleLocator)
       .map(attack -> attack.getFinished() != null)

@@ -40,6 +40,7 @@ import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
+import org.owasp.herder.validation.ValidFlag;
 import org.owasp.herder.validation.ValidModuleId;
 import org.owasp.herder.validation.ValidModuleLocator;
 import org.owasp.herder.validation.ValidUserId;
@@ -103,7 +104,7 @@ public class FlagHandler {
   public Mono<Boolean> verifyFlag(
     @ValidUserId final String userId,
     @ValidModuleId final String moduleId,
-    @NotEmpty @NotNull final String submittedFlag
+    @ValidFlag final String submittedFlag
   ) {
     log.trace("Verifying flag " + submittedFlag + " submitted by userId " + userId + " to moduleId " + moduleId);
 

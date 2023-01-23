@@ -39,7 +39,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.DuplicateModuleLocatorException;
-import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
@@ -291,21 +290,6 @@ class ModuleServiceTest extends BaseTest {
       .verifyComplete();
 
     verify(moduleRepository).save(mockModuleWithoutBonusScores);
-  }
-
-  @Test
-  void setStaticFlag_EmptyStaticFlag_ReturnsInvalidFlagException() {
-    StepVerifier.create(moduleService.setStaticFlag("id", "")).expectError(InvalidFlagException.class).verify();
-  }
-
-  @Test
-  void setStaticFlag_NullStaticFlag_ReturnsNullPointerException() {
-    StepVerifier
-      .create(moduleService.setStaticFlag("id", null))
-      .expectErrorMatches(throwable ->
-        throwable instanceof NullPointerException && throwable.getMessage().equals("Flag cannot be null")
-      )
-      .verify();
   }
 
   @Test

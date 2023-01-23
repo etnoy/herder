@@ -28,9 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.DuplicateModuleLocatorException;
 import org.owasp.herder.exception.DuplicateModuleNameException;
-import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.user.ModuleListRepository;
+import org.owasp.herder.validation.ValidFlag;
 import org.owasp.herder.validation.ValidModuleBaseScore;
 import org.owasp.herder.validation.ValidModuleBonusScore;
 import org.owasp.herder.validation.ValidModuleBonusScores;
@@ -209,14 +209,7 @@ public class ModuleService {
     return getById(moduleId).map(module -> module.withName(name)).flatMap(moduleRepository::save).then();
   }
 
-  public Mono<ModuleEntity> setStaticFlag(@ValidModuleId final String moduleId, final String staticFlag) {
-    // TODO: validate flag argument
-    if (staticFlag == null) {
-      return Mono.error(new NullPointerException("Flag cannot be null"));
-    } else if (staticFlag.isEmpty()) {
-      return Mono.error(new InvalidFlagException("Flag cannot be empty"));
-    }
-
+  public Mono<ModuleEntity> setStaticFlag(@ValidModuleId final String moduleId, @ValidFlag final String staticFlag) {
     return getById(moduleId)
       .map(module -> module.withFlagStatic(true).withStaticFlag(staticFlag))
       .flatMap(moduleRepository::save);
