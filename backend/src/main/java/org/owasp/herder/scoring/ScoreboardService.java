@@ -120,13 +120,8 @@ public class ScoreboardService {
         return true;
       }
 
-      // From now on, next silver medal count is equal to current silver medal count
-      if (nextEntry.getBronzeMedals() > currentBronzeMedals) {
-        // If the next gold medal count is greater than the current gold medal count then we have a bad sort
-        return false;
-      }
-      // At this point, next bronze medal count is less to or equal to the current count, so all is good
-      return true;
+      // At this point we only need to check bronze medal sorting
+      return nextEntry.getBronzeMedals() <= currentBronzeMedals;
     }
 
     public ScoreboardEntry processCurrentEntry(UnrankedScoreboardEntry currentEntry) {
