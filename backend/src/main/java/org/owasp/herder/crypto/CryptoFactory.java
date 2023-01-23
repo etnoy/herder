@@ -26,6 +26,7 @@ import java.security.SecureRandom;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.RequiredArgsConstructor;
+import org.owasp.herder.validation.ValidKey;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -42,7 +43,7 @@ public final class CryptoFactory {
     return Mac.getInstance(ALGORITHM);
   }
 
-  public SecretKeySpec getSecretKeySpec(byte[] key) {
+  public SecretKeySpec getSecretKeySpec(final @ValidKey byte[] key) {
     return new SecretKeySpec(key, ALGORITHM);
   }
 }

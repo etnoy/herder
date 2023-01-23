@@ -19,41 +19,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.crypto;
+package org.owasp.herder.validation;
 
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import lombok.RequiredArgsConstructor;
-import org.owasp.herder.exception.CryptographicException;
-import org.owasp.herder.validation.ValidKey;
-import org.owasp.herder.validation.ValidMessage;
-import org.springframework.stereotype.Service;
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@RequiredArgsConstructor
-@Service
-public final class CryptoService {
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = {})
+@NotNull(message = "{org.owasp.herder.ValidMessage.NullMessage}")
+@Size(min = 1, message = "{org.owasp.herder.ValidMessage.WrongLengthMessage}")
+public @interface ValidMessage {
+  String message() default "{org.owasp.herder.ValidMessage.message}";
 
-  private final CryptoFactory cryptoFactory;
+  Class<?>[] groups() default {};
 
-  public byte[] hmac(final @ValidKey byte[] key, final @ValidMessage byte[] message) {
-    final Mac hmac;
-
-    try {
-      hmac = cryptoFactory.getHmac();
-    } catch (NoSuchAlgorithmException e) {
-      throw new CryptographicException("Could not initialize MAC algorithm", e);
-    }
-
-    SecretKeySpec secretKeySpec = cryptoFactory.getSecretKeySpec(key);
-
-    try {
-      hmac.init(secretKeySpec);
-    } catch (InvalidKeyException e) {
-      throw new CryptographicException("Invalid key supplied to MAC", e);
-    }
-
-    return hmac.doFinal(message);
-  }
+  Class<? extends Payload>[] payload() default {};
 }

@@ -32,6 +32,7 @@ import lombok.NonNull;
 import lombok.ToString;
 import lombok.Value;
 import lombok.With;
+import org.owasp.herder.validation.ValidKey;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -60,7 +61,7 @@ public class ModuleEntity implements Serializable {
   private String staticFlag;
 
   @ToString.Exclude
-  @NonNull
+  @ValidKey
   private byte[] key;
 
   @JsonProperty("isOpen")
