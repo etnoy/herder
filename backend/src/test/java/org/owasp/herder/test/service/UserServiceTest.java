@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,9 +47,11 @@ import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
 import org.owasp.herder.exception.UserNotFoundException;
+import org.owasp.herder.scoring.PrincipalType;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.ClassService;
+import org.owasp.herder.user.PrincipalEntity;
 import org.owasp.herder.user.TeamRepository;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
@@ -169,6 +172,54 @@ class UserServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("findAllPrincipals can list a finite amount of users")
+  void findAllPrincipals_OnlyUsers_ReturnsThem() {
+    final UserEntity mockUser1 = mock(UserEntity.class);
+    final UserEntity mockUser2 = mock(UserEntity.class);
+    final UserEntity mockUser3 = mock(UserEntity.class);
+
+    when(mockUser1.getDisplayName()).thenReturn("Test User 1");
+    when(mockUser1.getCreationTime()).thenReturn(LocalDateTime.MIN);
+
+    when(mockUser2.getDisplayName()).thenReturn("Test User 2");
+    when(mockUser2.getCreationTime()).thenReturn(LocalDateTime.MIN);
+
+    when(mockUser3.getDisplayName()).thenReturn("Test User 3");
+    when(mockUser3.getCreationTime()).thenReturn(LocalDateTime.MIN);
+
+    final PrincipalEntity principal1 = PrincipalEntity
+      .builder()
+      .displayName("Test User 1")
+      .creationTime(LocalDateTime.MIN)
+      .principalType(PrincipalType.USER)
+      .build();
+
+    final PrincipalEntity principal2 = PrincipalEntity
+      .builder()
+      .displayName("Test User 2")
+      .creationTime(LocalDateTime.MIN)
+      .principalType(PrincipalType.USER)
+      .build();
+
+    final PrincipalEntity principal3 = PrincipalEntity
+      .builder()
+      .displayName("Test User 3")
+      .creationTime(LocalDateTime.MIN)
+      .principalType(PrincipalType.USER)
+      .build();
+
+    final List<PrincipalEntity> expectedPrincipals = List.of(principal1, principal2, principal3);
+
+    when(teamRepository.findAll()).thenReturn(Flux.empty());
+    when(userRepository.findAllByTeamId(null)).thenReturn(Flux.just(mockUser1, mockUser2, mockUser3));
+
+    StepVerifier
+      .create(userService.findAllPrincipals())
+      .thenConsumeWhile(principal -> expectedPrincipals.contains(principal))
+      .verifyComplete();
+  }
+
+  @Test
   void authenticate_ValidUsernameButInvalidPassword_DoesNotAuthenticate() {
     when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
       .thenReturn(Mono.just(mockPasswordAuth));
@@ -215,6 +266,8 @@ class UserServiceTest extends BaseTest {
       .verifyComplete();
 
     ArgumentCaptor<UserEntity> argument = ArgumentCaptor.forClass(UserEntity.class);
+
+    verify(userRepository).save(argument.capture());
 
     final UserEntity createdUser = argument.getValue();
     assertThat(createdUser.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
@@ -293,10 +346,12 @@ class UserServiceTest extends BaseTest {
       .verifyComplete();
 
     ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(UserEntity.class);
+    verify(userRepository).save(userArgumentCaptor.capture());
     assertThat(userArgumentCaptor.getValue().getId()).isNull();
     assertThat(userArgumentCaptor.getValue().getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
 
     ArgumentCaptor<PasswordAuth> passwordAuthArgumentCaptor = ArgumentCaptor.forClass(PasswordAuth.class);
+    verify(passwordAuthRepository).save(passwordAuthArgumentCaptor.capture());
     assertThat(passwordAuthArgumentCaptor.getValue().getUserId()).isEqualTo(TestConstants.TEST_USER_ID);
     assertThat(passwordAuthArgumentCaptor.getValue().getLoginName()).isEqualTo(TestConstants.TEST_USER_LOGIN_NAME);
     assertThat(passwordAuthArgumentCaptor.getValue().getHashedPassword()).isEqualTo(TestConstants.HASHED_TEST_PASSWORD);
@@ -496,6 +551,8 @@ class UserServiceTest extends BaseTest {
       .verifyComplete();
 
     ArgumentCaptor<UserEntity> argument = ArgumentCaptor.forClass(UserEntity.class);
+
+    verify(userRepository).save(argument.capture());
 
     assertThat(argument.getValue()).isEqualTo(mockUserWithKey);
     assertThat(argument.getValue().getKey()).isEqualTo(TestConstants.TEST_BYTE_ARRAY);

@@ -418,29 +418,38 @@ public class UserService {
   }
 
   /**
+   * Find all that do not belong to a team
+   *
+   * @return
+   */
+  public Flux<UserEntity> findAllUsersWithoutTeams() {
+    return userRepository.findAllByTeamId(null);
+  }
+
+  /**
    * Find all users and teams
    *
    * @return
    */
   public Flux<PrincipalEntity> findAllPrincipals() {
-    Flux<UserEntity> userFlux = userRepository.findAllByTeamId(null);
+    Flux<UserEntity> userFlux = findAllUsersWithoutTeams();
 
     final Flux<PrincipalEntity> teamFlux = teamRepository
       .findAll()
       .flatMap(team -> {
         final String teamId = team.getId();
-        PrincipalEntityBuilder teamEntityBuilder = PrincipalEntity.builder();
+        PrincipalEntityBuilder principalEntityBuilder = PrincipalEntity.builder();
 
-        teamEntityBuilder.principalType(PrincipalType.TEAM);
-        teamEntityBuilder.id(teamId);
-        teamEntityBuilder.displayName(team.getDisplayName());
-        teamEntityBuilder.creationTime(team.getCreationTime());
+        principalEntityBuilder.principalType(PrincipalType.TEAM);
+        principalEntityBuilder.id(teamId);
+        principalEntityBuilder.displayName(team.getDisplayName());
+        principalEntityBuilder.creationTime(team.getCreationTime());
 
         return userRepository
           .findAllByTeamId(teamId)
           .collectList()
           .map(HashSet<UserEntity>::new)
-          .map(teamEntityBuilder::members)
+          .map(principalEntityBuilder::members)
           .map(PrincipalEntityBuilder::build);
       });
 
@@ -448,14 +457,14 @@ public class UserService {
       teamFlux,
       userFlux.map(user -> {
         final String userId = user.getId();
-        PrincipalEntityBuilder userEntityBuilder = PrincipalEntity.builder();
+        PrincipalEntityBuilder principalEntityBuilder = PrincipalEntity.builder();
 
-        userEntityBuilder.principalType(PrincipalType.USER);
-        userEntityBuilder.id(userId);
-        userEntityBuilder.displayName(user.getDisplayName());
-        userEntityBuilder.creationTime(user.getCreationTime());
+        principalEntityBuilder.principalType(PrincipalType.USER);
+        principalEntityBuilder.id(userId);
+        principalEntityBuilder.displayName(user.getDisplayName());
+        principalEntityBuilder.creationTime(user.getCreationTime());
 
-        return userEntityBuilder.build();
+        return principalEntityBuilder.build();
       })
     );
   }
