@@ -67,11 +67,11 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserService {
 
-  private static final String DISPLAY_NAME_ALREADY_EXISTS = "Display name %s already exists";
+  private static final String DISPLAY_NAME_ALREADY_EXISTS = "Display name \"%s\" already exists";
 
-  private static final String LOGIN_NAME_ALREADY_EXISTS = "Login name %s already exists";
+  private static final String LOGIN_NAME_ALREADY_EXISTS = "Login name \"%s\" already exists";
 
-  private static final String TEAM_DISPLAY_NAME_ALREADY_EXISTS = "Team display name %s already exists";
+  private static final String TEAM_DISPLAY_NAME_ALREADY_EXISTS = "Team display name \"%s\" already exists";
 
   private final UserRepository userRepository;
 
@@ -165,10 +165,7 @@ public class UserService {
    * @return the modified UserEntity Mono with team id set to null
    */
   public Mono<UserEntity> clearTeamForUser(@ValidUserId final String userId) {
-    return findById(userId)
-      .switchIfEmpty(Mono.error(new UserNotFoundException()))
-      .map(user -> user.withTeamId(null))
-      .flatMap(userRepository::save);
+    return getById(userId).map(user -> user.withTeamId(null)).flatMap(userRepository::save);
   }
 
   /**

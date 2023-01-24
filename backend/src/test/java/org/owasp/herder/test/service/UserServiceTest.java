@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +47,7 @@ import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.exception.ClassIdNotFoundException;
+import org.owasp.herder.exception.DuplicateTeamDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
 import org.owasp.herder.exception.UserNotFoundException;
@@ -97,6 +99,8 @@ class UserServiceTest extends BaseTest {
   PasswordAuth mockPasswordAuth;
 
   UserEntity mockUser;
+
+  TeamEntity mockTeam;
 
   @Test
   void authenticate_InvalidUsername_ReturnsFalse() {
@@ -172,6 +176,96 @@ class UserServiceTest extends BaseTest {
         throwable instanceof DisabledException && throwable.getMessage().equals("Account disabled")
       )
       .verify();
+  }
+
+  @Test
+  void addUserToTeam_UserAlreadyInTeam_ThrowsException() {
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getTeamId()).thenReturn(TestConstants.TEST_TEAM_ID);
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
+
+    StepVerifier
+      .create(userService.addUserToTeam(TestConstants.TEST_USER_ID, TestConstants.TEST_TEAM_ID))
+      .expectErrorMatches(e ->
+        e instanceof IllegalStateException && e.getMessage().equals("User already belongs to a team")
+      )
+      .verify();
+  }
+
+  @Test
+  void addUserToTeam_UserNotInTeam_UserAddedToTeam() {
+    UserEntity mockUserWithTeam = mock(UserEntity.class);
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getTeamId()).thenReturn(null);
+    when(mockUser.withTeamId(TestConstants.TEST_TEAM_ID)).thenReturn(mockUserWithTeam);
+    when(mockUserWithTeam.getTeamId()).thenReturn(TestConstants.TEST_TEAM_ID);
+    when(mockUserWithTeam.getId()).thenReturn(TestConstants.TEST_USER_ID);
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
+    when(mockTeam.getMembers()).thenReturn(new ArrayList<UserEntity>());
+    when(userRepository.save(mockUserWithTeam)).thenReturn(Mono.just(mockUserWithTeam));
+    when(teamRepository.save(mockTeam)).thenReturn(Mono.just(mockTeam));
+
+    StepVerifier
+      .create(userService.addUserToTeam(TestConstants.TEST_USER_ID, TestConstants.TEST_TEAM_ID))
+      .verifyComplete();
+
+    final ArgumentCaptor<UserEntity> userEntityArgument = ArgumentCaptor.forClass(UserEntity.class);
+    verify(userRepository).save(userEntityArgument.capture());
+    final UserEntity savedUserEntity = userEntityArgument.getValue();
+
+    final ArgumentCaptor<TeamEntity> teamEntityArgument = ArgumentCaptor.forClass(TeamEntity.class);
+    verify(teamRepository).save(teamEntityArgument.capture());
+    final TeamEntity savedTeamEntity = teamEntityArgument.getValue();
+
+    assertThat(savedUserEntity.getTeamId()).isEqualTo(TestConstants.TEST_TEAM_ID);
+    assertThat(savedTeamEntity.getMembers()).extracting(UserEntity::getId).containsExactly(TestConstants.TEST_USER_ID);
+  }
+
+  @Test
+  void createTeam_TeamDisplayNameAlreadyExists_ThrowsException() {
+    when(teamRepository.findByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME)).thenReturn(Mono.just(mockTeam));
+
+    StepVerifier
+      .create(userService.createTeam(TestConstants.TEST_TEAM_DISPLAY_NAME))
+      .expectErrorMatches(e ->
+        e instanceof DuplicateTeamDisplayNameException &&
+        e.getMessage().equals("Team display name \"" + TestConstants.TEST_TEAM_DISPLAY_NAME + "\" already exists")
+      )
+      .verify();
+  }
+
+  @Test
+  void createTeam_TeamDisplayNameDoesNotExist_TeamCreated() {
+    setClock(TestConstants.year2000Clock);
+
+    when(teamRepository.findByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME)).thenReturn(Mono.empty());
+
+    TeamEntity createdTeam = TeamEntity
+      .builder()
+      .displayName(TestConstants.TEST_TEAM_DISPLAY_NAME)
+      .creationTime(LocalDateTime.now(TestConstants.year2000Clock))
+      .members(new ArrayList<>())
+      .build();
+
+    when(teamRepository.save(createdTeam)).thenReturn(Mono.just(createdTeam.withId(TestConstants.TEST_TEAM_ID)));
+
+    StepVerifier
+      .create(userService.createTeam(TestConstants.TEST_TEAM_DISPLAY_NAME))
+      .expectNext(TestConstants.TEST_TEAM_ID)
+      .verifyComplete();
+  }
+
+  @Test
+  void clearTeamForUser_UserExists_TeamIdSetToNull() {
+    UserEntity mockUserWithoutTeam = mock(UserEntity.class);
+    when(mockUser.withTeamId(null)).thenReturn(mockUserWithoutTeam);
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(userRepository.save(mockUserWithoutTeam)).thenReturn(Mono.just(mockUserWithoutTeam));
+
+    StepVerifier
+      .create(userService.clearTeamForUser(TestConstants.TEST_USER_ID))
+      .expectNext(mockUserWithoutTeam)
+      .verifyComplete();
   }
 
   @Test
@@ -695,5 +789,6 @@ class UserServiceTest extends BaseTest {
 
     mockPasswordAuth = mock(PasswordAuth.class);
     mockUser = mock(UserEntity.class);
+    mockTeam = mock(TeamEntity.class);
   }
 }
