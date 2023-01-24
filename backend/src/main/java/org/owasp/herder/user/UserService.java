@@ -307,7 +307,7 @@ public class UserService {
   public Mono<Void> deleteTeam(@ValidTeamId final String teamId) {
     log.info("Deleting team with id " + teamId);
 
-    return teamRepository.deleteById(teamId).then();
+    return teamRepository.deleteById(teamId);
   }
 
   /**
@@ -522,13 +522,14 @@ public class UserService {
    * @return the UserEntity if found. Throws a mono exception if not found
    */
   public Mono<UserEntity> getById(@ValidUserId final String userId) {
-    return findById(userId).switchIfEmpty(Mono.error(new UserNotFoundException("User id " + userId + " not found")));
+    return findById(userId)
+      .switchIfEmpty(Mono.error(new UserNotFoundException("User id \"" + userId + "\" not found")));
   }
 
   public Mono<TeamEntity> getTeamById(@ValidTeamId final String teamId) {
     return teamRepository
       .findById(teamId)
-      .switchIfEmpty(Mono.error(new TeamNotFoundException("Team id " + teamId + " not found")));
+      .switchIfEmpty(Mono.error(new TeamNotFoundException("Team id \"" + teamId + "\" not found")));
   }
 
   public Mono<TeamEntity> getTeamByUserId(@ValidUserId final String userId) {
@@ -594,7 +595,7 @@ public class UserService {
       .flatMap(userRepository::save);
   }
 
-  public Mono<Void> suspendUntil(@ValidUserId final String userId, @ValidDuration final Duration duration) {
+  public Mono<Void> suspendForDuration(@ValidUserId final String userId, @ValidDuration final Duration duration) {
     return suspendUntil(userId, LocalDateTime.now(clock).plus(duration), null);
   }
 

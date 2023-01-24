@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +51,7 @@ import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateTeamDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
+import org.owasp.herder.exception.TeamNotFoundException;
 import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.scoring.PrincipalType;
 import org.owasp.herder.test.BaseTest;
@@ -256,6 +258,13 @@ class UserServiceTest extends BaseTest {
   }
 
   @Test
+  void deleteTeam_ValidTeamId_DeletesTeam() {
+    when(teamRepository.deleteById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.empty());
+
+    StepVerifier.create(userService.deleteTeam(TestConstants.TEST_TEAM_ID)).verifyComplete();
+  }
+
+  @Test
   void clearTeamForUser_UserExists_TeamIdSetToNull() {
     UserEntity mockUserWithoutTeam = mock(UserEntity.class);
     when(mockUser.withTeamId(null)).thenReturn(mockUserWithoutTeam);
@@ -266,6 +275,38 @@ class UserServiceTest extends BaseTest {
       .create(userService.clearTeamForUser(TestConstants.TEST_USER_ID))
       .expectNext(mockUserWithoutTeam)
       .verifyComplete();
+  }
+
+  @Test
+  void disable_ValidUserId_DisablesUser() {
+    final UserEntity disabledMockUser = mock(UserEntity.class);
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+
+    when(mockUser.withEnabled(false)).thenReturn(disabledMockUser);
+    when(userRepository.save(disabledMockUser)).thenReturn(Mono.just(disabledMockUser));
+    StepVerifier.create(userService.disable(TestConstants.TEST_USER_ID)).verifyComplete();
+
+    ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(UserEntity.class);
+    verify(userRepository).save(userArgumentCaptor.capture());
+    assertThat(userArgumentCaptor.getValue()).isEqualTo(disabledMockUser);
+
+    verify(webTokenKeyManager).invalidateAccessToken(TestConstants.TEST_USER_ID);
+  }
+
+  @Test
+  void enable_ValidUserId_DisablesUser() {
+    final UserEntity enabledMockUser = mock(UserEntity.class);
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+
+    when(mockUser.withEnabled(true)).thenReturn(enabledMockUser);
+    when(userRepository.save(enabledMockUser)).thenReturn(Mono.just(enabledMockUser));
+    StepVerifier.create(userService.enable(TestConstants.TEST_USER_ID)).verifyComplete();
+
+    ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(UserEntity.class);
+    verify(userRepository).save(userArgumentCaptor.capture());
+    assertThat(userArgumentCaptor.getValue()).isEqualTo(enabledMockUser);
+
+    verify(webTokenKeyManager).invalidateAccessToken(TestConstants.TEST_USER_ID);
   }
 
   @Test
@@ -345,6 +386,253 @@ class UserServiceTest extends BaseTest {
       .create(userService.findAllPrincipals())
       .thenConsumeWhile(principal -> expectedPrincipals.contains(principal))
       .verifyComplete();
+  }
+
+  @Test
+  void existsByDisplayName_DisplayNameExists_ReturnsTrue() {
+    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME)).thenReturn(Mono.just(mockUser));
+    StepVerifier
+      .create(userService.existsByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME))
+      .expectNext(true)
+      .verifyComplete();
+  }
+
+  @Test
+  void existsByDisplayName_DisplayNameDoesNotExist_ReturnsFalse() {
+    when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME)).thenReturn(Mono.empty());
+    StepVerifier
+      .create(userService.existsByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME))
+      .expectNext(false)
+      .verifyComplete();
+  }
+
+  @Test
+  void existsById_UserIdIxists_ReturnsTrue() {
+    when(userRepository.findById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    StepVerifier.create(userService.existsById(TestConstants.TEST_USER_ID)).expectNext(true).verifyComplete();
+  }
+
+  @Test
+  void existsByI_UserIdDoesNotExist_ReturnsFalse() {
+    when(userRepository.findById(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
+    StepVerifier.create(userService.existsById(TestConstants.TEST_USER_ID)).expectNext(false).verifyComplete();
+  }
+
+  @Test
+  void existsByLoginName_UserIdIxists_ReturnsTrue() {
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
+      .thenReturn(Mono.just(mockPasswordAuth));
+    StepVerifier
+      .create(userService.existsByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
+      .expectNext(true)
+      .verifyComplete();
+  }
+
+  @Test
+  void existsByLoginName_UserIdDoesNotExist_ReturnsFalse() {
+    when(passwordAuthRepository.findByLoginName(TestConstants.TEST_USER_LOGIN_NAME)).thenReturn(Mono.empty());
+    StepVerifier
+      .create(userService.existsByLoginName(TestConstants.TEST_USER_LOGIN_NAME))
+      .expectNext(false)
+      .verifyComplete();
+  }
+
+  @Test
+  void teamExistsByDisplayName_DisplayNameExists_ReturnsTrue() {
+    when(teamRepository.findByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME)).thenReturn(Mono.just(mockTeam));
+    StepVerifier
+      .create(userService.teamExistsByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME))
+      .expectNext(true)
+      .verifyComplete();
+  }
+
+  @Test
+  void teamExistsByDisplayName_DisplayNameDoesNotExist_ReturnsFalse() {
+    when(teamRepository.findByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME)).thenReturn(Mono.empty());
+    StepVerifier
+      .create(userService.teamExistsByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME))
+      .expectNext(false)
+      .verifyComplete();
+  }
+
+  @Test
+  void teamExistsById_DisplayNameExists_ReturnsTrue() {
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
+    StepVerifier.create(userService.teamExistsById(TestConstants.TEST_TEAM_ID)).expectNext(true).verifyComplete();
+  }
+
+  @Test
+  void teamExistsById_DisplayNameDoesNotExist_ReturnsFalse() {
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.empty());
+    StepVerifier.create(userService.teamExistsById(TestConstants.TEST_TEAM_ID)).expectNext(false).verifyComplete();
+  }
+
+  @Test
+  void findAllTeams_TeamsExist_ReturnsTeams() {
+    when(teamRepository.findAll()).thenReturn(Flux.just(mockTeam));
+    StepVerifier.create(userService.findAllTeams()).expectNext(mockTeam).verifyComplete();
+  }
+
+  @Test
+  void findTeamById_TeamExists_ReturnsTeam() {
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
+    StepVerifier.create(userService.findTeamById(TestConstants.TEST_TEAM_ID)).expectNext(mockTeam).verifyComplete();
+  }
+
+  @Test
+  void getById_UserExists_ReturnsUser() {
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    StepVerifier.create(userService.getById(TestConstants.TEST_USER_ID)).expectNext(mockUser).verifyComplete();
+  }
+
+  @Test
+  void getById_UserDoesNotExist_ReturnsError() {
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
+    StepVerifier
+      .create(userService.getById(TestConstants.TEST_USER_ID))
+      .expectErrorMatches(throwable ->
+        throwable instanceof UserNotFoundException &&
+        throwable.getMessage().equals("User id \"" + TestConstants.TEST_USER_ID + "\" not found")
+      )
+      .verify();
+  }
+
+  @Test
+  void getTeamById_TeamExists_ReturnsUser() {
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
+    StepVerifier.create(userService.getTeamById(TestConstants.TEST_TEAM_ID)).expectNext(mockTeam).verifyComplete();
+  }
+
+  @Test
+  void getTeamById_UserDoesNotExist_ReturnsError() {
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.empty());
+    StepVerifier
+      .create(userService.getTeamById(TestConstants.TEST_TEAM_ID))
+      .expectErrorMatches(throwable ->
+        throwable instanceof TeamNotFoundException &&
+        throwable.getMessage().equals("Team id \"" + TestConstants.TEST_TEAM_ID + "\" not found")
+      )
+      .verify();
+  }
+
+  @Test
+  void getTeamByUserId_UserIsInTeam_ReturnsTeam() {
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getTeamId()).thenReturn(TestConstants.TEST_TEAM_ID);
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
+
+    StepVerifier.create(userService.getTeamByUserId(TestConstants.TEST_USER_ID)).expectNext(mockTeam).verifyComplete();
+  }
+
+  @Test
+  void getTeamByUserId_UserIsNotInTeam_ReturnsEmpty() {
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getTeamId()).thenReturn(null);
+
+    StepVerifier.create(userService.getTeamByUserId(TestConstants.TEST_USER_ID)).verifyComplete();
+  }
+
+  @Test
+  void suspendUntil_SuspensionDateInFutureAndHasMessage_Success() {
+    setClock(TestConstants.year2000Clock);
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+
+    final UserEntity mockUserWithSuspension = mock(UserEntity.class);
+    when(mockUser.withSuspendedUntil(LocalDateTime.MAX)).thenReturn(mockUserWithSuspension);
+
+    final UserEntity mockUserWithSuspensionMessage = mock(UserEntity.class);
+    when(mockUserWithSuspension.withSuspensionMessage("Banned")).thenReturn(mockUserWithSuspensionMessage);
+    when(userRepository.save(mockUserWithSuspensionMessage)).thenReturn(Mono.just(mockUserWithSuspensionMessage));
+
+    StepVerifier
+      .create(userService.suspendUntil(TestConstants.TEST_USER_ID, LocalDateTime.MAX, "Banned"))
+      .verifyComplete();
+
+    ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(UserEntity.class);
+    verify(userRepository).save(userArgumentCaptor.capture());
+    assertThat(userArgumentCaptor.getValue()).isEqualTo(mockUserWithSuspensionMessage);
+
+    verify(webTokenKeyManager).invalidateAccessToken(TestConstants.TEST_USER_ID);
+  }
+
+  @Test
+  void suspendUntil_SuspensionDateInFuture_Success() {
+    setClock(TestConstants.year2000Clock);
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+
+    final UserEntity mockUserWithSuspension = mock(UserEntity.class);
+    when(mockUser.withSuspendedUntil(LocalDateTime.MAX)).thenReturn(mockUserWithSuspension);
+
+    when(mockUserWithSuspension.withSuspensionMessage(null)).thenReturn(mockUserWithSuspension);
+    when(userRepository.save(mockUserWithSuspension)).thenReturn(Mono.just(mockUserWithSuspension));
+
+    StepVerifier.create(userService.suspendUntil(TestConstants.TEST_USER_ID, LocalDateTime.MAX)).verifyComplete();
+
+    ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(UserEntity.class);
+    verify(userRepository).save(userArgumentCaptor.capture());
+    assertThat(userArgumentCaptor.getValue()).isEqualTo(mockUserWithSuspension);
+
+    verify(webTokenKeyManager).invalidateAccessToken(TestConstants.TEST_USER_ID);
+  }
+
+  @Test
+  void suspendForDuration_ValidDurationAndHasMessage_Success() {
+    setClock(TestConstants.year2000Clock);
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+
+    final UserEntity mockUserWithSuspension = mock(UserEntity.class);
+    when(mockUser.withSuspendedUntil(LocalDateTime.now(TestConstants.year2000Clock).plus(Duration.ofDays(1))))
+      .thenReturn(mockUserWithSuspension);
+
+    final UserEntity mockUserWithSuspensionMessage = mock(UserEntity.class);
+    when(mockUserWithSuspension.withSuspensionMessage("Banned")).thenReturn(mockUserWithSuspensionMessage);
+    when(userRepository.save(mockUserWithSuspensionMessage)).thenReturn(Mono.just(mockUserWithSuspensionMessage));
+
+    StepVerifier
+      .create(userService.suspendForDuration(TestConstants.TEST_USER_ID, Duration.ofDays(1), "Banned"))
+      .verifyComplete();
+
+    ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(UserEntity.class);
+    verify(userRepository).save(userArgumentCaptor.capture());
+    assertThat(userArgumentCaptor.getValue()).isEqualTo(mockUserWithSuspensionMessage);
+
+    verify(webTokenKeyManager).invalidateAccessToken(TestConstants.TEST_USER_ID);
+  }
+
+  @Test
+  void suspendForDuration_ValidDuration_Success() {
+    setClock(TestConstants.year2000Clock);
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+
+    final UserEntity mockUserWithSuspension = mock(UserEntity.class);
+    when(mockUser.withSuspendedUntil(LocalDateTime.now(TestConstants.year2000Clock).plus(Duration.ofDays(1))))
+      .thenReturn(mockUserWithSuspension);
+
+    when(mockUserWithSuspension.withSuspensionMessage(null)).thenReturn(mockUserWithSuspension);
+    when(userRepository.save(mockUserWithSuspension)).thenReturn(Mono.just(mockUserWithSuspension));
+
+    StepVerifier
+      .create(userService.suspendForDuration(TestConstants.TEST_USER_ID, Duration.ofDays(1)))
+      .verifyComplete();
+
+    ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(UserEntity.class);
+    verify(userRepository).save(userArgumentCaptor.capture());
+    assertThat(userArgumentCaptor.getValue()).isEqualTo(mockUserWithSuspension);
+
+    verify(webTokenKeyManager).invalidateAccessToken(TestConstants.TEST_USER_ID);
+  }
+
+  @Test
+  void suspendUntil_SuspensionDateHasPassedAndHasMessage_Success() {
+    setClock(TestConstants.year2000Clock);
+
+    StepVerifier
+      .create(userService.suspendUntil(TestConstants.TEST_USER_ID, LocalDateTime.MIN, "Banned"))
+      .expectErrorMatches(throwable ->
+        throwable instanceof IllegalArgumentException &&
+        throwable.getMessage().equals("Suspension date must be in the future")
+      )
+      .verify();
   }
 
   @Test
@@ -554,13 +842,13 @@ class UserServiceTest extends BaseTest {
   }
 
   @Test
-  void findAll_NoUsersExist_ReturnsEmpty() {
+  void findAllUsers_NoUsersExist_ReturnsEmpty() {
     when(userRepository.findAll()).thenReturn(Flux.empty());
     StepVerifier.create(userService.findAllUsers()).verifyComplete();
   }
 
   @Test
-  void findAll_UsersExist_ReturnsUsers() {
+  void findAllUsers_UsersExist_ReturnsUsers() {
     final UserEntity mockUser1 = mock(UserEntity.class);
     final UserEntity mockUser2 = mock(UserEntity.class);
     final UserEntity mockUser3 = mock(UserEntity.class);
