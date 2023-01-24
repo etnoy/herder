@@ -129,6 +129,7 @@ public final class TestConstants {
 
   public static final String[] STRINGS_WITH_NULL = ArrayUtils.addAll(STRINGS, (String) null);
 
+  public static final String TEST_TEAM_ID = "abcdab123456789012345678";
   public static final String TEST_TEAM_DISPLAY_NAME = "Test Team";
 
   public static final String TEST_ADMIN_DISPLAY_NAME = "Test Admin";

@@ -30,6 +30,8 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -52,6 +54,7 @@ import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.ClassService;
 import org.owasp.herder.user.PrincipalEntity;
+import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.TeamRepository;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
@@ -179,32 +182,24 @@ class UserServiceTest extends BaseTest {
     final UserEntity mockUser3 = mock(UserEntity.class);
 
     when(mockUser1.getDisplayName()).thenReturn("Test User 1");
-    when(mockUser1.getCreationTime()).thenReturn(LocalDateTime.MIN);
-
     when(mockUser2.getDisplayName()).thenReturn("Test User 2");
-    when(mockUser2.getCreationTime()).thenReturn(LocalDateTime.MIN);
-
     when(mockUser3.getDisplayName()).thenReturn("Test User 3");
-    when(mockUser3.getCreationTime()).thenReturn(LocalDateTime.MIN);
 
     final PrincipalEntity principal1 = PrincipalEntity
       .builder()
       .displayName("Test User 1")
-      .creationTime(LocalDateTime.MIN)
       .principalType(PrincipalType.USER)
       .build();
 
     final PrincipalEntity principal2 = PrincipalEntity
       .builder()
       .displayName("Test User 2")
-      .creationTime(LocalDateTime.MIN)
       .principalType(PrincipalType.USER)
       .build();
 
     final PrincipalEntity principal3 = PrincipalEntity
       .builder()
       .displayName("Test User 3")
-      .creationTime(LocalDateTime.MIN)
       .principalType(PrincipalType.USER)
       .build();
 
@@ -212,6 +207,45 @@ class UserServiceTest extends BaseTest {
 
     when(teamRepository.findAll()).thenReturn(Flux.empty());
     when(userRepository.findAllByTeamId(null)).thenReturn(Flux.just(mockUser1, mockUser2, mockUser3));
+
+    StepVerifier
+      .create(userService.findAllPrincipals())
+      .thenConsumeWhile(principal -> expectedPrincipals.contains(principal))
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("findAllPrincipals can list a finite amount of users and teams")
+  void findAllPrincipals_UsersAndTeams_ReturnsThem() {
+    final UserEntity mockUser1 = mock(UserEntity.class);
+    final UserEntity mockUser2 = mock(UserEntity.class);
+    final UserEntity mockUser3 = mock(UserEntity.class);
+
+    when(mockUser1.getDisplayName()).thenReturn("Test User 1");
+
+    final TeamEntity mockTeam = mock(TeamEntity.class);
+    when(mockTeam.getDisplayName()).thenReturn("Test Team");
+    when(mockTeam.getId()).thenReturn(TestConstants.TEST_TEAM_ID);
+
+    final PrincipalEntity userPrincipal = PrincipalEntity
+      .builder()
+      .displayName("Test User 1")
+      .principalType(PrincipalType.USER)
+      .build();
+
+    final PrincipalEntity teamPrincipal = PrincipalEntity
+      .builder()
+      .id(TestConstants.TEST_TEAM_ID)
+      .displayName("Test Team")
+      .principalType(PrincipalType.TEAM)
+      .members(new HashSet<>(Arrays.asList(mockUser2, mockUser3)))
+      .build();
+
+    final List<PrincipalEntity> expectedPrincipals = List.of(userPrincipal, teamPrincipal);
+
+    when(userRepository.findAllByTeamId(null)).thenReturn(Flux.just(mockUser1));
+    when(userRepository.findAllByTeamId(TestConstants.TEST_TEAM_ID)).thenReturn(Flux.just(mockUser2, mockUser3));
+    when(teamRepository.findAll()).thenReturn(Flux.just(mockTeam));
 
     StepVerifier
       .create(userService.findAllPrincipals())

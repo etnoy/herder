@@ -51,7 +51,6 @@ public final class PrincipalEntity implements Serializable {
   @NonNull
   PrincipalType principalType;
 
-  @NonNull
   LocalDateTime creationTime;
 
   @Builder.Default
