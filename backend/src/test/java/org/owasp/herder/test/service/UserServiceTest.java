@@ -648,7 +648,6 @@ class UserServiceTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     userService =
       new UserService(
         userRepository,
