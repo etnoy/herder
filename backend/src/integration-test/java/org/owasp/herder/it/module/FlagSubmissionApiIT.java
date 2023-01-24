@@ -156,12 +156,12 @@ class FlagSubmissionApiIT extends BaseIT {
       @ParameterizedTest
       @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
       @DisplayName("should be accepted")
-      void canAcceptValidStaticFlag(final String flagToTest) {
-        moduleService.setStaticFlag(moduleId, flagToTest).block();
+      void canAcceptValidStaticFlag(final String validFlag) {
+        moduleService.setStaticFlag(moduleId, validFlag).block();
         StepVerifier
           .create(
             integrationTestUtils
-              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, flagToTest)
+              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, validFlag)
               .map(Submission::isValid)
           )
           .expectNext(true)
@@ -171,13 +171,13 @@ class FlagSubmissionApiIT extends BaseIT {
       @ParameterizedTest
       @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
       @DisplayName("should be accepted when in lowercase")
-      void canAcceptValidStaticFlagInLowercase(final String flagToTest) {
-        moduleService.setStaticFlag(moduleId, flagToTest).block();
+      void canAcceptValidStaticFlagInLowercase(final String validFlag) {
+        moduleService.setStaticFlag(moduleId, validFlag).block();
 
         StepVerifier
           .create(
             integrationTestUtils
-              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, flagToTest.toLowerCase())
+              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, validFlag.toLowerCase())
               .map(Submission::isValid)
           )
           .expectNext(true)
@@ -187,13 +187,13 @@ class FlagSubmissionApiIT extends BaseIT {
       @ParameterizedTest
       @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
       @DisplayName("should be accepted when in uppercase")
-      void canAcceptValidStaticFlagInUppercase(final String flagToTest) {
-        moduleService.setStaticFlag(moduleId, flagToTest).block();
+      void canAcceptValidStaticFlagInUppercase(final String validFlag) {
+        moduleService.setStaticFlag(moduleId, validFlag).block();
 
         StepVerifier
           .create(
             integrationTestUtils
-              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, flagToTest.toUpperCase())
+              .submitFlagApiAndReturnSubmission(TestConstants.TEST_MODULE_LOCATOR, token, validFlag.toUpperCase())
               .map(Submission::isValid)
           )
           .expectNext(true)
@@ -219,19 +219,20 @@ class FlagSubmissionApiIT extends BaseIT {
         .verifyComplete();
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("org.owasp.herder.test.util.TestConstants#validStaticFlagProvider")
     @DisplayName("should return HTTP 401 when not logged in")
-    void canRejectUnauthorizedEmptyStaticFlag() {
-      integrationTestUtils.submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "").expectStatus().isUnauthorized();
+    void canRejectUnauthorizedEmptyStaticFlag(final String validFlag) {
+      integrationTestUtils
+        .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, validFlag)
+        .expectStatus()
+        .isUnauthorized();
     }
 
     @Test
     @DisplayName("when empty should return HTTP 401 when not logged in")
     void canRejectUnauthorizedStaticFlag() {
-      integrationTestUtils
-        .submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, TestConstants.TEST_STATIC_FLAG)
-        .expectStatus()
-        .isUnauthorized();
+      integrationTestUtils.submitFlagApi(TestConstants.TEST_MODULE_LOCATOR, null, "").expectStatus().isUnauthorized();
     }
 
     @BeforeEach

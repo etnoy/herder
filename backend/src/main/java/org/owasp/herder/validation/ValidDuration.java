@@ -24,7 +24,6 @@ package org.owasp.herder.validation;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -32,9 +31,8 @@ import java.lang.annotation.Target;
 
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = {})
+@Constraint(validatedBy = PositiveDurationValidator.class)
 @NotNull(message = "{org.owasp.herder.ValidDuration.NullMessage}")
-@Positive(message = "{org.owasp.herder.ValidDuration.NotPositiveMessage}")
 public @interface ValidDuration {
   String message() default "{org.owasp.herder.ValidDuration.message}";
 

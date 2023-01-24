@@ -21,24 +21,14 @@
  */
 package org.owasp.herder.validation;
 
-import jakarta.validation.Constraint;
-import jakarta.validation.Payload;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import java.time.Duration;
 
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
-@Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = {})
-@NotNull(message = "{org.owasp.herder.ValidFlag.NullMessage}")
-@Size(min = 1, max = 65535, message = "{org.owasp.herder.ValidFlag.WrongLengthMessage}")
-public @interface ValidFlag {
-  String message() default "{org.owasp.herder.ValidFlag.message}";
+public class PositiveDurationValidator implements ConstraintValidator<ValidDuration, Duration> {
 
-  Class<?>[] groups() default {};
-
-  Class<? extends Payload>[] payload() default {};
+  @Override
+  public boolean isValid(final Duration value, ConstraintValidatorContext context) {
+    return !value.isNegative();
+  }
 }
