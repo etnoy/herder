@@ -54,6 +54,7 @@ import org.owasp.herder.exception.DuplicateUserLoginNameException;
 import org.owasp.herder.exception.TeamNotFoundException;
 import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.scoring.PrincipalType;
+import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.ClassService;
@@ -85,6 +86,9 @@ class UserServiceTest extends BaseTest {
 
   @Mock
   PasswordAuthRepository passwordAuthRepository;
+
+  @Mock
+  SubmissionRepository submissionRepository;
 
   @Mock
   ClassService classService;
@@ -1069,6 +1073,7 @@ class UserServiceTest extends BaseTest {
         userRepository,
         teamRepository,
         passwordAuthRepository,
+        submissionRepository,
         classService,
         keyService,
         webTokenKeyManager,

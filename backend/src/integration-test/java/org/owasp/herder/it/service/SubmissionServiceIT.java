@@ -41,7 +41,6 @@ import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
@@ -61,9 +60,6 @@ class SubmissionServiceIT extends BaseIT {
 
   @Autowired
   ModuleService moduleService;
-
-  @Autowired
-  RefresherService refresherService;
 
   @Autowired
   ModuleRepository moduleRepository;
@@ -130,12 +126,12 @@ class SubmissionServiceIT extends BaseIT {
     userService.addUserToTeam(userId1, teamId).block();
     userService.addUserToTeam(userId3, teamId).block();
 
-    refresherService.afterUserUpdate(userId1).block();
-    refresherService.afterUserUpdate(userId3).block();
+    userService.afterUserUpdate(userId1).block();
+    userService.afterUserUpdate(userId3).block();
 
     final TeamEntity team = userService.getTeamById(teamId).block();
 
-    refresherService.refreshSubmissionRanks().block();
+    submissionService.refreshSubmissionRanks().block();
 
     StepVerifier
       .create(submissionService.findAllRankedByTeamId(teamId))
@@ -157,7 +153,7 @@ class SubmissionServiceIT extends BaseIT {
     final UserEntity user = userService.getById(userId).block();
     final ModuleEntity module = moduleService.getById(moduleId).block();
 
-    refresherService.refreshSubmissionRanks().block();
+    submissionService.refreshSubmissionRanks().block();
 
     StepVerifier
       .create(submissionService.findAllRankedByUserId(userId))

@@ -169,4 +169,8 @@ public class SubmissionService {
   ) {
     return submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(userId, moduleId).map(exists -> !exists);
   }
+
+  public Mono<Void> refreshSubmissionRanks() {
+    return submissionRepository.refreshSubmissionRanks().then();
+  }
 }

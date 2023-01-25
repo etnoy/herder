@@ -44,7 +44,6 @@ import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,7 +89,7 @@ class ScoreboardServiceIT extends BaseIT {
       setClock(testClock);
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
       scoreboardService.refreshScoreboard().block();
 
       StepVerifier
@@ -152,7 +151,7 @@ class ScoreboardServiceIT extends BaseIT {
       scoreAdjustmentService.submitUserAdjustment(userId2, -1000, "Penalty for cheating").block();
       scoreAdjustmentService.submitUserAdjustment(userId3, -1000, "Penalty for cheating").block();
 
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
       scoreboardService.refreshScoreboard().block();
 
       StepVerifier
@@ -219,9 +218,9 @@ class ScoreboardServiceIT extends BaseIT {
 
       scoreAdjustmentService.submitTeamAdjustment(teamId, -100, "No scores for you!").block();
 
-      refresherService.afterUserUpdate(userId1).block();
-      refresherService.afterUserUpdate(userId3).block();
-      refresherService.refreshSubmissionRanks().block();
+      userService.afterUserUpdate(userId1).block();
+      userService.afterUserUpdate(userId3).block();
+      submissionService.refreshSubmissionRanks().block();
       scoreboardService.refreshScoreboard().block();
 
       StepVerifier
@@ -284,10 +283,10 @@ class ScoreboardServiceIT extends BaseIT {
       userService.clearTeamForUser(userId1).block();
       userService.clearTeamForUser(userId3).block();
 
-      refresherService.afterUserUpdate(userId1).block();
-      refresherService.afterUserUpdate(userId3).block();
+      userService.afterUserUpdate(userId1).block();
+      userService.afterUserUpdate(userId3).block();
 
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
 
       scoreboardService.refreshScoreboard().block();
 
@@ -355,10 +354,10 @@ class ScoreboardServiceIT extends BaseIT {
 
       scoreAdjustmentService.submitTeamAdjustment(teamId, -1000, "No scores for you!").block();
 
-      refresherService.afterUserUpdate(userId1).block();
-      refresherService.afterUserUpdate(userId3).block();
+      userService.afterUserUpdate(userId1).block();
+      userService.afterUserUpdate(userId3).block();
 
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
 
       scoreboardService.refreshScoreboard().block();
 
@@ -416,7 +415,7 @@ class ScoreboardServiceIT extends BaseIT {
       scoreAdjustmentService.submitUserAdjustment(userId1, -1000, "Penalty for cheating").block();
       scoreAdjustmentService.submitUserAdjustment(userId3, 1000, "Thanks for the bribe").block();
 
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
 
       scoreboardService.refreshScoreboard().block();
 
@@ -477,7 +476,7 @@ class ScoreboardServiceIT extends BaseIT {
       setClock(testClock);
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
       scoreboardService.refreshScoreboard().block();
 
       StepVerifier
@@ -525,7 +524,7 @@ class ScoreboardServiceIT extends BaseIT {
     @DisplayName("before any submissions are made")
     @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoresWithoutSubmissions() {
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
 
       scoreboardService.refreshScoreboard().block();
 
@@ -576,7 +575,7 @@ class ScoreboardServiceIT extends BaseIT {
     void canGetScoresWithSingleSubmissions() {
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
 
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
       scoreboardService.refreshScoreboard().block();
 
       StepVerifier
@@ -637,10 +636,10 @@ class ScoreboardServiceIT extends BaseIT {
       userService.addUserToTeam(userId1, teamId).block();
       userService.addUserToTeam(userId3, teamId).block();
 
-      refresherService.afterUserUpdate(userId1).block();
-      refresherService.afterUserUpdate(userId3).block();
+      userService.afterUserUpdate(userId1).block();
+      userService.afterUserUpdate(userId3).block();
 
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
       scoreboardService.refreshScoreboard().block();
 
       StepVerifier
@@ -683,8 +682,8 @@ class ScoreboardServiceIT extends BaseIT {
       userService.addUserToTeam(userId1, teamId).block();
       userService.addUserToTeam(userId3, teamId).block();
 
-      refresherService.afterUserUpdate(userId1).block();
-      refresherService.afterUserUpdate(userId3).block();
+      userService.afterUserUpdate(userId1).block();
+      userService.afterUserUpdate(userId3).block();
 
       Clock testClock = TestConstants.year2000Clock;
 
@@ -699,10 +698,10 @@ class ScoreboardServiceIT extends BaseIT {
       userService.clearTeamForUser(userId1).block();
       userService.clearTeamForUser(userId3).block();
 
-      refresherService.afterUserUpdate(userId1).block();
-      refresherService.afterUserUpdate(userId3).block();
+      userService.afterUserUpdate(userId1).block();
+      userService.afterUserUpdate(userId3).block();
 
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
       scoreboardService.refreshScoreboard().block();
 
       StepVerifier
@@ -763,9 +762,6 @@ class ScoreboardServiceIT extends BaseIT {
       module1 = moduleService.getById(moduleId2).block();
     }
   }
-
-  @Autowired
-  RefresherService refresherService;
 
   @Autowired
   SubmissionService submissionService;

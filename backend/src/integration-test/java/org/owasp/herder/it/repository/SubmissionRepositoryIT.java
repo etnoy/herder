@@ -44,7 +44,6 @@ import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.service.ConfigurationService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
-import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -52,9 +51,6 @@ import reactor.test.StepVerifier;
 
 @DisplayName("SubmissionRepository integration tests")
 class SubmissionRepositoryIT extends BaseIT {
-
-  @Autowired
-  RefresherService refresherService;
 
   @Autowired
   ModuleService moduleService;

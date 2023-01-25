@@ -29,7 +29,6 @@ import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
-import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.validation.ValidModuleLocator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,8 +53,6 @@ public class FlagController {
 
   private final SubmissionService submissionService;
 
-  private final RefresherService refresherService;
-
   private final ScoreboardService scoreboardService;
 
   @PostMapping(path = "flag/submit/{moduleLocator}")
@@ -69,9 +66,9 @@ public class FlagController {
       .zipWith(moduleService.findByLocator(moduleLocator).map(ModuleEntity::getId))
       .flatMap(tuple -> submissionService.submitFlag(tuple.getT1(), tuple.getT2(), flag))
       .flatMap(u ->
-        refresherService
+        moduleService
           .refreshModuleLists()
-          .then(refresherService.refreshSubmissionRanks())
+          .then(submissionService.refreshSubmissionRanks())
           .then(scoreboardService.refreshScoreboard())
           .then(Mono.just(u))
       )

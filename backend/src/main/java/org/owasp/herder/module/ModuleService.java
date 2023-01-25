@@ -218,4 +218,8 @@ public class ModuleService {
   public Mono<Void> setTags(@ValidModuleId final String moduleId, final Multimap<String, String> tags) {
     return getById(moduleId).map(module -> module.withTags(tags)).flatMap(moduleRepository::save).then();
   }
+
+  public Mono<Void> refreshModuleLists() {
+    return moduleRepository.computeModuleLists().then();
+  }
 }

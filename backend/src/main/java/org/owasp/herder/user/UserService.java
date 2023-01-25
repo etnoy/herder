@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.authentication.AuthResponse;
@@ -43,6 +44,8 @@ import org.owasp.herder.exception.DuplicateUserLoginNameException;
 import org.owasp.herder.exception.TeamNotFoundException;
 import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.scoring.PrincipalType;
+import org.owasp.herder.scoring.Submission;
+import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.user.PrincipalEntity.PrincipalEntityBuilder;
 import org.owasp.herder.validation.ValidClassId;
 import org.owasp.herder.validation.ValidDisplayName;
@@ -78,6 +81,8 @@ public class UserService {
   private final TeamRepository teamRepository;
 
   private final PasswordAuthRepository passwordAuthRepository;
+
+  private final SubmissionRepository submissionRepository;
 
   private final ClassService classService;
 
@@ -651,5 +656,158 @@ public class UserService {
    */
   public Mono<Boolean> teamExistsById(@ValidTeamId final String teamId) {
     return teamRepository.findById(teamId).map(u -> true).defaultIfEmpty(false);
+  }
+
+  /**
+   * Propagate updated user information to relevant parts of the db
+   *
+   * @param userId the updated user id
+   * @return a Mono<Void> signaling completion
+   */
+  public Mono<Void> afterUserUpdate(@ValidUserId final String userId) {
+    Mono<UserEntity> updatedUser = getById(userId);
+
+    // First, update all teams related to the user
+
+    // The team (if any) the user belongs to now
+    Mono<TeamEntity> incomingTeam = updatedUser
+      .filter(user -> user.getTeamId() != null)
+      .map(UserEntity::getTeamId)
+      .flatMap(this::getTeamById)
+      .zipWith(updatedUser)
+      .map(tuple ->
+        tuple
+          .getT1()
+          // Update the correct member entry in the team's member list
+          .withMembers(
+            tuple
+              .getT1()
+              .getMembers()
+              .stream()
+              .map(user -> {
+                if (user.getId().equals(userId)) {
+                  // Found the correct user id, replace this with the new user
+                  // entity
+                  return tuple.getT2();
+                } else {
+                  return user;
+                }
+              })
+              // Collect all entries into an array list
+              .collect(Collectors.toCollection(ArrayList::new))
+          )
+      )
+      // Save the team to the db
+      .flatMap(teamRepository::save);
+
+    // The team (if any) the user belonged to before. This number can be greater than one
+    final Flux<TeamEntity> outgoingTeams = findAllTeams()
+      .filter(team ->
+        // Look through all teams and find the one that lists the updated user as member
+        !team.getMembers().stream().filter(user -> user.getId().equals(userId)).findAny().isEmpty()
+      )
+      .zipWith(updatedUser.cache().repeat())
+      // If the new team and old team are the same, don't remove the old team
+      .filter(tuple -> {
+        if (tuple.getT2().getTeamId() != null) {
+          return !tuple.getT2().getTeamId().equals(tuple.getT1().getId());
+        } else {
+          return true;
+        }
+      })
+      .flatMap(tuple -> {
+        if (tuple.getT1().getMembers().size() == 1) {
+          // The last user of the team was removed, therefore delete the entire team
+          log.info("Deleting team with id " + tuple.getT1().getId() + " because last user left");
+          return deleteTeam(tuple.getT1().getId())
+            .then(afterTeamDeletion(tuple.getT1().getId()))
+            // Return an empty tuple
+            .then(Mono.empty());
+        } else {
+          // Team not empty, do nothing here
+          return Mono.just(tuple);
+        }
+      })
+      .map(tuple ->
+        tuple
+          .getT1()
+          // Update the members list to only contain remaining users
+          .withMembers(
+            tuple
+              .getT1()
+              .getMembers()
+              .stream()
+              .filter(user -> !user.getId().equals(userId))
+              .collect(Collectors.toCollection(ArrayList::new))
+          )
+      );
+
+    // Update submissions
+    Flux<Submission> submissionsToUpdate = submissionRepository.findAllByUserId(userId);
+
+    // Update team field in submissions
+    Flux<Submission> addedTeamSubmissions = incomingTeam
+      .flatMapMany(team -> submissionsToUpdate.map(submission -> submission.withTeamId(team.getId())))
+      .switchIfEmpty(submissionsToUpdate);
+
+    // Save all to db
+    return teamRepository.saveAll(outgoingTeams).thenMany(submissionRepository.saveAll(addedTeamSubmissions)).then();
+  }
+
+  /**
+   * Removes deleted teams from db. To be called after team deletion
+   *
+   * @param teamId
+   * @return
+   */
+  public Mono<Void> afterTeamDeletion(@ValidTeamId final String teamId) {
+    // Update submissions
+
+    // Update team field in submissions
+    final Flux<Submission> updatedTeamSubmissions = submissionRepository
+      .findAllByTeamId(teamId)
+      .map(submission -> submission.withTeamId(null));
+
+    return submissionRepository.saveAll(updatedTeamSubmissions).then();
+  }
+
+  /**
+   * To be called after user deletion
+   *
+   * @param userId
+   * @return
+   */
+  public Mono<Void> afterUserDeletion(@ValidUserId final String userId) {
+    // The team (if any) the user belonged to before
+    final Flux<TeamEntity> outgoingTeams = findAllTeams()
+      .filter(team ->
+        // Look through all teams and find the one that lists the updated user as member
+        !team.getMembers().stream().filter(user -> user.getId().equals(userId)).findAny().isEmpty()
+      )
+      .flatMap(team -> {
+        if (team.getMembers().size() == 1) {
+          // The last user of the team was removed, therefore delete the entire team
+          log.info("Deleting team with id " + team.getId() + " because last user left");
+          return deleteTeam(team.getId())
+            .flatMap(u -> afterTeamDeletion(team.getId()))
+            // Return an empty tuple
+            .then(Mono.empty());
+        } else {
+          // Team not empty, do nothing here
+          return Mono.just(team);
+        }
+      })
+      .map(team ->
+        team.withMembers(
+          // Update the members list to only contain remaining users
+          team
+            .getMembers()
+            .stream()
+            .filter(user -> !user.getId().equals(userId))
+            .collect(Collectors.toCollection(ArrayList::new))
+        )
+      );
+
+    return teamRepository.saveAll(outgoingTeams).then();
   }
 }

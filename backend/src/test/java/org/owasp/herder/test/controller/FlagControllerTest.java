@@ -43,7 +43,6 @@ import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.RefresherService;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -64,22 +63,12 @@ class FlagControllerTest extends BaseTest {
   private SubmissionService submissionService;
 
   @Mock
-  private RefresherService refresherService;
-
-  @Mock
   private ScoreboardService scoreboardService;
 
   @BeforeEach
   void setup() {
     // Set up the system under test
-    flagController =
-      new FlagController(
-        controllerAuthentication,
-        moduleService,
-        submissionService,
-        refresherService,
-        scoreboardService
-      );
+    flagController = new FlagController(controllerAuthentication, moduleService, submissionService, scoreboardService);
   }
 
   @Test
@@ -123,8 +112,8 @@ class FlagControllerTest extends BaseTest {
 
     when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
 
-    when(refresherService.refreshModuleLists()).thenReturn(Mono.empty());
-    when(refresherService.refreshSubmissionRanks()).thenReturn(Mono.empty());
+    when(moduleService.refreshModuleLists()).thenReturn(Mono.empty());
+    when(submissionService.refreshSubmissionRanks()).thenReturn(Mono.empty());
     when(scoreboardService.refreshScoreboard()).thenReturn(Mono.empty());
 
     StepVerifier

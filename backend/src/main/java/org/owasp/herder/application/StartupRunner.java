@@ -27,7 +27,6 @@ import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
-import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.UserService;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -44,8 +43,6 @@ public class StartupRunner implements ApplicationRunner {
   private final ModuleService moduleService;
 
   private final SubmissionService submissionService;
-
-  private final RefresherService refresherService;
 
   private final ScoreboardService scoreboardService;
 
@@ -95,12 +92,12 @@ public class StartupRunner implements ApplicationRunner {
       userService.addUserToTeam(userId2, teamId1).block();
       userService.addUserToTeam(userId3, teamId2).block();
 
-      refresherService.afterUserUpdate(userId1).block();
-      refresherService.afterUserUpdate(userId2).block();
-      refresherService.afterUserUpdate(userId3).block();
+      userService.afterUserUpdate(userId1).block();
+      userService.afterUserUpdate(userId2).block();
+      userService.afterUserUpdate(userId3).block();
     }
-    refresherService.refreshModuleLists().block();
-    refresherService.refreshSubmissionRanks().block();
+    moduleService.refreshModuleLists().block();
+    submissionService.refreshSubmissionRanks().block();
     scoreboardService.refreshScoreboard().block();
   }
 }
