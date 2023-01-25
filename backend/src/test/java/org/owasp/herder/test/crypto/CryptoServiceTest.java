@@ -54,16 +54,13 @@ class CryptoServiceTest extends BaseTest {
 
   @Test
   void hmac_GetHmacThrowsNoSuchAlgorithmException_ThrowsCryptographicException() throws NoSuchAlgorithmException {
-    final byte[] message = { 120, 56 };
     when(cryptoFactory.getHmac()).thenThrow(new NoSuchAlgorithmException());
     assertThatExceptionOfType(CryptographicException.class)
-      .isThrownBy(() -> cryptoService.hmac(TestConstants.TEST_BYTE_ARRAY, message));
+      .isThrownBy(() -> cryptoService.hmac(TestConstants.TEST_BYTE_ARRAY, TestConstants.TEST_BYTE_ARRAY2));
   }
 
   @Test
   void hmac_InvalidKeyException_ThrowsCryptographicException() throws Exception {
-    final byte[] message = { 120, 56, 111 };
-
     Mac mockMac = mock(Mac.class);
     when(cryptoFactory.getHmac()).thenReturn(mockMac);
 
@@ -73,24 +70,21 @@ class CryptoServiceTest extends BaseTest {
     doThrow(new InvalidKeyException()).when(mockMac).init(mockSecretKeySpec);
 
     assertThatExceptionOfType(CryptographicException.class)
-      .isThrownBy(() -> cryptoService.hmac(TestConstants.TEST_BYTE_ARRAY, message));
+      .isThrownBy(() -> cryptoService.hmac(TestConstants.TEST_BYTE_ARRAY, TestConstants.TEST_BYTE_ARRAY2));
   }
 
   @Test
   void hmac_ValidData_ReturnsHash() throws NoSuchAlgorithmException {
-    // TODO: cleanup these test constants
-    final byte[] message = { 120, 56, 111 };
-    final byte[] expectedHash = { 46 };
-
     Mac mockMac = mock(Mac.class);
     when(cryptoFactory.getHmac()).thenReturn(mockMac);
 
     SecretKeySpec mockSecretKeySpec = mock(SecretKeySpec.class);
     when(cryptoFactory.getSecretKeySpec(TestConstants.TEST_BYTE_ARRAY)).thenReturn(mockSecretKeySpec);
 
-    when(mockMac.doFinal(message)).thenReturn(expectedHash);
+    when(mockMac.doFinal(TestConstants.TEST_BYTE_ARRAY2)).thenReturn(TestConstants.TEST_BYTE_ARRAY3);
 
-    assertThat(cryptoService.hmac(TestConstants.TEST_BYTE_ARRAY, message)).isEqualTo(expectedHash);
+    assertThat(cryptoService.hmac(TestConstants.TEST_BYTE_ARRAY, TestConstants.TEST_BYTE_ARRAY2))
+      .isEqualTo(TestConstants.TEST_BYTE_ARRAY3);
   }
 
   @BeforeEach
