@@ -45,6 +45,7 @@ import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.ModuleListRepository;
+import org.owasp.herder.user.UserRepository;
 import org.springframework.context.ApplicationContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -60,6 +61,9 @@ class ModuleServiceTest extends BaseTest {
 
   @Mock
   ModuleRepository moduleRepository;
+
+  @Mock
+  UserRepository userRepository;
 
   @Mock
   ModuleListRepository moduleListRepository;
@@ -315,6 +319,6 @@ class ModuleServiceTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    moduleService = new ModuleService(moduleRepository, keyService, moduleListRepository);
+    moduleService = new ModuleService(moduleRepository, keyService, moduleListRepository, userRepository);
   }
 }

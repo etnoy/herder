@@ -30,6 +30,7 @@ import org.owasp.herder.exception.DuplicateModuleLocatorException;
 import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.user.ModuleListRepository;
+import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.validation.ValidFlag;
 import org.owasp.herder.validation.ValidModuleBaseScore;
 import org.owasp.herder.validation.ValidModuleBonusScore;
@@ -55,6 +56,8 @@ public class ModuleService {
   private final KeyService keyService;
 
   private final ModuleListRepository moduleListRepository;
+
+  private final UserRepository userRepository;
 
   public Mono<ModuleEntity> close(@ValidModuleId final String moduleId) {
     return getById(moduleId).map(module -> module.withOpen(false)).flatMap(moduleRepository::save);
@@ -220,6 +223,6 @@ public class ModuleService {
   }
 
   public Mono<Void> refreshModuleLists() {
-    return moduleRepository.computeModuleLists().then();
+    return userRepository.computeModuleLists().then();
   }
 }
