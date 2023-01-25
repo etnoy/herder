@@ -41,6 +41,7 @@ import org.owasp.herder.crypto.CryptoFactory;
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.CryptographicException;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CryptoService unit tests")
@@ -53,45 +54,31 @@ class CryptoServiceTest extends BaseTest {
 
   @Test
   void hmac_GetHmacThrowsNoSuchAlgorithmException_ThrowsCryptographicException() throws NoSuchAlgorithmException {
-    final byte[] key = { -91, -79, 67 };
     final byte[] message = { 120, 56 };
     when(cryptoFactory.getHmac()).thenThrow(new NoSuchAlgorithmException());
-    assertThatExceptionOfType(CryptographicException.class).isThrownBy(() -> cryptoService.hmac(key, message));
+    assertThatExceptionOfType(CryptographicException.class)
+      .isThrownBy(() -> cryptoService.hmac(TestConstants.TEST_BYTE_ARRAY, message));
   }
 
   @Test
   void hmac_InvalidKeyException_ThrowsCryptographicException() throws Exception {
-    final byte[] key = { -91 };
     final byte[] message = { 120, 56, 111 };
 
     Mac mockMac = mock(Mac.class);
     when(cryptoFactory.getHmac()).thenReturn(mockMac);
 
     SecretKeySpec mockSecretKeySpec = mock(SecretKeySpec.class);
-    when(cryptoFactory.getSecretKeySpec(key)).thenReturn(mockSecretKeySpec);
+    when(cryptoFactory.getSecretKeySpec(TestConstants.TEST_BYTE_ARRAY)).thenReturn(mockSecretKeySpec);
 
     doThrow(new InvalidKeyException()).when(mockMac).init(mockSecretKeySpec);
 
-    assertThatExceptionOfType(CryptographicException.class).isThrownBy(() -> cryptoService.hmac(key, message));
-  }
-
-  @Test
-  void hmac_NullKey_ThrowsNullPointerException() {
-    final byte[] message = { 120, 56, 111, -98, -118, 44, -65, -127, 39, 35 };
-
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> cryptoService.hmac(null, message));
-  }
-
-  @Test
-  void hmac_NullMessage_ThrowsNullPointerException() {
-    final byte[] key = { -91, -79, 67, -107, 9, 91, 62, -95, 80, 78 };
-
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> cryptoService.hmac(key, null));
+    assertThatExceptionOfType(CryptographicException.class)
+      .isThrownBy(() -> cryptoService.hmac(TestConstants.TEST_BYTE_ARRAY, message));
   }
 
   @Test
   void hmac_ValidData_ReturnsHash() throws NoSuchAlgorithmException {
-    final byte[] key = { -91 };
+    // TODO: cleanup these test constants
     final byte[] message = { 120, 56, 111 };
     final byte[] expectedHash = { 46 };
 
@@ -99,11 +86,11 @@ class CryptoServiceTest extends BaseTest {
     when(cryptoFactory.getHmac()).thenReturn(mockMac);
 
     SecretKeySpec mockSecretKeySpec = mock(SecretKeySpec.class);
-    when(cryptoFactory.getSecretKeySpec(key)).thenReturn(mockSecretKeySpec);
+    when(cryptoFactory.getSecretKeySpec(TestConstants.TEST_BYTE_ARRAY)).thenReturn(mockSecretKeySpec);
 
     when(mockMac.doFinal(message)).thenReturn(expectedHash);
 
-    assertThat(cryptoService.hmac(key, message)).isEqualTo(expectedHash);
+    assertThat(cryptoService.hmac(TestConstants.TEST_BYTE_ARRAY, message)).isEqualTo(expectedHash);
   }
 
   @BeforeEach

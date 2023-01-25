@@ -35,6 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.CryptoFactory;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CryptoFactory unit tests")
@@ -54,8 +55,7 @@ class CryptoFactoryTest extends BaseTest {
 
   @Test
   void getHmacKey_ValidKey_ReturnsMacInstance() {
-    final byte[] key = { -91, -79, 67 };
-    assertThat(cryptoFactory.getSecretKeySpec(key)).isInstanceOf(Key.class);
+    assertThat(cryptoFactory.getSecretKeySpec(TestConstants.TEST_BYTE_ARRAY)).isInstanceOf(Key.class);
   }
 
   @Test
