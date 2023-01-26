@@ -149,6 +149,20 @@ class TeamServiceIT extends BaseIT {
   }
 
   @Test
+  @DisplayName("Can return error when removing user from team it is not a member of")
+  void canReturnErrorWhenRemovingUserFromTeamItDoesntBelongTo() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    StepVerifier
+      .create(teamService.expel(teamId, userId))
+      .expectErrorMatches(throwable ->
+        throwable instanceof IllegalStateException && throwable.getMessage().equals("User not found in team")
+      )
+      .verify();
+  }
+
+  @Test
   @DisplayName("Can update team memberships after user switches teams")
   void canUpdateMembershipsAfterTeamChange() {
     final String userId = integrationTestUtils.createTestUser();

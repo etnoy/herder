@@ -69,8 +69,15 @@ public class TeamService {
   public Mono<Void> expel(@ValidTeamId final String teamId, @ValidUserId final String expelledUserId) {
     return getById(teamId)
       .flatMap(team -> {
-        if (team.getMembers().stream().filter(member -> member.getId().equals(expelledUserId)).count() != 1) {
-          return Mono.error(new IllegalStateException("Team contains an inconsistent number of matching users"));
+        final long matchingUserCount = team
+          .getMembers()
+          .stream()
+          .filter(member -> member.getId().equals(expelledUserId))
+          .count();
+        if (matchingUserCount == 0) {
+          return Mono.error(new IllegalStateException("User not found in team"));
+        } else if (matchingUserCount > 1) {
+          return Mono.error(new IllegalStateException("Team contains the same user more than once"));
         }
         return Mono.just(team);
       })
