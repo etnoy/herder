@@ -66,6 +66,26 @@ public class TeamService {
       .then();
   }
 
+  public Mono<Void> expel(@ValidTeamId final String teamId, @ValidUserId final String expelledUserId) {
+    return getById(teamId)
+      .flatMap(team -> {
+        if (team.getMembers().stream().filter(member -> member.getId().equals(expelledUserId)).count() != 1) {
+          return Mono.error(new IllegalStateException("Team contains an inconsistent number of matching users"));
+        }
+        return Mono.just(team);
+      })
+      .map(team -> {
+        final ArrayList<UserEntity> newMembers = team
+          .getMembers()
+          .stream()
+          .filter(member -> !member.getId().equals(expelledUserId))
+          .collect(Collectors.toCollection(ArrayList::new));
+        return team.withMembers(newMembers);
+      })
+      .flatMap(teamRepository::save)
+      .then();
+  }
+
   /**
    * Creates a new team
    *
@@ -185,7 +205,7 @@ public class TeamService {
   public Mono<Void> updateTeamMember(final UserEntity updatedUser) {
     final String currentTeamId = updatedUser.getTeamId();
 
-    if (updatedUser.getTeamId() == null) {
+    if (currentTeamId == null) {
       return Mono.empty();
     }
 
@@ -193,7 +213,7 @@ public class TeamService {
     findAllByMemberId(updatedUser.getId());
 
     // Update the user entity in the team the user belongs to
-    getById(updatedUser.getTeamId())
+    return getById(currentTeamId)
       .map(team ->
         team.withMembers(
           team
@@ -213,6 +233,5 @@ public class TeamService {
       )
       .flatMap(teamRepository::save)
       .then();
-    return Mono.empty();
   }
 }

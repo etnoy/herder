@@ -40,6 +40,7 @@ import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.TeamRepository;
 import org.owasp.herder.user.TeamService;
@@ -115,16 +116,65 @@ class TeamServiceIT extends BaseIT {
     final UserEntity user = userService.getById(userId).block();
     teamService.addMember(teamId, user).block();
 
-    final TeamEntity team = teamService.getById(teamId).block();
-
-    userService.setDisplayName(userId, "New name").block();
-
-    teamService.updateTeamMember(user).block();
+    final UserEntity renamedUser = userService.setDisplayName(userId, "New name").block();
+    teamService.updateTeamMember(renamedUser).block();
 
     StepVerifier
       .create(teamService.getById(teamId))
       .assertNext(returnedTeam -> {
         assertThat(returnedTeam.getMembers()).extracting(UserEntity::getDisplayName).containsExactly("New name");
+      })
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can remove user from team")
+  void canRemoveUserFromTeam() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    userService.addUserToTeam(userId, teamId).block();
+    final UserEntity user = userService.getById(userId).block();
+    teamService.addMember(teamId, user).block();
+
+    userService.clearTeamForUser(userId).block();
+    teamService.expel(teamId, userId).block();
+
+    StepVerifier
+      .create(teamService.getById(teamId))
+      .assertNext(returnedTeam -> {
+        assertThat(returnedTeam.getMembers()).isEmpty();
+      })
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can update team memberships after user switches teams")
+  void canUpdateMembershipsAfterTeamChange() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String teamId1 = integrationTestUtils.createTestTeam();
+    final String teamId2 = teamService.create(TestConstants.TEST_TEAM_DISPLAY_NAME + " 2").block();
+
+    userService.addUserToTeam(userId, teamId1).block();
+    final UserEntity user = userService.getById(userId).block();
+    teamService.addMember(teamId1, user).block();
+
+    userService.clearTeamForUser(userId).block();
+    userService.addUserToTeam(userId, teamId2).block();
+    final UserEntity userWithNewTeam = userService.getById(userId).block();
+    teamService.addMember(teamId2, userWithNewTeam).block();
+
+    StepVerifier
+      .create(teamService.getById(teamId1))
+      .assertNext(returnedTeam -> {
+        assertThat(returnedTeam.getMembers()).isEmpty();
+      })
+      .verifyComplete();
+
+    StepVerifier
+      .create(teamService.getById(teamId2))
+      .assertNext(returnedTeam -> {
+        assertThat(returnedTeam.getMembers()).containsExactly(userWithNewTeam);
       })
       .verifyComplete();
   }
