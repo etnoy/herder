@@ -87,6 +87,25 @@ class TeamServiceIT extends BaseIT {
   InvalidFlagRateLimiter invalidFlagRateLimiter;
 
   @Test
+  @DisplayName("Can add user to team")
+  void canAddUserToTeam() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    userService.addUserToTeam(userId, teamId).block();
+    final UserEntity user = userService.getById(userId).block();
+
+    teamService.addMember(teamId, user).block();
+
+    StepVerifier
+      .create(teamService.getById(teamId))
+      .assertNext(returnedTeam -> {
+        assertThat(returnedTeam.getMembers()).containsExactly(user);
+      })
+      .verifyComplete();
+  }
+
+  @Test
   @DisplayName("Can update the embedded user entity in a team after user entity has changed")
   void canUpdateEmbeddedUserEntity() {
     final String userId = integrationTestUtils.createTestUser();
@@ -94,6 +113,8 @@ class TeamServiceIT extends BaseIT {
     userService.addUserToTeam(userId, teamId).block();
 
     final UserEntity user = userService.getById(userId).block();
+    teamService.addMember(teamId, user).block();
+
     final TeamEntity team = teamService.getById(teamId).block();
 
     userService.setDisplayName(userId, "New name").block();

@@ -96,19 +96,11 @@ public class UserService {
 
   public Mono<Void> addUserToTeam(@ValidUserId final String userId, @ValidTeamId final String teamId) {
     log.debug("Adding user with id " + userId + " to team with id " + teamId);
-    final Mono<UserEntity> userMono = getById(userId)
+    return getById(userId)
       .filter(user -> user.getTeamId() == null)
-      .switchIfEmpty(Mono.error(new IllegalStateException("User already belongs to a team")));
-
-    return Mono
-      .zip(userMono, getTeamById(teamId))
-      .flatMap(tuple -> {
-        final UserEntity user = tuple.getT1().withTeamId(teamId);
-        final TeamEntity team = tuple.getT2();
-        final ArrayList<UserEntity> members = team.getMembers();
-        members.add(user);
-        return userRepository.save(user).then(teamRepository.save(team.withMembers(members)));
-      })
+      .switchIfEmpty(Mono.error(new IllegalStateException("User already belongs to a team")))
+      .map(user -> user.withTeamId(teamId))
+      .flatMap(userRepository::save)
       .then();
   }
 
