@@ -43,8 +43,8 @@ import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.test.StepVerifier;
 
-@DisplayName("User administration integration tests")
-class UserAdministrationIT extends BaseIT {
+@DisplayName("UserService integration tests")
+class UserServiceIT extends BaseIT {
 
   @Autowired
   UserService userService;
