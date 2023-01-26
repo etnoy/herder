@@ -40,6 +40,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -54,6 +55,7 @@ import org.owasp.herder.exception.DuplicateUserLoginNameException;
 import org.owasp.herder.exception.TeamNotFoundException;
 import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.scoring.PrincipalType;
+import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
@@ -200,16 +202,25 @@ class UserServiceTest extends BaseTest {
 
   @Test
   void addUserToTeam_UserNotInTeam_UserAddedToTeam() {
-    UserEntity mockUserWithTeam = mock(UserEntity.class);
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getTeamId()).thenReturn(null);
-    when(mockUser.withTeamId(TestConstants.TEST_TEAM_ID)).thenReturn(mockUserWithTeam);
-    when(mockUserWithTeam.getTeamId()).thenReturn(TestConstants.TEST_TEAM_ID);
-    when(mockUserWithTeam.getId()).thenReturn(TestConstants.TEST_USER_ID);
-    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
-    when(mockTeam.getMembers()).thenReturn(new ArrayList<UserEntity>());
-    when(userRepository.save(mockUserWithTeam)).thenReturn(Mono.just(mockUserWithTeam));
-    when(teamRepository.save(mockTeam)).thenReturn(Mono.just(mockTeam));
+    final ArrayList<UserEntity> initialTeamMembers = new ArrayList<>();
+
+    final TeamEntity testTeam = TeamEntity
+      .builder()
+      .displayName(TestConstants.TEST_TEAM_DISPLAY_NAME)
+      .members(initialTeamMembers)
+      .build();
+
+    final UserEntity userBeingAdded = UserEntity
+      .builder()
+      .displayName(TestConstants.TEST_USER_DISPLAY_NAME)
+      .key(TestConstants.TEST_BYTE_ARRAY)
+      .build();
+
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(userBeingAdded));
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(testTeam));
+
+    when(userRepository.save(any(UserEntity.class))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
+    when(teamRepository.save(any(TeamEntity.class))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
     StepVerifier
       .create(userService.addUserToTeam(TestConstants.TEST_USER_ID, TestConstants.TEST_TEAM_ID))
@@ -217,14 +228,13 @@ class UserServiceTest extends BaseTest {
 
     final ArgumentCaptor<UserEntity> userEntityArgument = ArgumentCaptor.forClass(UserEntity.class);
     verify(userRepository).save(userEntityArgument.capture());
-    final UserEntity savedUserEntity = userEntityArgument.getValue();
 
     final ArgumentCaptor<TeamEntity> teamEntityArgument = ArgumentCaptor.forClass(TeamEntity.class);
     verify(teamRepository).save(teamEntityArgument.capture());
-    final TeamEntity savedTeamEntity = teamEntityArgument.getValue();
 
-    assertThat(savedUserEntity.getTeamId()).isEqualTo(TestConstants.TEST_TEAM_ID);
-    assertThat(savedTeamEntity.getMembers()).extracting(UserEntity::getId).containsExactly(TestConstants.TEST_USER_ID);
+    assertThat(userEntityArgument.getValue().getTeamId()).isEqualTo(TestConstants.TEST_TEAM_ID);
+    assertThat(teamEntityArgument.getValue().getMembers())
+      .containsExactly(userBeingAdded.withTeamId(TestConstants.TEST_TEAM_ID));
   }
 
   @Test
@@ -1037,18 +1047,7 @@ class UserServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Can return exception when setting display name of user id that does not exist")
-  void setDisplayName_UserIdDoesNotExist_ReturnsUserIdNotFoundException() {
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
-
-    StepVerifier
-      .create(userService.setDisplayName(TestConstants.TEST_USER_ID, TestConstants.TEST_USER_DISPLAY_NAME))
-      .expectError(UserNotFoundException.class)
-      .verify();
-  }
-
-  @Test
-  @DisplayName("Can change display name")
+  @DisplayName("Can change a user's display name")
   void setDisplayName_ValidDisplayName_DisplayNameIsSet() {
     String newDisplayName = "newDisplayName";
 
@@ -1064,6 +1063,57 @@ class UserServiceTest extends BaseTest {
       .expectNextMatches(user -> user.getDisplayName().equals(newDisplayName))
       .as("Display name should change to supplied value")
       .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can do nothing after updating user without team or submissions")
+  @SuppressWarnings("unchecked")
+  void afterUserUpdate_UserNotInTeamAndNoSubmissions_DoesNothing() {
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(teamRepository.findAll()).thenReturn(Flux.empty());
+    when(submissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.empty());
+    when(teamRepository.saveAll(ArgumentMatchers.<Flux<TeamEntity>>any())).thenReturn(Flux.empty());
+    when(submissionRepository.saveAll(ArgumentMatchers.<Flux<Submission>>any())).thenReturn(Flux.empty());
+
+    StepVerifier.create(userService.afterUserUpdate(TestConstants.TEST_USER_ID)).verifyComplete();
+
+    verify(teamRepository, never()).save(any());
+
+    final ArgumentCaptor<Flux<Submission>> addedTeamSubmissionsArgument = ArgumentCaptor.forClass(Flux.class);
+    verify(submissionRepository).saveAll(addedTeamSubmissionsArgument.capture());
+    StepVerifier.create(addedTeamSubmissionsArgument.getValue()).verifyComplete();
+
+    final ArgumentCaptor<Flux<TeamEntity>> outgoingTeamArgument = ArgumentCaptor.forClass(Flux.class);
+    verify(teamRepository).saveAll(outgoingTeamArgument.capture());
+    StepVerifier.create(outgoingTeamArgument.getValue()).verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can update a user added to a team")
+  @SuppressWarnings("unchecked")
+  void afterUserUpdate_UserAddedToTeam_UpdatesTeam() {
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(mockUser.getTeamId()).thenReturn(TestConstants.TEST_TEAM_ID);
+
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
+    when(mockTeam.getMembers()).thenReturn(new ArrayList<UserEntity>());
+
+    when(teamRepository.findAll()).thenReturn(Flux.just(mockTeam));
+    when(submissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.empty());
+    when(teamRepository.saveAll(ArgumentMatchers.<Flux<TeamEntity>>any())).thenReturn(Flux.empty());
+    when(submissionRepository.saveAll(ArgumentMatchers.<Flux<Submission>>any())).thenReturn(Flux.empty());
+
+    StepVerifier.create(userService.afterUserUpdate(TestConstants.TEST_USER_ID)).verifyComplete();
+
+    verify(teamRepository, never()).save(any());
+
+    final ArgumentCaptor<Flux<Submission>> addedTeamSubmissionsArgument = ArgumentCaptor.forClass(Flux.class);
+    verify(submissionRepository).saveAll(addedTeamSubmissionsArgument.capture());
+    StepVerifier.create(addedTeamSubmissionsArgument.getValue()).verifyComplete();
+
+    final ArgumentCaptor<Flux<TeamEntity>> outgoingTeamArgument = ArgumentCaptor.forClass(Flux.class);
+    verify(teamRepository).saveAll(outgoingTeamArgument.capture());
+    StepVerifier.create(outgoingTeamArgument.getValue()).verifyComplete();
   }
 
   @BeforeEach

@@ -228,6 +228,26 @@ class UserServiceIT extends BaseIT {
     StepVerifier.create(userService.getTeamByUserId(userId)).verifyComplete();
   }
 
+  @Test
+  @DisplayName("Can refresh a user that switched teams")
+  void canRefreshUserThatSwitchedTeams() {
+    final String userId = integrationTestUtils.createTestUser();
+
+    final String teamId1 = userService.createTeam("Test team 1").block();
+    final String teamId2 = userService.createTeam("Test team 2").block();
+
+    userService.addUserToTeam(userId, teamId1).block();
+    userService.clearTeamForUser(userId).block();
+    userService.addUserToTeam(userId, teamId2).block();
+
+    userService.afterUserUpdate(userId).block();
+
+    StepVerifier
+      .create(userService.getTeamByUserId(userId))
+      .expectNextMatches(team -> team.getId().equals(teamId2))
+      .verifyComplete();
+  }
+
   @BeforeEach
   void setup() {
     integrationTestUtils.resetState();

@@ -102,11 +102,10 @@ public class UserService {
       .zip(userMono, getTeamById(teamId))
       .flatMap(tuple -> {
         final UserEntity user = tuple.getT1().withTeamId(teamId);
-        TeamEntity team = tuple.getT2();
-        ArrayList<UserEntity> members = team.getMembers();
+        final TeamEntity team = tuple.getT2();
+        final ArrayList<UserEntity> members = team.getMembers();
         members.add(user);
-        team.withMembers(members);
-        return userRepository.save(user).then(teamRepository.save(team));
+        return userRepository.save(user).then(teamRepository.save(team.withMembers(members)));
       })
       .then();
   }
@@ -661,11 +660,11 @@ public class UserService {
   /**
    * Propagate updated user information to relevant parts of the db
    *
-   * @param userId the updated user id
+   * @param updatedUserId the updated user id
    * @return a Mono<Void> signaling completion
    */
-  public Mono<Void> afterUserUpdate(@ValidUserId final String userId) {
-    Mono<UserEntity> updatedUser = getById(userId);
+  public Mono<Void> afterUserUpdate(@ValidUserId final String updatedUserId) {
+    Mono<UserEntity> updatedUser = getById(updatedUserId);
 
     // First, update all teams related to the user
 
@@ -684,13 +683,13 @@ public class UserService {
               .getT1()
               .getMembers()
               .stream()
-              .map(user -> {
-                if (user.getId().equals(userId)) {
-                  // Found the correct user id, replace this with the new user
-                  // entity
-                  return tuple.getT2();
+              .map(existingUser -> {
+                final UserEntity newUser = tuple.getT2();
+                if (existingUser.getId().equals(updatedUserId)) {
+                  // Found the correct user id, replace this with the new user entity
+                  return newUser;
                 } else {
-                  return user;
+                  return existingUser;
                 }
               })
               // Collect all entries into an array list
@@ -704,7 +703,7 @@ public class UserService {
     final Flux<TeamEntity> outgoingTeams = findAllTeams()
       .filter(team ->
         // Look through all teams and find the one that lists the updated user as member
-        !team.getMembers().stream().filter(user -> user.getId().equals(userId)).findAny().isEmpty()
+        !team.getMembers().stream().filter(user -> user.getId().equals(updatedUserId)).findAny().isEmpty()
       )
       .zipWith(updatedUser.cache().repeat())
       // If the new team and old team are the same, don't remove the old team
@@ -737,19 +736,17 @@ public class UserService {
               .getT1()
               .getMembers()
               .stream()
-              .filter(user -> !user.getId().equals(userId))
+              .filter(user -> !user.getId().equals(updatedUserId))
               .collect(Collectors.toCollection(ArrayList::new))
           )
       );
-
     // Update submissions
-    Flux<Submission> submissionsToUpdate = submissionRepository.findAllByUserId(userId);
+    Flux<Submission> submissionsToUpdate = submissionRepository.findAllByUserId(updatedUserId);
 
     // Update team field in submissions
     Flux<Submission> addedTeamSubmissions = incomingTeam
       .flatMapMany(team -> submissionsToUpdate.map(submission -> submission.withTeamId(team.getId())))
       .switchIfEmpty(submissionsToUpdate);
-
     // Save all to db
     return teamRepository.saveAll(outgoingTeams).thenMany(submissionRepository.saveAll(addedTeamSubmissions)).then();
   }
@@ -774,15 +771,15 @@ public class UserService {
   /**
    * To be called after user deletion
    *
-   * @param userId
+   * @param deletedUserId
    * @return
    */
-  public Mono<Void> afterUserDeletion(@ValidUserId final String userId) {
+  public Mono<Void> afterUserDeletion(@ValidUserId final String deletedUserId) {
     // The team (if any) the user belonged to before
     final Flux<TeamEntity> outgoingTeams = findAllTeams()
       .filter(team ->
         // Look through all teams and find the one that lists the updated user as member
-        !team.getMembers().stream().filter(user -> user.getId().equals(userId)).findAny().isEmpty()
+        !team.getMembers().stream().filter(user -> user.getId().equals(deletedUserId)).findAny().isEmpty()
       )
       .flatMap(team -> {
         if (team.getMembers().size() == 1) {
@@ -803,7 +800,7 @@ public class UserService {
           team
             .getMembers()
             .stream()
-            .filter(user -> !user.getId().equals(userId))
+            .filter(user -> !user.getId().equals(deletedUserId))
             .collect(Collectors.toCollection(ArrayList::new))
         )
       );
