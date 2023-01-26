@@ -25,9 +25,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.authentication.AuthResponse;
@@ -38,14 +36,10 @@ import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.crypto.WebTokenKeyManager;
 import org.owasp.herder.exception.ClassIdNotFoundException;
-import org.owasp.herder.exception.DuplicateTeamDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
-import org.owasp.herder.exception.TeamNotFoundException;
 import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.scoring.PrincipalType;
-import org.owasp.herder.scoring.Submission;
-import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.user.PrincipalEntity.PrincipalEntityBuilder;
 import org.owasp.herder.validation.ValidClassId;
 import org.owasp.herder.validation.ValidDisplayName;
@@ -74,19 +68,13 @@ public class UserService {
 
   private static final String LOGIN_NAME_ALREADY_EXISTS = "Login name \"%s\" already exists";
 
-  private static final String TEAM_DISPLAY_NAME_ALREADY_EXISTS = "Team display name \"%s\" already exists";
-
   private final UserRepository userRepository;
 
   private final TeamRepository teamRepository;
 
   private final PasswordAuthRepository passwordAuthRepository;
 
-  private final SubmissionRepository submissionRepository;
-
   private final ClassService classService;
-
-  private final TeamService teamService;
 
   private final KeyService keyService;
 

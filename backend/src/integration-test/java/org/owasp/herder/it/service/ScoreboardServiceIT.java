@@ -29,6 +29,7 @@ import static org.mockito.Mockito.when;
 import io.github.bucket4j.Bucket;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -44,6 +45,7 @@ import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.test.util.TestConstants;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,125 +74,87 @@ class ScoreboardServiceIT extends BaseIT {
     ModuleEntity module1;
     Clock testClock;
 
+    private void addUsers1and3ToTeam(final String teamId) {
+      userService.addUserToTeam(userId1, teamId).block();
+      user1 = user1.withTeamId(teamId);
+      teamService.addMember(teamId, user1).block();
+      submissionService.setTeamIdOfUserSubmissions(userId1, teamId).block();
+
+      userService.addUserToTeam(userId3, teamId).block();
+      user3 = user3.withTeamId(teamId);
+      teamService.addMember(teamId, user3).block();
+      submissionService.setTeamIdOfUserSubmissions(userId3, teamId).block();
+    }
+
+    private void removeUsers1and3FromTeam(final String teamId) {
+      userService.clearTeamForUser(userId1).block();
+      user1 = user1.withTeamId(null);
+      teamService.expel(teamId, userId1).block();
+      submissionService.clearTeamIdOfUserSubmissions(userId1).block();
+
+      userService.clearTeamForUser(userId3).block();
+      user3 = user3.withTeamId(null);
+      teamService.expel(teamId, userId3).block();
+      submissionService.clearTeamIdOfUserSubmissions(userId3).block();
+      teamService.delete(teamId).block();
+    }
+
     @Test
     @DisplayName("and break ties using medals")
     void canBreakTiesUsingMedals() {
       moduleService.setBaseScore(moduleId1, 100).block();
 
-      Clock testClock = TestConstants.year2000Clock;
-      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
-      submissionService.refreshSubmissionRanks().block();
-      scoreboardService.refreshScoreboard().block();
+      refreshScores();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-          assertThat(scoreboardEntry.getGoldMedals()).isOne();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isOne();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isOne();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        .recordWith(ArrayList::new)
+        .thenConsumeWhile(x -> true)
+        .consumeRecordedWith(scoreboard -> {
+          assertThat(scoreboard).extracting("principalId").containsExactly(userId1, userId2, userId3, userId4);
+          assertThat(scoreboard).extracting("rank").containsExactly(1L, 2L, 3L, 4L);
+          assertThat(scoreboard).extracting("score").containsExactly(100L, 100L, 100L, 0L);
+          assertThat(scoreboard).extracting("goldMedals").containsExactly(1L, 0L, 0L, 0L);
+          assertThat(scoreboard).extracting("silverMedals").containsExactly(0L, 1L, 0L, 0L);
+          assertThat(scoreboard).extracting("bronzeMedals").containsExactly(0L, 0L, 1L, 0L);
         })
         .verifyComplete();
     }
 
     @Test
     @DisplayName("with users with no strictly positive scores")
-    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoreboardWithNoStrictlyPositiveScores() {
       moduleService.setBaseScore(moduleId1, 100).block();
 
-      Clock testClock = TestConstants.year2000Clock;
-      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       scoreAdjustmentService.submitUserAdjustment(userId1, -1000, "Penalty for cheating").block();
       scoreAdjustmentService.submitUserAdjustment(userId2, -1000, "Penalty for cheating").block();
       scoreAdjustmentService.submitUserAdjustment(userId3, -1000, "Penalty for cheating").block();
 
-      submissionService.refreshSubmissionRanks().block();
-      scoreboardService.refreshScoreboard().block();
+      refreshScores();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-          assertThat(scoreboardEntry.getGoldMedals()).isOne();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isOne();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
-          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isOne();
+        .recordWith(ArrayList::new)
+        .thenConsumeWhile(x -> true)
+        .consumeRecordedWith(scoreboard -> {
+          assertThat(scoreboard).extracting("principalId").containsExactly(userId4, userId1, userId2, userId3);
+          assertThat(scoreboard).extracting("rank").containsExactly(1L, 2L, 3L, 4L);
+          assertThat(scoreboard).extracting("score").containsExactly(0L, -900L, -900L, -900L);
+          assertThat(scoreboard).extracting("goldMedals").containsExactly(0L, 1L, 0L, 0L);
+          assertThat(scoreboard).extracting("silverMedals").containsExactly(0L, 0L, 1L, 0L);
+          assertThat(scoreboard).extracting("bronzeMedals").containsExactly(0L, 0L, 0L, 1L);
         })
         .verifyComplete();
     }
@@ -200,133 +164,67 @@ class ScoreboardServiceIT extends BaseIT {
     void canGetScoreboardWithTeamAndUserTied() {
       moduleService.setBaseScore(moduleId1, 100).block();
 
-      Clock testClock = TestConstants.year2000Clock;
-      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       final String teamId = integrationTestUtils.createTestTeam();
-      userService.addUserToTeam(userId1, teamId).block();
-      userService.addUserToTeam(userId3, teamId).block();
+
+      addUsers1and3ToTeam(teamId);
 
       scoreAdjustmentService.submitTeamAdjustment(teamId, -100, "No scores for you!").block();
 
-      userService.afterUserUpdate(userId1).block();
-      userService.afterUserUpdate(userId3).block();
-      submissionService.refreshSubmissionRanks().block();
-      scoreboardService.refreshScoreboard().block();
+      refreshScores();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-
-          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isOne();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isOne();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        .recordWith(ArrayList::new)
+        .thenConsumeWhile(x -> true)
+        .consumeRecordedWith(scoreboard -> {
+          assertThat(scoreboard).extracting("principalId").containsExactly(userId2, teamId, userId4);
+          assertThat(scoreboard).extracting("rank").containsExactly(1L, 2L, 3L);
+          assertThat(scoreboard).extracting("score").containsExactly(100L, 0L, 0L);
+          assertThat(scoreboard).extracting("goldMedals").containsExactly(0L, 1L, 0L);
+          assertThat(scoreboard).extracting("silverMedals").containsExactly(1L, 0L, 0L);
+          assertThat(scoreboard).extracting("bronzeMedals").containsExactly(0L, 0L, 0L);
         })
         .verifyComplete();
     }
 
     @Test
     @DisplayName("with teams with score adjustment remaining after user leaves team")
-    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoreboardWithTeamScoreAdjustmentRemainingAfterUserLeavingTeam() {
       moduleService.setBaseScore(moduleId1, 100).block();
 
-      Clock testClock = TestConstants.year2000Clock;
-      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       final String teamId = integrationTestUtils.createTestTeam();
-      userService.addUserToTeam(userId1, teamId).block();
-      userService.addUserToTeam(userId3, teamId).block();
+
+      addUsers1and3ToTeam(teamId);
 
       scoreAdjustmentService.submitTeamAdjustment(teamId, -1000, "No scores for you!").block();
 
-      userService.clearTeamForUser(userId1).block();
-      userService.clearTeamForUser(userId3).block();
+      removeUsers1and3FromTeam(teamId);
 
-      userService.afterUserUpdate(userId1).block();
-      userService.afterUserUpdate(userId3).block();
-
-      submissionService.refreshSubmissionRanks().block();
-
-      scoreboardService.refreshScoreboard().block();
+      refreshScores();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isOne();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-          assertThat(scoreboardEntry.getGoldMedals()).isOne();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
-          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isOne();
+        .recordWith(ArrayList::new)
+        .thenConsumeWhile(x -> true)
+        .consumeRecordedWith(scoreboard -> {
+          assertThat(scoreboard).extracting("principalId").containsExactly(userId2, userId4, userId1, userId3);
+          assertThat(scoreboard).extracting("rank").containsExactly(1L, 2L, 3L, 4L);
+          assertThat(scoreboard).extracting("score").containsExactly(100L, 0L, -900L, -900L);
+          assertThat(scoreboard).extracting("goldMedals").containsExactly(0L, 0L, 1L, 0L);
+          assertThat(scoreboard).extracting("silverMedals").containsExactly(1L, 0L, 0L, 0L);
+          assertThat(scoreboard).extracting("bronzeMedals").containsExactly(0L, 0L, 0L, 1L);
         })
         .verifyComplete();
     }
@@ -336,285 +234,130 @@ class ScoreboardServiceIT extends BaseIT {
     void canGetScoreboardWithTeamScoreAdjustments() {
       moduleService.setBaseScore(moduleId1, 100).block();
 
-      Clock testClock = TestConstants.year2000Clock;
-      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       final String teamId = integrationTestUtils.createTestTeam();
-      userService.addUserToTeam(userId1, teamId).block();
-      userService.addUserToTeam(userId3, teamId).block();
+
+      addUsers1and3ToTeam(teamId);
 
       scoreAdjustmentService.submitTeamAdjustment(teamId, -1000, "No scores for you!").block();
 
-      userService.afterUserUpdate(userId1).block();
-      userService.afterUserUpdate(userId3).block();
-
-      submissionService.refreshSubmissionRanks().block();
-
-      scoreboardService.refreshScoreboard().block();
+      refreshScores();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isOne();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-          assertThat(scoreboardEntry.getGoldMedals()).isOne();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        .recordWith(ArrayList::new)
+        .thenConsumeWhile(x -> true)
+        .consumeRecordedWith(scoreboard -> {
+          assertThat(scoreboard).extracting("principalId").containsExactly(userId2, userId4, teamId);
+          assertThat(scoreboard).extracting("rank").containsExactly(1L, 2L, 3L);
+          assertThat(scoreboard).extracting("score").containsExactly(100L, 0L, -900L);
+          assertThat(scoreboard).extracting("goldMedals").containsExactly(0L, 0L, 1L);
+          assertThat(scoreboard).extracting("silverMedals").containsExactly(1L, 0L, 0L);
+          assertThat(scoreboard).extracting("bronzeMedals").containsExactly(0L, 0L, 0L);
         })
         .verifyComplete();
     }
 
     @Test
     @DisplayName("with users with score adjustments")
-    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoreboardWithUserScoreAdjustments() {
       moduleService.setBaseScore(moduleId1, 100).block();
 
-      Clock testClock = TestConstants.year2000Clock;
-      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       scoreAdjustmentService.submitUserAdjustment(userId1, -1000, "Penalty for cheating").block();
       scoreAdjustmentService.submitUserAdjustment(userId3, 1000, "Thanks for the bribe").block();
 
-      submissionService.refreshSubmissionRanks().block();
-
-      scoreboardService.refreshScoreboard().block();
+      refreshScores();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isEqualTo(1100L);
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isOne();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isEqualTo(100L);
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isOne();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
-          assertThat(scoreboardEntry.getScore()).isEqualTo(-900L);
-          assertThat(scoreboardEntry.getGoldMedals()).isOne();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        .recordWith(ArrayList::new)
+        .thenConsumeWhile(x -> true)
+        .consumeRecordedWith(scoreboard -> {
+          assertThat(scoreboard).extracting("principalId").containsExactly(userId3, userId2, userId4, userId1);
+          assertThat(scoreboard).extracting("rank").containsExactly(1L, 2L, 3L, 4L);
+          assertThat(scoreboard).extracting("score").containsExactly(1100L, 100L, 0L, -900L);
+          assertThat(scoreboard).extracting("goldMedals").containsExactly(0L, 0L, 0L, 1L);
+          assertThat(scoreboard).extracting("silverMedals").containsExactly(0L, 1L, 0L, 0L);
+          assertThat(scoreboard).extracting("bronzeMedals").containsExactly(1L, 0L, 0L, 0L);
         })
         .verifyComplete();
     }
 
     @Test
     @DisplayName("with users with zero score submissions")
-    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoreboardWithZeroScoreSubmissions() {
-      Clock testClock = TestConstants.year2000Clock;
-      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
-
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-      setClock(testClock);
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
-      submissionService.refreshSubmissionRanks().block();
-      scoreboardService.refreshScoreboard().block();
+      refreshScores();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isOne();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isOne();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isOne();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(4L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        .recordWith(ArrayList::new)
+        .thenConsumeWhile(x -> true)
+        .consumeRecordedWith(scoreboard -> {
+          assertThat(scoreboard).extracting("principalId").containsExactly(userId1, userId2, userId3, userId4);
+          assertThat(scoreboard).extracting("rank").containsExactly(1L, 2L, 3L, 4L);
+          assertThat(scoreboard).extracting("score").containsExactly(0L, 0L, 0L, 0L);
+          assertThat(scoreboard).extracting("goldMedals").containsExactly(1L, 0L, 0L, 0L);
+          assertThat(scoreboard).extracting("silverMedals").containsExactly(0L, 1L, 0L, 0L);
+          assertThat(scoreboard).extracting("bronzeMedals").containsExactly(0L, 0L, 1L, 0L);
         })
         .verifyComplete();
     }
 
     @Test
     @DisplayName("before any submissions are made")
-    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoresWithoutSubmissions() {
-      submissionService.refreshSubmissionRanks().block();
-
-      scoreboardService.refreshScoreboard().block();
+      refreshScores();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        .recordWith(ArrayList::new)
+        .thenConsumeWhile(x -> true)
+        .consumeRecordedWith(scoreboard -> {
+          assertThat(scoreboard).extracting("principalId").containsExactly(userId1, userId2, userId3, userId4);
+          assertThat(scoreboard).extracting("rank").containsOnly(1L);
+          assertThat(scoreboard).extracting("score").containsOnly(0L);
+          assertThat(scoreboard).extracting("goldMedals").containsOnly(0L);
+          assertThat(scoreboard).extracting("silverMedals").containsOnly(0L);
+          assertThat(scoreboard).extracting("bronzeMedals").containsOnly(0L);
         })
         .verifyComplete();
     }
 
     @Test
     @DisplayName("with a single submission")
-    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoresWithSingleSubmissions() {
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
 
-      submissionService.refreshSubmissionRanks().block();
-      scoreboardService.refreshScoreboard().block();
+      refreshScores();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isOne();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        .recordWith(ArrayList::new)
+        .thenConsumeWhile(x -> true)
+        .consumeRecordedWith(scoreboard -> {
+          assertThat(scoreboard).extracting("principalId").containsExactly(userId2, userId1, userId3, userId4);
+          assertThat(scoreboard).extracting("rank").containsExactly(1L, 2L, 2L, 2L);
+          assertThat(scoreboard).extracting("score").containsOnly(0L);
+          assertThat(scoreboard).extracting("goldMedals").containsExactly(1L, 0L, 0L, 0L);
+          assertThat(scoreboard).extracting("silverMedals").containsOnly(0L);
+          assertThat(scoreboard).extracting("bronzeMedals").containsOnly(0L);
         })
         .verifyComplete();
     }
@@ -622,125 +365,55 @@ class ScoreboardServiceIT extends BaseIT {
     @Test
     @DisplayName("with team and user submissions")
     void canGetScoresWithUserAndTeamSubmissions() {
-      Clock testClock = TestConstants.year2000Clock;
-
-      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-
-      setClock(testClock);
-
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
       final String teamId = integrationTestUtils.createTestTeam();
-      userService.addUserToTeam(userId1, teamId).block();
-      userService.addUserToTeam(userId3, teamId).block();
+      addUsers1and3ToTeam(teamId);
 
-      userService.afterUserUpdate(userId1).block();
-      userService.afterUserUpdate(userId3).block();
-
-      submissionService.refreshSubmissionRanks().block();
-      scoreboardService.refreshScoreboard().block();
+      refreshScores();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isOne();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(teamId);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isOne();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        .recordWith(ArrayList::new)
+        .thenConsumeWhile(x -> true)
+        .consumeRecordedWith(scoreboard -> {
+          assertThat(scoreboard).extracting("principalId").containsExactly(userId2, teamId, userId4);
+          assertThat(scoreboard).extracting("rank").containsExactly(1L, 2L, 3L);
+          assertThat(scoreboard).extracting("score").containsExactly(0L, 0L, 0L);
+          assertThat(scoreboard).extracting("goldMedals").containsExactly(1L, 0L, 0L);
+          assertThat(scoreboard).extracting("silverMedals").containsExactly(0L, 1L, 0L);
+          assertThat(scoreboard).extracting("bronzeMedals").containsExactly(0L, 0L, 0L);
         })
         .verifyComplete();
     }
 
     @Test
     @DisplayName("with users that have left a team")
-    @java.lang.SuppressWarnings("squid:S5961")
     void canGetScoresWithUserThatLeftTeam() {
       final String teamId = integrationTestUtils.createTestTeam();
-      userService.addUserToTeam(userId1, teamId).block();
-      userService.addUserToTeam(userId3, teamId).block();
+      addUsers1and3ToTeam(teamId);
 
-      userService.afterUserUpdate(userId1).block();
-      userService.afterUserUpdate(userId3).block();
-
-      Clock testClock = TestConstants.year2000Clock;
-
-      setClock(testClock);
       integrationTestUtils.submitValidFlag(userId2, moduleId1);
-      testClock = Clock.offset(testClock, Duration.ofSeconds(1));
-
-      setClock(testClock);
-
+      tickTestClock();
       integrationTestUtils.submitValidFlag(userId3, moduleId1);
 
-      userService.clearTeamForUser(userId1).block();
-      userService.clearTeamForUser(userId3).block();
+      removeUsers1and3FromTeam(teamId);
 
-      userService.afterUserUpdate(userId1).block();
-      userService.afterUserUpdate(userId3).block();
-
-      submissionService.refreshSubmissionRanks().block();
-      scoreboardService.refreshScoreboard().block();
+      refreshScores();
 
       StepVerifier
         .create(scoreboardService.getScoreboard())
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId2);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isOne();
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isOne();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId3);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(2L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isOne();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId1);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
-        })
-        .assertNext(scoreboardEntry -> {
-          assertThat(scoreboardEntry.getPrincipalId()).isEqualTo(userId4);
-          assertThat(scoreboardEntry.getPrincipalType()).isEqualTo(PrincipalType.USER);
-          assertThat(scoreboardEntry.getRank()).isEqualTo(3L);
-          assertThat(scoreboardEntry.getScore()).isZero();
-          assertThat(scoreboardEntry.getGoldMedals()).isZero();
-          assertThat(scoreboardEntry.getSilverMedals()).isZero();
-          assertThat(scoreboardEntry.getBronzeMedals()).isZero();
+        .recordWith(ArrayList::new)
+        .thenConsumeWhile(x -> true)
+        .consumeRecordedWith(scoreboard -> {
+          assertThat(scoreboard).extracting("principalId").containsExactly(userId2, userId3, userId1, userId4);
+          assertThat(scoreboard).extracting("rank").containsExactly(1L, 2L, 3L, 3L);
+          assertThat(scoreboard).extracting("score").containsExactly(0L, 0L, 0L, 0L);
+          assertThat(scoreboard).extracting("goldMedals").containsExactly(1L, 0L, 0L, 0L);
+          assertThat(scoreboard).extracting("silverMedals").containsExactly(0L, 1L, 0L, 0L);
+          assertThat(scoreboard).extracting("bronzeMedals").containsExactly(0L, 0L, 0L, 0L);
         })
         .verifyComplete();
     }
@@ -760,6 +433,7 @@ class ScoreboardServiceIT extends BaseIT {
       user3 = userService.getById(userId3).block();
       module1 = moduleService.getById(moduleId1).block();
       module1 = moduleService.getById(moduleId2).block();
+      setInitialClock();
     }
   }
 
@@ -771,6 +445,9 @@ class ScoreboardServiceIT extends BaseIT {
 
   @Autowired
   UserService userService;
+
+  @Autowired
+  TeamService teamService;
 
   @Autowired
   ModuleService moduleService;
@@ -790,6 +467,8 @@ class ScoreboardServiceIT extends BaseIT {
   @MockBean
   Clock clock;
 
+  Clock testClock;
+
   private void resetClock() {
     setClock(Clock.systemDefaultZone());
   }
@@ -797,6 +476,21 @@ class ScoreboardServiceIT extends BaseIT {
   private void setClock(final Clock testClock) {
     when(clock.instant()).thenReturn(testClock.instant());
     when(clock.getZone()).thenReturn(testClock.getZone());
+  }
+
+  private void tickTestClock() {
+    testClock = Clock.offset(testClock, Duration.ofSeconds(1));
+    setClock(testClock);
+  }
+
+  private void setInitialClock() {
+    testClock = TestConstants.year2000Clock;
+    setClock(testClock);
+  }
+
+  private void refreshScores() {
+    submissionService.refreshSubmissionRanks().block();
+    scoreboardService.refreshScoreboard().block();
   }
 
   @BeforeEach

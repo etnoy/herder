@@ -49,6 +49,7 @@ import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,19 +64,19 @@ class RankedSubmissionRepositoryIT extends BaseIT {
   class canGetUnrankedScoreboard {
 
     String userId1;
-
     String userId2;
     String userId3;
-    String moduleId1;
 
-    String moduleId2;
     UserEntity user1;
-
     UserEntity user2;
     UserEntity user3;
-    ModuleEntity module1;
 
+    String moduleId1;
+    String moduleId2;
+
+    ModuleEntity module1;
     ModuleEntity module2;
+
     Clock testClock;
 
     @Test
@@ -147,9 +148,14 @@ class RankedSubmissionRepositoryIT extends BaseIT {
 
       final String teamId = integrationTestUtils.createTestTeam();
       userService.addUserToTeam(userId1, teamId).block();
+      user1 = user1.withTeamId(teamId);
+      teamService.addMember(teamId, user1).block();
+      submissionService.setTeamIdOfUserSubmissions(userId1, teamId).block();
+
       userService.addUserToTeam(userId3, teamId).block();
-      userService.afterUserUpdate(userId1).block();
-      userService.afterUserUpdate(userId3).block();
+      user3 = user3.withTeamId(teamId);
+      teamService.addMember(teamId, user3).block();
+      submissionService.setTeamIdOfUserSubmissions(userId3, teamId).block();
 
       submissionService.refreshSubmissionRanks().block();
 
@@ -319,12 +325,19 @@ class RankedSubmissionRepositoryIT extends BaseIT {
         teamId = integrationTestUtils.createTestTeam();
 
         userService.addUserToTeam(userId1, teamId).block();
-        userService.addUserToTeam(userId2, teamId).block();
-        userService.addUserToTeam(userId3, teamId).block();
+        user1 = user1.withTeamId(teamId);
+        teamService.addMember(teamId, user1).block();
+        submissionService.setTeamIdOfUserSubmissions(userId1, teamId).block();
 
-        userService.afterUserUpdate(userId1).block();
-        userService.afterUserUpdate(userId2).block();
-        userService.afterUserUpdate(userId3).block();
+        userService.addUserToTeam(userId2, teamId).block();
+        user2 = user2.withTeamId(teamId);
+        teamService.addMember(teamId, user1).block();
+        submissionService.setTeamIdOfUserSubmissions(userId2, teamId).block();
+
+        userService.addUserToTeam(userId3, teamId).block();
+        user3 = user3.withTeamId(teamId);
+        teamService.addMember(teamId, user1).block();
+        submissionService.setTeamIdOfUserSubmissions(userId3, teamId).block();
 
         submissionService.refreshSubmissionRanks().block();
       }
@@ -369,10 +382,14 @@ class RankedSubmissionRepositoryIT extends BaseIT {
         teamId = integrationTestUtils.createTestTeam();
 
         userService.addUserToTeam(userId1, teamId).block();
-        userService.addUserToTeam(userId3, teamId).block();
+        user1 = user1.withTeamId(teamId);
+        teamService.addMember(teamId, user1).block();
+        submissionService.setTeamIdOfUserSubmissions(userId1, teamId).block();
 
-        userService.afterUserUpdate(userId1).block();
-        userService.afterUserUpdate(userId3).block();
+        userService.addUserToTeam(userId3, teamId).block();
+        user3 = user3.withTeamId(teamId);
+        teamService.addMember(teamId, user3).block();
+        submissionService.setTeamIdOfUserSubmissions(userId3, teamId).block();
 
         submissionService.refreshSubmissionRanks().block();
       }
@@ -469,9 +486,14 @@ class RankedSubmissionRepositoryIT extends BaseIT {
         integrationTestUtils.submitValidFlag(userId1, moduleId2);
 
         userService.addUserToTeam(userId1, teamId).block();
+        user1 = user1.withTeamId(teamId);
+        teamService.addMember(teamId, user1).block();
+        submissionService.setTeamIdOfUserSubmissions(userId1, teamId).block();
+
         userService.addUserToTeam(userId3, teamId).block();
-        userService.afterUserUpdate(userId1).block();
-        userService.afterUserUpdate(userId3).block();
+        user3 = user3.withTeamId(teamId);
+        teamService.addMember(teamId, user3).block();
+        submissionService.setTeamIdOfUserSubmissions(userId3, teamId).block();
 
         submissionService.refreshSubmissionRanks().block();
       }
@@ -586,6 +608,9 @@ class RankedSubmissionRepositoryIT extends BaseIT {
 
   @Autowired
   UserService userService;
+
+  @Autowired
+  TeamService teamService;
 
   @Autowired
   SubmissionService submissionService;

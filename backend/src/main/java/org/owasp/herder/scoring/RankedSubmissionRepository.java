@@ -22,7 +22,6 @@
 package org.owasp.herder.scoring;
 
 import org.springframework.data.mongodb.repository.Aggregation;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import reactor.core.publisher.Flux;
 
@@ -31,7 +30,6 @@ public interface RankedSubmissionRepository extends ReactiveMongoRepository<Rank
 
   public Flux<RankedSubmission> findAllByUserId(String userId);
 
-  @Query("{'module.locator' : ?0}")
   public Flux<RankedSubmission> findAllByModuleLocator(String moduleLocator);
 
   @Aggregation(

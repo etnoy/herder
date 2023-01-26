@@ -42,10 +42,8 @@ import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
-import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -126,21 +124,25 @@ class SubmissionServiceIT extends BaseIT {
     integrationTestUtils.submitValidFlag(userId3, moduleId);
 
     userService.addUserToTeam(userId1, teamId).block();
+    teamService.addMember(teamId, userService.getById(userId1).block()).block();
+    submissionService.setTeamIdOfUserSubmissions(userId1, teamId).block();
+
     userService.addUserToTeam(userId3, teamId).block();
-
-    userService.afterUserUpdate(userId1).block();
-    userService.afterUserUpdate(userId3).block();
-
-    final TeamEntity team = teamService.getById(teamId).block();
+    teamService.addMember(teamId, userService.getById(userId1).block()).block();
+    submissionService.setTeamIdOfUserSubmissions(userId3, teamId).block();
 
     submissionService.refreshSubmissionRanks().block();
 
     StepVerifier
-      .create(submissionService.findAllRankedByTeamId(teamId))
-      .assertNext(rankedSubmission -> {
-        assertThat(rankedSubmission.getId()).isEqualTo(team.getId());
-        assertThat(rankedSubmission.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
-        assertThat(rankedSubmission.getRank()).isEqualTo(1L);
+      .create(submissionService.findAllRankedByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .recordWith(ArrayList::new)
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(rankedSubmissions -> {
+        assertThat(rankedSubmissions).extracting("id").containsExactly(teamId, userId2);
+        assertThat(rankedSubmissions)
+          .extracting("principalType")
+          .containsExactly(PrincipalType.TEAM, PrincipalType.USER);
+        assertThat(rankedSubmissions).extracting("rank").containsExactly(1L, 2L);
       })
       .verifyComplete();
   }
