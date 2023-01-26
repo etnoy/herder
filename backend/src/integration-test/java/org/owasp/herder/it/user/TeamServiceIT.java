@@ -27,7 +27,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.github.bucket4j.Bucket;
-import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,13 +34,11 @@ import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleService;
-import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.TeamRepository;
 import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
@@ -174,6 +171,7 @@ class TeamServiceIT extends BaseIT {
     teamService.addMember(teamId1, user).block();
 
     userService.clearTeamForUser(userId).block();
+    teamService.expel(teamId1, userId).block();
     userService.addUserToTeam(userId, teamId2).block();
     final UserEntity userWithNewTeam = userService.getById(userId).block();
     teamService.addMember(teamId2, userWithNewTeam).block();

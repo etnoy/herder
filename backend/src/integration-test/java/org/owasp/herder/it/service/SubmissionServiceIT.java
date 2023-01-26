@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,7 @@ import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
@@ -68,7 +70,7 @@ class SubmissionServiceIT extends BaseIT {
   SubmissionRepository submissionRepository;
 
   @Autowired
-  UserRepository userRepository;
+  TeamService teamService;
 
   @Autowired
   FlagHandler flagHandler;
@@ -79,9 +81,9 @@ class SubmissionServiceIT extends BaseIT {
   @MockBean
   Clock clock;
 
-  private String userId;
+  String userId;
 
-  private String moduleId;
+  String moduleId;
 
   @Test
   @DisplayName("Valid submission of a static flag should be accepted")
@@ -129,7 +131,7 @@ class SubmissionServiceIT extends BaseIT {
     userService.afterUserUpdate(userId1).block();
     userService.afterUserUpdate(userId3).block();
 
-    final TeamEntity team = userService.getTeamById(teamId).block();
+    final TeamEntity team = teamService.getById(teamId).block();
 
     submissionService.refreshSubmissionRanks().block();
 
@@ -180,6 +182,57 @@ class SubmissionServiceIT extends BaseIT {
       .expectNext(true)
       .expectError(ModuleAlreadySolvedException.class)
       .verify();
+  }
+
+  @Test
+  @DisplayName("Can set team id of submissions when user joins a team")
+  void canSetTeamIdOfSubmissionsWhenJoiningTeam() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String moduleId = integrationTestUtils.createStaticTestModule();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    integrationTestUtils.submitInvalidFlag(userId, moduleId);
+    integrationTestUtils.submitValidFlag(userId, moduleId);
+
+    userService.addUserToTeam(userId, teamId).block();
+
+    final UserEntity user = userService.getById(userId).block();
+    teamService.addMember(teamId, user).block();
+
+    submissionService.setTeamIdOfUserSubmissions(userId, teamId).block();
+
+    StepVerifier
+      .create(submissionService.findAllSubmissions())
+      .recordWith(ArrayList::new)
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(submissions -> assertThat(submissions).extracting(Submission::getTeamId).containsOnly(teamId)
+      )
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can clear team id of submissions when user leaves a team")
+  void canClearTeamIdOfSubmissionsWhenJoiningTeam() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String moduleId = integrationTestUtils.createStaticTestModule();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    integrationTestUtils.submitInvalidFlag(userId, moduleId);
+    integrationTestUtils.submitValidFlag(userId, moduleId);
+
+    userService.addUserToTeam(userId, teamId).block();
+
+    final UserEntity user = userService.getById(userId).block();
+    teamService.addMember(teamId, user).block();
+
+    submissionService.clearTeamIdOfUserSubmissions(userId).block();
+
+    StepVerifier
+      .create(submissionService.findAllSubmissions())
+      .recordWith(ArrayList::new)
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(submissions -> assertThat(submissions).extracting(Submission::getTeamId).containsOnlyNulls())
+      .verifyComplete();
   }
 
   private void resetClock() {

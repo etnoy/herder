@@ -38,6 +38,7 @@ import org.owasp.herder.scoring.ScoreboardController;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -47,54 +48,22 @@ import reactor.test.StepVerifier;
 @DisplayName("ScoreboardController unit tests")
 class ScoreboardControllerTest extends BaseTest {
 
-  private ScoreboardController scoreboardController;
+  ScoreboardController scoreboardController;
 
   @Mock
-  private ScoreboardService scoreboardService;
+  ScoreboardService scoreboardService;
 
   @Mock
-  private UserService userService;
+  UserService userService;
 
   @Mock
-  private ModuleService moduleService;
+  TeamService teamService;
 
   @Mock
-  private SubmissionService submissionService;
+  ModuleService moduleService;
 
-  //  @Test
-  //  void getScoreboard_ValidData_ReturnsScoreboard() {
-  //    final ScoreboardEntryBuilder scoreboardEntryBuilder = ScoreboardEntry.builder();
-  //    final ScoreboardEntry scoreboardEntry1 =
-  //        scoreboardEntryBuilder
-  //            .rank(1L)
-  //            .userId("asdf")
-  //            .score(1337L)
-  //            .displayName("User1")
-  //            .goldMedals(420L)
-  //            .silverMedals(17L)
-  //            .bronzeMedals(2L)
-  //            .build();
-  //    final ScoreboardEntry scoreboardEntry2 =
-  //        scoreboardEntryBuilder
-  //            .rank(1L)
-  //            .userId("qwert")
-  //            .score(13399L)
-  //            .displayName("User2")
-  //            .goldMedals(69L)
-  //            .silverMedals(19L)
-  //            .bronzeMedals(2L)
-  //            .build();
-  //
-  //    final Flux<ScoreboardEntry> scoreboard = Flux.just(scoreboardEntry1, scoreboardEntry2);
-  //    when(scoreboardService.getScoreboard()).thenReturn(scoreboard);
-  //
-  //    StepVerifier.create(scoreboardController.getScoreboard())
-  //        .expectNext(scoreboardEntry1)
-  //        .expectNext(scoreboardEntry2)
-  //        .verifyComplete();
-  //
-  //    verify(scoreboardService, times(1)).getScoreboard();
-  //  }
+  @Mock
+  SubmissionService submissionService;
 
   @Test
   void getScoreboardByUserId_ValidUserId_ReturnsScoreboardForUser() {
@@ -119,6 +88,7 @@ class ScoreboardControllerTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    scoreboardController = new ScoreboardController(scoreboardService, userService, submissionService, moduleService);
+    scoreboardController =
+      new ScoreboardController(scoreboardService, userService, teamService, submissionService, moduleService);
   }
 }

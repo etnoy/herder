@@ -36,6 +36,7 @@ import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.PrincipalEntity;
 import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
@@ -58,20 +59,10 @@ class UserAdministrationIT extends BaseIT {
   SubmissionService submissionService;
 
   @Autowired
+  TeamService teamService;
+
+  @Autowired
   IntegrationTestUtils integrationTestUtils;
-
-  @Test
-  @DisplayName("Can update team id field when adding user to team")
-  void canAddUserToTeam() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String teamId = integrationTestUtils.createTestTeam();
-
-    userService.getById(userId).block();
-
-    userService.addUserToTeam(userId, teamId).block();
-
-    StepVerifier.create(userService.findById(userId).map(UserEntity::getTeamId)).expectNext(teamId).verifyComplete();
-  }
 
   @Test
   @DisplayName("Can update members field when adding user to team")
@@ -110,7 +101,7 @@ class UserAdministrationIT extends BaseIT {
   @DisplayName("Can create team with display name")
   void canCreateTeam(final String displayName) {
     StepVerifier
-      .create(userService.createTeam(displayName).flatMap(userService::findTeamById).map(TeamEntity::getDisplayName))
+      .create(teamService.create(displayName).flatMap(userService::findTeamById).map(TeamEntity::getDisplayName))
       .expectNext(displayName)
       .verifyComplete();
   }
@@ -203,7 +194,7 @@ class UserAdministrationIT extends BaseIT {
 
     userService.addUserToTeam(userId, teamId).block();
 
-    final String teamId2 = userService.createTeam("Test team 2").block();
+    final String teamId2 = teamService.create("Test team 2").block();
 
     StepVerifier.create(userService.addUserToTeam(userId, teamId2)).expectError(IllegalStateException.class).verify();
   }
@@ -216,10 +207,10 @@ class UserAdministrationIT extends BaseIT {
     final String userId3 = userService.create("Test 3").block();
     final String userId4 = userService.create("Test 4").block();
 
-    final String teamId1 = userService.createTeam("Team 1").block();
-    final String teamId2 = userService.createTeam("Team 2").block();
-    final String teamId3 = userService.createTeam("Team 3").block();
-    final String teamId4 = userService.createTeam("Team 4").block();
+    final String teamId1 = teamService.create("Team 1").block();
+    final String teamId2 = teamService.create("Team 2").block();
+    final String teamId3 = teamService.create("Team 3").block();
+    final String teamId4 = teamService.create("Team 4").block();
 
     userService.addUserToTeam(userId1, teamId1).block();
     userService.addUserToTeam(userId2, teamId1).block();

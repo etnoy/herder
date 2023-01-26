@@ -242,34 +242,6 @@ public class UserService {
   }
 
   /**
-   * Creates a new team
-   *
-   * @param displayName The display name of the team
-   * @return The created team id
-   */
-  public Mono<String> createTeam(@ValidDisplayName final String displayName) {
-    log.info("Creating new team with display name " + displayName);
-
-    return Mono
-      .just(displayName)
-      .filterWhen(this::teamDoesNotExistByDisplayName)
-      .switchIfEmpty(
-        Mono.error(new DuplicateTeamDisplayNameException(String.format(TEAM_DISPLAY_NAME_ALREADY_EXISTS, displayName)))
-      )
-      .flatMap(name ->
-        teamRepository.save(
-          TeamEntity
-            .builder()
-            .displayName(name)
-            .creationTime(LocalDateTime.now(clock))
-            .members(new ArrayList<>())
-            .build()
-        )
-      )
-      .map(TeamEntity::getId);
-  }
-
-  /**
    * Deletes a user. In the database, the corresponding document is set to deleted, and all fields
    * are cleared
    *
@@ -294,18 +266,6 @@ public class UserService {
       .flatMap(userRepository::save)
       .flatMap(u -> passwordAuthRepository.deleteByUserId(userId))
       .then();
-  }
-
-  /**
-   * Deletes a team
-   *
-   * @param teamId
-   * @return
-   */
-  public Mono<Void> deleteTeam(@ValidTeamId final String teamId) {
-    log.info("Deleting team with id " + teamId);
-
-    return teamRepository.deleteById(teamId);
   }
 
   /**
@@ -392,15 +352,6 @@ public class UserService {
    */
   public Mono<Boolean> existsByLoginName(@ValidLoginName final String loginName) {
     return passwordAuthRepository.findByLoginName(loginName).map(u -> true).defaultIfEmpty(false);
-  }
-
-  /**
-   * Find all teams
-   *
-   * @return
-   */
-  public Flux<TeamEntity> findAllTeams() {
-    return teamRepository.findAll();
   }
 
   /**
@@ -524,24 +475,6 @@ public class UserService {
       .switchIfEmpty(Mono.error(new UserNotFoundException("User id \"" + userId + "\" not found")));
   }
 
-  public Mono<TeamEntity> getTeamById(@ValidTeamId final String teamId) {
-    return teamRepository
-      .findById(teamId)
-      .switchIfEmpty(Mono.error(new TeamNotFoundException("Team id \"" + teamId + "\" not found")));
-  }
-
-  public Mono<TeamEntity> getTeamByUserId(@ValidUserId final String userId) {
-    return getById(userId)
-      .flatMap(user -> {
-        final String teamId = user.getTeamId();
-        if (teamId == null) {
-          return Mono.empty();
-        } else {
-          return getTeamById(teamId);
-        }
-      });
-  }
-
   public void kick(@ValidUserId final String userId) {
     log.info("Revoking all tokens for user with id " + userId);
 
@@ -625,152 +558,5 @@ public class UserService {
       .flatMap(userRepository::save)
       .doOnSuccess(u -> kick(userId))
       .then();
-  }
-
-  private Mono<Boolean> teamDoesNotExistByDisplayName(@ValidDisplayName final String displayName) {
-    return teamRepository.findByDisplayName(displayName).map(u -> false).defaultIfEmpty(true);
-  }
-
-  /**
-   * Checks whether a given display name exists
-   *
-   * @param displayName
-   * @return
-   */
-  public Mono<Boolean> teamExistsByDisplayName(@ValidDisplayName final String displayName) {
-    return teamRepository.findByDisplayName(displayName).map(u -> true).defaultIfEmpty(false);
-  }
-
-  /**
-   * Checks whether a given display name exists
-   *
-   * @param displayName
-   * @return
-   */
-  public Mono<Boolean> teamExistsById(@ValidTeamId final String teamId) {
-    return teamRepository.findById(teamId).map(u -> true).defaultIfEmpty(false);
-  }
-
-  /**
-   * Propagate updated user information to relevant parts of the db
-   *
-   * @param updatedUserId the updated user id
-   * @return a Mono<Void> signaling completion
-   */
-  public Mono<Void> afterUserUpdate(@ValidUserId final String updatedUserId) {
-    Mono<UserEntity> updatedUser = getById(updatedUserId);
-
-    // First, update all teams related to the user
-
-    // The team (if any) the user belongs to now
-    updatedUser.flatMap(teamService::updateTeamMember);
-
-    // The team (if any) the user belonged to before. This number can be greater than one
-    final Flux<TeamEntity> outgoingTeams = findAllTeams()
-      .filter(team ->
-        // Look through all teams and find the one that lists the updated user as member
-        !team.getMembers().stream().filter(user -> user.getId().equals(updatedUserId)).findAny().isEmpty()
-      )
-      .zipWith(updatedUser.cache().repeat())
-      // If the new team and old team are the same, don't remove the old team
-      .filter(tuple -> {
-        if (tuple.getT2().getTeamId() != null) {
-          return !tuple.getT2().getTeamId().equals(tuple.getT1().getId());
-        } else {
-          return true;
-        }
-      })
-      .flatMap(tuple -> {
-        if (tuple.getT1().getMembers().size() == 1) {
-          // The last user of the team was removed, therefore delete the entire team
-          log.info("Deleting team with id " + tuple.getT1().getId() + " because last user left");
-          return deleteTeam(tuple.getT1().getId())
-            .then(afterTeamDeletion(tuple.getT1().getId()))
-            // Return an empty tuple
-            .then(Mono.empty());
-        } else {
-          // Team not empty, do nothing here
-          return Mono.just(tuple);
-        }
-      })
-      .map(tuple ->
-        tuple
-          .getT1()
-          // Update the members list to only contain remaining users
-          .withMembers(
-            tuple
-              .getT1()
-              .getMembers()
-              .stream()
-              .filter(user -> !user.getId().equals(updatedUserId))
-              .collect(Collectors.toCollection(ArrayList::new))
-          )
-      );
-    // Update submissions
-    Flux<Submission> submissionsToUpdate = submissionRepository.findAllByUserId(updatedUserId);
-    Mono<TeamEntity> incomingTeam = Mono.empty();
-    // Update team field in submissions
-    Flux<Submission> addedTeamSubmissions = incomingTeam
-      .flatMapMany(team -> submissionsToUpdate.map(submission -> submission.withTeamId(team.getId())))
-      .switchIfEmpty(submissionsToUpdate);
-    // Save all to db
-    return teamRepository.saveAll(outgoingTeams).thenMany(submissionRepository.saveAll(addedTeamSubmissions)).then();
-  }
-
-  /**
-   * Removes deleted teams from db. To be called after team deletion
-   *
-   * @param teamId
-   * @return
-   */
-  public Mono<Void> afterTeamDeletion(@ValidTeamId final String teamId) {
-    // Update submissions
-
-    // Update team field in submissions
-    final Flux<Submission> updatedTeamSubmissions = submissionRepository
-      .findAllByTeamId(teamId)
-      .map(submission -> submission.withTeamId(null));
-
-    return submissionRepository.saveAll(updatedTeamSubmissions).then();
-  }
-
-  /**
-   * To be called after user deletion
-   *
-   * @param deletedUserId
-   * @return
-   */
-  public Mono<Void> afterUserDeletion(@ValidUserId final String deletedUserId) {
-    // The team (if any) the user belonged to before
-    final Flux<TeamEntity> outgoingTeams = findAllTeams()
-      .filter(team ->
-        // Look through all teams and find the one that lists the updated user as member
-        !team.getMembers().stream().filter(user -> user.getId().equals(deletedUserId)).findAny().isEmpty()
-      )
-      .flatMap(team -> {
-        if (team.getMembers().size() == 1) {
-          // The last user of the team was removed, therefore delete the entire team
-          log.info("Deleting team with id " + team.getId() + " because last user left");
-          return deleteTeam(team.getId())
-            .flatMap(u -> afterTeamDeletion(team.getId()))
-            // Return an empty tuple
-            .then(Mono.empty());
-        } else {
-          // Team not empty, do nothing here
-          return Mono.just(team);
-        }
-      })
-      .map(team ->
-        team.withMembers(
-          // Update the members list to only contain remaining users
-          team
-            .getMembers()
-            .stream()
-            .filter(user -> !user.getId().equals(deletedUserId))
-            .collect(Collectors.toCollection(ArrayList::new))
-        )
-      );
-
-    return teamRepository.saveAll(outgoingTeams).then();
   }
 }

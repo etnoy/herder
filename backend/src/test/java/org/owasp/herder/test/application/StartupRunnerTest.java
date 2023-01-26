@@ -41,6 +41,7 @@ import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Mono;
 
@@ -48,34 +49,37 @@ import reactor.core.publisher.Mono;
 @DisplayName("StartupRunner unit tests")
 class StartupRunnerTest extends BaseTest {
 
-  private StartupRunner startupRunner;
+  StartupRunner startupRunner;
 
   @Mock
-  private UserService userService;
+  UserService userService;
 
   @Mock
-  private ModuleService moduleService;
+  TeamService teamService;
 
   @Mock
-  private SubmissionService submissionService;
+  ModuleService moduleService;
 
   @Mock
-  private XssTutorial xssTutorial;
+  SubmissionService submissionService;
 
   @Mock
-  private SqlInjectionTutorial sqlInjectionTutorial;
+  XssTutorial xssTutorial;
 
   @Mock
-  private CsrfTutorial csrfTutorial;
+  SqlInjectionTutorial sqlInjectionTutorial;
 
   @Mock
-  private FlagTutorial flagTutorial;
+  CsrfTutorial csrfTutorial;
 
   @Mock
-  private FlagHandler flagHandler;
+  FlagTutorial flagTutorial;
 
   @Mock
-  private ScoreboardService scoreboardService;
+  FlagHandler flagHandler;
+
+  @Mock
+  ScoreboardService scoreboardService;
 
   @Test
   void run_NoArguments_Success() {
@@ -96,7 +100,7 @@ class StartupRunnerTest extends BaseTest {
     when(userService.existsByLoginName(any(String.class))).thenReturn(Mono.just(false));
     when(userService.existsByDisplayName(any(String.class))).thenReturn(Mono.just(false));
 
-    when(userService.teamExistsByDisplayName("Team 1")).thenReturn(Mono.just(true));
+    when(teamService.existsByDisplayName("Team 1")).thenReturn(Mono.just(true));
     when(moduleService.refreshModuleLists()).thenReturn(Mono.empty());
     when(submissionService.refreshSubmissionRanks()).thenReturn(Mono.empty());
     when(scoreboardService.refreshScoreboard()).thenReturn(Mono.empty());
@@ -108,6 +112,7 @@ class StartupRunnerTest extends BaseTest {
   void setup() {
     // Set up the system under test
 
-    startupRunner = new StartupRunner(userService, moduleService, submissionService, scoreboardService, flagTutorial);
+    startupRunner =
+      new StartupRunner(userService, teamService, moduleService, submissionService, scoreboardService, flagTutorial);
   }
 }

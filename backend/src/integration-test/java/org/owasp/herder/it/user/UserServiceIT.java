@@ -42,6 +42,7 @@ import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.TeamRepository;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
@@ -60,6 +61,9 @@ class UserServiceIT extends BaseIT {
 
   @Autowired
   UserService userService;
+
+  @Autowired
+  TeamService teamService;
 
   @Autowired
   ModuleService moduleService;
@@ -90,12 +94,12 @@ class UserServiceIT extends BaseIT {
     userService.addUserToTeam(userId, teamId).block();
 
     final UserEntity user = userService.getById(userId).block();
-    final TeamEntity team = userService.getTeamById(teamId).block();
+    final TeamEntity team = teamService.getById(teamId).block();
 
     userService.afterUserUpdate(userId).block();
 
     StepVerifier.create(userService.findAllUsers()).expectNext(user).verifyComplete();
-    StepVerifier.create(userService.findAllTeams()).expectNext(team).verifyComplete();
+    StepVerifier.create(teamService.findAll()).expectNext(team).verifyComplete();
   }
 
   @Test
@@ -136,47 +140,6 @@ class UserServiceIT extends BaseIT {
       .verifyComplete();
   }
 
-  @DisplayName("Can refresh a submission with user added to team")
-  void canRefreshUserAddedToTeamInSubmissions() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String moduleId = integrationTestUtils.createStaticTestModule();
-    final String teamId = integrationTestUtils.createTestTeam();
-
-    submissionService.submitFlag(userId, moduleId, "asdf").block();
-    integrationTestUtils.submitValidFlag(userId, moduleId);
-
-    userService.addUserToTeam(userId, teamId).block();
-    userService.afterUserUpdate(userId).block();
-
-    Consumer<Submission> asserter = submission -> {
-      assertThat(submission.getUserId()).isEqualTo(userId);
-      assertThat(submission.getTeamId()).isEqualTo(teamId);
-    };
-
-    StepVerifier
-      .create(submissionService.findAllSubmissions())
-      .assertNext(asserter)
-      .assertNext(asserter)
-      .verifyComplete();
-  }
-
-  @Test
-  @DisplayName("Can refresh an updated user in a team")
-  void canRefreshUserInExistingTeam() {
-    final String userId = integrationTestUtils.createTestUser();
-    final String teamId = integrationTestUtils.createTestTeam();
-    final String newDisplayName = "New displayName";
-    userService.addUserToTeam(userId, teamId).block();
-    userService.setDisplayName(userId, newDisplayName).block();
-    userService.afterUserUpdate(userId).block();
-    StepVerifier
-      .create(teamRepository.findAll())
-      .assertNext(team -> {
-        assertThat(team.getMembers().get(0).getDisplayName()).isEqualTo(newDisplayName);
-      })
-      .verifyComplete();
-  }
-
   @Test
   @DisplayName("Can delete team when last member is removed")
   void canRefreshUserRemovedFromTeam() {
@@ -185,7 +148,7 @@ class UserServiceIT extends BaseIT {
     userService.addUserToTeam(userId, teamId).block();
     userService.clearTeamForUser(userId).block();
     userService.afterUserUpdate(userId).block();
-    StepVerifier.create(userService.findAllTeams()).verifyComplete();
+    StepVerifier.create(teamService.findAll()).verifyComplete();
   }
 
   @Test
@@ -204,7 +167,7 @@ class UserServiceIT extends BaseIT {
     userService.clearTeamForUser(userId1).block();
     userService.afterUserUpdate(userId1).block();
     StepVerifier
-      .create(userService.getTeamById(teamId))
+      .create(teamService.getById(teamId))
       .assertNext(team -> {
         assertThat(team.getMembers()).containsExactly(user2);
       })
@@ -216,8 +179,8 @@ class UserServiceIT extends BaseIT {
   void canRefreshUserRemovedFromTwoTeams() {
     final String userId = integrationTestUtils.createTestUser();
 
-    final String teamId1 = userService.createTeam("Test team 1").block();
-    final String teamId2 = userService.createTeam("Test team 2").block();
+    final String teamId1 = teamService.create("Test team 1").block();
+    final String teamId2 = teamService.create("Test team 2").block();
 
     userService.addUserToTeam(userId, teamId1).block();
     userService.clearTeamForUser(userId).block();
@@ -225,7 +188,7 @@ class UserServiceIT extends BaseIT {
     userService.clearTeamForUser(userId).block();
 
     userService.afterUserUpdate(userId).block();
-    StepVerifier.create(userService.getTeamByUserId(userId)).verifyComplete();
+    StepVerifier.create(teamService.getByUserId(userId)).verifyComplete();
   }
 
   @Test

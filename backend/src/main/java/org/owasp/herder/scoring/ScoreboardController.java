@@ -27,6 +27,7 @@ import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.exception.TeamNotFoundException;
 import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,6 +49,8 @@ public class ScoreboardController {
   private final ScoreboardService scoreboardService;
 
   private final UserService userService;
+
+  private final TeamService teamService;
 
   private final SubmissionService submissionService;
 
@@ -91,8 +94,8 @@ public class ScoreboardController {
   @PreAuthorize("hasRole('ROLE_USER')")
   public Flux<SanitizedRankedSubmission> getSubmissionsByTeamId(@PathVariable final String teamId) {
     try {
-      return userService
-        .teamExistsById(teamId)
+      return teamService
+        .existsById(teamId)
         .filter(exists -> exists)
         .switchIfEmpty(Mono.error(new TeamNotFoundException("Team id " + teamId + " not found.")))
         .flatMapMany(u -> submissionService.findAllRankedByTeamId(teamId));

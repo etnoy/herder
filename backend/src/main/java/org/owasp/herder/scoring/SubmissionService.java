@@ -119,6 +119,18 @@ public class SubmissionService {
     return builder.build();
   }
 
+  public Mono<Void> setTeamIdOfUserSubmissions(@ValidUserId final String userId, @ValidUserId final String teamId) {
+    final Flux<Submission> updatedSubmissions = submissionRepository
+      .findAllByUserId(userId)
+      .map(submission -> submission.withTeamId(teamId));
+
+    return submissionRepository.saveAll(updatedSubmissions).then();
+  }
+
+  public Mono<Void> clearTeamIdOfUserSubmissions(@ValidUserId final String userId) {
+    return setTeamIdOfUserSubmissions(userId, null);
+  }
+
   public Mono<Submission> submitFlag(
     @ValidUserId final String userId,
     @ValidModuleId final String moduleId,

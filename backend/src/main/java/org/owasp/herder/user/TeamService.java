@@ -158,6 +158,24 @@ public class TeamService {
       .switchIfEmpty(Mono.error(new TeamNotFoundException("Team id \"" + teamId + "\" not found")));
   }
 
+  public Mono<TeamEntity> getByMemberId(@ValidUserId final String userId) {
+    return findAllByMemberId(userId)
+      .collectList()
+      .flatMap(teams -> {
+        final int matchingTeamsCount = teams.size();
+        if (matchingTeamsCount == 0) {
+          return Mono.error(
+            new IllegalStateException(String.format("User id \"%s\" is not a member of any team", userId))
+          );
+        } else if (matchingTeamsCount > 1) {
+          return Mono.error(
+            new IllegalStateException(String.format("User id \"%s\" is member of more than one team", userId))
+          );
+        }
+        return Mono.just(teams.get(0));
+      });
+  }
+
   public Flux<TeamEntity> findAllByMemberId(@ValidUserId final String userId) {
     return teamRepository.findAllByMembersId(userId);
   }
