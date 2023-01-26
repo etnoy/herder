@@ -86,6 +86,8 @@ public class UserService {
 
   private final ClassService classService;
 
+  private final TeamService teamService;
+
   private final KeyService keyService;
 
   private final WebTokenKeyManager webTokenKeyManager;
@@ -669,35 +671,7 @@ public class UserService {
     // First, update all teams related to the user
 
     // The team (if any) the user belongs to now
-    Mono<TeamEntity> incomingTeam = updatedUser
-      .filter(user -> user.getTeamId() != null)
-      .map(UserEntity::getTeamId)
-      .flatMap(this::getTeamById)
-      .zipWith(updatedUser)
-      .map(tuple ->
-        tuple
-          .getT1()
-          // Update the correct member entry in the team's member list
-          .withMembers(
-            tuple
-              .getT1()
-              .getMembers()
-              .stream()
-              .map(existingUser -> {
-                final UserEntity newUser = tuple.getT2();
-                if (existingUser.getId().equals(updatedUserId)) {
-                  // Found the correct user id, replace this with the new user entity
-                  return newUser;
-                } else {
-                  return existingUser;
-                }
-              })
-              // Collect all entries into an array list
-              .collect(Collectors.toCollection(ArrayList::new))
-          )
-      )
-      // Save the team to the db
-      .flatMap(teamRepository::save);
+    updatedUser.flatMap(teamService::updateTeamMember);
 
     // The team (if any) the user belonged to before. This number can be greater than one
     final Flux<TeamEntity> outgoingTeams = findAllTeams()
@@ -742,7 +716,7 @@ public class UserService {
       );
     // Update submissions
     Flux<Submission> submissionsToUpdate = submissionRepository.findAllByUserId(updatedUserId);
-
+    Mono<TeamEntity> incomingTeam = Mono.empty();
     // Update team field in submissions
     Flux<Submission> addedTeamSubmissions = incomingTeam
       .flatMapMany(team -> submissionsToUpdate.map(submission -> submission.withTeamId(team.getId())))

@@ -63,6 +63,7 @@ import org.owasp.herder.user.ClassService;
 import org.owasp.herder.user.PrincipalEntity;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.TeamRepository;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
@@ -97,6 +98,9 @@ class UserServiceTest extends BaseTest {
 
   @Mock
   KeyService keyService;
+
+  @Mock
+  TeamService teamService;
 
   @Mock
   WebTokenKeyManager webTokenKeyManager;
@@ -1125,6 +1129,7 @@ class UserServiceTest extends BaseTest {
         passwordAuthRepository,
         submissionRepository,
         classService,
+        teamService,
         keyService,
         webTokenKeyManager,
         clock
