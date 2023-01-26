@@ -65,19 +65,14 @@ class UserAdministrationIT extends BaseIT {
   IntegrationTestUtils integrationTestUtils;
 
   @Test
-  @DisplayName("Can update members field when adding user to team")
+  @DisplayName("Can add user to team")
   void canAddUserToTeamMembers() {
     final String userId = integrationTestUtils.createTestUser();
     final String teamId = integrationTestUtils.createTestTeam();
 
-    final UserEntity user = userService.getById(userId).block();
-
     userService.addUserToTeam(userId, teamId).block();
 
-    StepVerifier
-      .create(userService.findTeamById(teamId).map(TeamEntity::getMembers))
-      .assertNext(members -> assertThat(members).containsExactly(user.withTeamId(teamId)))
-      .verifyComplete();
+    StepVerifier.create(userService.getById(userId).map(UserEntity::getTeamId)).expectNext(teamId).verifyComplete();
   }
 
   @Test

@@ -38,7 +38,6 @@ import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
-import org.owasp.herder.scoring.PrincipalType;
 import org.owasp.herder.scoring.ScoreAdjustmentService;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;

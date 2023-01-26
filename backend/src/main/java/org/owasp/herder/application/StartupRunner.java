@@ -92,12 +92,16 @@ public class StartupRunner implements ApplicationRunner {
       }
 
       userService.addUserToTeam(userId1, teamId1).block();
-      userService.addUserToTeam(userId2, teamId1).block();
-      userService.addUserToTeam(userId3, teamId2).block();
+      teamService.addMember(teamId1, userService.getById(userId1).block()).block();
+      submissionService.setTeamIdOfUserSubmissions(userId1, teamId1).block();
 
-      userService.afterUserUpdate(userId1).block();
-      userService.afterUserUpdate(userId2).block();
-      userService.afterUserUpdate(userId3).block();
+      userService.addUserToTeam(userId2, teamId1).block();
+      teamService.addMember(teamId1, userService.getById(userId2).block()).block();
+      submissionService.setTeamIdOfUserSubmissions(userId2, teamId1).block();
+
+      userService.addUserToTeam(userId3, teamId2).block();
+      teamService.addMember(teamId2, userService.getById(userId3).block()).block();
+      submissionService.setTeamIdOfUserSubmissions(userId3, teamId2).block();
     }
     moduleService.refreshModuleLists().block();
     submissionService.refreshSubmissionRanks().block();
