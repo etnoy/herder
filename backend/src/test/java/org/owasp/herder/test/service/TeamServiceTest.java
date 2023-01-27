@@ -315,7 +315,7 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
-  void getByMemberId_UserNotInTeam_ReturnsError() {
+  void getByMemberId_UserNotInTeam_ReturnsEror() {
     when(teamRepository.findAllByMembersId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just());
     StepVerifier
       .create(teamService.getByMemberId(TestConstants.TEST_USER_ID))
@@ -344,6 +344,27 @@ class TeamServiceTest extends BaseTest {
       .verify();
   }
 
+  @Test
+  void updateTeamMember_UserInTeam_ReplacesUserEntity() {
+    final ArrayList<UserEntity> membersBeforeUpdate = new ArrayList<>();
+    final UserEntity oldUserEntity = TestConstants.TEST_USER_ENTITY.withId(TestConstants.TEST_USER_ID);
+    membersBeforeUpdate.add(TestConstants.TEST_USER_ENTITY.withId(TestConstants.TEST_USER_ID));
+    when(mockUser.getId()).thenReturn("blargh");
+    membersBeforeUpdate.add(mockUser);
+
+    final TeamEntity teamBeforeUpdate = TestConstants.TEST_TEAM_ENTITY.withMembers(membersBeforeUpdate);
+    final UserEntity newUserEntity = oldUserEntity.withDisplayName("New Name");
+
+    when(teamRepository.save(any(TeamEntity.class))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
+
+    when(teamRepository.findAllByMembersId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(teamBeforeUpdate));
+    StepVerifier.create(teamService.updateTeamMember(newUserEntity)).verifyComplete();
+
+    final ArgumentCaptor<TeamEntity> teamEntityArgument = ArgumentCaptor.forClass(TeamEntity.class);
+    verify(teamRepository).save(teamEntityArgument.capture());
+    assertThat(teamEntityArgument.getValue().getMembers()).containsExactly(newUserEntity, mockUser);
+  }
+
   private void setClock(final Clock testClock) {
     when(clock.instant()).thenReturn(testClock.instant());
     when(clock.getZone()).thenReturn(testClock.getZone());
@@ -351,7 +372,7 @@ class TeamServiceTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    teamService = new TeamService(teamRepository, submissionRepository, clock);
+    teamService = new TeamService(teamRepository, clock);
 
     mockUser = mock(UserEntity.class);
     mockTeam = mock(TeamEntity.class);

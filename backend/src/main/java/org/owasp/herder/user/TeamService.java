@@ -29,8 +29,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.exception.DuplicateTeamDisplayNameException;
 import org.owasp.herder.exception.TeamNotFoundException;
-import org.owasp.herder.scoring.Submission;
-import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.validation.ValidDisplayName;
 import org.owasp.herder.validation.ValidTeamId;
 import org.owasp.herder.validation.ValidUserId;
@@ -45,11 +43,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class TeamService {
 
-  private static final String DISPLAY_NAME_ALREADY_EXISTS = "Team display name \"%s\" already exists";
-
   private final TeamRepository teamRepository;
-
-  private final SubmissionRepository submissionRepository;
 
   private final Clock clock;
 
@@ -124,7 +118,9 @@ public class TeamService {
       .just(displayName)
       .filterWhen(this::doesNotExistByDisplayName)
       .switchIfEmpty(
-        Mono.error(new DuplicateTeamDisplayNameException(String.format(DISPLAY_NAME_ALREADY_EXISTS, displayName)))
+        Mono.error(
+          new DuplicateTeamDisplayNameException(String.format("Team display name \"%s\" already exists", displayName))
+        )
       )
       .flatMap(name ->
         teamRepository.save(
@@ -223,51 +219,24 @@ public class TeamService {
   }
 
   /**
-   * Removes deleted teams from db. To be called after team deletion
-   *
-   * @param teamId
-   * @return
-   */
-  public Mono<Void> afterTeamDeletion(@ValidTeamId final String teamId) {
-    // Update submissions
-
-    // Update team field in submissions
-    final Flux<Submission> updatedTeamSubmissions = submissionRepository
-      .findAllByTeamId(teamId)
-      .map(submission -> submission.withTeamId(null));
-
-    return submissionRepository.saveAll(updatedTeamSubmissions).then();
-  }
-
-  /**
    * To be called after a user entity has changed
    *
    * @param updatedUserId the updated user id
    * @return a Mono<Void> signaling completion
    */
   public Mono<Void> updateTeamMember(final UserEntity updatedUser) {
-    final String currentTeamId = updatedUser.getTeamId();
-
-    if (currentTeamId == null) {
-      return Mono.empty();
-    }
-
-    // Remove the user from any previous teams it belonged to
-    findAllByMemberId(updatedUser.getId());
-
-    // Update the user entity in the team the user belongs to
-    return getById(currentTeamId)
+    return getByMemberId(updatedUser.getId())
       .map(team ->
         team.withMembers(
           team
             .getMembers()
             .stream()
-            .map(existingUser -> {
-              if (existingUser.getId().equals(updatedUser.getId())) {
+            .map(currentUser -> {
+              if (currentUser.getId().equals(updatedUser.getId())) {
                 // Found the correct user id, replace this with the new user entity
                 return updatedUser;
               } else {
-                return existingUser;
+                return currentUser;
               }
             })
             // Collect all entries into an array list
