@@ -183,7 +183,7 @@ public class TeamService {
         final int matchingTeamsCount = teams.size();
         if (matchingTeamsCount == 0) {
           return Mono.error(
-            new IllegalStateException(String.format("User id \"%s\" is not a member of any team", userId))
+            new TeamNotFoundException(String.format("User id \"%s\" is not a member of any team", userId))
           );
         } else if (matchingTeamsCount > 1) {
           return Mono.error(

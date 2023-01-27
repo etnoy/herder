@@ -291,13 +291,13 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
-  void getTeamById_TeamExists_ReturnsUser() {
+  void getById_TeamExists_ReturnsUser() {
     when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
     StepVerifier.create(teamService.getById(TestConstants.TEST_TEAM_ID)).expectNext(mockTeam).verifyComplete();
   }
 
   @Test
-  void getTeamById_UserDoesNotExist_ReturnsError() {
+  void getById_UserDoesNotExist_ReturnsError() {
     when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.empty());
     StepVerifier
       .create(teamService.getById(TestConstants.TEST_TEAM_ID))
@@ -312,6 +312,36 @@ class TeamServiceTest extends BaseTest {
   void getByMemberId_UserIsInTeam_ReturnsTeam() {
     when(teamRepository.findAllByMembersId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(mockTeam));
     StepVerifier.create(teamService.getByMemberId(TestConstants.TEST_USER_ID)).expectNext(mockTeam).verifyComplete();
+  }
+
+  @Test
+  void getByMemberId_UserNotInTeam_ReturnsError() {
+    when(teamRepository.findAllByMembersId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just());
+    StepVerifier
+      .create(teamService.getByMemberId(TestConstants.TEST_USER_ID))
+      .expectErrorMatches(throwable ->
+        throwable instanceof TeamNotFoundException &&
+        throwable
+          .getMessage()
+          .equals(String.format("User id \"%s\" is not a member of any team", TestConstants.TEST_USER_ID))
+      )
+      .verify();
+  }
+
+  @Test
+  void getByMemberId_UserInMoreThanOneTeam_ReturnsError() {
+    when(teamRepository.findAllByMembersId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(mockTeam, mockTeam));
+    StepVerifier
+      .create(teamService.getByMemberId(TestConstants.TEST_USER_ID))
+      .expectErrorMatches(throwable ->
+        throwable instanceof IllegalStateException &&
+        throwable
+          .getMessage()
+          .equals(
+            String.format(String.format("User id \"%s\" is member of more than one team", TestConstants.TEST_USER_ID))
+          )
+      )
+      .verify();
   }
 
   private void setClock(final Clock testClock) {
