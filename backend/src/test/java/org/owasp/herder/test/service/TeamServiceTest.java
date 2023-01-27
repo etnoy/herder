@@ -146,15 +146,17 @@ class TeamServiceTest extends BaseTest {
     final ArrayList<UserEntity> membersBeforeExpulsion = new ArrayList<>();
 
     membersBeforeExpulsion.add(TestConstants.TEST_USER_ENTITY.withId(TestConstants.TEST_USER_ID));
-    final TeamEntity teamBeforeExpulsion = TestConstants.TEST_TEAM_ENTITY.withMembers(membersBeforeExpulsion);
+    final TeamEntity teamBeforeExpulsion = TestConstants.TEST_TEAM_ENTITY
+      .withMembers(membersBeforeExpulsion)
+      .withId(TestConstants.TEST_TEAM_ID);
     when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(teamBeforeExpulsion));
-    when(teamRepository.delete(any(TeamEntity.class))).thenReturn(Mono.empty());
+    when(teamRepository.deleteById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.empty());
 
     StepVerifier.create(teamService.expel(TestConstants.TEST_TEAM_ID, TestConstants.TEST_USER_ID)).verifyComplete();
 
-    final ArgumentCaptor<TeamEntity> teamEntityArgument = ArgumentCaptor.forClass(TeamEntity.class);
-    verify(teamRepository).delete(teamEntityArgument.capture());
-    assertThat(teamEntityArgument.getValue()).isEqualTo(TestConstants.TEST_TEAM_ENTITY);
+    final ArgumentCaptor<String> teamEntityArgument = ArgumentCaptor.forClass(String.class);
+    verify(teamRepository).deleteById(teamEntityArgument.capture());
+    assertThat(teamEntityArgument.getValue()).isEqualTo(TestConstants.TEST_TEAM_ID);
   }
 
   @Test

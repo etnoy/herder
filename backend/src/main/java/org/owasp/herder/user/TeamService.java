@@ -94,7 +94,7 @@ public class TeamService {
       })
       .flatMap(team -> {
         if (team.getMembers().isEmpty()) {
-          return teamRepository.delete(team);
+          return teamRepository.deleteById(team.getId());
         } else {
           return teamRepository.save(team);
         }
