@@ -160,6 +160,54 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can return error when expelling user if it is not a member of the team")
+  void expel_UserNotInAnyTeam_ReturnsError() {
+    final ArrayList<UserEntity> membersBeforeExpulsion = new ArrayList<>();
+
+    final TeamEntity teamBeforeExpulsion = TestConstants.TEST_TEAM_ENTITY
+      .withMembers(membersBeforeExpulsion)
+      .withId(TestConstants.TEST_TEAM_ID);
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(teamBeforeExpulsion));
+
+    StepVerifier
+      .create(teamService.expel(TestConstants.TEST_TEAM_ID, TestConstants.TEST_USER_ID))
+      .expectErrorMatches(e ->
+        e instanceof IllegalStateException &&
+        e.getMessage().equals(String.format("User \"%s\"  not found in team", TestConstants.TEST_USER_ID))
+      )
+      .verify();
+  }
+
+  @Test
+  @DisplayName("Can return error when expelling user if it matches several users in a team")
+  void expel_UserIdFoundInMultipleMembers_ReturnsError() {
+    final ArrayList<UserEntity> membersBeforeExpulsion = new ArrayList<>();
+    membersBeforeExpulsion.add(TestConstants.TEST_USER_ENTITY.withId(TestConstants.TEST_USER_ID));
+    membersBeforeExpulsion.add(TestConstants.TEST_USER_ENTITY.withId(TestConstants.TEST_USER_ID));
+
+    final TeamEntity teamBeforeExpulsion = TestConstants.TEST_TEAM_ENTITY
+      .withMembers(membersBeforeExpulsion)
+      .withId(TestConstants.TEST_TEAM_ID);
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(teamBeforeExpulsion));
+
+    StepVerifier
+      .create(teamService.expel(TestConstants.TEST_TEAM_ID, TestConstants.TEST_USER_ID))
+      .expectErrorMatches(e ->
+        e instanceof IllegalStateException &&
+        e
+          .getMessage()
+          .equals(
+            String.format(
+              "Team with id \"%s\" contains the same user (id \"%s\") more than once",
+              TestConstants.TEST_TEAM_ID,
+              TestConstants.TEST_USER_ID
+            )
+          )
+      )
+      .verify();
+  }
+
+  @Test
   void create_TeamDisplayNameAlreadyExists_ThrowsException() {
     when(teamRepository.findByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME)).thenReturn(Mono.just(mockTeam));
 

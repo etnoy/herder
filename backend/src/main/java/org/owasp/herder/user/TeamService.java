@@ -77,9 +77,18 @@ public class TeamService {
 
         // Do some sanity checks on the number of matching users
         if (matchingUserCount == 0) {
-          return Mono.error(new IllegalStateException("User not found in team"));
+          return Mono.error(new IllegalStateException(String.format("User \"%s\"  not found in team", expelledUserId)));
         } else if (matchingUserCount > 1) {
-          return Mono.error(new IllegalStateException("Team contains the same user more than once"));
+          // This is highly unlikely but we check for it anyway
+          return Mono.error(
+            new IllegalStateException(
+              String.format(
+                "Team with id \"%s\" contains the same user (id \"%s\") more than once",
+                teamId,
+                expelledUserId
+              )
+            )
+          );
         }
         return Mono.just(team);
       })
