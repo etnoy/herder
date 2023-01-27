@@ -95,7 +95,6 @@ class ScoreboardServiceIT extends BaseIT {
       user3 = user3.withTeamId(null);
       teamService.expel(teamId, userId3).block();
       submissionService.clearTeamIdOfUserSubmissions(userId3).block();
-      teamService.delete(teamId).block();
     }
 
     @Test

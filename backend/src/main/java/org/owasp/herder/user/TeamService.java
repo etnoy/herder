@@ -74,6 +74,8 @@ public class TeamService {
           .stream()
           .filter(member -> member.getId().equals(expelledUserId))
           .count();
+
+        // Do some sanity checks on the number of matching users
         if (matchingUserCount == 0) {
           return Mono.error(new IllegalStateException("User not found in team"));
         } else if (matchingUserCount > 1) {
@@ -87,9 +89,16 @@ public class TeamService {
           .stream()
           .filter(member -> !member.getId().equals(expelledUserId))
           .collect(Collectors.toCollection(ArrayList::new));
+
         return team.withMembers(newMembers);
       })
-      .flatMap(teamRepository::save)
+      .flatMap(team -> {
+        if (team.getMembers().isEmpty()) {
+          return teamRepository.delete(team);
+        } else {
+          return teamRepository.save(team);
+        }
+      })
       .then();
   }
 

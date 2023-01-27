@@ -85,6 +85,7 @@ class TeamServiceTest extends BaseTest {
   TeamEntity mockTeam;
 
   @Test
+  @DisplayName("Can add user to team")
   void addMember_UserEntityIsMemberOfTeam_AddsUserToTeam() {
     final UserEntity newMember = TestConstants.TEST_USER_ENTITY.withTeamId(TestConstants.TEST_TEAM_ID);
 
@@ -99,11 +100,10 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can return error when adding user to team if user team id is null")
   void addMember_UserEntityIsNotMemberOfAnyTeam_ThrowsException() {
-    final UserEntity newMember = TestConstants.TEST_USER_ENTITY;
-
     StepVerifier
-      .create(teamService.addMember(TestConstants.TEST_TEAM_ID, newMember))
+      .create(teamService.addMember(TestConstants.TEST_TEAM_ID, TestConstants.TEST_USER_ENTITY))
       .expectErrorMatches(e ->
         e instanceof IllegalArgumentException && e.getMessage().equals("User has an incorrect team id")
       )
@@ -111,15 +111,50 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can return error if user is member of wrong team")
   void addMember_UserEntityIsNotMemberOfWrongTeam_ThrowsException() {
-    final UserEntity newMember = TestConstants.TEST_USER_ENTITY.withTeamId("blargh");
-
     StepVerifier
-      .create(teamService.addMember(TestConstants.TEST_TEAM_ID, newMember))
+      .create(teamService.addMember(TestConstants.TEST_TEAM_ID, TestConstants.TEST_USER_ENTITY.withTeamId("blargh")))
       .expectErrorMatches(e ->
         e instanceof IllegalArgumentException && e.getMessage().equals("User has an incorrect team id")
       )
       .verify();
+  }
+
+  @Test
+  @DisplayName("Can expel user from team")
+  void expel_UserIsNotLastMemberOfTeam_ExpelsUser() {
+    final ArrayList<UserEntity> membersBeforeExpulsion = new ArrayList<>();
+    membersBeforeExpulsion.add(mockUser);
+    when(mockUser.getId()).thenReturn("blargh");
+
+    membersBeforeExpulsion.add(TestConstants.TEST_USER_ENTITY.withId(TestConstants.TEST_USER_ID));
+    final TeamEntity teamBeforeExpulsion = TestConstants.TEST_TEAM_ENTITY.withMembers(membersBeforeExpulsion);
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(teamBeforeExpulsion));
+    when(teamRepository.save(any(TeamEntity.class))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
+
+    StepVerifier.create(teamService.expel(TestConstants.TEST_TEAM_ID, TestConstants.TEST_USER_ID)).verifyComplete();
+
+    final ArgumentCaptor<TeamEntity> teamEntityArgument = ArgumentCaptor.forClass(TeamEntity.class);
+    verify(teamRepository).save(teamEntityArgument.capture());
+    assertThat(teamEntityArgument.getValue().getMembers()).containsExactly(mockUser);
+  }
+
+  @Test
+  @DisplayName("Can expel user from team and deletes team if it was the last member")
+  void expel_UserIsLastMemberOfTeam_ExpelsUserAndDeletesTeam() {
+    final ArrayList<UserEntity> membersBeforeExpulsion = new ArrayList<>();
+
+    membersBeforeExpulsion.add(TestConstants.TEST_USER_ENTITY.withId(TestConstants.TEST_USER_ID));
+    final TeamEntity teamBeforeExpulsion = TestConstants.TEST_TEAM_ENTITY.withMembers(membersBeforeExpulsion);
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(teamBeforeExpulsion));
+    when(teamRepository.delete(any(TeamEntity.class))).thenReturn(Mono.empty());
+
+    StepVerifier.create(teamService.expel(TestConstants.TEST_TEAM_ID, TestConstants.TEST_USER_ID)).verifyComplete();
+
+    final ArgumentCaptor<TeamEntity> teamEntityArgument = ArgumentCaptor.forClass(TeamEntity.class);
+    verify(teamRepository).delete(teamEntityArgument.capture());
+    assertThat(teamEntityArgument.getValue()).isEqualTo(TestConstants.TEST_TEAM_ENTITY);
   }
 
   @Test
