@@ -50,12 +50,12 @@ import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
 import org.owasp.herder.exception.UserNotFoundException;
-import org.owasp.herder.scoring.PrincipalType;
+import org.owasp.herder.scoring.SolverType;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.ClassService;
-import org.owasp.herder.user.PrincipalEntity;
+import org.owasp.herder.user.SolverEntity;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.TeamRepository;
 import org.owasp.herder.user.TeamService;
@@ -276,31 +276,31 @@ class UserServiceTest extends BaseTest {
     when(mockUser2.getDisplayName()).thenReturn("Test User 2");
     when(mockUser3.getDisplayName()).thenReturn("Test User 3");
 
-    final PrincipalEntity principal1 = PrincipalEntity
+    final SolverEntity principal1 = SolverEntity
       .builder()
       .displayName("Test User 1")
-      .principalType(PrincipalType.USER)
+      .solverType(SolverType.USER)
       .build();
 
-    final PrincipalEntity principal2 = PrincipalEntity
+    final SolverEntity principal2 = SolverEntity
       .builder()
       .displayName("Test User 2")
-      .principalType(PrincipalType.USER)
+      .solverType(SolverType.USER)
       .build();
 
-    final PrincipalEntity principal3 = PrincipalEntity
+    final SolverEntity principal3 = SolverEntity
       .builder()
       .displayName("Test User 3")
-      .principalType(PrincipalType.USER)
+      .solverType(SolverType.USER)
       .build();
 
-    final List<PrincipalEntity> expectedPrincipals = List.of(principal1, principal2, principal3);
+    final List<SolverEntity> expectedPrincipals = List.of(principal1, principal2, principal3);
 
     when(teamRepository.findAll()).thenReturn(Flux.empty());
     when(userRepository.findAllByTeamId(null)).thenReturn(Flux.just(mockUser1, mockUser2, mockUser3));
 
     StepVerifier
-      .create(userService.findAllPrincipals())
+      .create(userService.findAllSolvers())
       .thenConsumeWhile(principal -> expectedPrincipals.contains(principal))
       .verifyComplete();
   }
@@ -318,28 +318,28 @@ class UserServiceTest extends BaseTest {
     when(mockTeam.getDisplayName()).thenReturn("Test Team");
     when(mockTeam.getId()).thenReturn(TestConstants.TEST_TEAM_ID);
 
-    final PrincipalEntity userPrincipal = PrincipalEntity
+    final SolverEntity userPrincipal = SolverEntity
       .builder()
       .displayName("Test User 1")
-      .principalType(PrincipalType.USER)
+      .solverType(SolverType.USER)
       .build();
 
-    final PrincipalEntity teamPrincipal = PrincipalEntity
+    final SolverEntity teamPrincipal = SolverEntity
       .builder()
       .id(TestConstants.TEST_TEAM_ID)
       .displayName("Test Team")
-      .principalType(PrincipalType.TEAM)
+      .solverType(SolverType.TEAM)
       .members(new HashSet<>(Arrays.asList(mockUser2, mockUser3)))
       .build();
 
-    final List<PrincipalEntity> expectedPrincipals = List.of(userPrincipal, teamPrincipal);
+    final List<SolverEntity> expectedPrincipals = List.of(userPrincipal, teamPrincipal);
 
     when(userRepository.findAllByTeamId(null)).thenReturn(Flux.just(mockUser1));
     when(userRepository.findAllByTeamId(TestConstants.TEST_TEAM_ID)).thenReturn(Flux.just(mockUser2, mockUser3));
     when(teamRepository.findAll()).thenReturn(Flux.just(mockTeam));
 
     StepVerifier
-      .create(userService.findAllPrincipals())
+      .create(userService.findAllSolvers())
       .thenConsumeWhile(principal -> expectedPrincipals.contains(principal))
       .verifyComplete();
   }

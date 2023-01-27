@@ -37,18 +37,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.scoring.PrincipalType;
 import org.owasp.herder.scoring.RankedSubmissionRepository;
 import org.owasp.herder.scoring.ScoreboardEntry;
 import org.owasp.herder.scoring.ScoreboardRepository;
 import org.owasp.herder.scoring.ScoreboardService;
+import org.owasp.herder.scoring.SolverType;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.UnrankedScoreboardEntry;
 import org.owasp.herder.scoring.UnrankedScoreboardEntry.UnrankedScoreboardEntryBuilder;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.PrincipalEntity;
-import org.owasp.herder.user.PrincipalEntity.PrincipalEntityBuilder;
+import org.owasp.herder.user.SolverEntity;
+import org.owasp.herder.user.SolverEntity.SolverEntityBuilder;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.TeamEntity.TeamEntityBuilder;
 import org.owasp.herder.user.TeamRepository;
@@ -127,8 +127,8 @@ class ScoreboardServiceTest extends BaseTest {
       testUser1 = createTestUser();
       testUser2 = createTestUser();
 
-      when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+      when(userService.findAllSolvers())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createSolverEntityFromUser(user)));
 
       unrankedScoreboardEntryBuilder.user(testUser1);
       unrankedScoreboardEntryBuilder.displayName(testUser1.getDisplayName());
@@ -199,20 +199,20 @@ class ScoreboardServiceTest extends BaseTest {
     verify(scoreboardRepository, times(1)).findAll();
   }
 
-  private PrincipalEntity createPrincipalEntityFromUser(final UserEntity userEntity) {
-    final PrincipalEntityBuilder principalEntityBuilder = PrincipalEntity.builder();
+  private SolverEntity createSolverEntityFromUser(final UserEntity userEntity) {
+    final SolverEntityBuilder principalEntityBuilder = SolverEntity.builder();
     principalEntityBuilder.creationTime(LocalDateTime.MIN);
-    principalEntityBuilder.principalType(PrincipalType.USER);
+    principalEntityBuilder.solverType(SolverType.USER);
 
     principalEntityBuilder.displayName(userEntity.getDisplayName());
     principalEntityBuilder.id(userEntity.getId());
     return principalEntityBuilder.build();
   }
 
-  private PrincipalEntity createPrincipalEntityFromTeam(final TeamEntity teamEntity) {
-    final PrincipalEntityBuilder principalEntityBuilder = PrincipalEntity.builder();
+  private SolverEntity createSolverEntityFromTeam(final TeamEntity teamEntity) {
+    final SolverEntityBuilder principalEntityBuilder = SolverEntity.builder();
     principalEntityBuilder.creationTime(LocalDateTime.MIN);
-    principalEntityBuilder.principalType(PrincipalType.TEAM);
+    principalEntityBuilder.solverType(SolverType.TEAM);
 
     principalEntityBuilder.displayName(teamEntity.getDisplayName());
     principalEntityBuilder.id(teamEntity.getId());
@@ -272,8 +272,8 @@ class ScoreboardServiceTest extends BaseTest {
       .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2, unrankedScoreboardEntry3));
 
     //Only submit two users
-    when(userService.findAllPrincipals())
-      .thenReturn(Flux.just(testUser1, testUser2).map(this::createPrincipalEntityFromUser));
+    when(userService.findAllSolvers())
+      .thenReturn(Flux.just(testUser1, testUser2).map(this::createSolverEntityFromUser));
 
     StepVerifier.create(scoreboardService.refreshScoreboard()).expectError(IllegalStateException.class).verify();
   }
@@ -289,7 +289,7 @@ class ScoreboardServiceTest extends BaseTest {
       scoreboardCaptor = ArgumentCaptor.forClass(ArrayList.class);
 
       when(rankedSubmissionRepository.getUnrankedScoreboard()).thenReturn(Flux.empty());
-      when(userService.findAllPrincipals()).thenReturn(Flux.empty());
+      when(userService.findAllSolvers()).thenReturn(Flux.empty());
     }
 
     @Test
@@ -335,9 +335,9 @@ class ScoreboardServiceTest extends BaseTest {
       when(rankedSubmissionRepository.getUnrankedScoreboard())
         .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2, unrankedScoreboardEntry3));
 
-      when(userService.findAllPrincipals())
+      when(userService.findAllSolvers())
         .thenReturn(
-          Flux.just(testUser1, testUser2, testUser3, testUser4).map(user -> createPrincipalEntityFromUser(user))
+          Flux.just(testUser1, testUser2, testUser3, testUser4).map(user -> createSolverEntityFromUser(user))
         );
 
       StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
@@ -376,8 +376,8 @@ class ScoreboardServiceTest extends BaseTest {
       when(rankedSubmissionRepository.getUnrankedScoreboard())
         .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
 
-      when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2, testUser3).map(user -> createPrincipalEntityFromUser(user)));
+      when(userService.findAllSolvers())
+        .thenReturn(Flux.just(testUser1, testUser2, testUser3).map(user -> createSolverEntityFromUser(user)));
 
       StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
@@ -415,8 +415,8 @@ class ScoreboardServiceTest extends BaseTest {
       when(rankedSubmissionRepository.getUnrankedScoreboard())
         .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
 
-      when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+      when(userService.findAllSolvers())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createSolverEntityFromUser(user)));
 
       StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
@@ -453,8 +453,8 @@ class ScoreboardServiceTest extends BaseTest {
       when(rankedSubmissionRepository.getUnrankedScoreboard())
         .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
 
-      when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+      when(userService.findAllSolvers())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createSolverEntityFromUser(user)));
 
       StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
@@ -490,8 +490,8 @@ class ScoreboardServiceTest extends BaseTest {
 
       when(rankedSubmissionRepository.getUnrankedScoreboard())
         .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
-      when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+      when(userService.findAllSolvers())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createSolverEntityFromUser(user)));
 
       StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
@@ -530,8 +530,8 @@ class ScoreboardServiceTest extends BaseTest {
       when(rankedSubmissionRepository.getUnrankedScoreboard())
         .thenReturn(Flux.just(unrankedScoreboardEntry1, unrankedScoreboardEntry2));
 
-      when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+      when(userService.findAllSolvers())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createSolverEntityFromUser(user)));
 
       StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 
@@ -551,8 +551,8 @@ class ScoreboardServiceTest extends BaseTest {
       final TeamEntity testTeam1 = createTestTeam();
       final TeamEntity testTeam2 = createTestTeam();
 
-      when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testTeam1, testTeam2).map(team -> createPrincipalEntityFromTeam(team)));
+      when(userService.findAllSolvers())
+        .thenReturn(Flux.just(testTeam1, testTeam2).map(team -> createSolverEntityFromTeam(team)));
 
       unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
 
@@ -599,8 +599,8 @@ class ScoreboardServiceTest extends BaseTest {
       final UserEntity testUser1 = createTestUser().withId("collision");
       final TeamEntity testTeam1 = createTestTeam().withId("collision");
 
-      when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(createPrincipalEntityFromUser(testUser1), createPrincipalEntityFromTeam(testTeam1)));
+      when(userService.findAllSolvers())
+        .thenReturn(Flux.just(createSolverEntityFromUser(testUser1), createSolverEntityFromTeam(testTeam1)));
 
       unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
 
@@ -636,8 +636,8 @@ class ScoreboardServiceTest extends BaseTest {
       assertThat(computedScoreboard).extracting(ScoreboardEntry::getRank).containsExactly(1L, 2L);
 
       assertThat(computedScoreboard)
-        .extracting(ScoreboardEntry::getPrincipalType)
-        .containsExactly(PrincipalType.USER, PrincipalType.TEAM);
+        .extracting(ScoreboardEntry::getSolverType)
+        .containsExactly(SolverType.USER, SolverType.TEAM);
     }
 
     @Test
@@ -646,8 +646,8 @@ class ScoreboardServiceTest extends BaseTest {
       final UserEntity testUser1 = createTestUser();
       final UserEntity testUser2 = createTestUser();
 
-      when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+      when(userService.findAllSolvers())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createSolverEntityFromUser(user)));
 
       unrankedScoreboardEntryBuilder.scoreAdjustment(0L);
 
@@ -700,8 +700,8 @@ class ScoreboardServiceTest extends BaseTest {
         testUser1 = createTestUser();
         testUser2 = createTestUser();
 
-        when(userService.findAllPrincipals())
-          .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+        when(userService.findAllSolvers())
+          .thenReturn(Flux.just(testUser1, testUser2).map(user -> createSolverEntityFromUser(user)));
 
         unrankedScoreboardEntryBuilder.user(testUser2);
         unrankedScoreboardEntryBuilder.displayName(testUser2.getDisplayName());
@@ -765,8 +765,8 @@ class ScoreboardServiceTest extends BaseTest {
       final UserEntity testUser1 = createTestUser();
       final UserEntity testUser2 = createTestUser();
 
-      when(userService.findAllPrincipals())
-        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createPrincipalEntityFromUser(user)));
+      when(userService.findAllSolvers())
+        .thenReturn(Flux.just(testUser1, testUser2).map(user -> createSolverEntityFromUser(user)));
 
       StepVerifier.create(scoreboardService.refreshScoreboard()).verifyComplete();
 

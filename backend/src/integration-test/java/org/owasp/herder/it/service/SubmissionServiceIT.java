@@ -37,7 +37,7 @@ import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
-import org.owasp.herder.scoring.PrincipalType;
+import org.owasp.herder.scoring.SolverType;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
@@ -139,9 +139,7 @@ class SubmissionServiceIT extends BaseIT {
       .thenConsumeWhile(x -> true)
       .consumeRecordedWith(rankedSubmissions -> {
         assertThat(rankedSubmissions).extracting("id").containsExactly(teamId, userId2);
-        assertThat(rankedSubmissions)
-          .extracting("principalType")
-          .containsExactly(PrincipalType.TEAM, PrincipalType.USER);
+        assertThat(rankedSubmissions).extracting("principalType").containsExactly(SolverType.TEAM, SolverType.USER);
         assertThat(rankedSubmissions).extracting("rank").containsExactly(1L, 2L);
       })
       .verifyComplete();

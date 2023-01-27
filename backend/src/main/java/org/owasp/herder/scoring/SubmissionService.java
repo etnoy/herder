@@ -99,12 +99,12 @@ public class SubmissionService {
       final TeamEntity team = rankedSubmission.getTeam();
       builder.id(team.getId());
       builder.displayName(team.getDisplayName());
-      builder.principalType(PrincipalType.TEAM);
+      builder.principalType(SolverType.TEAM);
     } else {
       final UserEntity user = rankedSubmission.getUser();
       builder.id(user.getId());
       builder.displayName(user.getDisplayName());
-      builder.principalType(PrincipalType.USER);
+      builder.principalType(SolverType.USER);
     }
     builder.baseScore(rankedSubmission.getBaseScore());
     builder.bonusScore(rankedSubmission.getBonusScore());

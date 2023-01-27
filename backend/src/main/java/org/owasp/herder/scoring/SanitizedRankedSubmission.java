@@ -42,7 +42,7 @@ public class SanitizedRankedSubmission implements Serializable {
   String id;
 
   @NonNull
-  PrincipalType principalType;
+  SolverType principalType;
 
   @NonNull
   String displayName;

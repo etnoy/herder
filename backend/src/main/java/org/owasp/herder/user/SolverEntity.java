@@ -29,7 +29,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
-import org.owasp.herder.scoring.PrincipalType;
+import org.owasp.herder.scoring.SolverType;
 import org.owasp.herder.validation.ValidDisplayName;
 import org.owasp.herder.validation.ValidPrincipalId;
 
@@ -37,7 +37,7 @@ import org.owasp.herder.validation.ValidPrincipalId;
 @AllArgsConstructor
 @Builder
 @With
-public final class PrincipalEntity implements Serializable {
+public final class SolverEntity implements Serializable {
 
   private static final long serialVersionUID = 8843939402741609352L;
 
@@ -49,7 +49,7 @@ public final class PrincipalEntity implements Serializable {
   String displayName;
 
   @NonNull
-  PrincipalType principalType;
+  SolverType solverType;
 
   LocalDateTime creationTime;
 

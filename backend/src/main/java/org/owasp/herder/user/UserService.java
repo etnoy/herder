@@ -39,8 +39,8 @@ import org.owasp.herder.exception.ClassIdNotFoundException;
 import org.owasp.herder.exception.DuplicateUserDisplayNameException;
 import org.owasp.herder.exception.DuplicateUserLoginNameException;
 import org.owasp.herder.exception.UserNotFoundException;
-import org.owasp.herder.scoring.PrincipalType;
-import org.owasp.herder.user.PrincipalEntity.PrincipalEntityBuilder;
+import org.owasp.herder.scoring.SolverType;
+import org.owasp.herder.user.SolverEntity.SolverEntityBuilder;
 import org.owasp.herder.validation.ValidClassId;
 import org.owasp.herder.validation.ValidDisplayName;
 import org.owasp.herder.validation.ValidDuration;
@@ -365,16 +365,16 @@ public class UserService {
    *
    * @return
    */
-  public Flux<PrincipalEntity> findAllPrincipals() {
+  public Flux<SolverEntity> findAllSolvers() {
     Flux<UserEntity> userFlux = findAllUsersWithoutTeams();
 
-    final Flux<PrincipalEntity> teamFlux = teamRepository
+    final Flux<SolverEntity> teamFlux = teamRepository
       .findAll()
       .flatMap(team -> {
         final String teamId = team.getId();
-        PrincipalEntityBuilder principalEntityBuilder = PrincipalEntity.builder();
+        SolverEntityBuilder principalEntityBuilder = SolverEntity.builder();
 
-        principalEntityBuilder.principalType(PrincipalType.TEAM);
+        principalEntityBuilder.solverType(SolverType.TEAM);
         principalEntityBuilder.id(teamId);
         principalEntityBuilder.displayName(team.getDisplayName());
         principalEntityBuilder.creationTime(team.getCreationTime());
@@ -384,16 +384,16 @@ public class UserService {
           .collectList()
           .map(HashSet<UserEntity>::new)
           .map(principalEntityBuilder::members)
-          .map(PrincipalEntityBuilder::build);
+          .map(SolverEntityBuilder::build);
       });
 
     return Flux.concat(
       teamFlux,
       userFlux.map(user -> {
         final String userId = user.getId();
-        PrincipalEntityBuilder principalEntityBuilder = PrincipalEntity.builder();
+        SolverEntityBuilder principalEntityBuilder = SolverEntity.builder();
 
-        principalEntityBuilder.principalType(PrincipalType.USER);
+        principalEntityBuilder.solverType(SolverType.USER);
         principalEntityBuilder.id(userId);
         principalEntityBuilder.displayName(user.getDisplayName());
         principalEntityBuilder.creationTime(user.getCreationTime());

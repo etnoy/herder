@@ -34,7 +34,7 @@ import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.PrincipalEntity;
+import org.owasp.herder.user.SolverEntity;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
@@ -212,7 +212,7 @@ class UserServiceIT extends BaseIT {
     userService.addUserToTeam(userId3, teamId2).block();
 
     StepVerifier
-      .create(userService.findAllPrincipals())
+      .create(userService.findAllSolvers())
       .recordWith(HashSet::new)
       .expectNextCount(5)
       .consumeRecordedWith(principals -> {
@@ -224,23 +224,23 @@ class UserServiceIT extends BaseIT {
 
         assertThat(principals)
           .filteredOn(principal -> principal.getId().equals(teamId1))
-          .flatExtracting(PrincipalEntity::getMembers)
+          .flatExtracting(SolverEntity::getMembers)
           .hasSize(2);
         assertThat(principals)
           .filteredOn(principal -> principal.getId().equals(teamId2))
-          .flatExtracting(PrincipalEntity::getMembers)
+          .flatExtracting(SolverEntity::getMembers)
           .hasSize(1);
         assertThat(principals)
           .filteredOn(principal -> principal.getId().equals(teamId3))
-          .flatExtracting(PrincipalEntity::getMembers)
+          .flatExtracting(SolverEntity::getMembers)
           .isEmpty();
         assertThat(principals)
           .filteredOn(principal -> principal.getId().equals(teamId4))
-          .flatExtracting(PrincipalEntity::getMembers)
+          .flatExtracting(SolverEntity::getMembers)
           .isEmpty();
         assertThat(principals)
           .filteredOn(principal -> principal.getId().equals(userId1))
-          .flatExtracting(PrincipalEntity::getMembers)
+          .flatExtracting(SolverEntity::getMembers)
           .isEmpty();
       })
       .verifyComplete();
@@ -253,7 +253,7 @@ class UserServiceIT extends BaseIT {
     final String teamId = integrationTestUtils.createTestTeam();
     userService.addUserToTeam(userId, teamId).block();
     StepVerifier
-      .create(userService.findAllPrincipals())
+      .create(userService.findAllSolvers())
       .assertNext(team -> {
         assertThat(team.getMembers()).hasAtLeastOneElementOfType(UserEntity.class);
         assertThat(team.getMembers().iterator().next().getDisplayName())
@@ -268,7 +268,7 @@ class UserServiceIT extends BaseIT {
   void canListPrincipalsWithOneUser() {
     integrationTestUtils.createTestUser();
     StepVerifier
-      .create(userService.findAllPrincipals())
+      .create(userService.findAllSolvers())
       .assertNext(user -> {
         assertThat(user.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
       })

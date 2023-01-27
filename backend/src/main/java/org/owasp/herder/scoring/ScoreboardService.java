@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.owasp.herder.scoring.ScoreboardEntry.ScoreboardEntryBuilder;
-import org.owasp.herder.user.PrincipalEntity;
+import org.owasp.herder.user.SolverEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -171,19 +171,19 @@ public class ScoreboardService {
       final ScoreboardEntryBuilder scoreboardEntryBuilder = ScoreboardEntry.builder();
 
       String principalId;
-      PrincipalType principalType;
+      SolverType solverType;
 
       if (currentEntry.getTeam() != null) {
         principalId = currentEntry.getTeam().getId();
-        principalType = PrincipalType.TEAM;
+        solverType = SolverType.TEAM;
         scoreboardEntryBuilder.displayName(currentEntry.getTeam().getDisplayName());
       } else {
         principalId = currentEntry.getUser().getId();
-        principalType = PrincipalType.USER;
+        solverType = SolverType.USER;
         scoreboardEntryBuilder.displayName(currentEntry.getUser().getDisplayName());
       }
       scoreboardEntryBuilder.principalId(principalId);
-      scoreboardEntryBuilder.principalType(principalType);
+      scoreboardEntryBuilder.solverType(solverType);
 
       scoreboardEntryBuilder.baseScore(currentEntry.getBaseScore());
       scoreboardEntryBuilder.bonusScore(currentEntry.getBonusScore());
@@ -207,7 +207,7 @@ public class ScoreboardService {
       return scoreboardEntryBuilder.build();
     }
 
-    public Stream<ScoreboardEntry> loadRemainingPrincipals(final Stream<PrincipalEntity> remainingPrincipals) {
+    public Stream<ScoreboardEntry> loadRemainingPrincipals(final Stream<SolverEntity> remainingPrincipals) {
       if (!negativeScoresFound) {
         zeroScoreRank = currentRank;
         zeroScorePosition = currentRank;
@@ -230,7 +230,7 @@ public class ScoreboardService {
       return remainingPrincipals.map(principal -> {
         zeroScoreboardEntryBuilder.displayName(principal.getDisplayName());
         zeroScoreboardEntryBuilder.principalId(principal.getId());
-        zeroScoreboardEntryBuilder.principalType(principal.getPrincipalType());
+        zeroScoreboardEntryBuilder.solverType(principal.getSolverType());
         return zeroScoreboardEntryBuilder.build();
       });
     }
@@ -252,13 +252,13 @@ public class ScoreboardService {
       // Transform the flux to a mono list
       .collectList()
       // Get the complete list of all users and teams
-      .zipWith(userService.findAllPrincipals().collectList())
+      .zipWith(userService.findAllSolvers().collectList())
       .map(tuple -> {
         final List<UnrankedScoreboardEntry> unrankedScoreboard = tuple.getT1();
 
         // The complete list of users and teams. We need this here because we want users
         // without submissions to be listed on the scoreboard with zero score and medals
-        Stream<PrincipalEntity> remainingPrincipals = tuple.getT2().stream();
+        Stream<SolverEntity> remainingSolvers = tuple.getT2().stream();
 
         final ScoreboardEntryState scoreboardEntryState = new ScoreboardEntryState();
 
@@ -283,17 +283,17 @@ public class ScoreboardService {
           scoreboard.add(newScoreboardEntry);
 
           // Remove the current scoreboard user from the list of zero score users and teams
-          remainingPrincipals =
-            remainingPrincipals.filter(principal ->
+          remainingSolvers =
+            remainingSolvers.filter(principal ->
               !principal.getId().equals(newScoreboardEntry.getPrincipalId()) ||
-              !principal.getPrincipalType().equals(newScoreboardEntry.getPrincipalType())
+              !principal.getSolverType().equals(newScoreboardEntry.getSolverType())
             );
         }
 
         // Were there principals with negative scores? (This can happen due to a negative score
         // adjustment)
         final Stream<ScoreboardEntry> zeroScoreboardPrincipals = scoreboardEntryState.loadRemainingPrincipals(
-          remainingPrincipals
+          remainingSolvers
         );
 
         // All scoreboard entries before the zero score principals

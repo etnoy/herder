@@ -21,7 +21,7 @@
  */
 package org.owasp.herder.scoring;
 
-public enum PrincipalType {
+public enum SolverType {
   USER,
   TEAM,
 }
