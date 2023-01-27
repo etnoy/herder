@@ -21,7 +21,10 @@
  */
 package org.owasp.herder.test.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
@@ -31,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.authentication.PasswordAuth;
@@ -79,6 +83,44 @@ class TeamServiceTest extends BaseTest {
   UserEntity mockUser;
 
   TeamEntity mockTeam;
+
+  @Test
+  void addMember_UserEntityIsMemberOfTeam_AddsUserToTeam() {
+    final UserEntity newMember = TestConstants.TEST_USER_ENTITY.withTeamId(TestConstants.TEST_TEAM_ID);
+
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(TestConstants.TEST_TEAM_ENTITY));
+    when(teamRepository.save(any(TeamEntity.class))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
+
+    StepVerifier.create(teamService.addMember(TestConstants.TEST_TEAM_ID, newMember)).verifyComplete();
+
+    final ArgumentCaptor<TeamEntity> teamEntityArgument = ArgumentCaptor.forClass(TeamEntity.class);
+    verify(teamRepository).save(teamEntityArgument.capture());
+    assertThat(teamEntityArgument.getValue().getMembers()).containsExactly(newMember);
+  }
+
+  @Test
+  void addMember_UserEntityIsNotMemberOfAnyTeam_ThrowsException() {
+    final UserEntity newMember = TestConstants.TEST_USER_ENTITY;
+
+    StepVerifier
+      .create(teamService.addMember(TestConstants.TEST_TEAM_ID, newMember))
+      .expectErrorMatches(e ->
+        e instanceof IllegalArgumentException && e.getMessage().equals("User has an incorrect team id")
+      )
+      .verify();
+  }
+
+  @Test
+  void addMember_UserEntityIsNotMemberOfWrongTeam_ThrowsException() {
+    final UserEntity newMember = TestConstants.TEST_USER_ENTITY.withTeamId("blargh");
+
+    StepVerifier
+      .create(teamService.addMember(TestConstants.TEST_TEAM_ID, newMember))
+      .expectErrorMatches(e ->
+        e instanceof IllegalArgumentException && e.getMessage().equals("User has an incorrect team id")
+      )
+      .verify();
+  }
 
   @Test
   void create_TeamDisplayNameAlreadyExists_ThrowsException() {

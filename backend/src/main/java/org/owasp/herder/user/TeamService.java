@@ -54,7 +54,7 @@ public class TeamService {
   private final Clock clock;
 
   public Mono<Void> addMember(@ValidTeamId final String teamId, final UserEntity newMember) {
-    if (!newMember.getTeamId().equals(teamId)) {
+    if (newMember.getTeamId() == null || !newMember.getTeamId().equals(teamId)) {
       return Mono.error(new IllegalArgumentException("User has an incorrect team id"));
     }
     return getById(teamId)

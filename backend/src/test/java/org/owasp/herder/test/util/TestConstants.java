@@ -25,9 +25,12 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
+import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.UserEntity;
 
 public final class TestConstants {
 
@@ -181,4 +184,16 @@ public final class TestConstants {
   public static Stream<String> validStaticFlagProvider() {
     return Stream.of(VALID_STATIC_FLAGS);
   }
+
+  public static final UserEntity TEST_USER_ENTITY = UserEntity
+    .builder()
+    .key(TEST_BYTE_ARRAY)
+    .displayName(TEST_USER_DISPLAY_NAME)
+    .build();
+
+  public static final TeamEntity TEST_TEAM_ENTITY = TeamEntity
+    .builder()
+    .displayName(TEST_TEAM_DISPLAY_NAME)
+    .members(new ArrayList<UserEntity>())
+    .build();
 }
