@@ -29,6 +29,9 @@ import java.util.ArrayList;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
+import org.owasp.herder.module.BaseModule;
+import org.owasp.herder.module.HerderModule;
+import org.owasp.herder.module.Locator;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
 
@@ -196,4 +199,8 @@ public final class TestConstants {
     .displayName(TEST_TEAM_DISPLAY_NAME)
     .members(new ArrayList<UserEntity>())
     .build();
+
+  @HerderModule(TestConstants.TEST_MODULE_NAME)
+  @Locator(TestConstants.TEST_MODULE_LOCATOR)
+  public static class TestModule implements BaseModule {}
 }

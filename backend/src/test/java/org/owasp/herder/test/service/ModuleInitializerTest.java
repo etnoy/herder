@@ -23,8 +23,12 @@ package org.owasp.herder.test.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,6 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
 import org.owasp.herder.module.Locator;
@@ -80,35 +85,77 @@ class ModuleInitializerTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Can initialize a valid module")
-  void initializeModules_ModulesToInitialize_DoesNothing() {
-    final String moduleLocator = "scored-module";
+  @DisplayName("Can initialize a single module")
+  void initializeModules_SingleModule_CallsInitializesModule() {
+    final Map<String, Object> moduleCandidates = new HashMap<>();
+    moduleCandidates.put(TestConstants.TEST_MODULE_NAME, new TestConstants.TestModule());
+    when(applicationContext.getBeansWithAnnotation(HerderModule.class)).thenReturn(moduleCandidates);
 
-    @HerderModule("Test module")
-    @Locator(moduleLocator)
+    doReturn(Mono.just(TestConstants.TEST_MODULE_ID)).when(moduleInitializer).initializeModule(any());
+
+    moduleInitializer.initializeModules();
+
+    final ArgumentCaptor<BaseModule> baseModuleArgument = ArgumentCaptor.forClass(BaseModule.class);
+
+    verify(moduleInitializer).initializeModule(baseModuleArgument.capture());
+    assertThat(baseModuleArgument.getValue()).isInstanceOf(BaseModule.class);
+  }
+
+  @Test
+  @DisplayName("Can error when trying to initialize module that does not implement BaseModule")
+  void initializeModules_ModuleWithInvalidSuperclass_ThrowsError() {
+    final Map<String, Object> moduleCandidates = new HashMap<>();
+    moduleCandidates.put(TestConstants.TEST_MODULE_NAME, new String());
+    when(applicationContext.getBeansWithAnnotation(HerderModule.class)).thenReturn(moduleCandidates);
+
+    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  @DisplayName("Can error when module names collide")
+  void initializeModules_ModuleNamesCollide_ThrowsError() {
+    @HerderModule(TestConstants.TEST_MODULE_NAME)
+    class TestModule implements BaseModule {}
+
+    @HerderModule(TestConstants.TEST_MODULE_NAME)
+    class TestModuleNameCollision implements BaseModule {}
+
+    final Map<String, Object> moduleCandidates = new HashMap<>();
+    moduleCandidates.put(TestConstants.TEST_MODULE_NAME, new TestModule());
+    moduleCandidates.put(TestConstants.TEST_MODULE_NAME, new TestModuleNameCollision());
+
+    when(applicationContext.getBeansWithAnnotation(HerderModule.class)).thenReturn(moduleCandidates);
+
+    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(DuplicateModuleNameException.class);
+  }
+
+  @Test
+  @DisplayName("Can initialize a basic valid module")
+  void initializeModule_ModulesToInitialize_CreatesModule() {
+    @HerderModule(TestConstants.TEST_MODULE_NAME)
+    @Locator(TestConstants.TEST_MODULE_LOCATOR)
     class TestModule implements BaseModule {}
 
     final Map<String, Object> moduleCandidates = new HashMap<>();
-    moduleCandidates.put("Test Module", new TestModule());
-    when(applicationContext.getBeansWithAnnotation(HerderModule.class)).thenReturn(moduleCandidates);
-    when(moduleService.existsByLocator(moduleLocator)).thenReturn(Mono.just(false));
-    when(moduleService.create("Test module", moduleLocator)).thenReturn(Mono.just(TestConstants.TEST_MODULE_ID));
-    when(moduleService.setTags(eq(TestConstants.TEST_MODULE_ID), any())).thenReturn(Mono.empty());
+    moduleCandidates.put(TestConstants.TEST_MODULE_NAME, new TestModule());
+    when(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(false));
+    when(moduleService.create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ID));
 
-    moduleInitializer.initializeModules();
+    moduleInitializer.initializeModule(new TestModule());
 
     final ArgumentCaptor<String> moduleNameArgument = ArgumentCaptor.forClass(String.class);
     final ArgumentCaptor<String> moduleLocatorArgument = ArgumentCaptor.forClass(String.class);
 
     verify(moduleService).create(moduleNameArgument.capture(), moduleLocatorArgument.capture());
-    assertThat(moduleNameArgument.getValue()).isEqualTo("Test module");
-    assertThat(moduleLocatorArgument.getValue()).isEqualTo(moduleLocator);
+    assertThat(moduleNameArgument.getValue()).isEqualTo(TestConstants.TEST_MODULE_NAME);
+    assertThat(moduleLocatorArgument.getValue()).isEqualTo(TestConstants.TEST_MODULE_LOCATOR);
   }
 
   @BeforeEach
   void setup() {
     // Set up the system under test
-    moduleInitializer = new ModuleInitializer(applicationContext, moduleService);
+    moduleInitializer = spy(new ModuleInitializer(applicationContext, moduleService));
     moduleInitializer.setApplicationContext(applicationContext);
   }
 }

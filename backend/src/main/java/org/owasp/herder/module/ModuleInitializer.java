@@ -90,10 +90,9 @@ public final class ModuleInitializer implements ApplicationContextAware {
 
   public Mono<String> initializeModule(final BaseModule module) {
     final HerderModule herderModuleAnnotation = module.getClass().getAnnotation(HerderModule.class);
-
     final Score scoreAnnotation = module.getClass().getAnnotation(Score.class);
-
     final Locator locatorAnnotation = module.getClass().getAnnotation(Locator.class);
+
     if (locatorAnnotation == null) {
       return Mono.error(new ModuleInitializationException("Missing @Locator on module " + module.getName()));
     }
