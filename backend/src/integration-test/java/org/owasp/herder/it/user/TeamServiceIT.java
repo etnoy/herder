@@ -130,9 +130,18 @@ class TeamServiceIT extends BaseIT {
     final String userId = integrationTestUtils.createTestUser();
     final String teamId = integrationTestUtils.createTestTeam();
 
+    final String userId2 = userService
+      .createPasswordUser("Test User 2", "testuser", TestConstants.HASHED_TEST_PASSWORD)
+      .block();
+
     userService.addUserToTeam(userId, teamId).block();
     final UserEntity user = userService.getById(userId).block();
     teamService.addMember(teamId, user).block();
+
+    userService.addUserToTeam(userId2, teamId).block();
+
+    final UserEntity user2 = userService.getById(userId2).block();
+    teamService.addMember(teamId, user2).block();
 
     userService.clearTeamForUser(userId).block();
     teamService.expel(teamId, userId).block();
@@ -140,7 +149,7 @@ class TeamServiceIT extends BaseIT {
     StepVerifier
       .create(teamService.getById(teamId))
       .assertNext(returnedTeam -> {
-        assertThat(returnedTeam.getMembers()).isEmpty();
+        assertThat(returnedTeam.getMembers()).containsExactly(user2);
       })
       .verifyComplete();
   }
@@ -154,7 +163,8 @@ class TeamServiceIT extends BaseIT {
     StepVerifier
       .create(teamService.expel(teamId, userId))
       .expectErrorMatches(throwable ->
-        throwable instanceof IllegalStateException && throwable.getMessage().equals("User not found in team")
+        throwable instanceof IllegalStateException &&
+        throwable.getMessage().equals(String.format("User \"%s\"  not found in team", userId))
       )
       .verify();
   }
@@ -176,12 +186,8 @@ class TeamServiceIT extends BaseIT {
     final UserEntity userWithNewTeam = userService.getById(userId).block();
     teamService.addMember(teamId2, userWithNewTeam).block();
 
-    StepVerifier
-      .create(teamService.getById(teamId1))
-      .assertNext(returnedTeam -> {
-        assertThat(returnedTeam.getMembers()).isEmpty();
-      })
-      .verifyComplete();
+    // The team should no longer exist because the last user left
+    StepVerifier.create(teamService.existsById(teamId1)).expectNext(false).verifyComplete();
 
     StepVerifier
       .create(teamService.getById(teamId2))
