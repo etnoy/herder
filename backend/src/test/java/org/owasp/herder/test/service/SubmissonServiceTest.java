@@ -30,10 +30,12 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.exception.ModuleAlreadySolvedException;
@@ -435,5 +437,36 @@ class SubmissonServiceTest extends BaseTest {
         e.getMessage().equals(String.format("Ranked submission is missing user or team", TestConstants.TEST_USER_ID))
       )
       .verify();
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  @DisplayName("Error when finding ranked submissions with neither user or team by module locator")
+  void setTeamIdOfUserSubmissions_SubmissionToModify_SavesModifiedSubmissions() {
+    final Submission testSubmission = Submission
+      .builder()
+      .userId(TestConstants.TEST_USER_ID)
+      .moduleId(TestConstants.TEST_MODULE_ID)
+      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .build();
+    // TODO: test for submissions that already have team id
+    when(submissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(testSubmission));
+
+    when(submissionRepository.saveAll(any(Flux.class))).thenReturn(Flux.empty());
+
+    StepVerifier
+      .create(submissionService.setTeamIdOfUserSubmissions(TestConstants.TEST_USER_ID, TestConstants.TEST_TEAM_ID))
+      .verifyComplete();
+
+    ArgumentCaptor<Flux<Submission>> fluxCaptor = ArgumentCaptor.forClass(Flux.class);
+    verify(submissionRepository).saveAll(fluxCaptor.capture());
+    StepVerifier
+      .create(fluxCaptor.getValue())
+      .recordWith(ArrayList::new)
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(members -> {
+        assertThat(members).extracting("teamId").containsOnly(TestConstants.TEST_TEAM_ID);
+      })
+      .verifyComplete();
   }
 }
