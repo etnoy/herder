@@ -40,7 +40,10 @@ import org.owasp.herder.exception.ModuleAlreadySolvedException;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.scoring.RankedSubmission;
 import org.owasp.herder.scoring.RankedSubmissionRepository;
+import org.owasp.herder.scoring.SanitizedRankedSubmission;
+import org.owasp.herder.scoring.SolverType;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
@@ -84,6 +87,7 @@ class SubmissonServiceTest extends BaseTest {
   TeamEntity mockTeam;
 
   @Test
+  @DisplayName("Can find ranked submissions by user id")
   void findAllRankedByUserId_NoRankedSubmissionsExist_ReturnsEmpty() {
     when(rankedSubmissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.empty());
     StepVerifier.create(submissionService.findAllRankedByUserId(TestConstants.TEST_USER_ID)).verifyComplete();
@@ -92,6 +96,7 @@ class SubmissonServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can find zero valid submissions by user id")
   void findAllValidByUserId_NoSubmissionsExist_ReturnsEmpty() {
     when(submissionRepository.findAllByUserIdAndIsValidTrue(TestConstants.TEST_USER_ID)).thenReturn(Flux.empty());
     StepVerifier.create(submissionService.findAllValidByUserId(TestConstants.TEST_USER_ID)).verifyComplete();
@@ -100,6 +105,7 @@ class SubmissonServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can find valid submissions by user id")
   void findAllValidByUserId_SubmissionsExist_ReturnsSubmissions() {
     final Submission mockSubmission1 = mock(Submission.class);
     final Submission mockSubmission2 = mock(Submission.class);
@@ -120,6 +126,7 @@ class SubmissonServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can find zero valid submissions by user id and module name")
   void findAllValidByUserIdAndModuleName_NoSubmissionsExist_ReturnsEmpty() {
     when(
       submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(
@@ -139,6 +146,7 @@ class SubmissonServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can find valid submissions by user id and module name")
   void findAllValidByUserIdAndModuleName_SubmissionsExist_ReturnsSubmissions() {
     final Submission mockSubmission = mock(Submission.class);
 
@@ -184,6 +192,7 @@ class SubmissonServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can persist an invalid submission entity when an invalid flag is submitted")
   void submit_InvalidFlag_ReturnsInvalidSubmission() {
     final String mockSubmissionId = "submissionId";
 
@@ -236,6 +245,7 @@ class SubmissonServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can error when submitting a valid flag to an already solved module")
   void submit_ModuleAlreadySolvedByUser_ReturnsModuleAlreadySolvedException() {
     final UserEntity mockUser = mock(UserEntity.class);
     final ModuleEntity mockModule = mock(ModuleEntity.class);
@@ -276,6 +286,7 @@ class SubmissonServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can persist a submission entity when a flag is submitted")
   void submit_ValidFlag_ReturnsValidSubmission() {
     final String mockSubmissionId = "sub-id";
 
@@ -325,5 +336,104 @@ class SubmissonServiceTest extends BaseTest {
     verify(submissionRepository, times(1))
       .existsByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID);
     verify(submissionRepository, times(1)).save(any(Submission.class));
+  }
+
+  @Test
+  @DisplayName("Can find ranked submissions with user id by module locator")
+  void findAllRankedByModuleLocator_SubmissionsExistWithUser_ReturnsSubmissions() {
+    final RankedSubmission rankedSubmission = RankedSubmission
+      .builder()
+      .module(TestConstants.TEST_MODULE_ENTITY)
+      .user(TestConstants.TEST_USER_ENTITY.withId(TestConstants.TEST_USER_ID))
+      .rank(1L)
+      .baseScore(100L)
+      .bonusScore(10L)
+      .score(110L)
+      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .build();
+
+    when(rankedSubmissionRepository.findAllByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Flux.just(rankedSubmission));
+
+    final SanitizedRankedSubmission sanitizedRankedSubmission = SanitizedRankedSubmission
+      .builder()
+      .id(TestConstants.TEST_USER_ID)
+      .principalType(SolverType.USER)
+      .moduleName(TestConstants.TEST_MODULE_NAME)
+      .displayName(TestConstants.TEST_USER_DISPLAY_NAME)
+      .moduleLocator(TestConstants.TEST_MODULE_LOCATOR)
+      .rank(1L)
+      .baseScore(100L)
+      .bonusScore(10L)
+      .score(110L)
+      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .build();
+
+    StepVerifier
+      .create(submissionService.findAllRankedByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .expectNext(sanitizedRankedSubmission)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can find ranked submissions with team id by module locator")
+  void findAllRankedByModuleLocator_SubmissionsExistWithTeam_ReturnsSubmissions() {
+    final RankedSubmission rankedSubmission = RankedSubmission
+      .builder()
+      .module(TestConstants.TEST_MODULE_ENTITY)
+      .team(TestConstants.TEST_TEAM_ENTITY.withId(TestConstants.TEST_TEAM_ID))
+      .rank(1L)
+      .baseScore(100L)
+      .bonusScore(10L)
+      .score(110L)
+      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .build();
+
+    when(rankedSubmissionRepository.findAllByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Flux.just(rankedSubmission));
+
+    final SanitizedRankedSubmission sanitizedRankedSubmission = SanitizedRankedSubmission
+      .builder()
+      .id(TestConstants.TEST_TEAM_ID)
+      .principalType(SolverType.TEAM)
+      .moduleName(TestConstants.TEST_MODULE_NAME)
+      .displayName(TestConstants.TEST_TEAM_DISPLAY_NAME)
+      .moduleLocator(TestConstants.TEST_MODULE_LOCATOR)
+      .rank(1L)
+      .baseScore(100L)
+      .bonusScore(10L)
+      .score(110L)
+      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .build();
+
+    StepVerifier
+      .create(submissionService.findAllRankedByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .expectNext(sanitizedRankedSubmission)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Error when finding ranked submissions with neither user or team by module locator")
+  void findAllRankedByModuleLocator_RankedSubmissionWithoutUserOrTeam_Errors() {
+    final RankedSubmission rankedSubmission = RankedSubmission
+      .builder()
+      .module(TestConstants.TEST_MODULE_ENTITY)
+      .rank(1L)
+      .baseScore(100L)
+      .bonusScore(10L)
+      .score(110L)
+      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .build();
+
+    when(rankedSubmissionRepository.findAllByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Flux.just(rankedSubmission));
+
+    StepVerifier
+      .create(submissionService.findAllRankedByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .expectErrorMatches(e ->
+        e instanceof IllegalArgumentException &&
+        e.getMessage().equals(String.format("Ranked submission is missing user or team", TestConstants.TEST_USER_ID))
+      )
+      .verify();
   }
 }

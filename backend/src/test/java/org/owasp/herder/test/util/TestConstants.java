@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
+import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
 
@@ -126,10 +127,6 @@ public final class TestConstants {
     " ﷽ ﷽  ﷽  ",
   };
 
-  public static final String INITIAL_NAME = "id";
-
-  public static final String[] NAMES = { INITIAL_NAME, "id-with-hyphen", "abc123" };
-
   public static final String[] INVALID_NAMES = { "", null };
 
   public static final String[] STRINGS_WITH_NULL = ArrayUtils.addAll(STRINGS, (String) null);
@@ -195,5 +192,11 @@ public final class TestConstants {
     .builder()
     .displayName(TEST_TEAM_DISPLAY_NAME)
     .members(new ArrayList<UserEntity>())
+    .build();
+
+  public static final ModuleEntity TEST_MODULE_ENTITY = ModuleEntity
+    .builder()
+    .name(TestConstants.TEST_MODULE_NAME)
+    .locator(TEST_MODULE_LOCATOR)
     .build();
 }

@@ -57,9 +57,12 @@ public class RankedSubmission implements Serializable {
 
   String flag;
 
+  @NonNull
   Long baseScore;
 
+  @NonNull
   Long bonusScore;
 
+  @NonNull
   Long score;
 }

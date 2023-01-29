@@ -100,11 +100,13 @@ public class SubmissionService {
       builder.id(team.getId());
       builder.displayName(team.getDisplayName());
       builder.principalType(SolverType.TEAM);
-    } else {
+    } else if (rankedSubmission.getUser() != null) {
       final UserEntity user = rankedSubmission.getUser();
       builder.id(user.getId());
       builder.displayName(user.getDisplayName());
       builder.principalType(SolverType.USER);
+    } else {
+      throw new IllegalArgumentException("Ranked submission is missing user or team");
     }
     builder.baseScore(rankedSubmission.getBaseScore());
     builder.bonusScore(rankedSubmission.getBonusScore());
