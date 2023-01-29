@@ -24,7 +24,9 @@ package org.owasp.herder.test.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.guava.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -32,8 +34,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Multimap;
 import jakarta.validation.ConstraintViolationException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,6 +54,8 @@ import org.owasp.herder.module.Locator;
 import org.owasp.herder.module.ModuleInitializer;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.module.Score;
+import org.owasp.herder.module.Tag;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserRepository;
@@ -179,8 +185,96 @@ class ModuleInitializerTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Can error when module is missing locator annotation")
-  void initializeModule_MissingLocator_ReturnsError() {
+  @DisplayName("Can initialize a valid module with base score")
+  void initializeModule_ValidModuleWithBaseScore_CreatesModule() {
+    @HerderModule(TestConstants.TEST_MODULE_NAME)
+    @Locator(TestConstants.TEST_MODULE_LOCATOR)
+    @Score(baseScore = 100)
+    class BaseScoreModule implements BaseModule {}
+
+    when(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(false));
+    when(moduleService.create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ID));
+    when(moduleService.setBaseScore(TestConstants.TEST_MODULE_ID, 100)).thenReturn(Mono.empty());
+
+    when(moduleService.setBonusScores(eq(TestConstants.TEST_MODULE_ID), any())).thenReturn(Mono.empty());
+
+    final BaseScoreModule testModule = new BaseScoreModule();
+
+    StepVerifier
+      .create(moduleInitializer.initializeModule(testModule))
+      .expectNext(TestConstants.TEST_MODULE_ID)
+      .verifyComplete();
+
+    @SuppressWarnings("unchecked")
+    final ArgumentCaptor<List<Integer>> bonusScoreArgument = ArgumentCaptor.forClass(List.class);
+
+    verify(moduleService).setBonusScores(eq(TestConstants.TEST_MODULE_ID), bonusScoreArgument.capture());
+    assertThat(bonusScoreArgument.getValue()).containsExactly(0, 0, 0);
+  }
+
+  @Test
+  @DisplayName("Can initialize a valid module with bonus scores")
+  void initializeModule_ValidModuleWithBonusScores_CreatesModule() {
+    @HerderModule(TestConstants.TEST_MODULE_NAME)
+    @Locator(TestConstants.TEST_MODULE_LOCATOR)
+    @Score(baseScore = 100, goldBonus = 10, silverBonus = 5, bronzeBonus = 1)
+    class BonusScoreModule implements BaseModule {}
+
+    when(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(false));
+    when(moduleService.create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ID));
+    when(moduleService.setBaseScore(TestConstants.TEST_MODULE_ID, 100)).thenReturn(Mono.empty());
+
+    when(moduleService.setBonusScores(eq(TestConstants.TEST_MODULE_ID), any())).thenReturn(Mono.empty());
+
+    final BonusScoreModule testModule = new BonusScoreModule();
+
+    StepVerifier
+      .create(moduleInitializer.initializeModule(testModule))
+      .expectNext(TestConstants.TEST_MODULE_ID)
+      .verifyComplete();
+
+    @SuppressWarnings("unchecked")
+    final ArgumentCaptor<List<Integer>> bonusScoreArgument = ArgumentCaptor.forClass(List.class);
+
+    verify(moduleService).setBonusScores(eq(TestConstants.TEST_MODULE_ID), bonusScoreArgument.capture());
+    assertThat(bonusScoreArgument.getValue()).containsExactly(10, 5, 1);
+  }
+
+  @Test
+  @DisplayName("Can initialize a valid module with tags")
+  void initializeModule_ValidModuleWithTags_CreatesModule() {
+    @HerderModule(TestConstants.TEST_MODULE_NAME)
+    @Locator(TestConstants.TEST_MODULE_LOCATOR)
+    @Tag(key = "topic", value = "xss")
+    class TagModule implements BaseModule {}
+
+    when(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(false));
+    when(moduleService.create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ID));
+
+    when(moduleService.setTags(eq(TestConstants.TEST_MODULE_ID), any())).thenReturn(Mono.empty());
+
+    final TagModule testModule = new TagModule();
+
+    StepVerifier
+      .create(moduleInitializer.initializeModule(testModule))
+      .expectNext(TestConstants.TEST_MODULE_ID)
+      .verifyComplete();
+
+    @SuppressWarnings("unchecked")
+    final ArgumentCaptor<Multimap<String, String>> tagArgument = ArgumentCaptor.forClass(Multimap.class);
+
+    verify(moduleService).setTags(eq(TestConstants.TEST_MODULE_ID), tagArgument.capture());
+    final Multimap<String, String> tags = tagArgument.getValue();
+    assertThat(tags).containsKeys("topic");
+    assertThat(tags).containsValues("xss");
+  }
+
+  @Test
+  @DisplayName("Can error when module is missing @Locator")
+  void initializeModule_MissingLocatorAnnotation_ReturnsError() {
     @HerderModule(TestConstants.TEST_MODULE_NAME)
     class MissingLocator implements BaseModule {}
 
@@ -192,12 +286,14 @@ class ModuleInitializerTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Can error when module is missing locator annotation")
+  @DisplayName("Can error when module is missing @HerderModule")
   void initializeModule_MissingHerderModuleAnnotation_ReturnsError() {
     @Locator(TestConstants.TEST_MODULE_LOCATOR)
     class MissingHederAnnotation implements BaseModule {}
 
     final MissingHederAnnotation testModule = new MissingHederAnnotation();
+
+    when(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(false));
 
     assertThatThrownBy(() -> moduleInitializer.initializeModule(testModule))
       .isInstanceOf(ModuleInitializationException.class)

@@ -56,7 +56,7 @@ public final class ModuleInitializer implements ApplicationContextAware {
 
     List<BaseModule> modules = new ArrayList<>();
     Set<String> uniqueNames = new HashSet<>();
-    List<BaseModule> duplicateModules = new ArrayList<>();
+    List<BaseModule> duplicateModuleNamess = new ArrayList<>();
 
     // Find all beans annotated with @HerderModule
     for (final Object moduleCandidate : applicationContext.getBeansWithAnnotation(HerderModule.class).values()) {
@@ -64,7 +64,8 @@ public final class ModuleInitializer implements ApplicationContextAware {
         final String moduleName = baseModule.getName();
         modules.add(baseModule);
         if (!uniqueNames.add(moduleName)) {
-          duplicateModules.add(baseModule);
+          // This module name is a duplicate, which is disallowed
+          duplicateModuleNamess.add(baseModule);
         }
       } else {
         throw new IllegalArgumentException(
@@ -73,14 +74,15 @@ public final class ModuleInitializer implements ApplicationContextAware {
       }
     }
 
-    if (!duplicateModules.isEmpty()) {
+    if (!duplicateModuleNamess.isEmpty()) {
       throw new DuplicateModuleNameException(
-        "The following modules have colliding names: " + duplicateModules.toString()
+        "The following modules have colliding names: " + duplicateModuleNamess.toString()
       );
     }
 
     for (final BaseModule module : modules) {
       try {
+        // Initialize the module
         initializeModule(module).block();
       } catch (ConstraintViolationException e) {
         throw new ModuleInitializationException(String.format("Module \"%s\" has invalid metadata", module), e);
@@ -130,6 +132,7 @@ public final class ModuleInitializer implements ApplicationContextAware {
         if (scoreAnnotation != null) {
           final ArrayList<Integer> bonusScores = new ArrayList<>();
 
+          // These bonus scores will be zero if missing
           bonusScores.add(scoreAnnotation.goldBonus());
           bonusScores.add(scoreAnnotation.silverBonus());
           bonusScores.add(scoreAnnotation.bronzeBonus());

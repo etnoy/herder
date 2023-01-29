@@ -135,7 +135,6 @@ class WebTokenServiceIT extends BaseIT {
     assertThat(authentication.getPrincipal()).isEqualTo(userId);
     assertThat(authentication.getCredentials()).isEqualTo(accessToken);
 
-    // AssertJ cannot do list asserts on Collection<? extends ... >
     @SuppressWarnings("unchecked")
     Collection<SimpleGrantedAuthority> authorityList = (Collection<SimpleGrantedAuthority>) authentication.getAuthorities();
     assertThat(authorityList)
