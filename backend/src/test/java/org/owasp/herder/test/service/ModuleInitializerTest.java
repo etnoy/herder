@@ -25,13 +25,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import jakarta.validation.ConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +43,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.exception.DuplicateModuleNameException;
+import org.owasp.herder.exception.ModuleInitializationException;
 import org.owasp.herder.module.BaseModule;
 import org.owasp.herder.module.HerderModule;
 import org.owasp.herder.module.Locator;
@@ -53,6 +55,7 @@ import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserRepository;
 import org.springframework.context.ApplicationContext;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ModuleInitializer unit tests")
@@ -72,6 +75,10 @@ class ModuleInitializerTest extends BaseTest {
   @Mock
   ApplicationContext applicationContext;
 
+  @HerderModule(TestConstants.TEST_MODULE_NAME)
+  @Locator(TestConstants.TEST_MODULE_LOCATOR)
+  private static final class TestModule implements BaseModule {}
+
   @Test
   @DisplayName("Can do nothing when there are no modules to initialize")
   void initializeModules_NoModulesToInitialize_DoesNothing() {
@@ -88,7 +95,7 @@ class ModuleInitializerTest extends BaseTest {
   @DisplayName("Can initialize a single module")
   void initializeModules_SingleModule_CallsInitializesModule() {
     final Map<String, Object> moduleCandidates = new HashMap<>();
-    moduleCandidates.put(TestConstants.TEST_MODULE_NAME, new TestConstants.TestModule());
+    moduleCandidates.put("1", new TestModule());
     when(applicationContext.getBeansWithAnnotation(HerderModule.class)).thenReturn(moduleCandidates);
 
     doReturn(Mono.just(TestConstants.TEST_MODULE_ID)).when(moduleInitializer).initializeModule(any());
@@ -103,9 +110,13 @@ class ModuleInitializerTest extends BaseTest {
 
   @Test
   @DisplayName("Can error when trying to initialize module that does not implement BaseModule")
-  void initializeModules_ModuleWithInvalidSuperclass_ThrowsError() {
+  void initializeModules_ModuleNotImplementingBaseModule_ThrowsError() {
+    @HerderModule(TestConstants.TEST_MODULE_NAME)
+    @Locator(TestConstants.TEST_MODULE_LOCATOR)
+    class NotImplementingBaseModule {}
+
     final Map<String, Object> moduleCandidates = new HashMap<>();
-    moduleCandidates.put(TestConstants.TEST_MODULE_NAME, new String());
+    moduleCandidates.put("1", new NotImplementingBaseModule());
     when(applicationContext.getBeansWithAnnotation(HerderModule.class)).thenReturn(moduleCandidates);
 
     assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
@@ -115,34 +126,49 @@ class ModuleInitializerTest extends BaseTest {
   @DisplayName("Can error when module names collide")
   void initializeModules_ModuleNamesCollide_ThrowsError() {
     @HerderModule(TestConstants.TEST_MODULE_NAME)
-    class TestModule implements BaseModule {}
-
-    @HerderModule(TestConstants.TEST_MODULE_NAME)
-    class TestModuleNameCollision implements BaseModule {}
+    class NameCollision implements BaseModule {}
 
     final Map<String, Object> moduleCandidates = new HashMap<>();
-    moduleCandidates.put(TestConstants.TEST_MODULE_NAME, new TestModule());
-    moduleCandidates.put(TestConstants.TEST_MODULE_NAME, new TestModuleNameCollision());
+    moduleCandidates.put("1", new TestModule());
+    moduleCandidates.put("2", new NameCollision());
 
     when(applicationContext.getBeansWithAnnotation(HerderModule.class)).thenReturn(moduleCandidates);
 
-    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(DuplicateModuleNameException.class);
+    assertThatThrownBy(() -> moduleInitializer.initializeModules())
+      .isInstanceOf(DuplicateModuleNameException.class)
+      .hasMessageStartingWith("The following modules have colliding names:");
   }
 
   @Test
-  @DisplayName("Can initialize a basic valid module")
-  void initializeModule_ModulesToInitialize_CreatesModule() {
-    @HerderModule(TestConstants.TEST_MODULE_NAME)
-    @Locator(TestConstants.TEST_MODULE_LOCATOR)
-    class TestModule implements BaseModule {}
-
+  @DisplayName("Can handle a constraint violation in module data")
+  void initializeModules_ConstraintViolation_ThrowsError() {
     final Map<String, Object> moduleCandidates = new HashMap<>();
-    moduleCandidates.put(TestConstants.TEST_MODULE_NAME, new TestModule());
+    moduleCandidates.put("1", new TestModule());
+
+    when(applicationContext.getBeansWithAnnotation(HerderModule.class)).thenReturn(moduleCandidates);
+
+    doThrow(new ConstraintViolationException("Module name invalid", null))
+      .when(moduleInitializer)
+      .initializeModule(any());
+
+    assertThatThrownBy(() -> moduleInitializer.initializeModules())
+      .isInstanceOf(ModuleInitializationException.class)
+      .hasMessageContaining("has invalid metadata");
+  }
+
+  @Test
+  @DisplayName("Can initialize a valid module")
+  void initializeModule_ValidModule_CreatesModule() {
     when(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(false));
     when(moduleService.create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR))
       .thenReturn(Mono.just(TestConstants.TEST_MODULE_ID));
 
-    moduleInitializer.initializeModule(new TestModule());
+    final TestModule testModule = new TestModule();
+
+    StepVerifier
+      .create(moduleInitializer.initializeModule(testModule))
+      .expectNext(TestConstants.TEST_MODULE_ID)
+      .verifyComplete();
 
     final ArgumentCaptor<String> moduleNameArgument = ArgumentCaptor.forClass(String.class);
     final ArgumentCaptor<String> moduleLocatorArgument = ArgumentCaptor.forClass(String.class);
@@ -150,6 +176,44 @@ class ModuleInitializerTest extends BaseTest {
     verify(moduleService).create(moduleNameArgument.capture(), moduleLocatorArgument.capture());
     assertThat(moduleNameArgument.getValue()).isEqualTo(TestConstants.TEST_MODULE_NAME);
     assertThat(moduleLocatorArgument.getValue()).isEqualTo(TestConstants.TEST_MODULE_LOCATOR);
+  }
+
+  @Test
+  @DisplayName("Can error when module is missing locator annotation")
+  void initializeModule_MissingLocator_ReturnsError() {
+    @HerderModule(TestConstants.TEST_MODULE_NAME)
+    class MissingLocator implements BaseModule {}
+
+    final MissingLocator testModule = new MissingLocator();
+
+    assertThatThrownBy(() -> moduleInitializer.initializeModule(testModule))
+      .isInstanceOf(ModuleInitializationException.class)
+      .hasMessageStartingWith("Missing @Locator on module");
+  }
+
+  @Test
+  @DisplayName("Can error when module is missing locator annotation")
+  void initializeModule_MissingHerderModuleAnnotation_ReturnsError() {
+    @Locator(TestConstants.TEST_MODULE_LOCATOR)
+    class MissingHederAnnotation implements BaseModule {}
+
+    final MissingHederAnnotation testModule = new MissingHederAnnotation();
+
+    assertThatThrownBy(() -> moduleInitializer.initializeModule(testModule))
+      .isInstanceOf(ModuleInitializationException.class)
+      .hasMessageContaining("is missing the @HerderModule annotation");
+  }
+
+  @Test
+  @DisplayName("Can do nothing when module is already persisted")
+  void initializeModule_ModuleAlreadyPersisted_DoesNothing() {
+    when(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(true));
+
+    final TestModule testModule = new TestModule();
+
+    StepVerifier.create(moduleInitializer.initializeModule(testModule)).verifyComplete();
+
+    verify(moduleService, never()).create(any(), any());
   }
 
   @BeforeEach
