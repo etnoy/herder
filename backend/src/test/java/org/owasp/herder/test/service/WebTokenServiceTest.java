@@ -174,8 +174,7 @@ class WebTokenServiceTest {
     final Claims claims = Jwts.parserBuilder().setSigningKey(testKey).build().parseClaimsJws(token).getBody();
 
     assertThat(token.length()).isGreaterThan(10);
-    assertThat(claims).contains(entry("impersonator", TestConstants.TEST_USER_ID));
-    assertThat(claims).contains(entry("role", "user"));
+    assertThat(claims).contains(entry("impersonator", TestConstants.TEST_USER_ID), entry("role", "user"));
     assertThat(claims.getIssuer()).isEqualTo("herder");
     assertThat(claims.getSubject()).isEqualTo(TestConstants.TEST_USER_ID2);
   }
@@ -196,8 +195,7 @@ class WebTokenServiceTest {
     final Claims claims = Jwts.parserBuilder().setSigningKey(testKey).build().parseClaimsJws(token).getBody();
 
     assertThat(token.length()).isGreaterThan(10);
-    assertThat(claims).contains(entry("impersonator", TestConstants.TEST_USER_ID));
-    assertThat(claims).contains(entry("role", "admin"));
+    assertThat(claims).contains(entry("impersonator", TestConstants.TEST_USER_ID), entry("role", "admin"));
     assertThat(claims.getIssuer()).isEqualTo("herder");
     assertThat(claims.getSubject()).isEqualTo(TestConstants.TEST_USER_ID2);
   }

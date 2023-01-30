@@ -27,6 +27,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.r2dbc.spi.R2dbcBadGrammarException;
+import io.r2dbc.spi.Row;
+import io.r2dbc.spi.RowMetadata;
 import java.util.function.BiFunction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -219,13 +221,14 @@ class SqlInjectionTutorialTest extends BaseTest {
     final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
 
     when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
-    when(mockExecuteSpec.then()).thenReturn(Mono.empty());
 
     final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
     final SqlInjectionTutorialRow mockSqlInjectionTutorialRow1 = mock(SqlInjectionTutorialRow.class);
     final SqlInjectionTutorialRow mockSqlInjectionTutorialRow2 = mock(SqlInjectionTutorialRow.class);
 
     when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
+
+    when(mockExecuteSpec.then()).thenReturn(Mono.empty());
     when(fetchSpec.all()).thenReturn(Flux.just(mockSqlInjectionTutorialRow1, mockSqlInjectionTutorialRow2));
 
     StepVerifier
