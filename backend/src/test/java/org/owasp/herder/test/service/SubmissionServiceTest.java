@@ -415,7 +415,9 @@ class SubmissionServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Error when finding ranked submissions with neither user or team by module locator")
+  @DisplayName(
+    "Can error when finding ranked submissions by module locator and the submission has neither user or team"
+  )
   void findAllRankedByModuleLocator_RankedSubmissionWithoutUserOrTeam_Errors() {
     final RankedSubmission rankedSubmission = RankedSubmission
       .builder()
@@ -441,7 +443,7 @@ class SubmissionServiceTest extends BaseTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  @DisplayName("Error when finding ranked submissions with neither user or team by module locator")
+  @DisplayName("Can set team id of user submissions")
   void setTeamIdOfUserSubmissions_SubmissionToModify_SavesModifiedSubmissions() {
     final Submission testSubmission = Submission
       .builder()
@@ -449,7 +451,6 @@ class SubmissionServiceTest extends BaseTest {
       .moduleId(TestConstants.TEST_MODULE_ID)
       .time(LocalDateTime.now(TestConstants.year2000Clock))
       .build();
-    // TODO: test for submissions that already have team id
     when(submissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(testSubmission));
 
     when(submissionRepository.saveAll(any(Flux.class))).thenReturn(Flux.empty());
@@ -466,6 +467,95 @@ class SubmissionServiceTest extends BaseTest {
       .thenConsumeWhile(x -> true)
       .consumeRecordedWith(members -> {
         assertThat(members).extracting("teamId").containsOnly(TestConstants.TEST_TEAM_ID);
+      })
+      .verifyComplete();
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  @DisplayName("Can error when setting team id of submissions with team id already set")
+  void setTeamIdOfUserSubmissions_TeamIdAlreadySet_Errors() {
+    final Submission testSubmission = Submission
+      .builder()
+      .userId(TestConstants.TEST_USER_ID)
+      .teamId(TestConstants.TEST_TEAM_ID)
+      .moduleId(TestConstants.TEST_MODULE_ID)
+      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .build();
+    when(submissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(testSubmission));
+
+    when(submissionRepository.saveAll(any(Flux.class))).thenAnswer(i -> i.getArguments()[0]);
+
+    StepVerifier
+      .create(submissionService.setTeamIdOfUserSubmissions(TestConstants.TEST_USER_ID, TestConstants.TEST_TEAM_ID))
+      .expectErrorMatches(e ->
+        e instanceof IllegalStateException &&
+        e
+          .getMessage()
+          .equals(
+            String.format(
+              "Ranked submission for user \"%s\" and module \"%s\" already has team id set",
+              TestConstants.TEST_USER_ID,
+              TestConstants.TEST_MODULE_ID
+            )
+          )
+      )
+      .verify();
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  @DisplayName("Can clear team id of user submissions")
+  void clearTeamIdOfUserSubmissions_SubmissionToModify_SavesModifiedSubmissions() {
+    final Submission testSubmission = Submission
+      .builder()
+      .userId(TestConstants.TEST_USER_ID)
+      .teamId(TestConstants.TEST_TEAM_ID)
+      .moduleId(TestConstants.TEST_MODULE_ID)
+      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .build();
+    when(submissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(testSubmission));
+
+    when(submissionRepository.saveAll(any(Flux.class))).thenReturn(Flux.empty());
+
+    StepVerifier.create(submissionService.clearTeamIdOfUserSubmissions(TestConstants.TEST_USER_ID)).verifyComplete();
+
+    ArgumentCaptor<Flux<Submission>> fluxCaptor = ArgumentCaptor.forClass(Flux.class);
+    verify(submissionRepository).saveAll(fluxCaptor.capture());
+    StepVerifier
+      .create(fluxCaptor.getValue())
+      .recordWith(ArrayList::new)
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(members -> {
+        assertThat(members).extracting("teamId").containsOnlyNulls();
+      })
+      .verifyComplete();
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  @DisplayName("Can clear team id of user submissions with no team id set")
+  void clearTeamIdOfUserSubmissions_NoTeamIdSet_SavesModifiedSubmissions() {
+    final Submission testSubmission = Submission
+      .builder()
+      .userId(TestConstants.TEST_USER_ID)
+      .moduleId(TestConstants.TEST_MODULE_ID)
+      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .build();
+    when(submissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(testSubmission));
+
+    when(submissionRepository.saveAll(any(Flux.class))).thenReturn(Flux.empty());
+
+    StepVerifier.create(submissionService.clearTeamIdOfUserSubmissions(TestConstants.TEST_USER_ID)).verifyComplete();
+
+    ArgumentCaptor<Flux<Submission>> fluxCaptor = ArgumentCaptor.forClass(Flux.class);
+    verify(submissionRepository).saveAll(fluxCaptor.capture());
+    StepVerifier
+      .create(fluxCaptor.getValue())
+      .recordWith(ArrayList::new)
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(members -> {
+        assertThat(members).extracting("teamId").containsOnlyNulls();
       })
       .verifyComplete();
   }

@@ -124,6 +124,21 @@ public class SubmissionService {
   public Mono<Void> setTeamIdOfUserSubmissions(@ValidUserId final String userId, @ValidUserId final String teamId) {
     final Flux<Submission> updatedSubmissions = submissionRepository
       .findAllByUserId(userId)
+      .flatMap(submission -> {
+        if (submission.getTeamId() != null && teamId != null) {
+          return Mono.error(
+            new IllegalStateException(
+              String.format(
+                "Ranked submission for user \"%s\" and module \"%s\" already has team id set",
+                submission.getUserId(),
+                submission.getModuleId()
+              )
+            )
+          );
+        } else {
+          return Flux.just(submission);
+        }
+      })
       .map(submission -> submission.withTeamId(teamId));
 
     return submissionRepository.saveAll(updatedSubmissions).then();
