@@ -64,7 +64,7 @@ public class ScoreboardController {
 
   @GetMapping(path = "scoreboard/user/{userId}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<SanitizedRankedSubmission> getSubmissionsByUserId(@PathVariable final String userId) {
+  public Flux<SanitizedRankedSubmission> getScoreboardByUserId(@PathVariable final String userId) {
     try {
       return userService
         .existsById(userId)
@@ -78,7 +78,7 @@ public class ScoreboardController {
 
   @GetMapping(path = "scoreboard/module/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<SanitizedRankedSubmission> getSubmissionsByModuleLocator(@PathVariable final String moduleLocator) {
+  public Flux<SanitizedRankedSubmission> getScoreboardByModuleLocator(@PathVariable final String moduleLocator) {
     try {
       return moduleService
         .existsByLocator(moduleLocator)
@@ -92,7 +92,7 @@ public class ScoreboardController {
 
   @GetMapping(path = "scoreboard/team/{teamId}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<SanitizedRankedSubmission> getSubmissionsByTeamId(@PathVariable final String teamId) {
+  public Flux<SanitizedRankedSubmission> getScoreboardByTeamId(@PathVariable final String teamId) {
     try {
       return teamService
         .existsById(teamId)

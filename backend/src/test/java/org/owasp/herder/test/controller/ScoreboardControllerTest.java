@@ -22,10 +22,9 @@
 package org.owasp.herder.test.controller;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,8 +37,10 @@ import org.owasp.herder.scoring.ScoreboardController;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserService;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -66,23 +67,85 @@ class ScoreboardControllerTest extends BaseTest {
   SubmissionService submissionService;
 
   @Test
-  void getScoreboardByUserId_ValidUserId_ReturnsScoreboardForUser() {
-    final String mockUserId = "id";
-
+  void getScoreboardByUserId_ValidUserId_ReturnsScoreboard() {
     final SanitizedRankedSubmission rankedSubmission1 = mock(SanitizedRankedSubmission.class);
     final SanitizedRankedSubmission rankedSubmission2 = mock(SanitizedRankedSubmission.class);
 
     final Flux<SanitizedRankedSubmission> rankedSubmissions = Flux.just(rankedSubmission1, rankedSubmission2);
-    when(submissionService.findAllRankedByUserId(mockUserId)).thenReturn(rankedSubmissions);
-    when(userService.existsById(mockUserId)).thenReturn(Mono.just(true));
+    when(submissionService.findAllRankedByUserId(TestConstants.TEST_USER_ID)).thenReturn(rankedSubmissions);
+    when(userService.existsById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(true));
 
     StepVerifier
-      .create(scoreboardController.getSubmissionsByUserId(mockUserId))
+      .create(scoreboardController.getScoreboardByUserId(TestConstants.TEST_USER_ID))
       .expectNext(rankedSubmission1)
       .expectNext(rankedSubmission2)
       .verifyComplete();
+  }
 
-    verify(submissionService, times(1)).findAllRankedByUserId(mockUserId);
+  @Test
+  void getScoreboardByUserId_InvalidUserId_Errors() {
+    when(userService.existsById(TestConstants.TEST_USER_ID))
+      .thenThrow(new ConstraintViolationException("bad data", null));
+
+    StepVerifier
+      .create(scoreboardController.getScoreboardByUserId(TestConstants.TEST_USER_ID))
+      .expectError(ResponseStatusException.class)
+      .verify();
+  }
+
+  @Test
+  void getScoreboardByModuleLocator_ValidLocator_ReturnsScoreboard() {
+    final SanitizedRankedSubmission rankedSubmission1 = mock(SanitizedRankedSubmission.class);
+    final SanitizedRankedSubmission rankedSubmission2 = mock(SanitizedRankedSubmission.class);
+
+    final Flux<SanitizedRankedSubmission> rankedSubmissions = Flux.just(rankedSubmission1, rankedSubmission2);
+    when(submissionService.findAllRankedByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(rankedSubmissions);
+    when(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(true));
+
+    StepVerifier
+      .create(scoreboardController.getScoreboardByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .expectNext(rankedSubmission1)
+      .expectNext(rankedSubmission2)
+      .verifyComplete();
+  }
+
+  @Test
+  void getScoreboardByModuleLocator_InvalidLocator_ReturnsScoreboard() {
+    when(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenThrow(new ConstraintViolationException("bad data", null));
+
+    StepVerifier
+      .create(scoreboardController.getScoreboardByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .expectError(ResponseStatusException.class)
+      .verify();
+  }
+
+  @Test
+  void getScoreboardByTeamId_ValidTeamId_ReturnsScoreboard() {
+    final SanitizedRankedSubmission rankedSubmission1 = mock(SanitizedRankedSubmission.class);
+    final SanitizedRankedSubmission rankedSubmission2 = mock(SanitizedRankedSubmission.class);
+
+    final Flux<SanitizedRankedSubmission> rankedSubmissions = Flux.just(rankedSubmission1, rankedSubmission2);
+    when(submissionService.findAllRankedByTeamId(TestConstants.TEST_TEAM_ID)).thenReturn(rankedSubmissions);
+    when(teamService.existsById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(true));
+
+    StepVerifier
+      .create(scoreboardController.getScoreboardByTeamId(TestConstants.TEST_TEAM_ID))
+      .expectNext(rankedSubmission1)
+      .expectNext(rankedSubmission2)
+      .verifyComplete();
+  }
+
+  @Test
+  void getScoreboardByTeamId_InvalidTeamId_ReturnsScoreboard() {
+    when(teamService.existsById(TestConstants.TEST_TEAM_ID))
+      .thenThrow(new ConstraintViolationException("bad data", null));
+
+    StepVerifier
+      .create(scoreboardController.getScoreboardByTeamId(TestConstants.TEST_TEAM_ID))
+      .expectError(ResponseStatusException.class)
+      .verify();
   }
 
   @BeforeEach
