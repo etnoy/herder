@@ -60,7 +60,7 @@ import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SubmissionService unit tests")
-class SubmissonServiceTest extends BaseTest {
+class SubmissionServiceTest extends BaseTest {
 
   private SubmissionService submissionService;
 
