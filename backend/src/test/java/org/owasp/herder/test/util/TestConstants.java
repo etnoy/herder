@@ -154,6 +154,7 @@ public final class TestConstants {
   public static final String TEST_STATIC_FLAG = "Static Test Flag 123 456";
 
   public static final String TEST_USER_ID = "abcdef123456789012345678";
+  public static final String TEST_USER_ID2 = "abcdef123456789012345679";
 
   public static final String TEST_CLASS_ID = "abcdef1234567890abcd5678";
 
