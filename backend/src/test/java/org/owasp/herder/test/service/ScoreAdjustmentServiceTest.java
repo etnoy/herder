@@ -38,7 +38,7 @@ import org.owasp.herder.scoring.ScoreAdjustmentRepository;
 import org.owasp.herder.scoring.ScoreAdjustmentService;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.UserService;
+import org.owasp.herder.user.TeamService;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -52,7 +52,7 @@ class ScoreAdjustmentServiceTest extends BaseTest {
   ScoreAdjustmentRepository scoreAdjustmentRepository;
 
   @Mock
-  UserService userService;
+  TeamService teamService;
 
   @Mock
   Clock clock;
@@ -65,7 +65,7 @@ class ScoreAdjustmentServiceTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    scoreAdjustmentService = new ScoreAdjustmentService(scoreAdjustmentRepository, userService, clock);
+    scoreAdjustmentService = new ScoreAdjustmentService(scoreAdjustmentRepository, teamService, clock);
   }
 
   @Test

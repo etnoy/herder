@@ -27,6 +27,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.RequiredArgsConstructor;
 import org.owasp.herder.exception.CryptographicException;
+import org.owasp.herder.validation.ValidKey;
+import org.owasp.herder.validation.ValidMessage;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -35,15 +37,7 @@ public final class CryptoService {
 
   private final CryptoFactory cryptoFactory;
 
-  // TODO: validation
-  public byte[] hmac(final byte[] key, final byte[] message) {
-    if (key == null) {
-      throw new NullPointerException("Key cannot be null");
-    }
-    if (message == null) {
-      throw new NullPointerException("Message cannot be null");
-    }
-
+  public byte[] hmac(final @ValidKey byte[] key, final @ValidMessage byte[] message) {
     final Mac hmac;
 
     try {

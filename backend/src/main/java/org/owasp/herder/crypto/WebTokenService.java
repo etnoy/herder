@@ -104,12 +104,10 @@ public class WebTokenService {
     final Date expirationTime = new Date(creationTime.getTime() + getExpirationTime());
     final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(impersonatorUserId);
 
-    String role;
+    String role = "user";
 
     if (impersonateAnAdmin) {
       role = ADMIN;
-    } else {
-      role = "user";
     }
 
     return Jwts
@@ -126,7 +124,6 @@ public class WebTokenService {
 
   public Authentication parseToken(@NotNull @NotEmpty String token) throws AuthenticationException {
     final Claims parsedClaims;
-
     try {
       parsedClaims =
         Jwts

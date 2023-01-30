@@ -235,7 +235,7 @@ class EntityIdValidationIT extends BaseIT {
   @DisplayName("in userService.suspendUntil()")
   void userService_suspendUntil_Duration(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-      () -> userService.suspendUntil(userId, Duration.ofDays(14)),
+      () -> userService.suspendForDuration(userId, Duration.ofDays(14)),
       containingMessage
     );
   }
@@ -245,7 +245,7 @@ class EntityIdValidationIT extends BaseIT {
   @DisplayName("in userService.suspendUntil()")
   void userService_suspendUntil_DurationMessage(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-      () -> userService.suspendUntil(userId, Duration.ofDays(14), "Banned!"),
+      () -> userService.suspendForDuration(userId, Duration.ofDays(14), "Banned!"),
       containingMessage
     );
   }

@@ -14,6 +14,9 @@
     />
   </div>
 </form>
+<div *ngIf="fullQuery">
+  <p>{{ fullQuery }}</p>
+</div>
 <div *ngIf="submitted && result?.length === 0 && !errorResult">
   <h3 class="h3 mb-3 font-weight-normal text-center">Search results</h3>
   <p>No result.</p>

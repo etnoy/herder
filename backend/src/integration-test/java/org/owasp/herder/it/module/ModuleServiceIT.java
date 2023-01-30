@@ -49,7 +49,6 @@ import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -99,7 +98,7 @@ class ModuleServiceIT extends BaseIT {
 
       moduleService.setTags(moduleId, tags).block();
 
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
 
       StepVerifier
         .create(moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
@@ -112,7 +111,7 @@ class ModuleServiceIT extends BaseIT {
     void canGetSolvedModule() {
       integrationTestUtils.submitValidFlag(userId, moduleId);
 
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
 
       StepVerifier
         .create(moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
@@ -127,7 +126,7 @@ class ModuleServiceIT extends BaseIT {
       // Create a module to submit to
       moduleId = integrationTestUtils.createStaticTestModule();
 
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
 
       moduleListItem =
         ModuleListItem
@@ -151,7 +150,7 @@ class ModuleServiceIT extends BaseIT {
     @DisplayName("for user with closed module")
     void canHideClosedModuleInList() {
       moduleService.close(moduleId).block();
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
 
       ArrayList<ModuleListItem> modules = moduleList.getModules();
       modules.clear();
@@ -169,7 +168,7 @@ class ModuleServiceIT extends BaseIT {
 
       moduleService.close(moduleId).block();
 
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
 
       ArrayList<ModuleListItem> modules = moduleList.getModules();
       modules.clear();
@@ -183,7 +182,7 @@ class ModuleServiceIT extends BaseIT {
     @Test
     @DisplayName("for user with no module solutions or tags")
     void canListModule() {
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
       StepVerifier.create(moduleService.findModuleListByUserId(userId)).expectNext(moduleList).verifyComplete();
     }
 
@@ -193,7 +192,7 @@ class ModuleServiceIT extends BaseIT {
       submissionService.submitFlag(userId, moduleId, "invalidflag").block();
       submissionService.submitFlag(userId, moduleId, "invalidflag2").block();
 
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
 
       StepVerifier.create(moduleService.findModuleListByUserId(userId)).expectNext(moduleList).verifyComplete();
     }
@@ -209,7 +208,7 @@ class ModuleServiceIT extends BaseIT {
 
       moduleService.setTags(moduleId, tags).block();
 
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
 
       StepVerifier
         .create(moduleService.findModuleListByUserId(userId))
@@ -225,7 +224,7 @@ class ModuleServiceIT extends BaseIT {
 
       integrationTestUtils.submitValidFlag(userId, moduleId);
 
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
 
       final ModuleListItem moduleListItem1 = ModuleListItem
         .builder()
@@ -262,7 +261,7 @@ class ModuleServiceIT extends BaseIT {
     void canListSolvedModule() {
       integrationTestUtils.submitValidFlag(userId, moduleId);
 
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
 
       StepVerifier
         .create(moduleService.findModuleListByUserId(userId))
@@ -282,7 +281,7 @@ class ModuleServiceIT extends BaseIT {
 
       integrationTestUtils.submitValidFlag(userId2, moduleId);
 
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
 
       StepVerifier
         .create(moduleService.findModuleListByUserId(userId2))
@@ -299,7 +298,7 @@ class ModuleServiceIT extends BaseIT {
 
       integrationTestUtils.submitValidFlag(userId, moduleId);
 
-      refresherService.refreshModuleLists().block();
+      moduleService.refreshModuleLists().block();
 
       StepVerifier
         .create(moduleService.findModuleListByTeamId(teamId))
@@ -337,9 +336,6 @@ class ModuleServiceIT extends BaseIT {
 
   @Autowired
   UserService userService;
-
-  @Autowired
-  RefresherService refresherService;
 
   @MockBean
   FlagSubmissionRateLimiter flagSubmissionRateLimiter;

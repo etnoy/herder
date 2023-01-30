@@ -19,41 +19,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.user;
+package org.owasp.herder.validation;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
-import lombok.With;
-import org.owasp.herder.scoring.PrincipalType;
-import org.owasp.herder.validation.ValidDisplayName;
-import org.owasp.herder.validation.ValidPrincipalId;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import java.time.Duration;
 
-@Value
-@AllArgsConstructor
-@Builder
-@With
-public final class PrincipalEntity implements Serializable {
+public class PositiveDurationValidator implements ConstraintValidator<ValidDuration, Duration> {
 
-  private static final long serialVersionUID = 8843939402741609352L;
-
-  @NonNull
-  @ValidDisplayName
-  String displayName;
-
-  @ValidPrincipalId
-  String id;
-
-  @NonNull
-  PrincipalType principalType;
-
-  @NonNull
-  LocalDateTime creationTime;
-
-  @Builder.Default
-  HashSet<UserEntity> members = new HashSet<>();
+  @Override
+  public boolean isValid(final Duration value, ConstraintValidatorContext context) {
+    return !value.isNegative();
+  }
 }

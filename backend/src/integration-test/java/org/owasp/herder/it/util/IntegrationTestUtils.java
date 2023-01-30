@@ -45,6 +45,7 @@ import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.ClassRepository;
 import org.owasp.herder.user.ModuleListRepository;
 import org.owasp.herder.user.TeamRepository;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +66,9 @@ public final class IntegrationTestUtils {
 
   @Autowired
   UserService userService;
+
+  @Autowired
+  TeamService teamService;
 
   @Autowired
   ModuleService moduleService;
@@ -144,7 +148,7 @@ public final class IntegrationTestUtils {
   }
 
   public String createTestTeam() {
-    return userService.createTeam(TestConstants.TEST_TEAM_DISPLAY_NAME).block();
+    return teamService.create(TestConstants.TEST_TEAM_DISPLAY_NAME).block();
   }
 
   public String createTestAdmin() {

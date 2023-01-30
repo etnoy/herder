@@ -37,6 +37,7 @@ export class SqlInjectionTutorialComponent {
   errorResult: string;
   submitted = false;
   loading = false;
+  fullQuery: String;
 
   @Input() module: ModuleListItem;
 
@@ -50,25 +51,26 @@ export class SqlInjectionTutorialComponent {
     });
     this.result = [];
     this.errorResult = '';
+    this.fullQuery = null;
   }
 
   submitQuery() {
-    if (this.queryForm.controls.query.value === '') {
+    const query = this.queryForm.controls.query.value;
+    this.fullQuery = `SELECT * FROM sqlinjection.users WHERE name = '${query}';`;
+
+    if (query === '') {
       this.result = null;
       return;
     }
     return this.apiService
-      .modulePostRequest(
-        this.module.locator,
-        'search',
-        this.queryForm.controls.query.value
-      )
+      .modulePostRequest(this.module.locator, 'search', query)
       .subscribe({
         next: (data) => {
           this.alertService.clear();
           this.submitted = true;
           this.result = data;
         },
+
         error: (error) => {
           this.submitted = false;
           this.result = [];

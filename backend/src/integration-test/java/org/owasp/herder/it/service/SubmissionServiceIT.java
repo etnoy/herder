@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,15 +37,13 @@ import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
-import org.owasp.herder.scoring.PrincipalType;
+import org.owasp.herder.scoring.SolverType;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.RefresherService;
-import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
-import org.owasp.herder.user.UserRepository;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -63,16 +62,13 @@ class SubmissionServiceIT extends BaseIT {
   ModuleService moduleService;
 
   @Autowired
-  RefresherService refresherService;
-
-  @Autowired
   ModuleRepository moduleRepository;
 
   @Autowired
   SubmissionRepository submissionRepository;
 
   @Autowired
-  UserRepository userRepository;
+  TeamService teamService;
 
   @Autowired
   FlagHandler flagHandler;
@@ -83,9 +79,9 @@ class SubmissionServiceIT extends BaseIT {
   @MockBean
   Clock clock;
 
-  private String userId;
+  String userId;
 
-  private String moduleId;
+  String moduleId;
 
   @Test
   @DisplayName("Valid submission of a static flag should be accepted")
@@ -128,21 +124,23 @@ class SubmissionServiceIT extends BaseIT {
     integrationTestUtils.submitValidFlag(userId3, moduleId);
 
     userService.addUserToTeam(userId1, teamId).block();
+    teamService.addMember(teamId, userService.getById(userId1).block()).block();
+    submissionService.setTeamIdOfUserSubmissions(userId1, teamId).block();
+
     userService.addUserToTeam(userId3, teamId).block();
+    teamService.addMember(teamId, userService.getById(userId1).block()).block();
+    submissionService.setTeamIdOfUserSubmissions(userId3, teamId).block();
 
-    refresherService.afterUserUpdate(userId1).block();
-    refresherService.afterUserUpdate(userId3).block();
-
-    final TeamEntity team = userService.getTeamById(teamId).block();
-
-    refresherService.refreshSubmissionRanks().block();
+    submissionService.refreshSubmissionRanks().block();
 
     StepVerifier
-      .create(submissionService.findAllRankedByTeamId(teamId))
-      .assertNext(rankedSubmission -> {
-        assertThat(rankedSubmission.getId()).isEqualTo(team.getId());
-        assertThat(rankedSubmission.getPrincipalType()).isEqualTo(PrincipalType.TEAM);
-        assertThat(rankedSubmission.getRank()).isEqualTo(1L);
+      .create(submissionService.findAllRankedByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .recordWith(ArrayList::new)
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(rankedSubmissions -> {
+        assertThat(rankedSubmissions).extracting("id").containsExactly(teamId, userId2);
+        assertThat(rankedSubmissions).extracting("principalType").containsExactly(SolverType.TEAM, SolverType.USER);
+        assertThat(rankedSubmissions).extracting("rank").containsExactly(1L, 2L);
       })
       .verifyComplete();
   }
@@ -157,7 +155,7 @@ class SubmissionServiceIT extends BaseIT {
     final UserEntity user = userService.getById(userId).block();
     final ModuleEntity module = moduleService.getById(moduleId).block();
 
-    refresherService.refreshSubmissionRanks().block();
+    submissionService.refreshSubmissionRanks().block();
 
     StepVerifier
       .create(submissionService.findAllRankedByUserId(userId))
@@ -184,6 +182,57 @@ class SubmissionServiceIT extends BaseIT {
       .expectNext(true)
       .expectError(ModuleAlreadySolvedException.class)
       .verify();
+  }
+
+  @Test
+  @DisplayName("Can set team id of submissions when user joins a team")
+  void canSetTeamIdOfSubmissionsWhenJoiningTeam() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String moduleId = integrationTestUtils.createStaticTestModule();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    integrationTestUtils.submitInvalidFlag(userId, moduleId);
+    integrationTestUtils.submitValidFlag(userId, moduleId);
+
+    userService.addUserToTeam(userId, teamId).block();
+
+    final UserEntity user = userService.getById(userId).block();
+    teamService.addMember(teamId, user).block();
+
+    submissionService.setTeamIdOfUserSubmissions(userId, teamId).block();
+
+    StepVerifier
+      .create(submissionService.findAllSubmissions())
+      .recordWith(ArrayList::new)
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(submissions -> assertThat(submissions).extracting(Submission::getTeamId).containsOnly(teamId)
+      )
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can clear team id of submissions when user leaves a team")
+  void canClearTeamIdOfSubmissionsWhenJoiningTeam() {
+    final String userId = integrationTestUtils.createTestUser();
+    final String moduleId = integrationTestUtils.createStaticTestModule();
+    final String teamId = integrationTestUtils.createTestTeam();
+
+    integrationTestUtils.submitInvalidFlag(userId, moduleId);
+    integrationTestUtils.submitValidFlag(userId, moduleId);
+
+    userService.addUserToTeam(userId, teamId).block();
+
+    final UserEntity user = userService.getById(userId).block();
+    teamService.addMember(teamId, user).block();
+
+    submissionService.clearTeamIdOfUserSubmissions(userId).block();
+
+    StepVerifier
+      .create(submissionService.findAllSubmissions())
+      .recordWith(ArrayList::new)
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(submissions -> assertThat(submissions).extracting(Submission::getTeamId).containsOnlyNulls())
+      .verifyComplete();
   }
 
   private void resetClock() {

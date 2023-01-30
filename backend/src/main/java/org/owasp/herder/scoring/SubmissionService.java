@@ -21,8 +21,6 @@
  */
 package org.owasp.herder.scoring;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +33,7 @@ import org.owasp.herder.scoring.Submission.SubmissionBuilder;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
+import org.owasp.herder.validation.ValidFlag;
 import org.owasp.herder.validation.ValidModuleId;
 import org.owasp.herder.validation.ValidModuleLocator;
 import org.owasp.herder.validation.ValidModuleName;
@@ -100,12 +99,14 @@ public class SubmissionService {
       final TeamEntity team = rankedSubmission.getTeam();
       builder.id(team.getId());
       builder.displayName(team.getDisplayName());
-      builder.principalType(PrincipalType.TEAM);
-    } else {
+      builder.principalType(SolverType.TEAM);
+    } else if (rankedSubmission.getUser() != null) {
       final UserEntity user = rankedSubmission.getUser();
       builder.id(user.getId());
       builder.displayName(user.getDisplayName());
-      builder.principalType(PrincipalType.USER);
+      builder.principalType(SolverType.USER);
+    } else {
+      throw new IllegalArgumentException("Ranked submission is missing user or team");
     }
     builder.baseScore(rankedSubmission.getBaseScore());
     builder.bonusScore(rankedSubmission.getBonusScore());
@@ -120,11 +121,37 @@ public class SubmissionService {
     return builder.build();
   }
 
-  // TODO: add flag validation annotation
+  public Mono<Void> setTeamIdOfUserSubmissions(@ValidUserId final String userId, @ValidUserId final String teamId) {
+    final Flux<Submission> updatedSubmissions = submissionRepository
+      .findAllByUserId(userId)
+      .flatMap(submission -> {
+        if (submission.getTeamId() != null && teamId != null) {
+          return Mono.error(
+            new IllegalStateException(
+              String.format(
+                "Ranked submission for user \"%s\" and module \"%s\" already has team id set",
+                submission.getUserId(),
+                submission.getModuleId()
+              )
+            )
+          );
+        } else {
+          return Flux.just(submission);
+        }
+      })
+      .map(submission -> submission.withTeamId(teamId));
+
+    return submissionRepository.saveAll(updatedSubmissions).then();
+  }
+
+  public Mono<Void> clearTeamIdOfUserSubmissions(@ValidUserId final String userId) {
+    return setTeamIdOfUserSubmissions(userId, null);
+  }
+
   public Mono<Submission> submitFlag(
     @ValidUserId final String userId,
     @ValidModuleId final String moduleId,
-    @NotEmpty @NotNull final String flag
+    @ValidFlag final String flag
   ) {
     final SubmissionBuilder submissionBuilder = Submission.builder();
 
@@ -170,5 +197,9 @@ public class SubmissionService {
     @ValidModuleName final String moduleId
   ) {
     return submissionRepository.existsByUserIdAndModuleIdAndIsValidTrue(userId, moduleId).map(exists -> !exists);
+  }
+
+  public Mono<Void> refreshSubmissionRanks() {
+    return submissionRepository.refreshSubmissionRanks().then();
   }
 }

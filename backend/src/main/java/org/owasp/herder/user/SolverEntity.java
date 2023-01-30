@@ -19,55 +19,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.scoring;
+package org.owasp.herder.user;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
-import lombok.ToString;
 import lombok.Value;
 import lombok.With;
+import org.owasp.herder.scoring.SolverType;
+import org.owasp.herder.validation.ValidDisplayName;
+import org.owasp.herder.validation.ValidPrincipalId;
 
 @Value
-@Builder
 @AllArgsConstructor
+@Builder
 @With
-public class SanitizedRankedSubmission implements Serializable {
+public final class SolverEntity implements Serializable {
 
-  private static final long serialVersionUID = 1059641731788037532L;
+  private static final long serialVersionUID = 8843939402741609352L;
 
-  @NonNull
+  @ValidPrincipalId
   String id;
 
   @NonNull
-  SolverType principalType;
-
-  @NonNull
+  @ValidDisplayName
   String displayName;
 
   @NonNull
-  String moduleLocator;
+  SolverType solverType;
 
-  @NonNull
-  String moduleName;
+  LocalDateTime creationTime;
 
-  @NonNull
-  Long rank;
-
-  @NonNull
-  LocalDateTime time;
-
-  @ToString.Exclude
-  String flag;
-
-  @NonNull
-  Long baseScore;
-
-  @NonNull
-  Long bonusScore;
-
-  @NonNull
-  Long score;
+  @Builder.Default
+  HashSet<UserEntity> members = new HashSet<>();
 }

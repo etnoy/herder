@@ -56,7 +56,7 @@ public final class ModuleInitializer implements ApplicationContextAware {
 
     List<BaseModule> modules = new ArrayList<>();
     Set<String> uniqueNames = new HashSet<>();
-    List<BaseModule> duplicateModules = new ArrayList<>();
+    List<BaseModule> duplicateModuleNamess = new ArrayList<>();
 
     // Find all beans annotated with @HerderModule
     for (final Object moduleCandidate : applicationContext.getBeansWithAnnotation(HerderModule.class).values()) {
@@ -64,7 +64,8 @@ public final class ModuleInitializer implements ApplicationContextAware {
         final String moduleName = baseModule.getName();
         modules.add(baseModule);
         if (!uniqueNames.add(moduleName)) {
-          duplicateModules.add(baseModule);
+          // This module name is a duplicate, which is disallowed
+          duplicateModuleNamess.add(baseModule);
         }
       } else {
         throw new IllegalArgumentException(
@@ -73,35 +74,45 @@ public final class ModuleInitializer implements ApplicationContextAware {
       }
     }
 
-    if (!duplicateModules.isEmpty()) {
+    if (!duplicateModuleNamess.isEmpty()) {
       throw new DuplicateModuleNameException(
-        "The following modules have colliding names: " + duplicateModules.toString()
+        "The following modules have colliding names: " + duplicateModuleNamess.toString()
       );
     }
 
     for (final BaseModule module : modules) {
       try {
+        // Initialize the module
         initializeModule(module).block();
       } catch (ConstraintViolationException e) {
-        throw new IllegalArgumentException(e);
+        throw new ModuleInitializationException(String.format("Module \"%s\" has invalid metadata", module), e);
       }
     }
   }
 
   public Mono<String> initializeModule(final BaseModule module) {
+    log.trace("About to initialize module  " + module);
+
     final HerderModule herderModuleAnnotation = module.getClass().getAnnotation(HerderModule.class);
-
     final Score scoreAnnotation = module.getClass().getAnnotation(Score.class);
-
     final Locator locatorAnnotation = module.getClass().getAnnotation(Locator.class);
+
     if (locatorAnnotation == null) {
-      return Mono.error(new ModuleInitializationException("Missing @Locator on module " + module.getName()));
+      throw new ModuleInitializationException(String.format("Missing @Locator on module \"%s\"", module));
     }
 
     final String moduleLocator = locatorAnnotation.value();
 
+    if (Boolean.TRUE.equals(moduleService.existsByLocator(moduleLocator).block())) {
+      // If the module already exists in the database, do nothing.
+      // This case can happen on, for instance, application restart
+      return Mono.empty();
+    }
+
     if (herderModuleAnnotation == null) {
-      throw new ModuleInitializationException("Module is missing the @HerderModule annotation");
+      throw new ModuleInitializationException(
+        String.format("Module \"%s\" is missing the @HerderModule annotation", module)
+      );
     }
 
     // Find the module name declared in the annotation
@@ -112,12 +123,6 @@ public final class ModuleInitializer implements ApplicationContextAware {
     // Find all tag annotations
     final Set<Tag> tagAnnotations = Set.of(module.getClass().getAnnotationsByType(Tag.class));
 
-    if (Boolean.TRUE.equals(moduleService.existsByLocator(moduleLocator).block())) {
-      // If the module already exists in the database, do nothing.
-      // This case can happen on, for instance, application restart
-      return Mono.empty();
-    }
-
     return moduleService
       // Persist the module
       .create(moduleName, moduleLocator)
@@ -127,6 +132,7 @@ public final class ModuleInitializer implements ApplicationContextAware {
         if (scoreAnnotation != null) {
           final ArrayList<Integer> bonusScores = new ArrayList<>();
 
+          // These bonus scores will be zero if missing
           bonusScores.add(scoreAnnotation.goldBonus());
           bonusScores.add(scoreAnnotation.silverBonus());
           bonusScores.add(scoreAnnotation.bronzeBonus());
@@ -139,7 +145,7 @@ public final class ModuleInitializer implements ApplicationContextAware {
         }
 
         Mono<Void> tagMono = Mono.empty();
-        if (tagAnnotations != null) {
+        if (!tagAnnotations.isEmpty()) {
           final Multimap<String, String> tags = ArrayListMultimap.create();
           final Iterator<Tag> tagIterator = tagAnnotations.iterator();
           while (tagIterator.hasNext()) {

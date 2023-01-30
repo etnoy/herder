@@ -19,9 +19,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.scoring;
+package org.owasp.herder.validation;
 
-public enum PrincipalType {
-  USER,
-  TEAM,
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = {})
+@NotNull(message = "{org.owasp.herder.ValidMessage.NullMessage}")
+@Size(min = 1, message = "{org.owasp.herder.ValidMessage.WrongLengthMessage}")
+public @interface ValidMessage {
+  String message() default "{org.owasp.herder.ValidMessage.message}";
+
+  Class<?>[] groups() default {};
+
+  Class<? extends Payload>[] payload() default {};
 }

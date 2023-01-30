@@ -27,6 +27,7 @@ import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.exception.TeamNotFoundException;
 import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -49,6 +50,8 @@ public class ScoreboardController {
 
   private final UserService userService;
 
+  private final TeamService teamService;
+
   private final SubmissionService submissionService;
 
   private final ModuleService moduleService;
@@ -61,7 +64,7 @@ public class ScoreboardController {
 
   @GetMapping(path = "scoreboard/user/{userId}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<SanitizedRankedSubmission> getSubmissionsByUserId(@PathVariable final String userId) {
+  public Flux<SanitizedRankedSubmission> getScoreboardByUserId(@PathVariable final String userId) {
     try {
       return userService
         .existsById(userId)
@@ -75,7 +78,7 @@ public class ScoreboardController {
 
   @GetMapping(path = "scoreboard/module/{moduleLocator}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<SanitizedRankedSubmission> getSubmissionsByModuleLocator(@PathVariable final String moduleLocator) {
+  public Flux<SanitizedRankedSubmission> getScoreboardByModuleLocator(@PathVariable final String moduleLocator) {
     try {
       return moduleService
         .existsByLocator(moduleLocator)
@@ -89,10 +92,10 @@ public class ScoreboardController {
 
   @GetMapping(path = "scoreboard/team/{teamId}")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<SanitizedRankedSubmission> getSubmissionsByTeamId(@PathVariable final String teamId) {
+  public Flux<SanitizedRankedSubmission> getScoreboardByTeamId(@PathVariable final String teamId) {
     try {
-      return userService
-        .teamExistsById(teamId)
+      return teamService
+        .existsById(teamId)
         .filter(exists -> exists)
         .switchIfEmpty(Mono.error(new TeamNotFoundException("Team id " + teamId + " not found.")))
         .flatMapMany(u -> submissionService.findAllRankedByTeamId(teamId));

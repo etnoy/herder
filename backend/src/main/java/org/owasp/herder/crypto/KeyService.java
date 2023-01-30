@@ -29,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.owasp.herder.exception.RngException;
+import org.owasp.herder.validation.ValidKey;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -39,13 +40,13 @@ public class KeyService {
 
   private final CryptoFactory cryptoFactory;
 
-  private byte[] byteGenerator(final SecureRandom strongPRNG, final int numberOfBytes) {
+  private byte[] byteGenerator(final SecureRandom strongPRNG, final @Min(1) int numberOfBytes) {
     byte[] randomBytes = new byte[numberOfBytes];
     strongPRNG.nextBytes(randomBytes);
     return randomBytes;
   }
 
-  public String convertByteKeyToString(final byte[] keyBytes) {
+  public String convertByteKeyToString(final @ValidKey byte[] keyBytes) {
     return new String(keyBytes, StandardCharsets.US_ASCII);
   }
 
@@ -57,7 +58,7 @@ public class KeyService {
     return Hex.decodeHex(stringFlag);
   }
 
-  public byte[] generateRandomBytes(@Min(1) final int numberOfBytes) {
+  public byte[] generateRandomBytes(final @Min(1) int numberOfBytes) {
     try {
       final SecureRandom prng = cryptoFactory.getPrng();
       return byteGenerator(prng, numberOfBytes);
@@ -66,7 +67,7 @@ public class KeyService {
     }
   }
 
-  public String generateRandomString(@Min(1) final int numberOfBytes) {
+  public String generateRandomString(final @Min(1) int numberOfBytes) {
     return convertByteKeyToString(generateRandomBytes(numberOfBytes));
   }
 }

@@ -25,9 +25,13 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
+import org.owasp.herder.module.ModuleEntity;
+import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.UserEntity;
 
 public final class TestConstants {
 
@@ -80,6 +84,8 @@ public final class TestConstants {
   );
 
   public static final byte[] TEST_BYTE_ARRAY = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+  public static final byte[] TEST_BYTE_ARRAY2 = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+  public static final byte[] TEST_BYTE_ARRAY3 = { 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 127 };
 
   public static final String[] STRINGS = {
     "Test",
@@ -121,14 +127,11 @@ public final class TestConstants {
     " ﷽ ﷽  ﷽  ",
   };
 
-  public static final String INITIAL_NAME = "id";
-
-  public static final String[] NAMES = { INITIAL_NAME, "id-with-hyphen", "abc123" };
-
   public static final String[] INVALID_NAMES = { "", null };
 
   public static final String[] STRINGS_WITH_NULL = ArrayUtils.addAll(STRINGS, (String) null);
 
+  public static final String TEST_TEAM_ID = "abcdab123456789012345678";
   public static final String TEST_TEAM_DISPLAY_NAME = "Test Team";
 
   public static final String TEST_ADMIN_DISPLAY_NAME = "Test Admin";
@@ -151,6 +154,7 @@ public final class TestConstants {
   public static final String TEST_STATIC_FLAG = "Static Test Flag 123 456";
 
   public static final String TEST_USER_ID = "abcdef123456789012345678";
+  public static final String TEST_USER_ID2 = "abcdef123456789012345679";
 
   public static final String TEST_CLASS_ID = "abcdef1234567890abcd5678";
 
@@ -178,4 +182,22 @@ public final class TestConstants {
   public static Stream<String> validStaticFlagProvider() {
     return Stream.of(VALID_STATIC_FLAGS);
   }
+
+  public static final UserEntity TEST_USER_ENTITY = UserEntity
+    .builder()
+    .key(TEST_BYTE_ARRAY)
+    .displayName(TEST_USER_DISPLAY_NAME)
+    .build();
+
+  public static final TeamEntity TEST_TEAM_ENTITY = TeamEntity
+    .builder()
+    .displayName(TEST_TEAM_DISPLAY_NAME)
+    .members(new ArrayList<UserEntity>())
+    .build();
+
+  public static final ModuleEntity TEST_MODULE_ENTITY = ModuleEntity
+    .builder()
+    .name(TestConstants.TEST_MODULE_NAME)
+    .locator(TEST_MODULE_LOCATOR)
+    .build();
 }

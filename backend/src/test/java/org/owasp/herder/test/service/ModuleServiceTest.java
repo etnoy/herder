@@ -39,13 +39,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.DuplicateModuleLocatorException;
-import org.owasp.herder.exception.InvalidFlagException;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.ModuleListRepository;
+import org.owasp.herder.user.UserRepository;
 import org.springframework.context.ApplicationContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -61,6 +61,9 @@ class ModuleServiceTest extends BaseTest {
 
   @Mock
   ModuleRepository moduleRepository;
+
+  @Mock
+  UserRepository userRepository;
 
   @Mock
   ModuleListRepository moduleListRepository;
@@ -294,21 +297,6 @@ class ModuleServiceTest extends BaseTest {
   }
 
   @Test
-  void setStaticFlag_EmptyStaticFlag_ReturnsInvalidFlagException() {
-    StepVerifier.create(moduleService.setStaticFlag("id", "")).expectError(InvalidFlagException.class).verify();
-  }
-
-  @Test
-  void setStaticFlag_NullStaticFlag_ReturnsNullPointerException() {
-    StepVerifier
-      .create(moduleService.setStaticFlag("id", null))
-      .expectErrorMatches(throwable ->
-        throwable instanceof NullPointerException && throwable.getMessage().equals("Flag cannot be null")
-      )
-      .verify();
-  }
-
-  @Test
   void setStaticFlag_ValidStaticFlag_SetsFlagToStatic() {
     final String staticFlag = "setStaticFlag_ValidStaticFlag_SetsFlagToStatic";
 
@@ -331,6 +319,6 @@ class ModuleServiceTest extends BaseTest {
   @BeforeEach
   void setup() {
     // Set up the system under test
-    moduleService = new ModuleService(moduleRepository, keyService, moduleListRepository);
+    moduleService = new ModuleService(moduleRepository, keyService, moduleListRepository, userRepository);
   }
 }

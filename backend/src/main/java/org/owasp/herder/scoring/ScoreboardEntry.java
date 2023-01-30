@@ -47,7 +47,7 @@ public class ScoreboardEntry implements Serializable {
   String principalId;
 
   @NonNull
-  PrincipalType principalType;
+  SolverType solverType;
 
   @NonNull
   String displayName;

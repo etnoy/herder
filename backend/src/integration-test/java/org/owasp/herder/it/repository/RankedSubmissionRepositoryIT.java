@@ -48,8 +48,8 @@ import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.service.FlagSubmissionRateLimiter;
 import org.owasp.herder.service.InvalidFlagRateLimiter;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.RefresherService;
 import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,19 +64,19 @@ class RankedSubmissionRepositoryIT extends BaseIT {
   class canGetUnrankedScoreboard {
 
     String userId1;
-
     String userId2;
     String userId3;
-    String moduleId1;
 
-    String moduleId2;
     UserEntity user1;
-
     UserEntity user2;
     UserEntity user3;
-    ModuleEntity module1;
 
+    String moduleId1;
+    String moduleId2;
+
+    ModuleEntity module1;
     ModuleEntity module2;
+
     Clock testClock;
 
     @Test
@@ -148,11 +148,16 @@ class RankedSubmissionRepositoryIT extends BaseIT {
 
       final String teamId = integrationTestUtils.createTestTeam();
       userService.addUserToTeam(userId1, teamId).block();
-      userService.addUserToTeam(userId3, teamId).block();
-      refresherService.afterUserUpdate(userId1).block();
-      refresherService.afterUserUpdate(userId3).block();
+      user1 = user1.withTeamId(teamId);
+      teamService.addMember(teamId, user1).block();
+      submissionService.setTeamIdOfUserSubmissions(userId1, teamId).block();
 
-      refresherService.refreshSubmissionRanks().block();
+      userService.addUserToTeam(userId3, teamId).block();
+      user3 = user3.withTeamId(teamId);
+      teamService.addMember(teamId, user3).block();
+      submissionService.setTeamIdOfUserSubmissions(userId3, teamId).block();
+
+      submissionService.refreshSubmissionRanks().block();
 
       StepVerifier
         .create(rankedSubmissionRepository.getUnrankedScoreboard())
@@ -228,7 +233,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
         )
         .block();
 
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
 
       StepVerifier
         .create(rankedSubmissionRepository.getUnrankedScoreboard())
@@ -320,14 +325,21 @@ class RankedSubmissionRepositoryIT extends BaseIT {
         teamId = integrationTestUtils.createTestTeam();
 
         userService.addUserToTeam(userId1, teamId).block();
+        user1 = user1.withTeamId(teamId);
+        teamService.addMember(teamId, user1).block();
+        submissionService.setTeamIdOfUserSubmissions(userId1, teamId).block();
+
         userService.addUserToTeam(userId2, teamId).block();
+        user2 = user2.withTeamId(teamId);
+        teamService.addMember(teamId, user1).block();
+        submissionService.setTeamIdOfUserSubmissions(userId2, teamId).block();
+
         userService.addUserToTeam(userId3, teamId).block();
+        user3 = user3.withTeamId(teamId);
+        teamService.addMember(teamId, user1).block();
+        submissionService.setTeamIdOfUserSubmissions(userId3, teamId).block();
 
-        refresherService.afterUserUpdate(userId1).block();
-        refresherService.afterUserUpdate(userId2).block();
-        refresherService.afterUserUpdate(userId3).block();
-
-        refresherService.refreshSubmissionRanks().block();
+        submissionService.refreshSubmissionRanks().block();
       }
     }
 
@@ -370,12 +382,16 @@ class RankedSubmissionRepositoryIT extends BaseIT {
         teamId = integrationTestUtils.createTestTeam();
 
         userService.addUserToTeam(userId1, teamId).block();
+        user1 = user1.withTeamId(teamId);
+        teamService.addMember(teamId, user1).block();
+        submissionService.setTeamIdOfUserSubmissions(userId1, teamId).block();
+
         userService.addUserToTeam(userId3, teamId).block();
+        user3 = user3.withTeamId(teamId);
+        teamService.addMember(teamId, user3).block();
+        submissionService.setTeamIdOfUserSubmissions(userId3, teamId).block();
 
-        refresherService.afterUserUpdate(userId1).block();
-        refresherService.afterUserUpdate(userId3).block();
-
-        refresherService.refreshSubmissionRanks().block();
+        submissionService.refreshSubmissionRanks().block();
       }
     }
 
@@ -470,11 +486,16 @@ class RankedSubmissionRepositoryIT extends BaseIT {
         integrationTestUtils.submitValidFlag(userId1, moduleId2);
 
         userService.addUserToTeam(userId1, teamId).block();
-        userService.addUserToTeam(userId3, teamId).block();
-        refresherService.afterUserUpdate(userId1).block();
-        refresherService.afterUserUpdate(userId3).block();
+        user1 = user1.withTeamId(teamId);
+        teamService.addMember(teamId, user1).block();
+        submissionService.setTeamIdOfUserSubmissions(userId1, teamId).block();
 
-        refresherService.refreshSubmissionRanks().block();
+        userService.addUserToTeam(userId3, teamId).block();
+        user3 = user3.withTeamId(teamId);
+        teamService.addMember(teamId, user3).block();
+        submissionService.setTeamIdOfUserSubmissions(userId3, teamId).block();
+
+        submissionService.refreshSubmissionRanks().block();
       }
     }
 
@@ -578,18 +599,18 @@ class RankedSubmissionRepositoryIT extends BaseIT {
       user3 = userService.getById(userId3).block();
       module = moduleService.getById(moduleId).block();
 
-      refresherService.refreshSubmissionRanks().block();
+      submissionService.refreshSubmissionRanks().block();
     }
   }
-
-  @Autowired
-  RefresherService refresherService;
 
   @Autowired
   ModuleService moduleService;
 
   @Autowired
   UserService userService;
+
+  @Autowired
+  TeamService teamService;
 
   @Autowired
   SubmissionService submissionService;
@@ -630,7 +651,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
 
     integrationTestUtils.submitValidFlag(userId, moduleId);
 
-    refresherService.refreshSubmissionRanks().block();
+    submissionService.refreshSubmissionRanks().block();
 
     StepVerifier
       .create(rankedSubmissionRepository.findAll())
@@ -717,7 +738,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
       )
       .block();
 
-    refresherService.refreshSubmissionRanks().block();
+    submissionService.refreshSubmissionRanks().block();
 
     StepVerifier
       .create(rankedSubmissionRepository.findAll())

@@ -107,7 +107,7 @@ class ScoreboardControllerIT extends BaseIT {
   @DisplayName("Can return error if invalid module locator is given")
   void canReturnErrorForInvalidModuleLocator() {
     StepVerifier
-      .create(scoreboardController.getSubmissionsByModuleLocator("XYZ"))
+      .create(scoreboardController.getScoreboardByModuleLocator("XYZ"))
       .expectError(ResponseStatusException.class)
       .verify();
   }
@@ -117,7 +117,7 @@ class ScoreboardControllerIT extends BaseIT {
   @DisplayName("Can return error for invalid user id")
   void canReturnErrorForInvalidUserId() {
     StepVerifier
-      .create(scoreboardController.getSubmissionsByUserId("xyz"))
+      .create(scoreboardController.getScoreboardByUserId("xyz"))
       .expectError(ResponseStatusException.class)
       .verify();
   }
@@ -127,7 +127,7 @@ class ScoreboardControllerIT extends BaseIT {
   @DisplayName("Can return error if nonexistent module locator is given")
   void canReturnErrorForNonExistentModuleLocator() {
     StepVerifier
-      .create(scoreboardController.getSubmissionsByModuleLocator("non-existent"))
+      .create(scoreboardController.getScoreboardByModuleLocator("non-existent"))
       .expectError(ModuleNotFoundException.class)
       .verify();
   }
@@ -137,7 +137,7 @@ class ScoreboardControllerIT extends BaseIT {
   @DisplayName("Can return error for nonexistent user id")
   void canReturnErrorForNonExistentUserId() {
     StepVerifier
-      .create(scoreboardController.getSubmissionsByUserId(TestConstants.TEST_USER_ID))
+      .create(scoreboardController.getScoreboardByUserId(TestConstants.TEST_USER_ID))
       .expectError(UserNotFoundException.class)
       .verify();
   }
@@ -148,7 +148,7 @@ class ScoreboardControllerIT extends BaseIT {
   void canReturnZeroSubmissionsForModuleWithoutSubmissions() {
     integrationTestUtils.createStaticTestModule();
     StepVerifier
-      .create(scoreboardController.getSubmissionsByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .create(scoreboardController.getScoreboardByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
       .verifyComplete();
   }
 
@@ -157,7 +157,7 @@ class ScoreboardControllerIT extends BaseIT {
   @DisplayName("Can return zero submissions for user without submissions")
   void canReturnZeroSubmissionsForUserWithoutSubmissions() {
     final String userId = integrationTestUtils.createTestUser();
-    StepVerifier.create(scoreboardController.getSubmissionsByUserId(userId)).verifyComplete();
+    StepVerifier.create(scoreboardController.getScoreboardByUserId(userId)).verifyComplete();
   }
 
   @BeforeEach

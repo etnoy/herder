@@ -49,9 +49,6 @@ jobs:
 
       - name: Build
         run: ./gradlew assemble
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Test
         run: ./gradlew build jacocoTestReport sonarqube -x spotlessCheck

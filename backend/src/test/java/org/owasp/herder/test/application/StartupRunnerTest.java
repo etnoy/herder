@@ -38,9 +38,10 @@ import org.owasp.herder.module.csrf.CsrfTutorial;
 import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorial;
 import org.owasp.herder.module.xss.XssTutorial;
+import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.BaseTest;
-import org.owasp.herder.user.RefresherService;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Mono;
 
@@ -48,34 +49,37 @@ import reactor.core.publisher.Mono;
 @DisplayName("StartupRunner unit tests")
 class StartupRunnerTest extends BaseTest {
 
-  private StartupRunner startupRunner;
+  StartupRunner startupRunner;
 
   @Mock
-  private UserService userService;
+  UserService userService;
 
   @Mock
-  private ModuleService moduleService;
+  TeamService teamService;
 
   @Mock
-  private SubmissionService submissionService;
+  ModuleService moduleService;
 
   @Mock
-  private RefresherService refresherService;
+  SubmissionService submissionService;
 
   @Mock
-  private XssTutorial xssTutorial;
+  XssTutorial xssTutorial;
 
   @Mock
-  private SqlInjectionTutorial sqlInjectionTutorial;
+  SqlInjectionTutorial sqlInjectionTutorial;
 
   @Mock
-  private CsrfTutorial csrfTutorial;
+  CsrfTutorial csrfTutorial;
 
   @Mock
-  private FlagTutorial flagTutorial;
+  FlagTutorial flagTutorial;
 
   @Mock
-  private FlagHandler flagHandler;
+  FlagHandler flagHandler;
+
+  @Mock
+  ScoreboardService scoreboardService;
 
   @Test
   void run_NoArguments_Success() {
@@ -96,10 +100,10 @@ class StartupRunnerTest extends BaseTest {
     when(userService.existsByLoginName(any(String.class))).thenReturn(Mono.just(false));
     when(userService.existsByDisplayName(any(String.class))).thenReturn(Mono.just(false));
 
-    when(userService.teamExistsByDisplayName("Team 1")).thenReturn(Mono.just(true));
-    when(refresherService.refreshModuleLists()).thenReturn(Mono.empty());
-    when(refresherService.refreshSubmissionRanks()).thenReturn(Mono.empty());
-    when(refresherService.refreshScoreboard()).thenReturn(Mono.empty());
+    when(teamService.existsByDisplayName("Team 1")).thenReturn(Mono.just(true));
+    when(moduleService.refreshModuleLists()).thenReturn(Mono.empty());
+    when(submissionService.refreshSubmissionRanks()).thenReturn(Mono.empty());
+    when(scoreboardService.refreshScoreboard()).thenReturn(Mono.empty());
 
     assertDoesNotThrow(() -> startupRunner.run(null));
   }
@@ -108,6 +112,7 @@ class StartupRunnerTest extends BaseTest {
   void setup() {
     // Set up the system under test
 
-    startupRunner = new StartupRunner(userService, moduleService, submissionService, refresherService, flagTutorial);
+    startupRunner =
+      new StartupRunner(userService, teamService, moduleService, submissionService, scoreboardService, flagTutorial);
   }
 }

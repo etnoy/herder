@@ -19,52 +19,45 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.test.crypto;
+package org.owasp.herder.test.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import javax.crypto.Mac;
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.crypto.CryptoFactory;
 import org.owasp.herder.test.BaseTest;
-import org.owasp.herder.test.util.TestConstants;
+import org.owasp.herder.validation.PositiveDurationValidator;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("CryptoFactory unit tests")
-class CryptoFactoryTest extends BaseTest {
+@DisplayName("PositiveDurationValidator unit tests")
+class PositiveDurationValidatorTest extends BaseTest {
 
-  CryptoFactory cryptoFactory;
-
-  @Test
-  void getPrng_ReturnsSecureRandomInstance() throws NoSuchAlgorithmException {
-    assertThat(cryptoFactory.getPrng()).isInstanceOf(SecureRandom.class);
-  }
-
-  @Test
-  void getHmac_ReturnsMacInstance() throws NoSuchAlgorithmException {
-    assertThat(cryptoFactory.getHmac()).isInstanceOf(Mac.class);
-  }
-
-  @Test
-  void getHmacKey_ValidKey_ReturnsMacInstance() {
-    assertThat(cryptoFactory.getSecretKeySpec(TestConstants.TEST_BYTE_ARRAY)).isInstanceOf(Key.class);
-  }
-
-  @Test
-  void getHmacKey_NullKey_ThrowsIllegalArgumentException() {
-    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> cryptoFactory.getSecretKeySpec(null));
-  }
+  PositiveDurationValidator positiveDurationValidator;
 
   @BeforeEach
   void setup() {
-    cryptoFactory = new CryptoFactory();
+    positiveDurationValidator = new PositiveDurationValidator();
+  }
+
+  @Test
+  @DisplayName("A negative duration should fail validation")
+  void isValid_NegativeDuration_ShouldFailValidation() {
+    assertThat(positiveDurationValidator.isValid(Duration.ofDays(-1), null)).isFalse();
+  }
+
+  @Test
+  @DisplayName("A zero duration should pass validation")
+  void isValid_ZeroDuration_ShouldPassValidation() {
+    assertThat(positiveDurationValidator.isValid(Duration.ZERO, null)).isTrue();
+  }
+
+  @Test
+  @DisplayName("A positive duration should pass validation")
+  void isValid_PositiveDuration_ShouldPassValidation() {
+    assertThat(positiveDurationValidator.isValid(Duration.ofDays(1), null)).isTrue();
   }
 }

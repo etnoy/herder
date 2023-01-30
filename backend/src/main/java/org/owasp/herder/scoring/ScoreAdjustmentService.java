@@ -28,8 +28,8 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.owasp.herder.scoring.ScoreAdjustment.ScoreAdjustmentBuilder;
 import org.owasp.herder.user.TeamEntity;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserEntity;
-import org.owasp.herder.user.UserService;
 import org.owasp.herder.validation.ValidTeamId;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
@@ -43,7 +43,7 @@ public class ScoreAdjustmentService {
 
   private final ScoreAdjustmentRepository scoreAdjustmentRepository;
 
-  private final UserService userService;
+  private final TeamService teamService;
 
   private final Clock clock;
 
@@ -78,8 +78,8 @@ public class ScoreAdjustmentService {
     scoreAdjustmentBuilder.description(description);
     scoreAdjustmentBuilder.time(LocalDateTime.now(clock));
 
-    return userService
-      .getTeamById(teamId)
+    return teamService
+      .getById(teamId)
       .map(TeamEntity::getMembers)
       .map(members -> members.stream().map(UserEntity::getId).collect(Collectors.toCollection(ArrayList::new)))
       .map(scoreAdjustmentBuilder::userIds)

@@ -21,53 +21,7 @@
  */
 package org.owasp.herder.scoring;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.ToString;
-import lombok.Value;
-import lombok.With;
-
-@Value
-@Builder
-@AllArgsConstructor
-@With
-public class SanitizedRankedSubmission implements Serializable {
-
-  private static final long serialVersionUID = 1059641731788037532L;
-
-  @NonNull
-  String id;
-
-  @NonNull
-  SolverType principalType;
-
-  @NonNull
-  String displayName;
-
-  @NonNull
-  String moduleLocator;
-
-  @NonNull
-  String moduleName;
-
-  @NonNull
-  Long rank;
-
-  @NonNull
-  LocalDateTime time;
-
-  @ToString.Exclude
-  String flag;
-
-  @NonNull
-  Long baseScore;
-
-  @NonNull
-  Long bonusScore;
-
-  @NonNull
-  Long score;
+public enum SolverType {
+  USER,
+  TEAM,
 }

@@ -38,9 +38,11 @@ public class ModuleList implements Serializable {
 
   private static final long serialVersionUID = 8586975724586678796L;
 
+  // User id for whom the module list applies
   @Id
   String id;
 
+  // Team id for which the module list applies
   String teamId;
 
   @NonNull

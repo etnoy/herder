@@ -19,55 +19,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.scoring;
+package org.owasp.herder.validation;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.ToString;
-import lombok.Value;
-import lombok.With;
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import jakarta.validation.constraints.NotNull;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@Value
-@Builder
-@AllArgsConstructor
-@With
-public class SanitizedRankedSubmission implements Serializable {
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = PositiveDurationValidator.class)
+@NotNull(message = "{org.owasp.herder.ValidDuration.NullMessage}")
+public @interface ValidDuration {
+  String message() default "{org.owasp.herder.ValidDuration.message}";
 
-  private static final long serialVersionUID = 1059641731788037532L;
+  Class<?>[] groups() default {};
 
-  @NonNull
-  String id;
-
-  @NonNull
-  SolverType principalType;
-
-  @NonNull
-  String displayName;
-
-  @NonNull
-  String moduleLocator;
-
-  @NonNull
-  String moduleName;
-
-  @NonNull
-  Long rank;
-
-  @NonNull
-  LocalDateTime time;
-
-  @ToString.Exclude
-  String flag;
-
-  @NonNull
-  Long baseScore;
-
-  @NonNull
-  Long bonusScore;
-
-  @NonNull
-  Long score;
+  Class<? extends Payload>[] payload() default {};
 }

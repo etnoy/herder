@@ -22,8 +22,11 @@
 package org.owasp.herder.user;
 
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface TeamRepository extends ReactiveMongoRepository<TeamEntity, String> {
   public Mono<TeamEntity> findByDisplayName(final String displayName);
+
+  public Flux<TeamEntity> findAllByMembersId(final String userId);
 }

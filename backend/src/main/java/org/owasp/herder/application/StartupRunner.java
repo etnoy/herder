@@ -25,8 +25,9 @@ import lombok.RequiredArgsConstructor;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.module.flag.FlagTutorial;
+import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
-import org.owasp.herder.user.RefresherService;
+import org.owasp.herder.user.TeamService;
 import org.owasp.herder.user.UserService;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -40,11 +41,13 @@ public class StartupRunner implements ApplicationRunner {
 
   private final UserService userService;
 
+  private final TeamService teamService;
+
   private final ModuleService moduleService;
 
   private final SubmissionService submissionService;
 
-  private final RefresherService refresherService;
+  private final ScoreboardService scoreboardService;
 
   private final FlagTutorial flagTutorial;
 
@@ -73,9 +76,9 @@ public class StartupRunner implements ApplicationRunner {
       userId3 = userService.create("Test user 3").block();
     }
 
-    if (Boolean.FALSE.equals(userService.teamExistsByDisplayName("Team 1").block())) {
-      String teamId1 = userService.createTeam("Team 1").block();
-      String teamId2 = userService.createTeam("Team 2").block();
+    if (Boolean.FALSE.equals(teamService.existsByDisplayName("Team 1").block())) {
+      String teamId1 = teamService.create("Team 1").block();
+      String teamId2 = teamService.create("Team 2").block();
 
       final ModuleEntity flagTutorialModule = moduleService.findByLocator("flag-tutorial").block();
       if (flagTutorialModule != null) {
@@ -89,15 +92,19 @@ public class StartupRunner implements ApplicationRunner {
       }
 
       userService.addUserToTeam(userId1, teamId1).block();
-      userService.addUserToTeam(userId2, teamId1).block();
-      userService.addUserToTeam(userId3, teamId2).block();
+      teamService.addMember(teamId1, userService.getById(userId1).block()).block();
+      submissionService.setTeamIdOfUserSubmissions(userId1, teamId1).block();
 
-      refresherService.afterUserUpdate(userId1).block();
-      refresherService.afterUserUpdate(userId2).block();
-      refresherService.afterUserUpdate(userId3).block();
+      userService.addUserToTeam(userId2, teamId1).block();
+      teamService.addMember(teamId1, userService.getById(userId2).block()).block();
+      submissionService.setTeamIdOfUserSubmissions(userId2, teamId1).block();
+
+      userService.addUserToTeam(userId3, teamId2).block();
+      teamService.addMember(teamId2, userService.getById(userId3).block()).block();
+      submissionService.setTeamIdOfUserSubmissions(userId3, teamId2).block();
     }
-    refresherService.refreshModuleLists().block();
-    refresherService.refreshSubmissionRanks().block();
-    refresherService.refreshScoreboard().block();
+    moduleService.refreshModuleLists().block();
+    submissionService.refreshSubmissionRanks().block();
+    scoreboardService.refreshScoreboard().block();
   }
 }

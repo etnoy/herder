@@ -658,7 +658,6 @@ class FlagHandlerTest extends BaseTest {
 
     verify(moduleService, times(1)).findById(TestConstants.TEST_MODULE_ID);
 
-    // TODO: this is too many interactions, why 4?
     verify(mockModule, times(4)).isFlagStatic();
     verify(mockModule, times(2)).getKey();
     verify(configurationService, atLeast(1)).getServerKey();

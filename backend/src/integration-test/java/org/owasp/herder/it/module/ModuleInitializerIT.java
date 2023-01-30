@@ -33,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.exception.DuplicateModuleNameException;
+import org.owasp.herder.exception.ModuleInitializationException;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.BaseModule;
@@ -102,7 +103,9 @@ class ModuleInitializerIT extends BaseIT {
 
     applicationContext.registerBean(TestModuleWithInvalidBaseScore.class, () -> new TestModuleWithInvalidBaseScore());
 
-    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> moduleInitializer.initializeModules())
+      .isInstanceOf(ModuleInitializationException.class)
+      .hasMessageContaining("has invalid metadata");
   }
 
   @Test
@@ -117,7 +120,9 @@ class ModuleInitializerIT extends BaseIT {
 
     applicationContext.registerBean(TestModuleWithInvalidGoldBonus.class, () -> new TestModuleWithInvalidGoldBonus());
 
-    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> moduleInitializer.initializeModules())
+      .isInstanceOf(ModuleInitializationException.class)
+      .hasMessageContaining("has invalid metadata");
   }
 
   @Test
@@ -135,7 +140,9 @@ class ModuleInitializerIT extends BaseIT {
       () -> new TestModuleWithInvalidSilverBonus()
     );
 
-    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> moduleInitializer.initializeModules())
+      .isInstanceOf(ModuleInitializationException.class)
+      .hasMessageContaining("has invalid metadata");
   }
 
   @Test
@@ -153,7 +160,9 @@ class ModuleInitializerIT extends BaseIT {
       () -> new TestModuleWithInvalidBronzeBonus()
     );
 
-    assertThatThrownBy(() -> moduleInitializer.initializeModules()).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> moduleInitializer.initializeModules())
+      .isInstanceOf(ModuleInitializationException.class)
+      .hasMessageContaining("has invalid metadata");
   }
 
   @Test
