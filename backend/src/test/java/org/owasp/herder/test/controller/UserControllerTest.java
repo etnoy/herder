@@ -60,6 +60,13 @@ class UserControllerTest extends BaseTest {
   }
 
   @Test
+  void findAllSolvers_ValidId_CallsUserService() {
+    when(userService.findAllSolvers()).thenReturn(Flux.empty());
+    StepVerifier.create(userController.findAllSolvers()).verifyComplete();
+    verify(userService, times(1)).findAllSolvers();
+  }
+
+  @Test
   void findAll_NoUsersExist_ReturnsEmpty() {
     when(userService.findAllUsers()).thenReturn(Flux.empty());
     StepVerifier.create(userController.findAll()).verifyComplete();

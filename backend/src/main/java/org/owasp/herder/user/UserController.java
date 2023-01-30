@@ -61,7 +61,7 @@ public class UserController {
 
   @GetMapping(path = "solvers")
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Flux<SolverEntity> findAllPrincipals() {
+  public Flux<SolverEntity> findAllSolvers() {
     return userService.findAllSolvers();
   }
 
