@@ -30,14 +30,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.FlagSubmissionRateLimitException;
-import org.owasp.herder.exception.InvalidFlagStateException;
 import org.owasp.herder.exception.InvalidFlagSubmissionRateLimitException;
 import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.service.ConfigurationService;
-import org.owasp.herder.service.FlagSubmissionRateLimiter;
-import org.owasp.herder.service.InvalidFlagRateLimiter;
+import org.owasp.herder.service.RateLimiter;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.owasp.herder.validation.ValidFlag;
@@ -64,9 +62,9 @@ public class FlagHandler {
 
   private final CryptoService cryptoService;
 
-  private final FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+  private final RateLimiter flagSubmissionRateLimiter;
 
-  private final InvalidFlagRateLimiter invalidFlagRateLimiter;
+  private final RateLimiter invalidFlagRateLimiter;
 
   public Mono<String> getDynamicFlag(@ValidUserId final String userId, @ValidModuleLocator final String moduleLocator) {
     return getSaltedHmac(userId, moduleLocator, "flag").map(flag -> String.format(DYNAMIC_FLAG_FORMAT, flag));
@@ -85,7 +83,7 @@ public class FlagHandler {
         .switchIfEmpty(Mono.error(new ModuleNotFoundException("Could not find module with locator " + moduleLocator)))
         // Make sure that the flag isn't static
         .filter(foundModule -> !foundModule.isFlagStatic())
-        .switchIfEmpty(Mono.error(new InvalidFlagStateException("Cannot get dynamic flag if flag is static")))
+        .switchIfEmpty(Mono.error(new IllegalStateException("Cannot get dynamic flag if flag is static")))
         // Get module key and convert to bytes
         .map(ModuleEntity::getKey);
 
@@ -95,7 +93,7 @@ public class FlagHandler {
 
     return userKey
       .zipWith(moduleKey)
-      .map(tuple -> Bytes.concat(tuple.getT1(), tuple.getT2(), prefix.getBytes()))
+      .map(tuple -> Bytes.concat(prefix.getBytes(), tuple.getT1(), tuple.getT2()))
       .zipWith(serverKey)
       .map(tuple -> cryptoService.hmac(tuple.getT2(), tuple.getT1()))
       .map(BaseEncoding.base32().lowerCase().omitPadding()::encode);

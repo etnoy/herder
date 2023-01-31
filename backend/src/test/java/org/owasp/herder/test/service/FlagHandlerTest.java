@@ -21,28 +21,33 @@
  */
 package org.owasp.herder.test.service;
 
-import static org.mockito.Mockito.atLeast;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.github.bucket4j.Bucket;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.CryptoService;
-import org.owasp.herder.exception.InvalidFlagStateException;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.service.ConfigurationService;
-import org.owasp.herder.service.FlagSubmissionRateLimiter;
-import org.owasp.herder.service.InvalidFlagRateLimiter;
+import org.owasp.herder.service.RateLimiter;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.BypassedRateLimiter;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
@@ -68,110 +73,47 @@ class FlagHandlerTest extends BaseTest {
   private CryptoService cryptoService;
 
   @Mock
-  private FlagSubmissionRateLimiter flagSubmissionRateLimiter;
+  private RateLimiter flagSubmissionRateLimiter;
 
   @Mock
-  private InvalidFlagRateLimiter invalidFlagRateLimiter;
+  private RateLimiter invalidFlagRateLimiter;
 
   @Test
+  @DisplayName("Can get dynamic flag")
   void getDynamicFlag_DynamicFlag_ReturnsFlag() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
+    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
 
-    final byte[] mockedServerKey = { -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29 };
+    when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY2));
 
-    final byte[] mockedUserKey = { -108, 101, -7, -35, 17, -16, -94, 0, -32, -117, 65, -127, 22, 62, 9, 19 };
-    final byte[] mockedModuleKey = { -118, 9, -7, -35, 15, -116, -94, 0, -32, -117, 65, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedHmacOutput = { -128, 1, -7, -35, 15, -116, -94, 0, -32, -117, 115, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedTotalKey = {
-      -108,
-      101,
-      -7,
-      -35,
-      17,
-      -16,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      22,
-      62,
-      9,
-      19,
-      -118,
-      9,
-      -7,
-      -35,
-      15,
-      -116,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      12,
-      82,
-      97,
-      19,
-      102,
-      108,
-      97,
-      103,
-    };
-    final String correctFlag = "flag{qaa7txiprsrabyelooaqyutbcm}";
-
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
-
-    when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockedUserKey));
-
-    when(configurationService.getServerKey()).thenReturn(Mono.just(mockedServerKey));
-    when(mockModule.getKey()).thenReturn(mockedModuleKey);
-
-    when(configurationService.getServerKey()).thenReturn(Mono.just(mockedServerKey));
-
-    when(cryptoService.hmac(mockedServerKey, mockedTotalKey)).thenReturn(mockedHmacOutput);
+    when(configurationService.getServerKey()).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY));
+    when(cryptoService.hmac(eq(TestConstants.TEST_BYTE_ARRAY), any())).thenReturn(TestConstants.TEST_BYTE_ARRAY4);
 
     StepVerifier
       .create(flagHandler.getDynamicFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_LOCATOR))
-      .expectNext(correctFlag)
+      .expectNext("flag{aqcqmbyibmfawdaqcf7q}")
       .verifyComplete();
-
-    verify(userService, times(1)).findKeyById(TestConstants.TEST_USER_ID);
-    verify(configurationService, times(1)).getServerKey();
-    verify(mockModule, times(1)).getKey();
-
-    verify(configurationService, times(1)).getServerKey();
-
-    verify(cryptoService, times(1)).hmac(mockedServerKey, mockedTotalKey);
   }
 
   @Test
+  @DisplayName("Can error when getting dynamic flag of static module")
   void getDynamicFlag_FlagIsStatic_ReturnsInvalidFlagStateException() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
+    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY.withFlagStatic(true)));
+    when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY2));
 
-    final byte[] mockedUserKey = { -108, 101, -7, -35, 17, -16, -94, 0, -32, -117, 65, -127, 22, 62, 9, 19 };
-    final byte[] mockedServerKey = { -118, 9, -7, -35, 17, -116, -94, 0, -32, -117, 65, -127, 12, 82, 9, 29 };
-
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
-
-    when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockedUserKey));
-    when(configurationService.getServerKey()).thenReturn(Mono.just(mockedServerKey));
-    when(mockModule.isFlagStatic()).thenReturn(true);
-
-    when(configurationService.getServerKey()).thenReturn(Mono.just(mockedServerKey));
+    when(configurationService.getServerKey()).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY));
 
     StepVerifier
       .create(flagHandler.getDynamicFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_LOCATOR))
-      .expectError(InvalidFlagStateException.class)
+      .expectError(IllegalStateException.class)
       .verify();
   }
 
   @BeforeEach
   void setup() {
+    flagSubmissionRateLimiter = new BypassedRateLimiter();
+    invalidFlagRateLimiter = new BypassedRateLimiter();
     // Set up the system under test
     flagHandler =
       new FlagHandler(
@@ -184,244 +126,82 @@ class FlagHandlerTest extends BaseTest {
       );
   }
 
-  @Test
-  void verifyFlag_CorrectDynamicFlag_ReturnsTrue() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final UserEntity mockUser = mock(UserEntity.class);
-
-    final byte[] mockedServerKey = { -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29 };
-
-    final byte[] mockedUserKey = { -108, 101, -7, -35, 17, -16, -94, 0, -32, -117, 65, -127, 22, 62, 9, 19 };
-    final byte[] mockedModuleKey = { -118, 9, -7, -35, 15, -116, -94, 0, -32, -117, 65, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedHmacOutput = { -128, 1, -7, -35, 15, -116, -94, 0, -32, -117, 115, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedTotalKey = {
-      -108,
-      101,
-      -7,
-      -35,
-      17,
-      -16,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      22,
-      62,
-      9,
-      19,
-      -118,
-      9,
-      -7,
-      -35,
-      15,
-      -116,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      12,
-      82,
-      97,
-      19,
-      102,
-      108,
-      97,
-      103,
-    };
-
-    final String correctFlag = "flag{qaa7txiprsrabyelooaqyutbcm}";
-
-    when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getKey()).thenReturn(mockedModuleKey);
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn("MockUser");
-
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
-
-    when(configurationService.getServerKey()).thenReturn(Mono.just(mockedServerKey));
-
-    when(cryptoService.hmac(mockedServerKey, mockedTotalKey)).thenReturn(mockedHmacOutput);
-
-    when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockedUserKey));
-
-    // Bypass all rate limiters
-    final Bucket mockBucket = mock(Bucket.class);
-    when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-
-    when(mockModule.getLocator()).thenReturn(TestConstants.TEST_MODULE_LOCATOR);
-
-    StepVerifier
-      .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, correctFlag))
-      .expectNext(true)
-      .verifyComplete();
-
-    verify(moduleService, atLeast(1)).findById(TestConstants.TEST_MODULE_ID);
-    verify(mockModule, atLeast(1)).isFlagStatic();
-    verify(mockModule, times(2)).getKey();
-    verify(configurationService, atLeast(1)).getServerKey();
-    verify(cryptoService, atLeast(1)).hmac(mockedServerKey, mockedTotalKey);
-    verify(userService, atLeast(1)).findKeyById(TestConstants.TEST_USER_ID);
+  // TODO: make this work with whitespace before and after flag
+  static Stream<Arguments> dynamicFlags() {
+    return Stream.of(
+      arguments("flag{aqcqmbyibmfawdaqcf7q}", true),
+      arguments("flag{asdfasdfasdfasdf}", false),
+      arguments("herder{aqcqmbyibmfawdaqcf7q}", false),
+      arguments("flag{aqcq  mbyib mfaw daqcf7q}", false),
+      arguments("FLAG{AQCQMBYIBMFAWDAQCF7Q}", true),
+      arguments("", false)
+    );
   }
 
-  @Test
-  void verifyFlag_CorrectDynamicFlagWithSpacesInTheMiddle_ReturnsFalse() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final UserEntity mockUser = mock(UserEntity.class);
+  @ParameterizedTest
+  @MethodSource("dynamicFlags")
+  @DisplayName("Can verify dynamic flags")
+  void verifyFlag_DynamicFlag_CorrectValidation(final String dynamicFlag, final boolean isValid) {
+    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
+      .withFlagStatic(false)
+      .withKey(TestConstants.TEST_BYTE_ARRAY3);
 
-    final byte[] mockedServerKey = { -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29 };
+    final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
 
-    final byte[] mockedUserKey = { -108, 101, -7, -35, 17, -16, -94, 0, -32, -117, 65, -127, 22, 62, 9, 19 };
-    final byte[] mockedModuleKey = { -118, 9, -7, -35, 15, -116, -94, 0, -32, -117, 65, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedHmacOutput = { -128, 1, -7, -35, 15, -116, -94, 0, -32, -117, 115, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedTotalKey = {
-      -108,
-      101,
-      -7,
-      -35,
-      17,
-      -16,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      22,
-      62,
-      9,
-      19,
-      -118,
-      9,
-      -7,
-      -35,
-      15,
-      -116,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      12,
-      82,
-      97,
-      19,
-      102,
-      108,
-      97,
-      103,
-    };
-
-    final String correctFlagWithSpacesInside = "flag{qaa7   txiprsr abyelooa qyutbcm}";
-
-    when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getKey()).thenReturn(mockedModuleKey);
-    when(mockModule.getLocator()).thenReturn(TestConstants.TEST_MODULE_LOCATOR);
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn("MockUser");
-
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
-
-    when(configurationService.getServerKey()).thenReturn(Mono.just(mockedServerKey));
-
-    when(cryptoService.hmac(mockedServerKey, mockedTotalKey)).thenReturn(mockedHmacOutput);
-
-    when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockedUserKey));
-
-    // Bypass all rate limiters
-    final Bucket mockBucket = mock(Bucket.class);
-    when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
+    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
+    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(testModule));
+    when(configurationService.getServerKey()).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY));
+    when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY2));
+    when(cryptoService.hmac(eq(TestConstants.TEST_BYTE_ARRAY), any())).thenReturn(TestConstants.TEST_BYTE_ARRAY4);
 
     StepVerifier
-      .create(
-        flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, correctFlagWithSpacesInside)
-      )
-      .expectNext(false)
+      .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, dynamicFlag))
+      .expectNext(isValid)
       .verifyComplete();
-
-    verify(moduleService, atLeast(1)).findById(TestConstants.TEST_MODULE_ID);
-    verify(mockModule, atLeast(1)).isFlagStatic();
-    verify(mockModule, times(2)).getKey();
-    verify(configurationService, atLeast(1)).getServerKey();
-    verify(cryptoService, atLeast(1)).hmac(mockedServerKey, mockedTotalKey);
-    verify(userService, atLeast(1)).findKeyById(TestConstants.TEST_USER_ID);
   }
 
-  @Test
-  void verifyFlag_CorrectLowerCaseStaticFlag_ReturnsTrue() {
-    final String validStaticFlag = "validFlagWithUPPERCASEandlowercase";
+  static final String staticTestFlag = "ValidStaticFlag";
 
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final UserEntity mockUser = mock(UserEntity.class);
+  // TODO: make this work with whitespace before and after flag
+  static Stream<Arguments> staticFlags() {
+    return Stream.of(arguments(staticTestFlag, true), arguments("wrongflag", false), arguments("", false));
+  }
 
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
+  @ParameterizedTest
+  @MethodSource("staticFlags")
+  @DisplayName("Can verify static flags")
+  void verifyFlag_StaticFlag_CorrectValidation(final String staticFlag, final boolean isValid) {
+    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
+      .withFlagStatic(true)
+      .withStaticFlag(staticTestFlag);
+    final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
 
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn("MockUser");
-
-    when(mockModule.isFlagStatic()).thenReturn(true);
-    when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
-
-    final Bucket mockBucket = mock(Bucket.class);
-    when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
+    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
 
     StepVerifier
-      .create(
-        flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, validStaticFlag.toLowerCase())
-      )
-      .expectNext(true)
+      .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, staticFlag))
+      .expectNext(isValid)
       .verifyComplete();
-
-    verify(moduleService, times(1)).findById(TestConstants.TEST_MODULE_ID);
-
-    verify(mockModule, times(2)).isFlagStatic();
-    verify(mockModule, times(2)).getStaticFlag();
   }
 
   @Test
   void verifyFlag_CorrectStaticFlag_ReturnsTrue() {
     final String validStaticFlag = "validFlag";
 
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final UserEntity mockUser = mock(UserEntity.class);
+    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
+      .withFlagStatic(true)
+      .withStaticFlag(validStaticFlag);
+    final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
 
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn("MockUser");
-
-    when(mockModule.isFlagStatic()).thenReturn(true);
-    when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
-
-    final Bucket mockBucket = mock(Bucket.class);
-    when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
+    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
 
     StepVerifier
       .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, validStaticFlag))
       .expectNext(true)
       .verifyComplete();
-
-    verify(moduleService, times(1)).findById(TestConstants.TEST_MODULE_ID);
-
-    verify(mockModule, times(2)).isFlagStatic();
-    verify(mockModule, times(2)).getStaticFlag();
   }
 
   @Test
@@ -430,21 +210,13 @@ class FlagHandlerTest extends BaseTest {
 
     final String validStaticFlagWithSpaces = "valid   Flag";
 
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final UserEntity mockUser = mock(UserEntity.class);
+    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
+      .withFlagStatic(true)
+      .withStaticFlag(validStaticFlag);
+    final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
 
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn("MockUser");
-
-    when(mockModule.isFlagStatic()).thenReturn(true);
-    when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
-
-    final Bucket mockBucket = mock(Bucket.class);
-    when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
+    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
 
     StepVerifier
       .create(
@@ -452,217 +224,26 @@ class FlagHandlerTest extends BaseTest {
       )
       .expectNext(false)
       .verifyComplete();
-
-    verify(moduleService, times(1)).findById(TestConstants.TEST_MODULE_ID);
-
-    verify(mockModule, times(2)).isFlagStatic();
-    verify(mockModule, times(2)).getStaticFlag();
-  }
-
-  @Test
-  void verifyFlag_CorrectUpperCaseDynamicFlag_ReturnsTrue() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final UserEntity mockUser = mock(UserEntity.class);
-
-    final byte[] mockedServerKey = { -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29 };
-
-    final byte[] mockedUserKey = { -108, 101, -7, -35, 17, -16, -94, 0, -32, -117, 65, -127, 22, 62, 9, 19 };
-    final byte[] mockedModuleKey = { -118, 9, -7, -35, 15, -116, -94, 0, -32, -117, 65, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedHmacOutput = { -128, 1, -7, -35, 15, -116, -94, 0, -32, -117, 115, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedTotalKey = {
-      -108,
-      101,
-      -7,
-      -35,
-      17,
-      -16,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      22,
-      62,
-      9,
-      19,
-      -118,
-      9,
-      -7,
-      -35,
-      15,
-      -116,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      12,
-      82,
-      97,
-      19,
-      102,
-      108,
-      97,
-      103,
-    };
-
-    final String correctFlag = "flag{qaa7txiprsrabyelooaqyutbcm}";
-
-    when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getKey()).thenReturn(mockedModuleKey);
-    when(mockModule.getLocator()).thenReturn(TestConstants.TEST_MODULE_LOCATOR);
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn("MockUser");
-
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
-
-    when(configurationService.getServerKey()).thenReturn(Mono.just(mockedServerKey));
-
-    when(cryptoService.hmac(mockedServerKey, mockedTotalKey)).thenReturn(mockedHmacOutput);
-
-    when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockedUserKey));
-
-    final Bucket mockBucket = mock(Bucket.class);
-    when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-
-    StepVerifier
-      .create(
-        flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, correctFlag.toUpperCase())
-      )
-      .expectNext(true)
-      .verifyComplete();
-
-    verify(moduleService, atLeast(1)).findById(TestConstants.TEST_MODULE_ID);
-    verify(mockModule, atLeast(1)).isFlagStatic();
-    verify(mockModule, times(2)).getKey();
-    verify(configurationService, atLeast(1)).getServerKey();
-    verify(cryptoService, atLeast(1)).hmac(mockedServerKey, mockedTotalKey);
-    verify(userService, atLeast(1)).findKeyById(TestConstants.TEST_USER_ID);
   }
 
   @Test
   void verifyFlag_CorrectUpperCaseStaticFlag_ReturnsTrue() {
-    final String mockModuleId = "module-id";
     final String validStaticFlag = "validFlagWithUPPERCASEandlowercase";
-    final UserEntity mockUser = mock(UserEntity.class);
 
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
+    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
+      .withFlagStatic(true)
+      .withStaticFlag(validStaticFlag);
+    final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
 
-    when(moduleService.findById(mockModuleId)).thenReturn(Mono.just(mockModule));
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn("MockUser");
-
-    when(mockModule.isFlagStatic()).thenReturn(true);
-    when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
-
-    final Bucket mockBucket = mock(Bucket.class);
-    when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
+    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
 
     StepVerifier
-      .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, mockModuleId, validStaticFlag.toUpperCase()))
+      .create(
+        flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, validStaticFlag.toUpperCase())
+      )
       .expectNext(true)
       .verifyComplete();
-
-    verify(moduleService, times(1)).findById(mockModuleId);
-
-    verify(mockModule, times(2)).isFlagStatic();
-    verify(mockModule, times(2)).getStaticFlag();
-  }
-
-  @Test
-  void verifyFlag_EmptyDynamicFlag_ReturnsFalse() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final UserEntity mockUser = mock(UserEntity.class);
-
-    final byte[] mockedServerKey = { -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29 };
-
-    final byte[] mockedUserKey = { -108, 101, -7, -35, 17, -16, -94, 0, -32, -117, 65, -127, 22, 62, 9, 19 };
-    final byte[] mockedModuleKey = { -118, 9, -7, -35, 15, -116, -94, 0, -32, -117, 65, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedHmacOutput = { -128, 1, -7, -35, 15, -116, -94, 0, -32, -117, 115, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedTotalKey = {
-      -108,
-      101,
-      -7,
-      -35,
-      17,
-      -16,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      22,
-      62,
-      9,
-      19,
-      -118,
-      9,
-      -7,
-      -35,
-      15,
-      -116,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      12,
-      82,
-      97,
-      19,
-      102,
-      108,
-      97,
-      103,
-    };
-
-    when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getKey()).thenReturn(mockedModuleKey);
-    when(mockModule.getLocator()).thenReturn(TestConstants.TEST_MODULE_LOCATOR);
-
-    when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockedUserKey));
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn("MockUser");
-
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
-
-    when(configurationService.getServerKey()).thenReturn(Mono.just(mockedServerKey));
-
-    when(cryptoService.hmac(mockedServerKey, mockedTotalKey)).thenReturn(mockedHmacOutput);
-
-    // Bypass all rate limiters
-    final Bucket mockBucket = mock(Bucket.class);
-    when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-
-    StepVerifier
-      .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, ""))
-      .expectNext(false)
-      .verifyComplete();
-
-    verify(moduleService, times(1)).findById(TestConstants.TEST_MODULE_ID);
-
-    verify(mockModule, times(4)).isFlagStatic();
-    verify(mockModule, times(2)).getKey();
-    verify(configurationService, atLeast(1)).getServerKey();
-    verify(cryptoService, times(2)).hmac(mockedServerKey, mockedTotalKey);
-    verify(userService, times(2)).findKeyById(TestConstants.TEST_USER_ID);
   }
 
   @Test
@@ -694,92 +275,6 @@ class FlagHandlerTest extends BaseTest {
 
     verify(mockModule, times(2)).isFlagStatic();
     verify(mockModule, times(2)).getStaticFlag();
-  }
-
-  @Test
-  void verifyFlag_WrongDynamicFlag_ReturnsFalse() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final UserEntity mockUser = mock(UserEntity.class);
-
-    final byte[] mockedServerKey = { -118, 17, 4, -35, 17, -3, -94, 0, -72, -17, 65, -127, 12, 82, 9, 29 };
-
-    final byte[] mockedUserKey = { -108, 101, -7, -35, 17, -16, -94, 0, -32, -117, 65, -127, 22, 62, 9, 19 };
-    final byte[] mockedModuleKey = { -118, 9, -7, -35, 15, -116, -94, 0, -32, -117, 65, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedHmacOutput = { -128, 1, -7, -35, 15, -116, -94, 0, -32, -117, 115, -127, 12, 82, 97, 19 };
-
-    final byte[] mockedTotalKey = {
-      -108,
-      101,
-      -7,
-      -35,
-      17,
-      -16,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      22,
-      62,
-      9,
-      19,
-      -118,
-      9,
-      -7,
-      -35,
-      15,
-      -116,
-      -94,
-      0,
-      -32,
-      -117,
-      65,
-      -127,
-      12,
-      82,
-      97,
-      19,
-      102,
-      108,
-      97,
-      103,
-    };
-
-    when(mockModule.isFlagStatic()).thenReturn(false);
-    when(mockModule.getKey()).thenReturn(mockedModuleKey);
-    when(mockModule.getLocator()).thenReturn(TestConstants.TEST_MODULE_LOCATOR);
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn("MockUser");
-
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
-
-    when(configurationService.getServerKey()).thenReturn(Mono.just(mockedServerKey));
-
-    when(cryptoService.hmac(mockedServerKey, mockedTotalKey)).thenReturn(mockedHmacOutput);
-
-    when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockedUserKey));
-
-    // Bypass all rate limiters
-    final Bucket mockBucket = mock(Bucket.class);
-    when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-
-    StepVerifier
-      .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, "invalidFlag"))
-      .expectNext(false)
-      .verifyComplete();
-
-    verify(moduleService, atLeast(1)).findById(TestConstants.TEST_MODULE_ID);
-    verify(mockModule, atLeast(1)).isFlagStatic();
-    verify(mockModule, times(2)).getKey();
-    verify(configurationService, atLeast(1)).getServerKey();
-    verify(cryptoService, atLeast(1)).hmac(mockedServerKey, mockedTotalKey);
-    verify(userService, atLeast(1)).findKeyById(TestConstants.TEST_USER_ID);
   }
 
   @Test

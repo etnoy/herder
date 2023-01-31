@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 public final class InvalidFlagRateLimiter extends RateLimiter {
 
   @Override
-  LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder) {
+  protected LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder) {
     return bucketBuilder
       .addLimit(Bandwidth.simple(5, Duration.ofMinutes(5)))
       .addLimit(Bandwidth.simple(2, Duration.ofMinutes(1)));

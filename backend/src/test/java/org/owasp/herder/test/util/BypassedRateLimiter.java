@@ -19,13 +19,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.exception;
+package org.owasp.herder.test.util;
 
-public class InvalidFlagStateException extends RuntimeException {
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.local.LocalBucketBuilder;
+import java.time.Duration;
+import org.owasp.herder.service.RateLimiter;
+import org.springframework.stereotype.Service;
 
-  private static final long serialVersionUID = -4875847423419350969L;
+@Service
+public final class BypassedRateLimiter extends RateLimiter {
 
-  public InvalidFlagStateException(final String message) {
-    super(message);
+  @Override
+  protected LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder) {
+    return bucketBuilder.addLimit(Bandwidth.simple(1, Duration.ofNanos(1)));
   }
 }

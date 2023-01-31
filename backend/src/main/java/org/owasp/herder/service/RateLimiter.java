@@ -27,11 +27,11 @@ import java.util.HashMap;
 import org.springframework.stereotype.Service;
 
 @Service
-abstract class RateLimiter {
+public abstract class RateLimiter {
 
   private HashMap<String, Bucket> buckets = new HashMap<>();
 
-  abstract LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder);
+  protected abstract LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder);
 
   public Bucket resolveBucket(final String userId) {
     if (buckets.containsKey(userId)) {
