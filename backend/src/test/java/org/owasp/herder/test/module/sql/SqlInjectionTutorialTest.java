@@ -43,6 +43,7 @@ import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.r2dbc.BadSqlGrammarException;
+import org.springframework.r2dbc.UncategorizedR2dbcException;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec;
 import org.springframework.r2dbc.core.FetchSpec;
@@ -72,6 +73,7 @@ class SqlInjectionTutorialTest extends BaseTest {
 
   @SuppressWarnings("unchecked")
   @Test
+  @DisplayName("Can return a meaningful error to the user when encountering BadSqlGrammarException")
   void submitQuery_BadSqlGrammarException_ReturnsErrorToUser() {
     sqlInjectionTutorial = new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
@@ -110,6 +112,47 @@ class SqlInjectionTutorialTest extends BaseTest {
       .verifyComplete();
   }
 
+  @SuppressWarnings("unchecked")
+  @Test
+  @DisplayName("Can return a meaningful error to the user when encountering UncategorizedR2dbcException")
+  void submitQuery_UncategorizedR2dbcException_ReturnsErrorToUser() {
+    sqlInjectionTutorial = new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
+
+    when(keyService.generateRandomBytes(16)).thenReturn(TestConstants.TEST_BYTE_ARRAY);
+    when(flagHandler.getDynamicFlag(TestConstants.TEST_USER_ID, moduleLocator)).thenReturn(Mono.just(testFlag));
+
+    final DatabaseClient mockDatabaseClient = mock(DatabaseClient.class);
+    when(sqlInjectionDatabaseClientFactory.create(any(String.class))).thenReturn(mockDatabaseClient);
+
+    final GenericExecuteSpec mockExecuteSpec = mock(GenericExecuteSpec.class);
+
+    when(mockDatabaseClient.sql(any(String.class))).thenReturn(mockExecuteSpec);
+    when(mockExecuteSpec.then()).thenReturn(Mono.empty());
+
+    final FetchSpec<SqlInjectionTutorialRow> fetchSpec = mock(FetchSpec.class);
+
+    when(mockExecuteSpec.map(any(BiFunction.class))).thenReturn(fetchSpec);
+    when(fetchSpec.all())
+      .thenReturn(
+        Flux.error(
+          new UncategorizedR2dbcException(
+            "Error",
+            testQuery,
+            new R2dbcBadGrammarException(new R2dbcBadGrammarException("Syntax error, yo", new RuntimeException()))
+          )
+        )
+      );
+
+    StepVerifier
+      .create(sqlInjectionTutorial.submitQuery(TestConstants.TEST_USER_ID, testQuery))
+      .assertNext(row -> {
+        assertThat(row.getName()).isNull();
+        assertThat(row.getComment()).isNull();
+        assertThat(row.getError()).isEqualTo("Syntax error, yo");
+      })
+      .verifyComplete();
+  }
+
   @BeforeEach
   void setup() {
     // Set up the system under test
@@ -120,6 +163,7 @@ class SqlInjectionTutorialTest extends BaseTest {
 
   @SuppressWarnings("unchecked")
   @Test
+  @DisplayName("Can return a meaningful error to the user when encountering DataIntegrityViolationException")
   void submitQuery_DataIntegrityViolationException_ReturnsErrorToUser() {
     sqlInjectionTutorial = new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
@@ -163,6 +207,7 @@ class SqlInjectionTutorialTest extends BaseTest {
 
   @SuppressWarnings("unchecked")
   @Test
+  @DisplayName("Can error if encountering an unexpected exception")
   void submitQuery_RuntimeException_ThrowsException() {
     when(keyService.generateRandomBytes(16)).thenReturn(TestConstants.TEST_BYTE_ARRAY);
     when(flagHandler.getDynamicFlag(TestConstants.TEST_USER_ID, moduleLocator)).thenReturn(Mono.just(testFlag));
@@ -190,6 +235,7 @@ class SqlInjectionTutorialTest extends BaseTest {
 
   @SuppressWarnings("unchecked")
   @Test
+  @DisplayName("Can return a row if a valid query is given")
   void submitQuery_ValidQuery_ReturnsSqlInjectionTutorialRow() {
     when(flagHandler.getDynamicFlag(TestConstants.TEST_USER_ID, moduleLocator)).thenReturn(Mono.just(testFlag));
 
