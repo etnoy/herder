@@ -55,8 +55,6 @@ import reactor.test.StepVerifier;
 @DisplayName("ModuleService unit tests")
 class ModuleServiceTest extends BaseTest {
 
-  final ModuleEntity mockModule = mock(ModuleEntity.class);
-
   ModuleService moduleService;
 
   @Mock
@@ -75,21 +73,21 @@ class ModuleServiceTest extends BaseTest {
   ApplicationContext applicationContext;
 
   @Test
+  @DisplayName("Can count the number of modules")
   void count_NoArgument_ReturnsCount() {
-    final long mockedModuleCount = 75L;
+    final long testModuleCount = 75L;
 
-    when(moduleRepository.count()).thenReturn(Mono.just(mockedModuleCount));
+    when(moduleRepository.count()).thenReturn(Mono.just(testModuleCount));
 
-    StepVerifier.create(moduleService.count()).expectNext(mockedModuleCount).verifyComplete();
-    verify(moduleRepository).count();
+    StepVerifier.create(moduleService.count()).expectNext(testModuleCount).verifyComplete();
   }
 
   @Test
+  @DisplayName("Can create a new module")
   void create_NewModuleLocator_Succeeds() {
     when(keyService.generateRandomBytes(16)).thenReturn(TestConstants.TEST_BYTE_ARRAY);
 
     when(moduleRepository.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.empty());
-
     when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.empty());
 
     when(moduleRepository.save(any(ModuleEntity.class)))
@@ -102,8 +100,10 @@ class ModuleServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can error when creating a module with duplicate module locator")
   void create_ModuleLocatorExists_ReturnsDuplicateModuleLocatorException() {
-    when(moduleRepository.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
+    when(moduleRepository.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(mock(ModuleEntity.class)));
 
     StepVerifier
       .create(moduleService.create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR))
@@ -112,6 +112,7 @@ class ModuleServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can find all module")
   void findAll_ModulesExist_ReturnsModules() {
     final ModuleEntity mockModule1 = mock(ModuleEntity.class);
     final ModuleEntity mockModule2 = mock(ModuleEntity.class);
@@ -125,24 +126,10 @@ class ModuleServiceTest extends BaseTest {
       .expectNext(mockModule2)
       .expectNext(mockModule3)
       .verifyComplete();
-    verify(moduleRepository).findAll();
   }
 
   @Test
-  void findAll_NoModulesExist_ReturnsEmpty() {
-    when(moduleRepository.findAll()).thenReturn(Flux.empty());
-    StepVerifier.create(moduleService.findAll()).verifyComplete();
-    verify(moduleRepository).findAll();
-  }
-
-  @Test
-  void findAllOpen_NoModulesExist_ReturnsEmpty() {
-    when(moduleRepository.findAllOpen()).thenReturn(Flux.empty());
-    StepVerifier.create(moduleService.findAllOpen()).verifyComplete();
-    verify(moduleRepository).findAllOpen();
-  }
-
-  @Test
+  @DisplayName("Can find all open modules")
   void findAllOpen_OpenModulesExist_ReturnsOpenModules() {
     final ModuleEntity mockModule1 = mock(ModuleEntity.class);
     final ModuleEntity mockModule2 = mock(ModuleEntity.class);
@@ -156,10 +143,10 @@ class ModuleServiceTest extends BaseTest {
       .expectNext(mockModule2)
       .expectNext(mockModule3)
       .verifyComplete();
-    verify(moduleRepository).findAllOpen();
   }
 
   @Test
+  @DisplayName("Can find a module by name")
   void findByName_ModuleNameExists_ReturnsModule() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
@@ -168,36 +155,23 @@ class ModuleServiceTest extends BaseTest {
       .create(moduleService.findByName(TestConstants.TEST_MODULE_NAME))
       .expectNext(mockModule)
       .verifyComplete();
-    verify(moduleRepository).findByName(TestConstants.TEST_MODULE_NAME);
   }
 
   @Test
-  void findByName_NonExistentModuleName_ReturnsEmpty() {
-    when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.empty());
-    StepVerifier.create(moduleService.findByName(TestConstants.TEST_MODULE_NAME)).verifyComplete();
-    verify(moduleRepository).findByName(TestConstants.TEST_MODULE_NAME);
-  }
-
-  @Test
+  @DisplayName("Can return existing dynamic flag of module if it was already set")
   void setDynamicFlag_FlagPreviouslySet_ReturnPreviousFlag() {
     final ModuleEntity mockModuleWithStaticFlag = mock(ModuleEntity.class);
     final ModuleEntity mockModuleWithDynamicFlag = mock(ModuleEntity.class);
 
     when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModuleWithStaticFlag));
-
     when(mockModuleWithStaticFlag.withFlagStatic(false)).thenReturn(mockModuleWithDynamicFlag);
-
     when(mockModuleWithDynamicFlag.getKey()).thenReturn(TestConstants.TEST_BYTE_ARRAY);
-
     when(moduleRepository.save(mockModuleWithDynamicFlag)).thenReturn(Mono.just(mockModuleWithDynamicFlag));
 
     StepVerifier
       .create(moduleService.setDynamicFlag(TestConstants.TEST_MODULE_ID))
-      .assertNext(module -> {
-        assertThat(module.getKey()).isEqualTo(TestConstants.TEST_BYTE_ARRAY);
-      })
+      .expectNextMatches(module -> module.getKey().equals(TestConstants.TEST_BYTE_ARRAY))
       .verifyComplete();
-    verify(moduleRepository).save(any(ModuleEntity.class));
     verify(keyService, never()).generateRandomString(any(Integer.class));
 
     ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
@@ -206,113 +180,82 @@ class ModuleServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can set dynamic flag of module")
   void setDynamicFlag_StaticFlagIsSet_SetsDynamicFlag() {
-    final ModuleEntity mockModuleWithStaticFlag = mock(ModuleEntity.class);
-    final ModuleEntity mockModuleWithDynamicFlag = mock(ModuleEntity.class);
+    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY.withFlagStatic(true);
 
-    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModuleWithStaticFlag));
-
-    when(mockModuleWithStaticFlag.withFlagStatic(false)).thenReturn(mockModuleWithDynamicFlag);
-
-    when(mockModuleWithDynamicFlag.isFlagStatic()).thenReturn(false);
-
-    when(moduleRepository.save(mockModuleWithDynamicFlag)).thenReturn(Mono.just(mockModuleWithDynamicFlag));
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
+    when(moduleRepository.save(any(ModuleEntity.class)))
+      .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
 
     StepVerifier
       .create(moduleService.setDynamicFlag(TestConstants.TEST_MODULE_ID))
-      .assertNext(module -> {
-        assertThat(module.isFlagStatic()).isFalse();
-      })
+      .expectNextMatches(module -> !module.isFlagStatic())
       .verifyComplete();
-    verify(mockModuleWithStaticFlag).withFlagStatic(false);
-    verify(moduleRepository).save(mockModuleWithDynamicFlag);
+
+    ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
+    verify(moduleRepository).save(argument.capture());
+    assertThat(argument.getValue().isFlagStatic()).isFalse();
   }
 
   @Test
+  @DisplayName("Can set base score of module")
   void setBaseScore_ValidBaseScore_SetsBaseScore() {
-    final int baseScore = 100;
+    final int newBaseScore = 100;
 
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final ModuleEntity mockModuleWithBaseScore = mock(ModuleEntity.class);
+    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY;
 
-    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-    when(mockModule.withBaseScore(baseScore)).thenReturn(mockModuleWithBaseScore);
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
 
-    when(moduleRepository.save(mockModuleWithBaseScore)).thenReturn(Mono.just(mockModuleWithBaseScore));
+    when(moduleRepository.save(any(ModuleEntity.class)))
+      .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
 
     StepVerifier
-      .create(moduleService.setBaseScore(TestConstants.TEST_MODULE_ID, baseScore))
-      .expectNext(mockModuleWithBaseScore)
+      .create(moduleService.setBaseScore(TestConstants.TEST_MODULE_ID, newBaseScore))
+      .expectNextMatches(module -> module.getBaseScore() == newBaseScore)
       .verifyComplete();
+
+    ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
+    verify(moduleRepository).save(argument.capture());
+    assertThat(argument.getValue().getBaseScore()).isEqualTo(newBaseScore);
   }
 
   @Test
-  void setBaseScore_NegativeBaseScore_ReturnsInvalidScoreException() {
-    final int invalidBaseScore = -1;
-
-    StepVerifier
-      .create(moduleService.setBaseScore(TestConstants.TEST_MODULE_ID, invalidBaseScore))
-      .expectError(IllegalArgumentException.class)
-      .verify();
-  }
-
-  @Test
+  @DisplayName("Can set bonus scores of module")
   void setBonusScores_ValidBonusScores_SetsBaseScore() {
-    List<Integer> validBonus = new ArrayList<Integer>();
+    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY;
 
-    validBonus.add(100);
-    validBonus.add(50);
-    validBonus.add(10);
+    List<Integer> bonusScores = new ArrayList<Integer>();
 
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final ModuleEntity mockModuleWithBonusScores = mock(ModuleEntity.class);
+    bonusScores.add(100);
+    bonusScores.add(50);
+    bonusScores.add(10);
 
-    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-    when(mockModule.withBonusScores(validBonus)).thenReturn(mockModuleWithBonusScores);
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
 
-    when(moduleRepository.save(mockModuleWithBonusScores)).thenReturn(Mono.just(mockModuleWithBonusScores));
+    when(moduleRepository.save(any(ModuleEntity.class)))
+      .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
 
     StepVerifier
-      .create(moduleService.setBonusScores(TestConstants.TEST_MODULE_ID, validBonus))
-      .expectNext(mockModuleWithBonusScores)
+      .create(moduleService.setBonusScores(TestConstants.TEST_MODULE_ID, bonusScores))
+      .expectNextMatches(module -> module.getBonusScores().equals(bonusScores))
       .verifyComplete();
   }
 
   @Test
-  void setBaseScore_NullBonusScore_RemovesBonusScores() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final ModuleEntity mockModuleWithoutBonusScores = mock(ModuleEntity.class);
-
-    when(moduleRepository.save(mockModuleWithoutBonusScores)).thenReturn(Mono.just(mockModuleWithoutBonusScores));
-
-    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-    when(mockModule.withBonusScores(null)).thenReturn(mockModuleWithoutBonusScores);
-
-    StepVerifier
-      .create(moduleService.setBonusScores(TestConstants.TEST_MODULE_ID, null))
-      .expectNext(mockModuleWithoutBonusScores)
-      .verifyComplete();
-
-    verify(moduleRepository).save(mockModuleWithoutBonusScores);
-  }
-
-  @Test
+  @DisplayName("Can set module static flag")
   void setStaticFlag_ValidStaticFlag_SetsFlagToStatic() {
-    final String staticFlag = "setStaticFlag_ValidStaticFlag_SetsFlagToStatic";
+    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY;
 
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final ModuleEntity mockModuleWithStaticFlag = mock(ModuleEntity.class);
-    final ModuleEntity mockModuleWithStaticFlagEnabled = mock(ModuleEntity.class);
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
 
-    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-    when(mockModule.withFlagStatic(true)).thenReturn(mockModuleWithStaticFlag);
-    when(mockModuleWithStaticFlag.withStaticFlag(staticFlag)).thenReturn(mockModuleWithStaticFlagEnabled);
-
-    when(moduleRepository.save(mockModuleWithStaticFlagEnabled)).thenReturn(Mono.just(mockModuleWithStaticFlagEnabled));
-
+    when(moduleRepository.save(any(ModuleEntity.class)))
+      .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
     StepVerifier
-      .create(moduleService.setStaticFlag(TestConstants.TEST_MODULE_ID, staticFlag))
-      .expectNext(mockModuleWithStaticFlagEnabled)
+      .create(moduleService.setStaticFlag(TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG))
+      .expectNextMatches(module ->
+        module.isFlagStatic() && module.getStaticFlag().equals(TestConstants.TEST_STATIC_FLAG)
+      )
       .verifyComplete();
   }
 

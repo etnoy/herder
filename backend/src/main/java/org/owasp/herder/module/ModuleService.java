@@ -187,9 +187,6 @@ public class ModuleService {
     @ValidModuleId final String moduleId,
     @ValidModuleBaseScore final int baseScore
   ) {
-    if (baseScore < 0) {
-      return Mono.error(new IllegalArgumentException("Module base score cannot be a negative number"));
-    }
     return getById(moduleId).map(module -> module.withBaseScore(baseScore)).flatMap(moduleRepository::save);
   }
 
