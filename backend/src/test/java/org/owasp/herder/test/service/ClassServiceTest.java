@@ -53,7 +53,7 @@ class ClassServiceTest extends BaseTest {
   private ClassRepository classRepository;
 
   @Test
-  @DisplayName("count() call the count function of ClassRepository and return its same value")
+  @DisplayName("Can count the number of classes")
   void count_FiniteNumberOfClasses_ReturnsCount() {
     final long mockedClassCount = 156L;
 
