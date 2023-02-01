@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.module;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.owasp.herder.authentication.ControllerAuthentication;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,6 +35,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @Validated
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/")
 public class ModuleController {
 

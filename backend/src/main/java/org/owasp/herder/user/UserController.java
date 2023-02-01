@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.user;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Validated
 @RequestMapping("/api/v1/")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
   private final UserService userService;

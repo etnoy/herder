@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.authentication;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.owasp.herder.authentication.LoginResponse.LoginResponseBuilder;
@@ -78,6 +79,7 @@ public class LoginController {
 
   @PostMapping(path = "/impersonate")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @SecurityRequirement(name = "bearerAuth")
   public Mono<ResponseEntity<LoginResponse>> impersonate(
     @Valid @RequestBody final ImpersonationDto impersonatedUserId
   ) {

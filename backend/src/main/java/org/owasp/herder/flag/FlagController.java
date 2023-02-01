@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.flag;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.owasp.herder.authentication.ControllerAuthentication;
 import org.owasp.herder.exception.RateLimitException;
@@ -44,6 +45,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/")
+@SecurityRequirement(name = "bearerAuth")
 @Validated
 public class FlagController {
 
