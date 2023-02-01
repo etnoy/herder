@@ -44,22 +44,26 @@ class CryptoFactoryTest extends BaseTest {
   CryptoFactory cryptoFactory;
 
   @Test
+  @DisplayName("Can get secure random instance")
   void getPrng_ReturnsSecureRandomInstance() throws NoSuchAlgorithmException {
     assertThat(cryptoFactory.getPrng()).isInstanceOf(SecureRandom.class);
   }
 
   @Test
+  @DisplayName("Can get HMAC instance")
   void getHmac_ReturnsMacInstance() throws NoSuchAlgorithmException {
     assertThat(cryptoFactory.getHmac()).isInstanceOf(Mac.class);
   }
 
   @Test
-  void getHmacKey_ValidKey_ReturnsMacInstance() {
+  @DisplayName("Can get secret key spec")
+  void getSecretKeySpec_ValidKey_ReturnsMacInstance() {
     assertThat(cryptoFactory.getSecretKeySpec(TestConstants.TEST_BYTE_ARRAY)).isInstanceOf(Key.class);
   }
 
   @Test
-  void getHmacKey_NullKey_ThrowsIllegalArgumentException() {
+  @DisplayName("Can error when supplied with a null key")
+  void getSecretKeySpec_NullKey_ThrowsIllegalArgumentException() {
     assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> cryptoFactory.getSecretKeySpec(null));
   }
 

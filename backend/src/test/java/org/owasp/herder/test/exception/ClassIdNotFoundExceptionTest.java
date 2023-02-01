@@ -36,6 +36,7 @@ import org.owasp.herder.test.util.TestConstants;
 class ClassIdNotFoundExceptionTest extends BaseTest {
 
   @Test
+  @DisplayName("Can construct an exception")
   void messageConstructor_ValidMessage_MessageIncluded() {
     for (final String message : TestConstants.STRINGS) {
       ClassIdNotFoundException exception = new ClassIdNotFoundException(message);
