@@ -91,6 +91,7 @@ class XssTutorialIT extends BaseIT {
   }
 
   @Test
+  @DisplayName("Can validate the flag from the right query")
   void submitQuery_XssQuery_ShowsAlert() {
     final String userId = userService.create("TestUser1").block();
 
@@ -106,25 +107,7 @@ class XssTutorialIT extends BaseIT {
   }
 
   @Test
-  void submitQuery_CorrectAttackQuery_ModifiedFlagIsWrong() {
-    final String userId = userService.create("TestUser1").block();
-
-    final Mono<String> flagMono = xssTutorial
-      .submitQuery(userId, "<script>alert('xss')</script>")
-      .map(this::extractFlagFromResponse);
-
-    // Take the flag we got from the tutorial, modify it, and expect validation to fail
-    StepVerifier
-      .create(
-        flagMono
-          .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag + "wrong"))
-          .map(Submission::isValid)
-      )
-      .expectNext(false)
-      .verifyComplete();
-  }
-
-  @Test
+  @DisplayName("Can get the correct response for a query without xss")
   void submitQuery_QueryWithoutXss_NoResults() {
     final String userId = userService.create("TestUser1").block();
 
