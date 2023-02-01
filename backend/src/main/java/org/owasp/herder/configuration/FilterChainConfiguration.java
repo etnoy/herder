@@ -60,16 +60,12 @@ public class FilterChainConfiguration {
         Mono.fromRunnable(() -> serverWebExchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN))
       )
       .and()
-      //
       .csrf()
       .disable()
-      //
       .formLogin()
       .disable()
-      //
       .httpBasic()
       .disable()
-      //
       .authenticationManager(authenticationManager)
       .securityContextRepository(securityContextRepository)
       .authorizeExchange()
@@ -80,6 +76,14 @@ public class FilterChainConfiguration {
       .pathMatchers(HttpMethod.OPTIONS)
       .permitAll()
       .pathMatchers("/api/v1/login")
+      .permitAll()
+      .pathMatchers(
+        "/v3/api-docs/**",
+        "/v3/**",
+        "/webjars/swagger-ui/**",
+        "/webjars/swagger-ui.html",
+        "/swagger-ui.html"
+      )
       .permitAll()
       .anyExchange()
       .authenticated()

@@ -24,12 +24,8 @@ package org.owasp.herder.test.service;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.github.bucket4j.Bucket;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -81,8 +77,11 @@ class FlagHandlerTest extends BaseTest {
   @Test
   @DisplayName("Can get dynamic flag")
   void getDynamicFlag_DynamicFlag_ReturnsFlag() {
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
-      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
+    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
+      .withFlagStatic(false)
+      .withKey(TestConstants.TEST_BYTE_ARRAY3);
+
+    when(moduleService.getByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(testModule));
 
     when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY2));
 
@@ -98,7 +97,7 @@ class FlagHandlerTest extends BaseTest {
   @Test
   @DisplayName("Can error when getting dynamic flag of static module")
   void getDynamicFlag_FlagIsStatic_ReturnsInvalidFlagStateException() {
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+    when(moduleService.getByLocator(TestConstants.TEST_MODULE_LOCATOR))
       .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY.withFlagStatic(true)));
     when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY2));
 
@@ -140,7 +139,7 @@ class FlagHandlerTest extends BaseTest {
 
   @ParameterizedTest
   @MethodSource("dynamicFlags")
-  @DisplayName("Can verify dynamic flags")
+  @DisplayName("Can verify a dynamic flag")
   void verifyFlag_DynamicFlag_CorrectValidation(final String dynamicFlag, final boolean isValid) {
     final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
       .withFlagStatic(false)
@@ -149,8 +148,8 @@ class FlagHandlerTest extends BaseTest {
     final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
 
     when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(testModule));
+    when(moduleService.getById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
+    when(moduleService.getByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(testModule));
     when(configurationService.getServerKey()).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY));
     when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY2));
     when(cryptoService.hmac(eq(TestConstants.TEST_BYTE_ARRAY), any())).thenReturn(TestConstants.TEST_BYTE_ARRAY4);
@@ -165,7 +164,14 @@ class FlagHandlerTest extends BaseTest {
 
   // TODO: make this work with whitespace before and after flag
   static Stream<Arguments> staticFlags() {
-    return Stream.of(arguments(staticTestFlag, true), arguments("wrongflag", false), arguments("", false));
+    return Stream.of(
+      arguments(staticTestFlag, true),
+      arguments(staticTestFlag.toUpperCase(), true),
+      arguments(staticTestFlag.toLowerCase(), true),
+      arguments("Valid Static Flag", false),
+      arguments("wrongflag", false),
+      arguments("", false)
+    );
   }
 
   @ParameterizedTest
@@ -175,136 +181,13 @@ class FlagHandlerTest extends BaseTest {
     final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
       .withFlagStatic(true)
       .withStaticFlag(staticTestFlag);
-    final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
 
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(TestConstants.TEST_USER_ENTITY));
+    when(moduleService.getById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
 
     StepVerifier
       .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, staticFlag))
       .expectNext(isValid)
       .verifyComplete();
-  }
-
-  @Test
-  void verifyFlag_CorrectStaticFlag_ReturnsTrue() {
-    final String validStaticFlag = "validFlag";
-
-    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
-      .withFlagStatic(true)
-      .withStaticFlag(validStaticFlag);
-    final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
-
-    StepVerifier
-      .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, validStaticFlag))
-      .expectNext(true)
-      .verifyComplete();
-  }
-
-  @Test
-  void verifyFlag_CorrectStaticFlagWithSpacesInTheMiddle_ReturnsFalse() {
-    final String validStaticFlag = "validFlag";
-
-    final String validStaticFlagWithSpaces = "valid   Flag";
-
-    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
-      .withFlagStatic(true)
-      .withStaticFlag(validStaticFlag);
-    final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
-
-    StepVerifier
-      .create(
-        flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, validStaticFlagWithSpaces)
-      )
-      .expectNext(false)
-      .verifyComplete();
-  }
-
-  @Test
-  void verifyFlag_CorrectUpperCaseStaticFlag_ReturnsTrue() {
-    final String validStaticFlag = "validFlagWithUPPERCASEandlowercase";
-
-    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
-      .withFlagStatic(true)
-      .withStaticFlag(validStaticFlag);
-    final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
-
-    StepVerifier
-      .create(
-        flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, validStaticFlag.toUpperCase())
-      )
-      .expectNext(true)
-      .verifyComplete();
-  }
-
-  @Test
-  void verifyFlag_EmptyStaticFlag_ReturnsFalse() {
-    final String validStaticFlag = "validFlag";
-    final UserEntity mockUser = mock(UserEntity.class);
-
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-
-    when(mockModule.isFlagStatic()).thenReturn(true);
-    when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn("MockUser");
-
-    final Bucket mockBucket = mock(Bucket.class);
-    when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-
-    StepVerifier
-      .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, ""))
-      .expectNext(false)
-      .verifyComplete();
-
-    verify(moduleService, times(1)).findById(TestConstants.TEST_MODULE_ID);
-
-    verify(mockModule, times(2)).isFlagStatic();
-    verify(mockModule, times(2)).getStaticFlag();
-  }
-
-  @Test
-  void verifyFlag_WrongStaticFlag_ReturnsFalse() {
-    final String validStaticFlag = "validFlag";
-
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-    final UserEntity mockUser = mock(UserEntity.class);
-
-    when(moduleService.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(mockModule));
-
-    when(mockModule.isFlagStatic()).thenReturn(true);
-    when(mockModule.getStaticFlag()).thenReturn(validStaticFlag);
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn("MockUser");
-
-    final Bucket mockBucket = mock(Bucket.class);
-    when(flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(invalidFlagRateLimiter.resolveBucket(TestConstants.TEST_USER_ID)).thenReturn(mockBucket);
-    when(mockBucket.tryConsume(1)).thenReturn(true);
-
-    StepVerifier
-      .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, "invalidFlag"))
-      .expectNext(false)
-      .verifyComplete();
-
-    verify(moduleService, times(1)).findById(TestConstants.TEST_MODULE_ID);
-
-    verify(mockModule, times(2)).isFlagStatic();
-    verify(mockModule, times(2)).getStaticFlag();
   }
 }

@@ -31,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.owasp.herder.crypto.CryptoService;
 import org.owasp.herder.exception.FlagSubmissionRateLimitException;
 import org.owasp.herder.exception.InvalidFlagSubmissionRateLimitException;
-import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.service.ConfigurationService;
@@ -78,9 +77,7 @@ public class FlagHandler {
     final Mono<byte[]> moduleKey =
       // Find the module in the repo
       moduleService
-        .findByLocator(moduleLocator)
-        // Return error if module wasn't found
-        .switchIfEmpty(Mono.error(new ModuleNotFoundException("Could not find module with locator " + moduleLocator)))
+        .getByLocator(moduleLocator)
         // Make sure that the flag isn't static
         .filter(foundModule -> !foundModule.isFlagStatic())
         .switchIfEmpty(Mono.error(new IllegalStateException("Cannot get dynamic flag if flag is static")))
@@ -114,11 +111,8 @@ public class FlagHandler {
     }
 
     // Get the module from the repository
-    final Mono<ModuleEntity> moduleMono = moduleService.findById(moduleId);
-
-    final Mono<Boolean> isValid = moduleMono
-      // If the module wasn't found, return exception
-      .switchIfEmpty(Mono.error(new ModuleNotFoundException("Module id " + moduleId + " not found")))
+    final Mono<Boolean> isValid = moduleService
+      .getById(moduleId)
       // Check if the flag is valid
       .flatMap(module -> {
         if (module.isFlagStatic()) {
@@ -148,7 +142,11 @@ public class FlagHandler {
       .map(validFlag -> Boolean.TRUE.equals(validFlag) ? "valid" : "invalid");
 
     Mono
-      .zip(userService.getById(userId).map(UserEntity::getDisplayName), validText, moduleMono.map(ModuleEntity::getId))
+      .zip(
+        userService.getById(userId).map(UserEntity::getDisplayName),
+        validText,
+        moduleService.getById(moduleId).map(ModuleEntity::getId)
+      )
       .map(tuple ->
         "User " +
         tuple.getT1() +

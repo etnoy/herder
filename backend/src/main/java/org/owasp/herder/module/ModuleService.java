@@ -179,6 +179,19 @@ public class ModuleService {
       .switchIfEmpty(Mono.error(new ModuleNotFoundException("Module id " + moduleId + " not found")));
   }
 
+  /**
+   * Finds the specific module given by the module id. If the module id isn't found, it returns a
+   * mono exception
+   *
+   * @param moduleLocator
+   * @return the corresponding module entity
+   */
+  public Mono<ModuleEntity> getByLocator(@ValidModuleLocator final String moduleLocator) {
+    return moduleRepository
+      .findByLocator(moduleLocator)
+      .switchIfEmpty(Mono.error(new ModuleNotFoundException("Module locator " + moduleLocator + " not found")));
+  }
+
   public Mono<ModuleEntity> open(@ValidModuleId final String moduleId) {
     return getById(moduleId).map(module -> module.withOpen(true)).flatMap(moduleRepository::save);
   }
