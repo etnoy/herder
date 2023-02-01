@@ -115,10 +115,10 @@ public class FlagHandler {
       .flatMap(module -> {
         if (module.isFlagStatic()) {
           // Verifying a static flag
-          return Mono.just(module.getStaticFlag().equalsIgnoreCase(submittedFlag));
+          return Mono.just(module.getStaticFlag().equalsIgnoreCase(submittedFlag.trim()));
         } else {
           // Verifying a dynamic flag
-          return getDynamicFlag(userId, module.getLocator()).map(submittedFlag::equalsIgnoreCase);
+          return getDynamicFlag(userId, module.getLocator()).map(flag -> submittedFlag.trim().equalsIgnoreCase(flag));
         }
       })
       .flatMap(validationResult -> {

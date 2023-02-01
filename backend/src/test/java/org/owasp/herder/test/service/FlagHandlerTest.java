@@ -48,7 +48,6 @@ import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.InfiniteCapacityRateLimiter;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.test.util.ZeroCapacityRateLimiter;
-import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -144,11 +143,13 @@ class FlagHandlerTest extends BaseTest {
       );
   }
 
-  // TODO: make this work with whitespace before and after flag
   static Stream<Arguments> dynamicFlags() {
     return Stream.of(
       arguments("flag{aqcqmbyibmfawdaqcf7q}", true),
       arguments("flag{asdfasdfasdfasdf}", false),
+      arguments("flag{aqcqmbyibmfawdaqcf7q} ", true),
+      arguments(" flag{aqcqmbyibmfawdaqcf7q}", true),
+      arguments(" flag{aqcqmbyibmfawdaqcf7q} ", true),
       arguments("herder{aqcqmbyibmfawdaqcf7q}", false),
       arguments("flag{aqcq  mbyib mfaw daqcf7q}", false),
       arguments("FLAG{AQCQMBYIBMFAWDAQCF7Q}", true),
@@ -215,12 +216,14 @@ class FlagHandlerTest extends BaseTest {
 
   static final String staticTestFlag = "ValidStaticFlag";
 
-  // TODO: make this work with whitespace before and after flag
   static Stream<Arguments> staticFlags() {
     return Stream.of(
       arguments(staticTestFlag, true),
       arguments(staticTestFlag.toUpperCase(), true),
       arguments(staticTestFlag.toLowerCase(), true),
+      arguments(" " + staticTestFlag, true),
+      arguments(staticTestFlag + " ", true),
+      arguments(" " + staticTestFlag + " ", true),
       arguments("Valid Static Flag", false),
       arguments("wrongflag", false),
       arguments("", false)
