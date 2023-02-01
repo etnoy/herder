@@ -145,14 +145,27 @@ class FlagHandlerTest extends BaseTest {
 
   static Stream<Arguments> dynamicFlags() {
     return Stream.of(
+      // The valid dynamic flag
       arguments("flag{aqcqmbyibmfawdaqcf7q}", true),
+      // The wrong flag
+      arguments("blargh", false),
+      // The wrong flag, but with the right decorator
       arguments("flag{asdfasdfasdfasdf}", false),
+      // Correct flag, but with a space at the end
       arguments("flag{aqcqmbyibmfawdaqcf7q} ", true),
+      // Correct flag, but with a space at the beginning end
       arguments(" flag{aqcqmbyibmfawdaqcf7q}", true),
+      // Correct flag, but with a space at the beginning and end
       arguments(" flag{aqcqmbyibmfawdaqcf7q} ", true),
+      // Correct flag, but with a tab at the end
+      arguments("flag{aqcqmbyibmfawdaqcf7q}\t", true),
+      // Correct flag, but the wrong decorator
       arguments("herder{aqcqmbyibmfawdaqcf7q}", false),
+      // Correct flag, but with spaces in the middle
       arguments("flag{aqcq  mbyib mfaw daqcf7q}", false),
+      // Correct flag in uppercase
       arguments("FLAG{AQCQMBYIBMFAWDAQCF7Q}", true),
+      // Empty flag
       arguments("", false)
     );
   }
@@ -218,14 +231,25 @@ class FlagHandlerTest extends BaseTest {
 
   static Stream<Arguments> staticFlags() {
     return Stream.of(
+      // The correct flag
       arguments(staticTestFlag, true),
+      // The correct flag in uppercase
       arguments(staticTestFlag.toUpperCase(), true),
+      // The correct flag in lowercase
       arguments(staticTestFlag.toLowerCase(), true),
+      // The correct flag with a space at the beginning
       arguments(" " + staticTestFlag, true),
+      // The correct flag with a space at the end
       arguments(staticTestFlag + " ", true),
+      // The correct flag with spaces at the beginning and end
       arguments(" " + staticTestFlag + " ", true),
+      // The correct flag with spaces in the middle
       arguments("Valid Static Flag", false),
+      // The wrong flag
       arguments("wrongflag", false),
+      // The correct flag with a tab at the end
+      arguments(staticTestFlag + "\t", true),
+      // An empty flag
       arguments("", false)
     );
   }
