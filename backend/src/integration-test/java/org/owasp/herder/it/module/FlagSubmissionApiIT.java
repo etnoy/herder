@@ -158,8 +158,6 @@ class FlagSubmissionApiIT extends BaseIT {
       @DisplayName("should be accepted")
       void canAcceptValidStaticFlag(final String validFlag) {
         moduleService.setStaticFlag(moduleId, validFlag).block();
-        System.out.println("|" + validFlag + "|");
-        System.out.println("|" + validFlag.trim() + "|");
 
         StepVerifier
           .create(
