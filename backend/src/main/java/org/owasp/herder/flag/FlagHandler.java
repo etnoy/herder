@@ -35,7 +35,6 @@ import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.service.ConfigurationService;
 import org.owasp.herder.service.RateLimiter;
-import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.owasp.herder.validation.ValidFlag;
 import org.owasp.herder.validation.ValidModuleId;
@@ -110,8 +109,7 @@ public class FlagHandler {
       return Mono.error(new FlagSubmissionRateLimitException());
     }
 
-    // Get the module from the repository
-    final Mono<Boolean> isValid = moduleService
+    return moduleService
       .getById(moduleId)
       // Check if the flag is valid
       .flatMap(module -> {
@@ -135,30 +133,5 @@ public class FlagHandler {
         }
         return Mono.just(validationResult);
       });
-
-    // Do some logging. First, check if error occurred and then print logs
-    final Mono<String> validText = isValid
-      .onErrorReturn(false)
-      .map(validFlag -> Boolean.TRUE.equals(validFlag) ? "valid" : "invalid");
-
-    Mono
-      .zip(
-        userService.getById(userId).map(UserEntity::getDisplayName),
-        validText,
-        moduleService.getById(moduleId).map(ModuleEntity::getId)
-      )
-      .map(tuple ->
-        "User " +
-        tuple.getT1() +
-        " submitted " +
-        tuple.getT2() +
-        " flag " +
-        submittedFlag +
-        " to module " +
-        tuple.getT3()
-      )
-      .subscribe(log::debug);
-
-    return isValid;
   }
 }

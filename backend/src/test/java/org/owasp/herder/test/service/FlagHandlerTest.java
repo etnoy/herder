@@ -37,14 +37,17 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.CryptoService;
+import org.owasp.herder.exception.FlagSubmissionRateLimitException;
+import org.owasp.herder.exception.InvalidFlagSubmissionRateLimitException;
 import org.owasp.herder.flag.FlagHandler;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.service.ConfigurationService;
 import org.owasp.herder.service.RateLimiter;
 import org.owasp.herder.test.BaseTest;
-import org.owasp.herder.test.util.BypassedRateLimiter;
+import org.owasp.herder.test.util.InfiniteCapacityRateLimiter;
 import org.owasp.herder.test.util.TestConstants;
+import org.owasp.herder.test.util.ZeroCapacityRateLimiter;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Mono;
@@ -111,9 +114,25 @@ class FlagHandlerTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    flagSubmissionRateLimiter = new BypassedRateLimiter();
-    invalidFlagRateLimiter = new BypassedRateLimiter();
-    // Set up the system under test
+    setFlagSubmissionRateLimiter(new InfiniteCapacityRateLimiter());
+    setInvalidFlagRateLimiter(new InfiniteCapacityRateLimiter());
+  }
+
+  void setFlagSubmissionRateLimiter(final RateLimiter rateLimiter) {
+    flagSubmissionRateLimiter = rateLimiter;
+    flagHandler =
+      new FlagHandler(
+        moduleService,
+        userService,
+        configurationService,
+        cryptoService,
+        flagSubmissionRateLimiter,
+        invalidFlagRateLimiter
+      );
+  }
+
+  void setInvalidFlagRateLimiter(final RateLimiter rateLimiter) {
+    invalidFlagRateLimiter = rateLimiter;
     flagHandler =
       new FlagHandler(
         moduleService,
@@ -145,9 +164,6 @@ class FlagHandlerTest extends BaseTest {
       .withFlagStatic(false)
       .withKey(TestConstants.TEST_BYTE_ARRAY3);
 
-    final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
-
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
     when(moduleService.getById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
     when(moduleService.getByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(testModule));
     when(configurationService.getServerKey()).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY));
@@ -158,6 +174,43 @@ class FlagHandlerTest extends BaseTest {
       .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, dynamicFlag))
       .expectNext(isValid)
       .verifyComplete();
+  }
+
+  @ParameterizedTest
+  @MethodSource("dynamicFlags")
+  @DisplayName("Can error when rate limited on flag submission")
+  void verifyFlag_FlagSubmissionRateLimited_RateLimitException(final String dynamicFlag, final boolean isValid) {
+    setFlagSubmissionRateLimiter(new ZeroCapacityRateLimiter());
+
+    flagSubmissionRateLimiter.resolveBucket(TestConstants.TEST_USER_ID).tryConsume(1);
+
+    StepVerifier
+      .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, dynamicFlag))
+      .expectError(FlagSubmissionRateLimitException.class)
+      .verify();
+  }
+
+  @Test
+  @DisplayName("Can error when rate limited on flag submission")
+  void verifyFlag_InvalidFlagRateLimited_RateLimitException() {
+    setInvalidFlagRateLimiter(new ZeroCapacityRateLimiter());
+
+    invalidFlagRateLimiter.resolveBucket(TestConstants.TEST_USER_ID).tryConsume(1);
+
+    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY
+      .withFlagStatic(false)
+      .withKey(TestConstants.TEST_BYTE_ARRAY3);
+
+    when(moduleService.getById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
+    when(moduleService.getByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(testModule));
+    when(configurationService.getServerKey()).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY));
+    when(userService.findKeyById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(TestConstants.TEST_BYTE_ARRAY2));
+    when(cryptoService.hmac(eq(TestConstants.TEST_BYTE_ARRAY), any())).thenReturn(TestConstants.TEST_BYTE_ARRAY4);
+
+    StepVerifier
+      .create(flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, ""))
+      .expectError(InvalidFlagSubmissionRateLimitException.class)
+      .verify();
   }
 
   static final String staticTestFlag = "ValidStaticFlag";
@@ -182,7 +235,6 @@ class FlagHandlerTest extends BaseTest {
       .withFlagStatic(true)
       .withStaticFlag(staticTestFlag);
 
-    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(TestConstants.TEST_USER_ENTITY));
     when(moduleService.getById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
 
     StepVerifier

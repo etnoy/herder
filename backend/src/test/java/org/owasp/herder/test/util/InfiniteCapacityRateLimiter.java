@@ -28,7 +28,7 @@ import org.owasp.herder.service.RateLimiter;
 import org.springframework.stereotype.Service;
 
 @Service
-public final class BypassedRateLimiter extends RateLimiter {
+public final class InfiniteCapacityRateLimiter extends RateLimiter {
 
   @Override
   protected LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder) {
