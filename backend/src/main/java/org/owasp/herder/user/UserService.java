@@ -267,7 +267,7 @@ public class UserService {
     log.info("Demoting user with id " + userId + " to user");
 
     return getById(userId)
-      .filter(user -> user.isAdmin())
+      .filter(UserEntity::isAdmin)
       .map(user -> user.withAdmin(false))
       .flatMap(user -> {
         kick(userId);
