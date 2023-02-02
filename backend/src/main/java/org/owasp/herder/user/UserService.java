@@ -249,6 +249,7 @@ public class UserService {
           .withDeleted(true)
           .withDisplayName("")
           .withSuspensionMessage(null)
+          .withSuspendedUntil(null)
           .withAdmin(false)
       )
       .flatMap(userRepository::save)
@@ -265,10 +266,13 @@ public class UserService {
   public Mono<Void> demote(@ValidUserId final String userId) {
     log.info("Demoting user with id " + userId + " to user");
 
-    return findById(userId)
+    return getById(userId)
+      .filter(user -> user.isAdmin())
       .map(user -> user.withAdmin(false))
-      .flatMap(userRepository::save)
-      .doOnSuccess(u -> kick(userId))
+      .flatMap(user -> {
+        kick(userId);
+        return userRepository.save(user);
+      })
       .then();
   }
 
@@ -476,10 +480,13 @@ public class UserService {
   public Mono<Void> promote(@ValidUserId final String userId) {
     log.info("Promoting user with id " + userId + " to admin");
 
-    return findById(userId)
+    return getById(userId)
+      .filter(user -> !user.isAdmin())
       .map(user -> user.withAdmin(true))
-      .flatMap(userRepository::save)
-      .doOnSuccess(u -> kick(userId))
+      .flatMap(user -> {
+        kick(userId);
+        return userRepository.save(user);
+      })
       .then();
   }
 
