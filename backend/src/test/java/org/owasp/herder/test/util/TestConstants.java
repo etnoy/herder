@@ -154,11 +154,14 @@ public final class TestConstants {
   public static final String TEST_MODULE_TAG_NAME = "test-tag";
 
   public static final String TEST_STATIC_FLAG = "Static Test Flag 123 456";
+  public static final String TEST_DYNAMIC_FLAG = "flag{123456789abcdef}";
 
   public static final String TEST_USER_ID = "abcdef123456789012345678";
   public static final String TEST_USER_ID2 = "abcdef123456789012345679";
 
   public static final String TEST_CLASS_ID = "abcdef1234567890abcd5678";
+
+  public static final String TEST_CSRF_PSEUDONYM = "a-target";
 
   public static final String VERY_LONG_STRING =
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
