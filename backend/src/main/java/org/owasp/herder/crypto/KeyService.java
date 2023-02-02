@@ -26,10 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.owasp.herder.exception.RngException;
-import org.owasp.herder.validation.ValidKey;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -46,18 +43,6 @@ public class KeyService {
     return randomBytes;
   }
 
-  public String convertByteKeyToString(final @ValidKey byte[] keyBytes) {
-    return new String(keyBytes, StandardCharsets.US_ASCII);
-  }
-
-  public String bytesToHexString(final byte[] bytes) {
-    return Hex.encodeHexString(bytes, true);
-  }
-
-  public byte[] hexStringToBytes(final String stringFlag) throws DecoderException {
-    return Hex.decodeHex(stringFlag);
-  }
-
   public byte[] generateRandomBytes(final @Min(1) int numberOfBytes) {
     try {
       final SecureRandom prng = cryptoFactory.getPrng();
@@ -68,6 +53,6 @@ public class KeyService {
   }
 
   public String generateRandomString(final @Min(1) int numberOfBytes) {
-    return convertByteKeyToString(generateRandomBytes(numberOfBytes));
+    return new String(generateRandomBytes(numberOfBytes), StandardCharsets.US_ASCII);
   }
 }

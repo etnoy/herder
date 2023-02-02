@@ -35,11 +35,13 @@ import org.owasp.herder.test.util.TestConstants;
 class XssEvaluationExceptionTest {
 
   @Test
+  @DisplayName("Can create exception with no args constructor")
   void noArgsConstructor_NoArguments_ReturnsException() {
     assertThat(new XssEvaluationException()).isInstanceOf(XssEvaluationException.class);
   }
 
   @Test
+  @DisplayName("Can create exception with message constructor")
   void messageConstructor_ValidMessage_MessageIncluded() {
     for (final String message : TestConstants.STRINGS) {
       XssEvaluationException exception = new XssEvaluationException(message);
@@ -48,6 +50,7 @@ class XssEvaluationExceptionTest {
   }
 
   @Test
+  @DisplayName("Can create exception with message and exception constructor")
   void messageExceptionConstructor_ValidMessageAndException_MessageIncluded() {
     for (final String message : TestConstants.STRINGS) {
       XssEvaluationException exception = new XssEvaluationException(message, new RuntimeException());
@@ -57,6 +60,7 @@ class XssEvaluationExceptionTest {
   }
 
   @Test
+  @DisplayName("Can create exception with exception constructor")
   void exceptionConstructor_ValidException_MessageIncluded() {
     XssEvaluationException exception = new XssEvaluationException(new RuntimeException());
     assertThat(exception.getCause()).isInstanceOf(RuntimeException.class);
