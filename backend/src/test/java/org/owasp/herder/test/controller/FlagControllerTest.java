@@ -67,12 +67,13 @@ class FlagControllerTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     flagController = new FlagController(controllerAuthentication, moduleService, submissionService, scoreboardService);
   }
 
+  //TODO: cleanup
   @Test
-  void submitFlag_UserNotAuthenticated_ReturnsException() {
+  @DisplayName("Can error when submitting flag without being authenticated")
+  void submitFlag_UserNotAuthenticated_Errors() {
     final String flag = "validflag";
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
@@ -89,6 +90,7 @@ class FlagControllerTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can submit flag")
   void submitFlag_UserAuthenticatedAndValidFlagSubmitted_ReturnsValidSubmission() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 

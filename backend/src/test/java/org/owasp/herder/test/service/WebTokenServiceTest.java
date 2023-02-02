@@ -348,7 +348,6 @@ class WebTokenServiceTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     webTokenService = new WebTokenService(webTokenKeyManager, webTokenClock);
   }
 

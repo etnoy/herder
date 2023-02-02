@@ -54,7 +54,6 @@ class CsrfTutorialTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     csrfTutorial = new CsrfTutorial(csrfService, flagHandler);
     locator = csrfTutorial.getLocator();
   }

@@ -52,11 +52,12 @@ class CsrfTutorialControllerTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     csrfTutorialController = new CsrfTutorialController(csrfTutorial, controllerAuthentication);
   }
 
+  // TODO: cleanup
   @Test
+  @DisplayName("Can get tutorial")
   void tutorial_TutorialCreated_ReturnsTutorial() {
     final String mockUserId = "id";
 
@@ -70,7 +71,8 @@ class CsrfTutorialControllerTest extends BaseTest {
   }
 
   @Test
-  void activate_TutorialCreated_ReturnsTutorial() {
+  @DisplayName("Can perform a CSRF attack")
+  void attack_TutorialCreated_ReturnsTutorial() {
     final String mockUserId = "id";
     final String mockPseudonym = "abcd123";
 

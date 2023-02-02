@@ -151,11 +151,11 @@ public class ModuleService {
     return moduleRepository.findByName(moduleName);
   }
 
-  public Mono<ModuleListItem> findListItemByLocator(
+  public Mono<ModuleListItem> findListItemByUserIdAndLocator(
     @ValidUserId final String userId,
     @ValidModuleLocator final String moduleLocator
   ) {
-    return moduleListRepository.findListItemByLocator(userId, moduleLocator);
+    return moduleListRepository.findListItemByUserIdAndLocator(userId, moduleLocator);
   }
 
   public Mono<ModuleList> findModuleListByTeamId(@ValidTeamId final String teamId) {

@@ -53,6 +53,7 @@ class CryptoServiceTest extends BaseTest {
   CryptoFactory cryptoFactory;
 
   @Test
+  @DisplayName("Can error when cryptofactory throws NoSuchAlgorithmException")
   void hmac_GetHmacThrowsNoSuchAlgorithmException_ThrowsCryptographicException() throws NoSuchAlgorithmException {
     when(cryptoFactory.getHmac()).thenThrow(new NoSuchAlgorithmException());
     assertThatExceptionOfType(CryptographicException.class)
@@ -60,6 +61,7 @@ class CryptoServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can error when cryptofactory throws CryptographicException")
   void hmac_InvalidKeyException_ThrowsCryptographicException() throws Exception {
     Mac mockMac = mock(Mac.class);
     when(cryptoFactory.getHmac()).thenReturn(mockMac);
@@ -74,6 +76,7 @@ class CryptoServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can perform hmac")
   void hmac_ValidData_ReturnsHash() throws NoSuchAlgorithmException {
     Mac mockMac = mock(Mac.class);
     when(cryptoFactory.getHmac()).thenReturn(mockMac);

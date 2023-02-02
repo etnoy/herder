@@ -95,7 +95,7 @@ class EntityIdValidationIT extends BaseIT {
   @DisplayName("in moduleService.findByLocatorWithSolutionStatus()")
   void moduleService_findByLocatorWithSolutionStatus(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-      () -> moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR),
+      () -> moduleService.findListItemByUserIdAndLocator(userId, TestConstants.TEST_MODULE_LOCATOR),
       containingMessage
     );
   }

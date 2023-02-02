@@ -64,7 +64,8 @@ class LoginControllerTest extends BaseTest {
   ControllerAuthentication controllerAuthentication;
 
   @Test
-  void login_InvalidCredentials_Returns401() {
+  @DisplayName("Can error when logging in with bad credentials")
+  void login_InvalidCredentials_Errors() {
     final String userName = "user";
     final String password = "password";
     final String badCredentials = "Invalid username or password";
@@ -82,6 +83,7 @@ class LoginControllerTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can return token when logging in")
   void login_ValidCredentials_ReturnsToken() {
     final String userName = "user";
     final String password = "password";
@@ -109,6 +111,7 @@ class LoginControllerTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can register a new user")
   void register_ValidData_NoError() {
     final String displayName = "displayName";
     final String userName = "user";
@@ -127,7 +130,6 @@ class LoginControllerTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     loginController = new LoginController(userService, webTokenService, passwordEncoder, controllerAuthentication);
   }
 }

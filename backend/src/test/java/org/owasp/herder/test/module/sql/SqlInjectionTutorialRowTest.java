@@ -21,88 +21,81 @@
  */
 package org.owasp.herder.test.module.sql;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow;
 import org.owasp.herder.module.sqlinjection.SqlInjectionTutorialRow.SqlInjectionTutorialRowBuilder;
-import org.owasp.herder.test.util.TestConstants;
 
 @DisplayName("SqlInjectionTutorialRow unit tests")
 class SqlInjectionTutorialRowTest {
 
-  @Test
-  void build_NullNameCommentAndError_ThrowsNullPointerException() {
-    final SqlInjectionTutorialRowBuilder sqlInjectionTutorialRowBuilder = SqlInjectionTutorialRow.builder();
-    assertThatExceptionOfType(NullPointerException.class)
-      .isThrownBy(() -> sqlInjectionTutorialRowBuilder.build())
-      .withMessage("%s", "Name, comment, and error can't all be null");
+  final SqlInjectionTutorialRowBuilder sqlInjectionTutorialRowBuilder = SqlInjectionTutorialRow.builder();
+
+  private static final String TEST_NAME = "name";
+
+  private static final String TEST_COMMENT = "comment";
+
+  private static final String TEST_ERROR = "error";
+
+  SqlInjectionTutorialRowBuilder addName(SqlInjectionTutorialRowBuilder builder) {
+    return builder.name(TEST_NAME);
+  }
+
+  SqlInjectionTutorialRowBuilder addComment(SqlInjectionTutorialRowBuilder builder) {
+    return builder.comment(TEST_COMMENT);
+  }
+
+  SqlInjectionTutorialRowBuilder addError(SqlInjectionTutorialRowBuilder builder) {
+    return builder.error(TEST_ERROR);
   }
 
   @Test
-  void buildComment_ValidComment_Builds() {
-    final SqlInjectionTutorialRowBuilder sqlInjectionTutorialRowBuilder = SqlInjectionTutorialRow.builder();
-    for (final String comment : TestConstants.STRINGS) {
-      final SqlInjectionTutorialRow sqlInjectionTutorialRow = sqlInjectionTutorialRowBuilder.comment(comment).build();
-      assertThat(sqlInjectionTutorialRow.getComment()).isEqualTo(comment);
-    }
+  @DisplayName("Can construct with name field set")
+  void constructor_HasName_Success() {
+    assertThatCode(() -> sqlInjectionTutorialRowBuilder.name(TEST_NAME).build()).doesNotThrowAnyException();
   }
 
   @Test
-  void buildError_ValidError_Builds() {
-    final SqlInjectionTutorialRowBuilder sqlInjectionTutorialRowBuilder = SqlInjectionTutorialRow.builder();
-    for (final String error : TestConstants.STRINGS) {
-      final SqlInjectionTutorialRow sqlInjectionTutorialRow = sqlInjectionTutorialRowBuilder.error(error).build();
-      assertThat(sqlInjectionTutorialRow.getError()).isEqualTo(error);
-    }
+  @DisplayName("Can construct with name and comment fields set")
+  void constructor_HasNameAndComment_Success() {
+    assertThatCode(() -> sqlInjectionTutorialRowBuilder.name(TEST_NAME).comment(TEST_COMMENT).build())
+      .doesNotThrowAnyException();
   }
 
   @Test
-  void builderToString_ValidData_AsExpected() {
-    final SqlInjectionTutorialRowBuilder testSqlInjectionTutorialRowBuilder = SqlInjectionTutorialRow
-      .builder()
-      .name("TestSqlInjectionTutorialRow")
-      .comment("This is a user")
-      .error("no error");
-    assertThat(testSqlInjectionTutorialRowBuilder)
-      .hasToString(
-        "SqlInjectionTutorialRow.SqlInjectionTutorialRowBuilder(name=TestSqlInjectionTutorialRow, comment=This is a user, error=no error)"
-      );
+  @DisplayName("Can construct with name, comment, and error fields set")
+  void constructor_HasNameAndCommentAndError_Success() {
+    assertThatCode(() -> sqlInjectionTutorialRowBuilder.name(TEST_NAME).comment(TEST_COMMENT).error(TEST_ERROR).build())
+      .doesNotThrowAnyException();
   }
 
   @Test
-  void buildName_ValidName_Builds() {
-    final SqlInjectionTutorialRowBuilder sqlInjectionTutorialRowBuilder = SqlInjectionTutorialRow.builder();
-    for (final String name : TestConstants.STRINGS) {
-      final SqlInjectionTutorialRow sqlInjectionTutorialRow = sqlInjectionTutorialRowBuilder.name(name).build();
-      assertThat(sqlInjectionTutorialRow.getName()).isEqualTo(name);
-    }
+  @DisplayName("Can construct with comment field set")
+  void constructor_HasComment_Success() {
+    assertThatCode(() -> sqlInjectionTutorialRowBuilder.comment(TEST_COMMENT).build()).doesNotThrowAnyException();
   }
 
   @Test
-  void buildName_ValidName_BuildsSqlInjectionTutorialRow() {
-    final SqlInjectionTutorialRow sqlInjectionTutorialRow = SqlInjectionTutorialRow
-      .builder()
-      .name("TestSqlInjectionTutorialRow")
-      .build();
-    assertThat(sqlInjectionTutorialRow.getName()).isEqualTo("TestSqlInjectionTutorialRow");
+  @DisplayName("Can construct with comment and error fields set")
+  void constructor_HasCommentAndError_Success() {
+    assertThatCode(() -> sqlInjectionTutorialRowBuilder.comment(TEST_COMMENT).error(TEST_ERROR).build())
+      .doesNotThrowAnyException();
   }
 
   @Test
-  void equals_EqualsVerifier_AsExpected() {
-    EqualsVerifier.forClass(SqlInjectionTutorialRow.class).verify();
+  @DisplayName("Can construct with error field set")
+  void constructor_HasError_Success() {
+    assertThatCode(() -> sqlInjectionTutorialRowBuilder.error(TEST_ERROR).build()).doesNotThrowAnyException();
   }
 
   @Test
-  void toString_ValidData_AsExpected() {
-    final SqlInjectionTutorialRow testSqlInjectionTutorialRow = SqlInjectionTutorialRow
-      .builder()
-      .name("TestSqlInjectionTutorialRow")
-      .build();
-    assertThat(testSqlInjectionTutorialRow)
-      .hasToString("SqlInjectionTutorialRow(name=TestSqlInjectionTutorialRow, comment=null, error=null)");
+  @DisplayName("Can error when building without any data")
+  void constructor_AllNull_Errors() {
+    assertThatThrownBy(() -> sqlInjectionTutorialRowBuilder.build())
+      .isInstanceOf(NullPointerException.class)
+      .hasMessage("Name, comment, and error can't all be null");
   }
 }

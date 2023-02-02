@@ -67,7 +67,6 @@ class AuthenticationManagerTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     authenticationManager = new AuthenticationManager(webTokenService);
   }
 

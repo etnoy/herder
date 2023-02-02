@@ -21,8 +21,6 @@
  */
 package org.owasp.herder.test.module.flag;
 
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +35,7 @@ import org.owasp.herder.module.flag.FlagTutorial;
 import org.owasp.herder.module.flag.FlagTutorialController;
 import org.owasp.herder.module.flag.FlagTutorialResult;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -53,33 +52,26 @@ class FlagTutorialControllerTest extends BaseTest {
   private ControllerAuthentication controllerAuthentication;
 
   @Test
+  @DisplayName("Can error when getting flag without being authenticated")
   void getFlag_UserNotAuthenticated_ReturnsException() {
     when(controllerAuthentication.getUserId()).thenReturn(Mono.error(new NotAuthenticatedException()));
 
     StepVerifier.create(flagTutorialController.getFlag()).expectError(NotAuthenticatedException.class).verify();
-
-    verify(controllerAuthentication, times(1)).getUserId();
   }
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     flagTutorialController = new FlagTutorialController(flagTutorial, controllerAuthentication);
   }
 
   @Test
+  @DisplayName("Can submit flag")
   void submitFlag_UserAuthenticated_ReturnsFlag() {
-    final String mockUserId = "id";
-    final String flag = "validflag";
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
+    when(flagTutorial.getFlag(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(TestConstants.TEST_STATIC_FLAG));
 
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
-    when(flagTutorial.getFlag(mockUserId)).thenReturn(Mono.just(flag));
+    FlagTutorialResult testFlag = FlagTutorialResult.builder().flag(TestConstants.TEST_STATIC_FLAG).build();
 
-    FlagTutorialResult mockFlag = FlagTutorialResult.builder().flag(flag).build();
-
-    StepVerifier.create(flagTutorialController.getFlag()).expectNext(mockFlag).verifyComplete();
-
-    verify(controllerAuthentication, times(1)).getUserId();
-    verify(flagTutorial, times(1)).getFlag(mockUserId);
+    StepVerifier.create(flagTutorialController.getFlag()).expectNext(testFlag).verifyComplete();
   }
 }

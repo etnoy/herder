@@ -56,8 +56,6 @@ class FlagTutorialTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
-
     flagTutorial = new FlagTutorial(flagHandler);
 
     moduleLocator = flagTutorial.getLocator();

@@ -82,6 +82,7 @@ class StartupRunnerTest extends BaseTest {
   ScoreboardService scoreboardService;
 
   @Test
+  @DisplayName("Can initialize application")
   void run_NoArguments_Success() {
     final String mockUserId = "id";
     when(
@@ -110,8 +111,6 @@ class StartupRunnerTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
-
     startupRunner =
       new StartupRunner(userService, teamService, moduleService, submissionService, scoreboardService, flagTutorial);
   }

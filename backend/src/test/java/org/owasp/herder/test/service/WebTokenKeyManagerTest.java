@@ -30,24 +30,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.crypto.WebTokenKeyManager;
+import org.owasp.herder.test.util.TestConstants;
 
 @DisplayName("WebTokenKeyManager unit tests")
 class WebTokenKeyManagerTest {
-
-  final String testUserId = "id";
 
   final Key testKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
   private WebTokenKeyManager webTokenKeyManager;
 
   @Test
+  @DisplayName("Can invalidate access token for user")
   void invalidateAccessToken_ValidUserId_Succeeds() {
-    assertDoesNotThrow(() -> webTokenKeyManager.invalidateAccessToken("id"));
+    assertDoesNotThrow(() -> webTokenKeyManager.invalidateAccessToken(TestConstants.TEST_USER_ID));
   }
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     webTokenKeyManager = new WebTokenKeyManager();
   }
 }

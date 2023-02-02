@@ -131,7 +131,6 @@ class SecurityContextRepositoryTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     securityContextRepository = new SecurityContextRepository(authenticationManager);
   }
 }

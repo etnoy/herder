@@ -55,6 +55,7 @@ class SqlInjectionTutorialControllerTest extends BaseTest {
   private SqlInjectionTutorial sqlInjectionTutorial;
 
   @Test
+  @DisplayName("Can get rows when searching")
   void search_Autenticated_CallsModule() {
     final String mockUserId = "id";
 
@@ -79,7 +80,8 @@ class SqlInjectionTutorialControllerTest extends BaseTest {
   }
 
   @Test
-  void search_NotAutenticated_CallsModule() {
+  @DisplayName("Can error when searching while not authenticated")
+  void search_NotAutenticated_Errors() {
     final String query = "sql";
     when(controllerAuthentication.getUserId()).thenReturn(Mono.error(new NotAuthenticatedException()));
     StepVerifier
@@ -91,7 +93,6 @@ class SqlInjectionTutorialControllerTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     sqlInjectionTutorialController = new SqlInjectionTutorialController(sqlInjectionTutorial, controllerAuthentication);
   }
 }

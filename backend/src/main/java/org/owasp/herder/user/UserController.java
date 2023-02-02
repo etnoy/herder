@@ -69,13 +69,11 @@ public class UserController {
 
   @GetMapping(path = "user/{userId}")
   @PreAuthorize("(hasRole('ROLE_USER') and #userId == authentication.principal) or hasRole('ROLE_ADMIN')")
-  public Mono<UserEntity> findById(@PathVariable final String userId) {
-    Mono<UserEntity> userMono;
+  public Mono<UserEntity> getById(@PathVariable final String userId) {
     try {
-      userMono = userService.findById(userId);
+      return userService.getById(userId);
     } catch (ConstraintViolationException e) {
       return Mono.error(new UserNotFoundException(e.getMessage()));
     }
-    return userMono.switchIfEmpty(Mono.error(new UserNotFoundException()));
   }
 }

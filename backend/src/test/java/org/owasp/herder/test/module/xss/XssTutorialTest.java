@@ -68,11 +68,11 @@ class XssTutorialTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     xssTutorial = new XssTutorial(flagHandler, xssService);
   }
 
   @Test
+  @DisplayName("Can return flag when submitting a correct query")
   void submitQuery_MakesAlert_ReturnsFlag() {
     final String mockUserId = "id";
     final String mockFlag = "mockedflag";
@@ -98,6 +98,7 @@ class XssTutorialTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can return query when not finding any alerts")
   void submitQuery_NoAlert_ReturnsQuery() {
     final String mockUserId = "id";
     final String query = "username";

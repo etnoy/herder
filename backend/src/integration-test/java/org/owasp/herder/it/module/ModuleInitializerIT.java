@@ -328,7 +328,6 @@ class ModuleInitializerIT extends BaseIT {
       applicationContext.removeBeanDefinition(beanName);
     }
 
-    // Set up the system under test
     moduleInitializer = new ModuleInitializer(applicationContext, moduleService);
   }
 }

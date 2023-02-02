@@ -64,11 +64,13 @@ class ScoreAdjustmentServiceTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     scoreAdjustmentService = new ScoreAdjustmentService(scoreAdjustmentRepository, teamService, clock);
   }
 
+  // TODO: cleanup
+
   @Test
+  @DisplayName("Can submit score adjustment")
   void submit_ValidUserId_ReturnsCorrection() {
     final String mockUserId = "id";
     final int amount = 1000;

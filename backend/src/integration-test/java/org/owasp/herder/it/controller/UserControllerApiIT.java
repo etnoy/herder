@@ -254,8 +254,8 @@ class UserControllerApiIT extends BaseIT {
           .map(UserEntity::getId)
       )
       .recordWith(HashSet::new)
-      .thenConsumeWhile(__ -> true)
-      .expectRecordedMatches(x -> x.equals(userIdSet))
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(users -> assertThat(users).containsExactlyElementsOf(userIdSet))
       .verifyComplete();
   }
 

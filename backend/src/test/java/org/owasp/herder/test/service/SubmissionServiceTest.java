@@ -177,7 +177,6 @@ class SubmissionServiceTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     submissionService =
       new SubmissionService(
         submissionRepository,

@@ -59,6 +59,7 @@ class XssServiceTest {
   XssWebClientFactory xssWebClientFactory;
 
   @Test
+  @DisplayName("Can find alerts in valid xss query")
   void doXss_AlertHandlerFindsAlerts_ReturnsCollectedAlerts()
     throws FailingHttpStatusCodeException, MalformedURLException, IOException {
     final String htmlPage = "<html></html>";
@@ -90,8 +91,8 @@ class XssServiceTest {
   }
 
   @Test
-  void doXss_GetPageThrowsIOException_ThrowsXssEvaluationException()
-    throws FailingHttpStatusCodeException, MalformedURLException, IOException {
+  @DisplayName("Can handle exceptions thrown by webClient.getPage when performing XSS")
+  void doXss_GetPageThrowsIOException_ThrowsXssEvaluationException() throws Exception {
     final String htmlPage = "<html></html>";
     final WebClient mockWebClient = mock(WebClient.class);
     final CollectingAlertHandler mockAlertHandler = mock(CollectingAlertHandler.class);
@@ -103,6 +104,7 @@ class XssServiceTest {
   }
 
   @Test
+  @DisplayName("Can handle exceptions thrown by HtmlPage.initialize when performing XSS")
   void doXss_PageInitializeThrowsIOException_ThrowsXssEvaluationException() throws Exception {
     final String htmlPage = "<html></html>";
     final HtmlPage mockPage = mock(HtmlPage.class);
@@ -120,7 +122,6 @@ class XssServiceTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     xssService = new XssService(xssWebClientFactory);
   }
 }

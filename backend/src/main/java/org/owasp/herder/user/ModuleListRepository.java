@@ -36,7 +36,7 @@ public interface ModuleListRepository extends ReactiveMongoRepository<ModuleList
       "{$match: {'locator': ?1}}",
     }
   )
-  public Mono<ModuleListItem> findListItemByLocator(final String userId, final String locator);
+  public Mono<ModuleListItem> findListItemByUserIdAndLocator(final String userId, final String locator);
 
   public Mono<ModuleList> findByTeamId(final String teamId);
 }

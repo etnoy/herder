@@ -155,7 +155,6 @@ class SqlInjectionTutorialTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     sqlInjectionTutorial = new SqlInjectionTutorial(sqlInjectionDatabaseClientFactory, keyService, flagHandler);
 
     moduleLocator = sqlInjectionTutorial.getLocator();

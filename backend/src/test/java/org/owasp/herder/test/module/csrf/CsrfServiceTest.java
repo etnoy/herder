@@ -71,6 +71,7 @@ class CsrfServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can return nothing if an attack is not found")
   void attack_AttackNotFound_Fails() {
     when(
       csrfAttackRepository.findByPseudonymAndModuleLocator(
