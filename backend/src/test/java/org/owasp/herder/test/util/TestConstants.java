@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
+import org.owasp.herder.model.ClassEntity;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
@@ -160,6 +161,7 @@ public final class TestConstants {
   public static final String TEST_USER_ID2 = "abcdef123456789012345679";
 
   public static final String TEST_CLASS_ID = "abcdef1234567890abcd5678";
+  public static final String TEST_CLASS_NAME = "Test Class";
 
   public static final String TEST_CSRF_PSEUDONYM = "a-target";
 
@@ -193,6 +195,8 @@ public final class TestConstants {
     .key(TEST_BYTE_ARRAY)
     .displayName(TEST_USER_DISPLAY_NAME)
     .build();
+
+  public static final ClassEntity TEST_CLASS_ENTITY = ClassEntity.builder().name(TEST_CLASS_NAME).build();
 
   public static final TeamEntity TEST_TEAM_ENTITY = TeamEntity
     .builder()

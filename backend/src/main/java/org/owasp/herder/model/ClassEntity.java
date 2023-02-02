@@ -38,7 +38,7 @@ public class ClassEntity implements Serializable {
   private static final long serialVersionUID = 7375094814834027958L;
 
   @Id
-  private Integer id;
+  private String id;
 
   @NonNull
   private String name;

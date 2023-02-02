@@ -55,7 +55,8 @@ class SecurityContextRepositoryTest extends BaseTest {
   AuthenticationManager authenticationManager;
 
   @Test
-  void load_InvalidHeader_ReturnsSecurityContext() {
+  @DisplayName("Can return empty authentication when loading security context with invalid header")
+  void load_InvalidHeader_ReturnsEmptyAuthentication() {
     final ServerWebExchange mockServerWebExchange = mock(ServerWebExchange.class);
     final String token = "authToken";
     final ServerHttpRequest mockServerHttpRequest = mock(ServerHttpRequest.class);
@@ -70,6 +71,7 @@ class SecurityContextRepositoryTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can return empty authentication when loading security context with null")
   void load_NullHeader_ReturnsSecurityContext() {
     final ServerWebExchange mockServerWebExchange = mock(ServerWebExchange.class);
 
@@ -85,6 +87,7 @@ class SecurityContextRepositoryTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can load security context")
   void load_ValidHeader_ReturnsSecurityContext() {
     final Long mockUserId = 581L;
     final ServerWebExchange mockServerWebExchange = mock(ServerWebExchange.class);
@@ -118,6 +121,7 @@ class SecurityContextRepositoryTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can return Not Implemented wieh saving security context")
   void save_NotImplemented() {
     StepVerifier
       .create(securityContextRepository.save(null, null))
