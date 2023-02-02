@@ -100,8 +100,8 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Can return error when adding user to team if user team id is null")
-  void addMember_UserEntityIsNotMemberOfAnyTeam_ThrowsException() {
+  @DisplayName("Can error when adding user to team if user team id is null")
+  void addMember_UserEntityIsNotMemberOfAnyTeam_Errors() {
     StepVerifier
       .create(teamService.addMember(TestConstants.TEST_TEAM_ID, TestConstants.TEST_USER_ENTITY))
       .expectErrorMatches(e ->
@@ -111,8 +111,8 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Can return error if user is member of wrong team")
-  void addMember_UserEntityIsNotMemberOfWrongTeam_ThrowsException() {
+  @DisplayName("Can error if user is member of wrong team")
+  void addMember_UserEntityIsNotMemberOfWrongTeam_Errors() {
     StepVerifier
       .create(teamService.addMember(TestConstants.TEST_TEAM_ID, TestConstants.TEST_USER_ENTITY.withTeamId("blargh")))
       .expectErrorMatches(e ->
@@ -160,7 +160,7 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Can return error when expelling user if it is not a member of the team")
+  @DisplayName("Can error when expelling user if it is not a member of given team")
   void expel_UserNotInAnyTeam_ReturnsError() {
     final ArrayList<UserEntity> membersBeforeExpulsion = new ArrayList<>();
 
@@ -179,7 +179,7 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Can return error when expelling user if it matches several users in a team")
+  @DisplayName("Can return error when expelling user if it matches several users in given team")
   void expel_UserIdFoundInMultipleMembers_ReturnsError() {
     final ArrayList<UserEntity> membersBeforeExpulsion = new ArrayList<>();
     membersBeforeExpulsion.add(TestConstants.TEST_USER_ENTITY.withId(TestConstants.TEST_USER_ID));
@@ -208,7 +208,8 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
-  void create_TeamDisplayNameAlreadyExists_ThrowsException() {
+  @DisplayName("Can error when creating team if team display name already exists")
+  void create_TeamDisplayNameAlreadyExists_Errors() {
     when(teamRepository.findByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME)).thenReturn(Mono.just(mockTeam));
 
     StepVerifier
@@ -221,7 +222,8 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
-  void create_TeamDisplayNameDoesNotExist_TeamCreated() {
+  @DisplayName("Can create team")
+  void create_ValidDisplayName_TeamCreated() {
     setClock(TestConstants.year2000Clock);
 
     when(teamRepository.findByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME)).thenReturn(Mono.empty());
@@ -242,6 +244,7 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can delete team")
   void delete_ValidTeamId_DeletesTeam() {
     when(teamRepository.deleteById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.empty());
 
@@ -249,6 +252,7 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can check if team exists by display name")
   void existsByDisplayName_DisplayNameExists_ReturnsTrue() {
     when(teamRepository.findByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME)).thenReturn(Mono.just(mockTeam));
     StepVerifier
@@ -258,6 +262,7 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can check if team does not exist by display name")
   void existsByDisplayName_DisplayNameDoesNotExist_ReturnsFalse() {
     when(teamRepository.findByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME)).thenReturn(Mono.empty());
     StepVerifier
@@ -267,37 +272,45 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
-  void existsById_DisplayNameExists_ReturnsTrue() {
+  @DisplayName("Can check if team exists by id")
+  void existsById_IdExists_ReturnsTrue() {
     when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
     StepVerifier.create(teamService.existsById(TestConstants.TEST_TEAM_ID)).expectNext(true).verifyComplete();
   }
 
   @Test
-  void existsById_DisplayNameDoesNotExist_ReturnsFalse() {
+  @DisplayName("Can check if does not team exist by id")
+  void existsById_IdDoesNotExist_ReturnsFalse() {
     when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.empty());
     StepVerifier.create(teamService.existsById(TestConstants.TEST_TEAM_ID)).expectNext(false).verifyComplete();
   }
 
   @Test
+  @DisplayName("Can find all teams")
   void findAll_TeamsExist_ReturnsTeams() {
     when(teamRepository.findAll()).thenReturn(Flux.just(mockTeam));
     StepVerifier.create(teamService.findAll()).expectNext(mockTeam).verifyComplete();
   }
 
   @Test
+  @DisplayName("Can find team by id")
   void findById_TeamExists_ReturnsTeam() {
     when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
     StepVerifier.create(teamService.findById(TestConstants.TEST_TEAM_ID)).expectNext(mockTeam).verifyComplete();
   }
 
+  // TODO: find team by id not existing
+
   @Test
+  @DisplayName("Can get existing team by id")
   void getById_TeamExists_ReturnsUser() {
     when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockTeam));
     StepVerifier.create(teamService.getById(TestConstants.TEST_TEAM_ID)).expectNext(mockTeam).verifyComplete();
   }
 
   @Test
-  void getById_UserDoesNotExist_ReturnsError() {
+  @DisplayName("Can error when getting nonexistent team by id")
+  void getById_UserDoesNotExist_Errors() {
     when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.empty());
     StepVerifier
       .create(teamService.getById(TestConstants.TEST_TEAM_ID))
@@ -309,13 +322,15 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can get team by member id")
   void getByMemberId_UserIsInTeam_ReturnsTeam() {
     when(teamRepository.findAllByMembersId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(mockTeam));
     StepVerifier.create(teamService.getByMemberId(TestConstants.TEST_USER_ID)).expectNext(mockTeam).verifyComplete();
   }
 
   @Test
-  void getByMemberId_UserNotInTeam_ReturnsEror() {
+  @DisplayName("Can error when getting nonexistent team by member id")
+  void getByMemberId_UserNotInTeam_Errors() {
     when(teamRepository.findAllByMembersId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just());
     StepVerifier
       .create(teamService.getByMemberId(TestConstants.TEST_USER_ID))
@@ -329,6 +344,7 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can error when getting team by member id if user is member of more than one team")
   void getByMemberId_UserInMoreThanOneTeam_ReturnsError() {
     when(teamRepository.findAllByMembersId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(mockTeam, mockTeam));
     StepVerifier
@@ -345,6 +361,7 @@ class TeamServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can update embedded user in team after user is updated")
   void updateTeamMember_UserInTeam_ReplacesUserEntity() {
     final ArrayList<UserEntity> membersBeforeUpdate = new ArrayList<>();
     final UserEntity oldUserEntity = TestConstants.TEST_USER_ENTITY.withId(TestConstants.TEST_USER_ID);
