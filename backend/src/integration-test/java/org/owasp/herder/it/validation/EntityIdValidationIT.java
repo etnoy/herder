@@ -163,7 +163,7 @@ class EntityIdValidationIT extends BaseIT {
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.findKeyById()")
   void userService_findKeyById(final String userId, final String containingMessage) {
-    integrationTestUtils.checkConstraintViolation(() -> userService.findKeyById(userId), containingMessage);
+    integrationTestUtils.checkConstraintViolation(() -> userService.findKeyByUserId(userId), containingMessage);
   }
 
   @ParameterizedTest

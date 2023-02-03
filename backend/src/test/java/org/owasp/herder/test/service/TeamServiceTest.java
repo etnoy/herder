@@ -299,7 +299,12 @@ class TeamServiceTest extends BaseTest {
     StepVerifier.create(teamService.findById(TestConstants.TEST_TEAM_ID)).expectNext(mockTeam).verifyComplete();
   }
 
-  // TODO: find team by id not existing
+  @Test
+  @DisplayName("Can return empty when finding nonexistent team by id")
+  void findById_TeamDoesNotExist_ReturnsTeam() {
+    when(teamRepository.findById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.empty());
+    StepVerifier.create(teamService.findById(TestConstants.TEST_TEAM_ID)).verifyComplete();
+  }
 
   @Test
   @DisplayName("Can get existing team by id")

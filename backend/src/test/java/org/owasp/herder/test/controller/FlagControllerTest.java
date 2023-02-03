@@ -70,11 +70,9 @@ class FlagControllerTest extends BaseTest {
     flagController = new FlagController(controllerAuthentication, moduleService, submissionService, scoreboardService);
   }
 
-  //TODO: cleanup
   @Test
   @DisplayName("Can error when submitting flag without being authenticated")
   void submitFlag_UserNotAuthenticated_Errors() {
-    final String flag = "validflag";
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
     when(controllerAuthentication.getUserId()).thenReturn(Mono.error(new NotAuthenticatedException()));
@@ -82,7 +80,7 @@ class FlagControllerTest extends BaseTest {
     when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
 
     StepVerifier
-      .create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag))
+      .create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, TestConstants.TEST_STATIC_FLAG))
       .expectError(NotAuthenticatedException.class)
       .verify();
 
@@ -94,20 +92,24 @@ class FlagControllerTest extends BaseTest {
   void submitFlag_UserAuthenticatedAndValidFlagSubmitted_ReturnsValidSubmission() {
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    final String flag = "validflag";
-
     when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
 
     final Submission submission = Submission
       .builder()
       .userId(TestConstants.TEST_USER_ID)
       .moduleId(TestConstants.TEST_MODULE_ID)
-      .flag(flag)
+      .flag(TestConstants.TEST_STATIC_FLAG)
       .isValid(true)
       .time(LocalDateTime.now(TestConstants.year2000Clock))
       .build();
 
-    when(submissionService.submitFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag))
+    when(
+      submissionService.submitFlag(
+        TestConstants.TEST_USER_ID,
+        TestConstants.TEST_MODULE_ID,
+        TestConstants.TEST_STATIC_FLAG
+      )
+    )
       .thenReturn(Mono.just(submission));
 
     when(mockModule.getId()).thenReturn(TestConstants.TEST_MODULE_ID);
@@ -119,10 +121,12 @@ class FlagControllerTest extends BaseTest {
     when(scoreboardService.refreshScoreboard()).thenReturn(Mono.empty());
 
     StepVerifier
-      .create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, flag).map(ResponseEntity::getBody))
+      .create(
+        flagController
+          .submitFlag(TestConstants.TEST_MODULE_LOCATOR, TestConstants.TEST_STATIC_FLAG)
+          .map(ResponseEntity::getBody)
+      )
       .expectNext(submission)
       .verifyComplete();
-
-    verify(submissionService, times(1)).submitFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, flag);
   }
 }

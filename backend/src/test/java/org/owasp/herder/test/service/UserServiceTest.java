@@ -669,16 +669,32 @@ class UserServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Can delete user by id")
-  void deleteById_ValidUserId_SavesDeletedPlaceholder() {
+  @DisplayName("Can error when deleting user belonging to team")
+  void deleteById_UserInTeam_Errors() {
     final UserEntity testUser = TestConstants.TEST_USER_ENTITY
       .withTeamId(TestConstants.TEST_TEAM_ID)
       .withSuspendedUntil(LocalDateTime.now(TestConstants.year2100Clock))
       .withSuspensionMessage("Banned!")
       .withId(TestConstants.TEST_USER_ID)
+      .withTeamId(TestConstants.TEST_TEAM_ID)
       .withAdmin(true);
 
-    // TODO: can't delete user belonging to team
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
+
+    StepVerifier
+      .create(userService.delete(TestConstants.TEST_USER_ID))
+      .expectError(IllegalStateException.class)
+      .verify();
+  }
+
+  @Test
+  @DisplayName("Can delete user by id")
+  void deleteById_ValidUserId_SavesDeletedPlaceholder() {
+    final UserEntity testUser = TestConstants.TEST_USER_ENTITY
+      .withSuspendedUntil(LocalDateTime.now(TestConstants.year2100Clock))
+      .withSuspensionMessage("Banned!")
+      .withId(TestConstants.TEST_USER_ID)
+      .withAdmin(true);
 
     when(passwordAuthRepository.deleteByUserId(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
     when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
@@ -797,46 +813,9 @@ class UserServiceTest extends BaseTest {
     when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
 
     StepVerifier
-      .create(userService.findKeyById(TestConstants.TEST_USER_ID))
+      .create(userService.findKeyByUserId(TestConstants.TEST_USER_ID))
       .expectNext(TestConstants.TEST_BYTE_ARRAY)
       .verifyComplete();
-  }
-
-  @Test
-  @DisplayName("Can generate key when getting key for user without key")
-  void getKeyById_NoKeyExists_GeneratesKey() {
-    // TODO: cleanup
-    // This user does not have a key
-    final UserEntity mockUserWithoutKey = mock(UserEntity.class);
-    when(mockUserWithoutKey.getKey()).thenReturn(null);
-
-    // When that user is given a key, return an entity that has the key
-    final UserEntity mockUserWithKey = mock(UserEntity.class);
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID))
-      .thenReturn(Mono.just(mockUserWithoutKey));
-    when(mockUserWithoutKey.getKey()).thenReturn(null);
-
-    when(mockUserWithoutKey.withKey(TestConstants.TEST_BYTE_ARRAY)).thenReturn(mockUserWithKey);
-
-    // Set up the mock repository
-    when(userRepository.save(any(UserEntity.class))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
-
-    // Set up the mock key service
-    when(keyService.generateRandomBytes(16)).thenReturn(TestConstants.TEST_BYTE_ARRAY);
-
-    when(mockUserWithKey.getKey()).thenReturn(TestConstants.TEST_BYTE_ARRAY);
-
-    StepVerifier
-      .create(userService.findKeyById(TestConstants.TEST_USER_ID))
-      .expectNext(TestConstants.TEST_BYTE_ARRAY)
-      .verifyComplete();
-
-    ArgumentCaptor<UserEntity> argument = ArgumentCaptor.forClass(UserEntity.class);
-
-    verify(userRepository).save(argument.capture());
-
-    assertThat(argument.getValue()).isEqualTo(mockUserWithKey);
-    assertThat(argument.getValue().getKey()).isEqualTo(TestConstants.TEST_BYTE_ARRAY);
   }
 
   @Test
@@ -936,21 +915,23 @@ class UserServiceTest extends BaseTest {
   @Test
   @DisplayName("Can set display name of user")
   void setDisplayName_ValidDisplayName_DisplayNameIsSet() {
-    // TODO: check for user id that does not exist
+    final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
     String newDisplayName = "newDisplayName";
 
-    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
     when(userRepository.findByDisplayName(newDisplayName)).thenReturn(Mono.empty());
 
-    when(mockUser.withDisplayName(newDisplayName)).thenReturn(mockUser);
-    when(userRepository.save(any(UserEntity.class))).thenReturn(Mono.just(mockUser));
-    when(mockUser.getDisplayName()).thenReturn(newDisplayName);
+    when(userRepository.save(any(UserEntity.class))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
     StepVerifier
       .create(userService.setDisplayName(TestConstants.TEST_USER_ID, newDisplayName))
       .expectNextMatches(user -> user.getDisplayName().equals(newDisplayName))
       .as("Display name should change to supplied value")
       .verifyComplete();
+
+    final ArgumentCaptor<UserEntity> argument = ArgumentCaptor.forClass(UserEntity.class);
+    verify(userRepository).save(argument.capture());
+    assertThat(argument.getValue().getDisplayName()).isEqualTo(newDisplayName);
   }
 
   @BeforeEach

@@ -83,7 +83,7 @@ public class FlagHandler {
         // Get module key and convert to bytes
         .map(ModuleEntity::getKey);
 
-    final Mono<byte[]> userKey = userService.findKeyById(userId);
+    final Mono<byte[]> userKey = userService.findKeyByUserId(userId);
 
     final Mono<byte[]> serverKey = configurationService.getServerKey();
 

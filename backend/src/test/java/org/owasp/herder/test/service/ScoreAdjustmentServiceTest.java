@@ -67,12 +67,9 @@ class ScoreAdjustmentServiceTest extends BaseTest {
     scoreAdjustmentService = new ScoreAdjustmentService(scoreAdjustmentRepository, teamService, clock);
   }
 
-  // TODO: cleanup
-
   @Test
   @DisplayName("Can submit score adjustment")
   void submit_ValidUserId_ReturnsCorrection() {
-    final String mockUserId = "id";
     final int amount = 1000;
     final String description = "Bonus";
 
@@ -82,9 +79,9 @@ class ScoreAdjustmentServiceTest extends BaseTest {
     setClock(TestConstants.year2000Clock);
 
     StepVerifier
-      .create(scoreAdjustmentService.submitUserAdjustment(mockUserId, amount, description))
+      .create(scoreAdjustmentService.submitUserAdjustment(TestConstants.TEST_USER_ID, amount, description))
       .assertNext(scoreAdjustment -> {
-        assertThat(scoreAdjustment.getUserIds()).contains(mockUserId);
+        assertThat(scoreAdjustment.getUserIds()).containsExactly(TestConstants.TEST_USER_ID);
         assertThat(scoreAdjustment.getAmount()).isEqualTo(amount);
         assertThat(scoreAdjustment.getDescription()).isEqualTo(description);
         assertThat(scoreAdjustment.getTime()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));

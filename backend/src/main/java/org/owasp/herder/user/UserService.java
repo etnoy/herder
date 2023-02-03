@@ -242,9 +242,10 @@ public class UserService {
     kick(userId);
 
     return getById(userId)
+      .filter(user -> user.getTeamId() == null)
+      .switchIfEmpty(Mono.error(new IllegalStateException("Cannot delete user if it belongs to team")))
       .map(user ->
         user
-          .withTeamId(null)
           .withEnabled(false)
           .withDeleted(true)
           .withDisplayName("")
@@ -423,15 +424,8 @@ public class UserService {
    * @param userId
    * @return The key if the user exists, otherwise UserNotFoundException
    */
-  public Mono<byte[]> findKeyById(@ValidUserId final String userId) {
-    return getById(userId)
-      .flatMap(user -> {
-        final byte[] key = user.getKey();
-        if (key == null) {
-          return userRepository.save(user.withKey(keyService.generateRandomBytes(16))).map(UserEntity::getKey);
-        }
-        return Mono.just(key);
-      });
+  public Mono<byte[]> findKeyByUserId(@ValidUserId final String userId) {
+    return getById(userId).map(UserEntity::getKey);
   }
 
   public Mono<PasswordAuth> findPasswordAuthByLoginName(@ValidLoginName final String loginName) {

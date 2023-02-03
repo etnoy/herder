@@ -35,6 +35,7 @@ import org.owasp.herder.module.csrf.CsrfTutorial;
 import org.owasp.herder.module.csrf.CsrfTutorialController;
 import org.owasp.herder.module.csrf.CsrfTutorialResult;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -55,35 +56,26 @@ class CsrfTutorialControllerTest extends BaseTest {
     csrfTutorialController = new CsrfTutorialController(csrfTutorial, controllerAuthentication);
   }
 
-  // TODO: cleanup
   @Test
   @DisplayName("Can get tutorial")
   void tutorial_TutorialCreated_ReturnsTutorial() {
-    final String mockUserId = "id";
-
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
-
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
     final CsrfTutorialResult mockCsrfTutorialResult = mock(CsrfTutorialResult.class);
-
-    when(csrfTutorial.getTutorial(mockUserId)).thenReturn(Mono.just(mockCsrfTutorialResult));
-
+    when(csrfTutorial.getTutorial(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockCsrfTutorialResult));
     StepVerifier.create(csrfTutorialController.tutorial()).expectNext(mockCsrfTutorialResult).verifyComplete();
   }
 
   @Test
   @DisplayName("Can perform a CSRF attack")
   void attack_TutorialCreated_ReturnsTutorial() {
-    final String mockUserId = "id";
-    final String mockPseudonym = "abcd123";
-
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
-
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
     final CsrfTutorialResult mockCsrfTutorialResult = mock(CsrfTutorialResult.class);
 
-    when(csrfTutorial.attack(mockUserId, mockPseudonym)).thenReturn(Mono.just(mockCsrfTutorialResult));
+    when(csrfTutorial.attack(TestConstants.TEST_USER_ID, TestConstants.TEST_CSRF_PSEUDONYM))
+      .thenReturn(Mono.just(mockCsrfTutorialResult));
 
     StepVerifier
-      .create(csrfTutorialController.attack(mockPseudonym))
+      .create(csrfTutorialController.attack(TestConstants.TEST_CSRF_PSEUDONYM))
       .expectNext(mockCsrfTutorialResult)
       .verifyComplete();
   }
