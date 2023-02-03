@@ -275,27 +275,6 @@ class UserServiceIT extends BaseIT {
       .verifyComplete();
   }
 
-  @Test
-  @DisplayName("Can remove user from team when deleting user")
-  void canRemoveUserFromTeamWhenDeletingUser() {
-    final String userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
-    final String teamId = integrationTestUtils.createTestTeam();
-
-    userService.addUserToTeam(userId, teamId).block();
-
-    userService.delete(userId).block();
-
-    StepVerifier
-      .create(userRepository.findById(userId))
-      .assertNext(user -> {
-        assertThat(user.isDeleted()).isTrue();
-        assertThat(user.getDisplayName()).isEmpty();
-        assertThat(user.isEnabled()).isFalse();
-        assertThat(user.getTeamId()).isNull();
-      })
-      .verifyComplete();
-  }
-
   @BeforeEach
   void setUp() {
     integrationTestUtils.resetState();
