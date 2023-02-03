@@ -259,6 +259,7 @@ class UserControllerApiIT extends BaseIT {
       .verifyComplete();
   }
 
+  // TODO: displaynames
   @Test
   void register_ValidData_ReturnsValidUser() {
     final String loginName = "test";
