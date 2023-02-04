@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.test.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,7 @@ import org.owasp.herder.authentication.PasswordLoginDto;
 import org.owasp.herder.authentication.PasswordRegistrationDto;
 import org.owasp.herder.crypto.WebTokenService;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -113,19 +115,18 @@ class LoginControllerTest extends BaseTest {
   @Test
   @DisplayName("Can register a new user")
   void register_ValidData_NoError() {
-    final String displayName = "displayName";
-    final String userName = "user";
-    final String password = "password";
-    final String encodedPassword = "encoded";
     final PasswordRegistrationDto passwordRegistrationDto = new PasswordRegistrationDto(
-      displayName,
-      userName,
-      password
+      TestConstants.TEST_USER_DISPLAY_NAME,
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
     );
-    final String mockUserId = "id";
-    when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
-    when(userService.createPasswordUser(displayName, userName, encodedPassword)).thenReturn(Mono.just(mockUserId));
-    StepVerifier.create(loginController.register(passwordRegistrationDto)).verifyComplete();
+
+    when(passwordEncoder.encode(TestConstants.TEST_USER_PASSWORD)).thenReturn(TestConstants.HASHED_TEST_PASSWORD);
+    when(userService.createPasswordUser(any(), any(), any())).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
+    StepVerifier
+      .create(loginController.register(passwordRegistrationDto))
+      .expectNext(TestConstants.TEST_USER_ID)
+      .verifyComplete();
   }
 
   @BeforeEach

@@ -23,12 +23,10 @@ package org.owasp.herder.it.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.jayway.jsonpath.JsonPath;
 import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.owasp.herder.authentication.PasswordRegistrationDto;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.test.util.TestConstants;
@@ -37,8 +35,6 @@ import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.reactive.function.BodyInserters;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @DisplayName("UserController API integration tests")
