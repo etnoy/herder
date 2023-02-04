@@ -73,7 +73,7 @@ class WebTokenServiceIT extends BaseIT {
 
     setClock(TestConstants.year2000Clock);
 
-    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+    final String accessToken = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -98,12 +98,12 @@ class WebTokenServiceIT extends BaseIT {
     final String userId = integrationTestUtils.createTestUser();
 
     // Create a token (we don't save it)
-    integrationTestUtils.performAPILoginWithToken(TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
+    integrationTestUtils.getTokenFromAPILogin(TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD);
 
     // Invalidate the token
     webTokenKeyManager.invalidateAccessToken(userId);
 
-    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+    final String accessToken = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -125,7 +125,7 @@ class WebTokenServiceIT extends BaseIT {
   void canGenerateValidAdminAccessTokens() {
     final String userId = integrationTestUtils.createTestAdmin();
 
-    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+    final String accessToken = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_ADMIN_LOGIN_NAME,
       TestConstants.TEST_ADMIN_PASSWORD
     );
@@ -146,7 +146,7 @@ class WebTokenServiceIT extends BaseIT {
   void canGenerateValidUserAccessTokens() {
     final String userId = integrationTestUtils.createTestUser();
 
-    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+    final String accessToken = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -167,7 +167,7 @@ class WebTokenServiceIT extends BaseIT {
   void canInvalidateAccessTokens() {
     final String userId = integrationTestUtils.createTestUser();
 
-    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+    final String accessToken = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -189,7 +189,7 @@ class WebTokenServiceIT extends BaseIT {
 
     setClock(TestConstants.year2000Clock);
 
-    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+    final String accessToken = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );

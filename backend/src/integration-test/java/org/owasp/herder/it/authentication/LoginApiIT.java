@@ -56,7 +56,7 @@ class LoginApiIT extends BaseIT {
   @Test
   @DisplayName("Logging in with correct credentials should return a valid token")
   void canLoginWithValidCredentials() {
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );

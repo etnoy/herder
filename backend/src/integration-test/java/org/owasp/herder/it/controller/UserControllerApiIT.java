@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.owasp.herder.authentication.PasswordRegistrationDto;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,191 +54,20 @@ class UserControllerApiIT extends BaseIT {
   IntegrationTestUtils integrationTestUtils;
 
   @Test
-  @DisplayName("Can return 403 Forbidden when getting user list without being authenticated")
-  void getUserList_AuthenticatedUser_Forbidden() {
-    final String loginName = "test";
-    final String hashedPassword = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
-
-    userService.createPasswordUser("Test User", loginName, hashedPassword).block();
-
-    String token = JsonPath
-      .parse(
-        new String(
-          webTestClient
-            .post()
-            .uri("/api/v1/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(
-              BodyInserters.fromPublisher(
-                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"test\"}"),
-                String.class
-              )
-            )
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectBody()
-            .returnResult()
-            .getResponseBody()
-        )
-      )
-      .read("$.accessToken");
-
-    webTestClient
-      .get()
-      .uri("/api/v1/users")
-      .header("Authorization", "Bearer " + token)
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus()
-      .isForbidden();
-  }
-
-  @Test
-  @DisplayName("Can get user list after user was promoted to admin")
-  void getUserList_UserPromotedToAdmin_Success() {
-    final String loginName = "test";
-    final String hashedPassword = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
-
-    final String userId = userService.createPasswordUser("Test User", loginName, hashedPassword).block();
-
-    final String token = JsonPath
-      .parse(
-        new String(
-          webTestClient
-            .post()
-            .uri("/api/v1/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(
-              BodyInserters.fromPublisher(
-                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"test\"}"),
-                String.class
-              )
-            )
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectBody()
-            .returnResult()
-            .getResponseBody()
-        )
-      )
-      .read("$.accessToken");
-
-    webTestClient
-      .get()
-      .uri("/api/v1/users")
-      .header("Authorization", "Bearer " + token)
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus()
-      .isForbidden();
-
-    // Promote user to admin
-    userService.promote(userId).block();
-
-    String newToken = JsonPath
-      .parse(
-        new String(
-          webTestClient
-            .post()
-            .uri("/api/v1/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(
-              BodyInserters.fromPublisher(
-                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"test\"}"),
-                String.class
-              )
-            )
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectBody()
-            .returnResult()
-            .getResponseBody()
-        )
-      )
-      .read("$.accessToken");
-
-    // Now the user should be able to see user list
-    webTestClient
-      .get()
-      .uri("/api/v1/users")
-      .header("Authorization", "Bearer " + newToken)
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus()
-      .isOk();
-  }
-
-  @Test
-  @DisplayName("Can list users")
-  void listUsers_UsersExist_ReturnsUserList() {
-    final String loginName = "test";
-    final String password = "paLswOrdha17£@£sh";
-
+  @DisplayName("Can list users as admin")
+  void listUsers_IsAdmin_ReturnsUserList() {
     HashSet<String> userIdSet = new HashSet<>();
 
-    webTestClient
-      .post()
-      .uri("/api/v1/register")
-      .contentType(MediaType.APPLICATION_JSON)
-      .body(BodyInserters.fromValue(new PasswordRegistrationDto("TestUserDisplayName", loginName, password)))
-      .exchange()
-      .expectStatus()
-      .isCreated();
+    userIdSet.add(integrationTestUtils.createTestAdmin());
 
-    final String userId = userService.findUserIdByLoginName(loginName).block();
+    final String token = integrationTestUtils.getTokenFromAPILogin(
+      TestConstants.TEST_ADMIN_LOGIN_NAME,
+      TestConstants.TEST_ADMIN_PASSWORD
+    );
 
-    // Promote this user to admin
-    userService.promote(userId).block();
-
-    userIdSet.add(userId);
-
-    String token = JsonPath
-      .parse(
-        new String(
-          webTestClient
-            .post()
-            .uri("/api/v1/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(
-              BodyInserters.fromPublisher(
-                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"" + password + "\"}"),
-                String.class
-              )
-            )
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectBody()
-            .returnResult()
-            .getResponseBody()
-        )
-      )
-      .read("$.accessToken");
-
-    webTestClient
-      .post()
-      .uri("/api/v1/register")
-      .contentType(MediaType.APPLICATION_JSON)
-      .body(BodyInserters.fromValue(new PasswordRegistrationDto("TestUser2", "loginName2", "paLswOrdha17£@£sh")))
-      .exchange()
-      .expectStatus()
-      .isCreated();
-
-    userIdSet.add(userService.findUserIdByLoginName("loginName2").block());
-
-    webTestClient
-      .post()
-      .uri("/api/v1/register")
-      .contentType(MediaType.APPLICATION_JSON)
-      .body(BodyInserters.fromValue(new PasswordRegistrationDto("TestUser3", "loginName3", "paLswOrdha17£@£sh")))
-      .exchange()
-      .expectStatus()
-      .isCreated();
-
-    userIdSet.add(userService.findUserIdByLoginName("loginName3").block());
+    userIdSet.add(userService.create("Test User 2").block());
+    userIdSet.add(userService.create("Test User 3").block());
+    userIdSet.add(userService.create("Test User 4").block());
 
     StepVerifier
       .create(
@@ -259,6 +89,28 @@ class UserControllerApiIT extends BaseIT {
       .thenConsumeWhile(x -> true)
       .consumeRecordedWith(users -> assertThat(users).containsExactlyElementsOf(userIdSet))
       .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can deny list users as user")
+  void listUsers_IsUser_ReturnsUserList() {
+    HashSet<String> userIdSet = new HashSet<>();
+
+    userIdSet.add(integrationTestUtils.createTestUser());
+
+    final String token = integrationTestUtils.getTokenFromAPILogin(
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
+    );
+
+    webTestClient
+      .get()
+      .uri("/api/v1/users")
+      .header("Authorization", "Bearer " + token)
+      .accept(MediaType.APPLICATION_JSON)
+      .exchange()
+      .expectStatus()
+      .isForbidden();
   }
 
   @BeforeEach

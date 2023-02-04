@@ -37,7 +37,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@DisplayName("UserController API integration tests")
+@DisplayName("LoginController API integration tests")
 class LoginControllerApiIT extends BaseIT {
 
   @Autowired

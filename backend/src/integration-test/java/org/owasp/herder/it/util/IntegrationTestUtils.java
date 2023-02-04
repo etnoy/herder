@@ -188,7 +188,7 @@ public final class IntegrationTestUtils {
       .exchange();
   }
 
-  public String performAPILoginWithToken(final String username, final String password) {
+  public String getTokenFromAPILogin(final String username, final String password) {
     return JsonPath
       .parse(
         new String(
