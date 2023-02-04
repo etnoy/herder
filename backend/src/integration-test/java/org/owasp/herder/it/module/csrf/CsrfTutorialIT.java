@@ -73,6 +73,7 @@ class CsrfTutorialIT extends BaseIT {
   ModuleInitializer moduleInitializer;
 
   @Test
+  @DisplayName("Can error when performing CSRF attack on pseudonym that doesn't exist")
   void activate_NonExistentPseudonym_ReturnsError() {
     final String userId = userService.create("Attacker").block();
 
@@ -85,9 +86,8 @@ class CsrfTutorialIT extends BaseIT {
       .verifyComplete();
   }
 
-  // TODO: displaynames
-
   @Test
+  @DisplayName("Can perform a CSRF attack")
   void getTutorial_CorrectAttack_Success() {
     final String userId1 = userService.create("TestUser1").block();
     final String userId2 = userService.create("TestUser2").block();
@@ -117,8 +117,9 @@ class CsrfTutorialIT extends BaseIT {
   }
 
   @Test
-  void getTutorial_SelfActivation_NotAllowed() {
-    final String userId = userService.create("TestUser").block();
+  @DisplayName("Can error when attempting CSRF attack on self")
+  void attack_SelfActivation_Errors() {
+    final String userId = integrationTestUtils.createTestUser();
 
     final CsrfTutorialResult tutorialResult = csrfTutorial.getTutorial(userId).block();
 

@@ -436,6 +436,15 @@ public class UserService {
     return passwordAuthRepository.findByUserId(userId);
   }
 
+  public Mono<PasswordAuth> getPasswordAuthByUserId(@ValidUserId final String userId) {
+    return findPasswordAuthByUserId(userId)
+      .switchIfEmpty(
+        Mono.error(
+          new UserNotFoundException("Password Auth information not found for user id \"" + userId + "\" not found")
+        )
+      );
+  }
+
   /**
    * Find a team by id
    *

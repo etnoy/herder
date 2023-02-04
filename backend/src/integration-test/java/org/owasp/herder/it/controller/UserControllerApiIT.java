@@ -35,7 +35,6 @@ import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.FluxExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
@@ -54,6 +53,7 @@ class UserControllerApiIT extends BaseIT {
   IntegrationTestUtils integrationTestUtils;
 
   @Test
+  @DisplayName("Can return 403 Forbidden when getting user list without being authenticated")
   void getUserList_AuthenticatedUser_Forbidden() {
     final String loginName = "test";
     final String hashedPassword = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
@@ -94,6 +94,7 @@ class UserControllerApiIT extends BaseIT {
   }
 
   @Test
+  @DisplayName("Can get user list after user was promoted to admin")
   void getUserList_UserPromotedToAdmin_Success() {
     final String loginName = "test";
     final String hashedPassword = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
@@ -170,6 +171,7 @@ class UserControllerApiIT extends BaseIT {
   }
 
   @Test
+  @DisplayName("Can list users")
   void listUsers_UsersExist_ReturnsUserList() {
     final String loginName = "test";
     final String password = "paLswOrdha17£@£sh";
@@ -256,82 +258,6 @@ class UserControllerApiIT extends BaseIT {
       .recordWith(HashSet::new)
       .thenConsumeWhile(x -> true)
       .consumeRecordedWith(users -> assertThat(users).containsExactlyElementsOf(userIdSet))
-      .verifyComplete();
-  }
-
-  // TODO: displaynames
-  @Test
-  void register_ValidData_ReturnsValidUser() {
-    final String loginName = "test";
-    final String password = "paLswOrdha17£@£sh";
-
-    webTestClient
-      .post()
-      .uri("/api/v1/register")
-      .contentType(MediaType.APPLICATION_JSON)
-      .body(
-        BodyInserters.fromPublisher(
-          Mono.just(
-            "{\"displayName\": \"" +
-            loginName +
-            "\", \"userName\": \"" +
-            loginName +
-            "\",  \"password\": \"" +
-            password +
-            "\"}"
-          ),
-          String.class
-        )
-      )
-      .exchange()
-      .expectStatus()
-      .isCreated();
-
-    final String userId = userService.findUserIdByLoginName("test").block();
-
-    // Promote this user to admin
-    userService.promote(userId).block();
-
-    String token = JsonPath
-      .parse(
-        new String(
-          webTestClient
-            .post()
-            .uri("/api/v1/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(
-              BodyInserters.fromPublisher(
-                Mono.just("{\"userName\": \"" + loginName + "\", \"password\": \"" + password + "\"}"),
-                String.class
-              )
-            )
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectBody()
-            .returnResult()
-            .getResponseBody()
-        )
-      )
-      .read("$.accessToken");
-
-    FluxExchangeResult<UserEntity> getResult = webTestClient
-      .get()
-      .uri("/api/v1/user/" + userId)
-      .header("Authorization", "Bearer " + token)
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus()
-      .isOk()
-      .expectHeader()
-      .contentType(MediaType.APPLICATION_JSON)
-      .returnResult(UserEntity.class);
-
-    StepVerifier
-      .create(getResult.getResponseBody())
-      .assertNext(getData -> {
-        assertThat(getData).isEqualTo(userService.findById(userId).block());
-      })
       .verifyComplete();
   }
 

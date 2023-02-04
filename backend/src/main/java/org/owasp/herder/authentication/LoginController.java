@@ -100,13 +100,11 @@ public class LoginController {
 
   @PostMapping(path = "/register")
   @ResponseStatus(HttpStatus.CREATED)
-  public Mono<Void> register(@Valid @RequestBody final PasswordRegistrationDto registrationDto) {
-    return userService
-      .createPasswordUser(
-        registrationDto.getDisplayName(),
-        registrationDto.getUserName(),
-        passwordEncoder.encode(registrationDto.getPassword())
-      )
-      .then();
+  public Mono<String> register(@Valid @RequestBody final PasswordRegistrationDto registrationDto) {
+    return userService.createPasswordUser(
+      registrationDto.getDisplayName(),
+      registrationDto.getUserName(),
+      passwordEncoder.encode(registrationDto.getPassword())
+    );
   }
 }
