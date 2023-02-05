@@ -21,7 +21,7 @@
  */
 package org.owasp.herder.test.controller;
 
-import static org.mockito.Mockito.mock;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,15 +34,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.authentication.ControllerAuthentication;
+import org.owasp.herder.exception.FlagSubmissionRateLimitException;
 import org.owasp.herder.exception.NotAuthenticatedException;
 import org.owasp.herder.flag.FlagController;
-import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -73,11 +74,10 @@ class FlagControllerTest extends BaseTest {
   @Test
   @DisplayName("Can error when submitting flag without being authenticated")
   void submitFlag_UserNotAuthenticated_Errors() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-
     when(controllerAuthentication.getUserId()).thenReturn(Mono.error(new NotAuthenticatedException()));
 
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
+    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
 
     StepVerifier
       .create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, TestConstants.TEST_STATIC_FLAG))
@@ -90,8 +90,6 @@ class FlagControllerTest extends BaseTest {
   @Test
   @DisplayName("Can submit flag")
   void submitFlag_UserAuthenticatedAndValidFlagSubmitted_ReturnsValidSubmission() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-
     when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
 
     final Submission submission = Submission
@@ -112,9 +110,8 @@ class FlagControllerTest extends BaseTest {
     )
       .thenReturn(Mono.just(submission));
 
-    when(mockModule.getId()).thenReturn(TestConstants.TEST_MODULE_ID);
-
-    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.just(mockModule));
+    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY.withId(TestConstants.TEST_MODULE_ID)));
 
     when(moduleService.refreshModuleLists()).thenReturn(Mono.empty());
     when(submissionService.refreshSubmissionRanks()).thenReturn(Mono.empty());
@@ -127,6 +124,33 @@ class FlagControllerTest extends BaseTest {
           .map(ResponseEntity::getBody)
       )
       .expectNext(submission)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can return too many requests status if rate limit is exceeded")
+  void submitFlag_RateLimitExceeded_Errors() {
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
+
+    when(
+      submissionService.submitFlag(
+        TestConstants.TEST_USER_ID,
+        TestConstants.TEST_MODULE_ID,
+        TestConstants.TEST_STATIC_FLAG
+      )
+    )
+      .thenReturn(Mono.error(new FlagSubmissionRateLimitException()));
+
+    when(moduleService.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY.withId(TestConstants.TEST_MODULE_ID)));
+
+    StepVerifier
+      .create(flagController.submitFlag(TestConstants.TEST_MODULE_LOCATOR, TestConstants.TEST_STATIC_FLAG))
+      .assertNext(response -> {
+        assertThat(response.getHeaders()).isEmpty();
+        assertThat(response.getBody()).isNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+      })
       .verifyComplete();
   }
 }
