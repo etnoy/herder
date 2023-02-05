@@ -21,7 +21,6 @@
  */
 package org.owasp.herder.configuration;
 
-import lombok.Generated;
 import org.owasp.herder.authentication.AuthenticationManager;
 import org.owasp.herder.authentication.SecurityContextRepository;
 import org.springframework.context.annotation.Bean;
@@ -34,7 +33,6 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import reactor.core.publisher.Mono;
 
-@Generated
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
@@ -47,9 +45,7 @@ public class FilterChainConfiguration {
     SecurityContextRepository securityContextRepository
   ) {
     return serverHttpSecurity
-      //
       .exceptionHandling()
-      //
       .authenticationEntryPoint((serverWebExchange, authenticationException) ->
         Mono.fromRunnable(() -> {
           serverWebExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);

@@ -19,29 +19,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.configuration;
+package org.owasp.herder.test.configuration;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.util.StdDateFormat;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.owasp.herder.configuration.ObjectMapperConfiguration;
 
-@Configuration
-public class ObjectMapperConfiguration {
+@ExtendWith(MockitoExtension.class)
+@DisplayName("ObjectMapperConfiguration unit tests")
+class ObjectMapperConfigurationTest {
 
-  @Bean
-  @Primary
-  public ObjectMapper buildObjectMapper() {
-    return new ObjectMapper()
-      .setAnnotationIntrospector(new JacksonAnnotationIntrospector())
-      .registerModule(new JavaTimeModule())
-      .setDateFormat(new StdDateFormat())
-      .registerModule(new GuavaModule())
-      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+  final ObjectMapperConfiguration objectMapperConfiguration = new ObjectMapperConfiguration();
+
+  @Test
+  @DisplayName("Can build the object mapperor factory")
+  void validatorFactory_ReturnsLocalValidatorFactoryBean() {
+    assertThat(objectMapperConfiguration.buildObjectMapper()).isInstanceOf(ObjectMapper.class);
   }
 }

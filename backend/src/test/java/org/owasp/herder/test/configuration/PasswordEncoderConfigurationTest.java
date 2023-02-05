@@ -19,13 +19,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.exception;
+package org.owasp.herder.test.configuration;
 
-public class InvalidFlagException extends RuntimeException {
+import static org.assertj.core.api.Assertions.assertThat;
 
-  private static final long serialVersionUID = -5098332156898854294L;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.owasp.herder.configuration.PasswordEncoderConfiguration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-  public InvalidFlagException(final String message) {
-    super(message);
+@ExtendWith(MockitoExtension.class)
+@DisplayName("PasswordEncoderConfiguration unit tests")
+class PasswordEncoderConfigurationTest {
+
+  final PasswordEncoderConfiguration passwordEncoderConfiguration = new PasswordEncoderConfiguration();
+
+  @Test
+  @DisplayName("Can get the bcrypt password encoder")
+  void passwordEncoder_ReturnsBryptEncoder() {
+    assertThat(passwordEncoderConfiguration.passwordEncoder()).isInstanceOf(BCryptPasswordEncoder.class);
   }
 }

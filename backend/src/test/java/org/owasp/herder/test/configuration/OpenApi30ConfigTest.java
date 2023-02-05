@@ -19,16 +19,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.exception;
+package org.owasp.herder.test.configuration;
 
-import lombok.NoArgsConstructor;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@NoArgsConstructor
-public class IncompatibleDatabaseException extends RuntimeException {
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.owasp.herder.configuration.OpenApi30Config;
 
-  private static final long serialVersionUID = -4610783131127415375L;
+@ExtendWith(MockitoExtension.class)
+@DisplayName("OpenApi30ConfigTest unit tests")
+class OpenApi30ConfigTest {
 
-  public IncompatibleDatabaseException(final String message) {
-    super(message);
+  final OpenApi30Config openApi30Config = new OpenApi30Config();
+
+  @Test
+  @DisplayName("Can construct the open api config bean")
+  void openApi30ConfigTest() {
+    assertThat(openApi30Config).isNotNull();
   }
 }
