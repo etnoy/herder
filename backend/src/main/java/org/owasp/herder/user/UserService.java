@@ -438,11 +438,7 @@ public class UserService {
 
   public Mono<PasswordAuth> getPasswordAuthByUserId(@ValidUserId final String userId) {
     return findPasswordAuthByUserId(userId)
-      .switchIfEmpty(
-        Mono.error(
-          new UserNotFoundException("Password Auth information not found for user id \"" + userId + "\" not found")
-        )
-      );
+      .switchIfEmpty(Mono.error(new UserNotFoundException("Password Auth for user id \"" + userId + "\" not found")));
   }
 
   /**

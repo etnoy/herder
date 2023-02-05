@@ -421,6 +421,29 @@ class UserServiceTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can get password auth by user id")
+  void getPasswordAuthByUserId_PasswordAuthExists_ReturnsUser() {
+    when(passwordAuthRepository.findByUserId(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockPasswordAuth));
+    StepVerifier
+      .create(userService.getPasswordAuthByUserId(TestConstants.TEST_USER_ID))
+      .expectNext(mockPasswordAuth)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can error when getting user by id if id does not exist")
+  void getPasswordAuthByUserId_PasswordAuthUserDoesNotExist_Errors() {
+    when(passwordAuthRepository.findByUserId(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
+    StepVerifier
+      .create(userService.getPasswordAuthByUserId(TestConstants.TEST_USER_ID))
+      .expectErrorMatches(throwable ->
+        throwable instanceof UserNotFoundException &&
+        throwable.getMessage().equals("Password Auth for user id \"" + TestConstants.TEST_USER_ID + "\" not found")
+      )
+      .verify();
+  }
+
+  @Test
   @DisplayName("Can suspend user until specific date and time with suspension message")
   void suspendUntil_SuspensionDateInFutureAndHasMessage_Success() {
     setClock(TestConstants.year2000Clock);
