@@ -214,20 +214,13 @@ public class ModuleService {
     return getById(moduleId).map(module -> module.withFlagStatic(false)).flatMap(moduleRepository::save);
   }
 
-  public Mono<Void> setModuleLocator(@ValidModuleId final String moduleId, @ValidModuleName final String locator) {
-    return getById(moduleId).map(module -> module.withLocator(locator)).flatMap(moduleRepository::save).then();
-  }
-
-  public Mono<Void> setModuleName(@ValidModuleId final String moduleId, @ValidModuleName final String name) {
-    return getById(moduleId).map(module -> module.withName(name)).flatMap(moduleRepository::save).then();
-  }
-
   public Mono<ModuleEntity> setStaticFlag(@ValidModuleId final String moduleId, @ValidFlag final String staticFlag) {
     return getById(moduleId)
       .map(module -> module.withFlagStatic(true).withStaticFlag(staticFlag))
       .flatMap(moduleRepository::save);
   }
 
+  // TODO: validate tags
   public Mono<Void> setTags(@ValidModuleId final String moduleId, final Multimap<String, String> tags) {
     return getById(moduleId).map(module -> module.withTags(tags)).flatMap(moduleRepository::save).then();
   }

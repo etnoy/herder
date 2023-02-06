@@ -28,6 +28,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +41,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.DuplicateModuleLocatorException;
+import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.module.ModuleEntity;
+import org.owasp.herder.module.ModuleList;
+import org.owasp.herder.module.ModuleListItem;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.test.BaseTest;
@@ -151,7 +156,68 @@ class ModuleServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Can find a module by name")
+  @DisplayName("Can find all module lists")
+  void findAllModuleLists_ModulesExist_ReturnsModuleList() {
+    final ModuleList mockModuleList1 = mock(ModuleList.class);
+    final ModuleList mockModuleList2 = mock(ModuleList.class);
+    final ModuleList mockModuleList3 = mock(ModuleList.class);
+
+    when(moduleListRepository.findAll()).thenReturn(Flux.just(mockModuleList1, mockModuleList2, mockModuleList3));
+
+    StepVerifier
+      .create(moduleService.findAllModuleLists())
+      .expectNext(mockModuleList1)
+      .expectNext(mockModuleList2)
+      .expectNext(mockModuleList3)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can find module list for team id")
+  void findModuleListByTeamId_ModulesExist_ReturnsModuleList() {
+    final ModuleList mockModuleList = mock(ModuleList.class);
+
+    when(moduleListRepository.findByTeamId(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(mockModuleList));
+
+    StepVerifier
+      .create(moduleService.findModuleListByTeamId(TestConstants.TEST_TEAM_ID))
+      .expectNext(mockModuleList)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can find module list for user id")
+  void findModuleListByUserId_ModulesExist_ReturnsModuleList() {
+    final ModuleList mockModuleList = mock(ModuleList.class);
+
+    when(moduleListRepository.findById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockModuleList));
+
+    StepVerifier
+      .create(moduleService.findModuleListByUserId(TestConstants.TEST_USER_ID))
+      .expectNext(mockModuleList)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can find module list item for user id and module locator")
+  void findListItemByUserIdAndLocator_ModulesExist_ReturnsModuleList() {
+    final ModuleListItem mockModuleListItem = mock(ModuleListItem.class);
+
+    when(
+      moduleListRepository.findListItemByUserIdAndLocator(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_LOCATOR)
+    )
+      .thenReturn(Mono.just(mockModuleListItem));
+
+    StepVerifier
+      .create(
+        moduleService.findListItemByUserIdAndLocator(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_LOCATOR)
+      )
+      .expectNext(mockModuleListItem)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can find module by name")
   void findByName_ModuleNameExists_ReturnsModule() {
     when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME))
       .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
@@ -159,6 +225,64 @@ class ModuleServiceTest extends BaseTest {
       .create(moduleService.findByName(TestConstants.TEST_MODULE_NAME))
       .expectNext(TestConstants.TEST_MODULE_ENTITY)
       .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can find module by id")
+  void findById_ModuleIdExists_ReturnsModule() {
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
+
+    StepVerifier
+      .create(moduleService.findById(TestConstants.TEST_MODULE_ID))
+      .expectNext(TestConstants.TEST_MODULE_ENTITY)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can get module by id")
+  void getById_ModuleIdExists_ReturnsModule() {
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
+
+    StepVerifier
+      .create(moduleService.getById(TestConstants.TEST_MODULE_ID))
+      .expectNext(TestConstants.TEST_MODULE_ENTITY)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can error when getting module by id that does not exist")
+  void getById_ModuleIdDoesNotExist_Errors() {
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.empty());
+
+    StepVerifier
+      .create(moduleService.getById(TestConstants.TEST_MODULE_ID))
+      .expectError(ModuleNotFoundException.class)
+      .verify();
+  }
+
+  @Test
+  @DisplayName("Can get module by locator")
+  void getByLocator_ModuleLocatorExists_ReturnsModule() {
+    when(moduleRepository.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
+
+    StepVerifier
+      .create(moduleService.getByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .expectNext(TestConstants.TEST_MODULE_ENTITY)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can error when getting module by id that does not exist")
+  void getByLocator_ModuleLocatorDoesNotExist_Errors() {
+    when(moduleRepository.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.empty());
+
+    StepVerifier
+      .create(moduleService.getByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .expectError(ModuleNotFoundException.class)
+      .verify();
   }
 
   @Test
@@ -244,7 +368,33 @@ class ModuleServiceTest extends BaseTest {
   }
 
   @Test
-  @DisplayName("Can set module static flag")
+  @DisplayName("Can set tags of module")
+  void setTags_ValidTags_SetsTags() {
+    final Multimap<String, String> tags = ArrayListMultimap.create();
+
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
+
+    when(moduleRepository.save(any(ModuleEntity.class)))
+      .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
+
+    StepVerifier.create(moduleService.setTags(TestConstants.TEST_MODULE_ID, tags)).verifyComplete();
+
+    final ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
+    verify(moduleRepository).save(argument.capture());
+    assertThat(argument.getValue().getTags()).isEqualTo(tags);
+  }
+
+  @Test
+  @DisplayName("Can refresh module lists")
+  void refreshModuleLists_RefreshesModules() {
+    when(userRepository.computeModuleLists()).thenReturn(Flux.just(mock(ModuleList.class)));
+
+    StepVerifier.create(moduleService.refreshModuleLists()).verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can set static flag of module")
   void setStaticFlag_ValidStaticFlag_SetsFlagToStatic() {
     when(moduleRepository.findById(TestConstants.TEST_MODULE_ID))
       .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
