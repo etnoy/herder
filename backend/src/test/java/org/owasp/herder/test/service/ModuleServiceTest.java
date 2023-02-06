@@ -91,12 +91,17 @@ class ModuleServiceTest extends BaseTest {
     when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.empty());
 
     when(moduleRepository.save(any(ModuleEntity.class)))
-      .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class).withId(TestConstants.TEST_MODULE_ID)));
+      .thenAnswer(module -> Mono.just(module.getArgument(0, ModuleEntity.class).withId(TestConstants.TEST_MODULE_ID)));
 
     StepVerifier
       .create(moduleService.create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR))
       .expectNext(TestConstants.TEST_MODULE_ID)
       .verifyComplete();
+
+    final ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
+    verify(moduleRepository).save(argument.capture());
+    assertThat(argument.getValue().getName()).isEqualTo(TestConstants.TEST_MODULE_NAME);
+    assertThat(argument.getValue().getLocator()).isEqualTo(TestConstants.TEST_MODULE_LOCATOR);
   }
 
   @Test
@@ -148,12 +153,11 @@ class ModuleServiceTest extends BaseTest {
   @Test
   @DisplayName("Can find a module by name")
   void findByName_ModuleNameExists_ReturnsModule() {
-    final ModuleEntity mockModule = mock(ModuleEntity.class);
-
-    when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mockModule));
+    when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
     StepVerifier
       .create(moduleService.findByName(TestConstants.TEST_MODULE_NAME))
-      .expectNext(mockModule)
+      .expectNext(TestConstants.TEST_MODULE_ENTITY)
       .verifyComplete();
   }
 
@@ -174,7 +178,7 @@ class ModuleServiceTest extends BaseTest {
       .verifyComplete();
     verify(keyService, never()).generateRandomString(any(Integer.class));
 
-    ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
+    final ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
     verify(moduleRepository).save(argument.capture());
     assertThat(argument.getValue().getKey()).isEqualTo(TestConstants.TEST_BYTE_ARRAY);
   }
@@ -182,9 +186,8 @@ class ModuleServiceTest extends BaseTest {
   @Test
   @DisplayName("Can set dynamic flag of module")
   void setDynamicFlag_StaticFlagIsSet_SetsDynamicFlag() {
-    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY.withFlagStatic(true);
-
-    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY.withFlagStatic(true)));
     when(moduleRepository.save(any(ModuleEntity.class)))
       .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
 
@@ -193,7 +196,7 @@ class ModuleServiceTest extends BaseTest {
       .expectNextMatches(module -> !module.isFlagStatic())
       .verifyComplete();
 
-    ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
+    final ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
     verify(moduleRepository).save(argument.capture());
     assertThat(argument.getValue().isFlagStatic()).isFalse();
   }
@@ -203,9 +206,8 @@ class ModuleServiceTest extends BaseTest {
   void setBaseScore_ValidBaseScore_SetsBaseScore() {
     final int newBaseScore = 100;
 
-    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY;
-
-    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
 
     when(moduleRepository.save(any(ModuleEntity.class)))
       .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
@@ -215,7 +217,7 @@ class ModuleServiceTest extends BaseTest {
       .expectNextMatches(module -> module.getBaseScore() == newBaseScore)
       .verifyComplete();
 
-    ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
+    final ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
     verify(moduleRepository).save(argument.capture());
     assertThat(argument.getValue().getBaseScore()).isEqualTo(newBaseScore);
   }
@@ -223,15 +225,14 @@ class ModuleServiceTest extends BaseTest {
   @Test
   @DisplayName("Can set bonus scores of module")
   void setBonusScores_ValidBonusScores_SetsBaseScore() {
-    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY;
-
     List<Integer> bonusScores = new ArrayList<Integer>();
 
     bonusScores.add(100);
     bonusScores.add(50);
     bonusScores.add(10);
 
-    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
 
     when(moduleRepository.save(any(ModuleEntity.class)))
       .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
@@ -245,9 +246,8 @@ class ModuleServiceTest extends BaseTest {
   @Test
   @DisplayName("Can set module static flag")
   void setStaticFlag_ValidStaticFlag_SetsFlagToStatic() {
-    final ModuleEntity testModule = TestConstants.TEST_MODULE_ENTITY;
-
-    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID)).thenReturn(Mono.just(testModule));
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
 
     when(moduleRepository.save(any(ModuleEntity.class)))
       .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
@@ -257,6 +257,84 @@ class ModuleServiceTest extends BaseTest {
         module.isFlagStatic() && module.getStaticFlag().equals(TestConstants.TEST_STATIC_FLAG)
       )
       .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can close module")
+  void close_ModuleOpen_ClosesModule() {
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY.withOpen(true)));
+
+    when(moduleRepository.save(any(ModuleEntity.class)))
+      .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
+
+    StepVerifier
+      .create(moduleService.close(TestConstants.TEST_MODULE_ID))
+      .expectNextMatches(module -> !module.isOpen())
+      .verifyComplete();
+
+    final ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
+    verify(moduleRepository).save(argument.capture());
+    assertThat(argument.getValue().isOpen()).isFalse();
+  }
+
+  @Test
+  @DisplayName("Can open module")
+  void open_ModuleClosed_OpensModule() {
+    when(moduleRepository.findById(TestConstants.TEST_MODULE_ID))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY.withOpen(false)));
+
+    when(moduleRepository.save(any(ModuleEntity.class)))
+      .thenAnswer(user -> Mono.just(user.getArgument(0, ModuleEntity.class)));
+
+    StepVerifier
+      .create(moduleService.open(TestConstants.TEST_MODULE_ID))
+      .expectNextMatches(module -> module.isOpen())
+      .verifyComplete();
+
+    final ArgumentCaptor<ModuleEntity> argument = ArgumentCaptor.forClass(ModuleEntity.class);
+    verify(moduleRepository).save(argument.capture());
+    assertThat(argument.getValue().isOpen()).isTrue();
+  }
+
+  @Test
+  @DisplayName("Can check if module exists by locator")
+  void existsByLocator_ModuleExists_ReturnsTrue() {
+    when(moduleRepository.findByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
+
+    StepVerifier
+      .create(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .expectNext(true)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can check if module does not exist by locator")
+  void existsByLocator_ModuleDoesNotExist_ReturnsFalse() {
+    when(moduleRepository.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.empty());
+
+    StepVerifier
+      .create(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR))
+      .expectNext(false)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can check if module exists by name")
+  void existsByName_ModuleExists_ReturnsTrue() {
+    when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY));
+
+    StepVerifier.create(moduleService.existsByName(TestConstants.TEST_MODULE_NAME)).expectNext(true).verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can check if module does not exist by name")
+  void existsByName_ModuleDoesNotExist_ReturnsFalse() {
+    when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.empty());
+
+    StepVerifier.create(moduleService.existsByName(TestConstants.TEST_MODULE_NAME)).expectNext(false).verifyComplete();
   }
 
   @BeforeEach
