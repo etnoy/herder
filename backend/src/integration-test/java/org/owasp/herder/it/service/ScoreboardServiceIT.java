@@ -482,7 +482,7 @@ class ScoreboardServiceIT extends BaseIT {
   }
 
   private void setInitialClock() {
-    testClock = TestConstants.year2000Clock;
+    testClock = TestConstants.YEAR_2000_CLOCK;
     setClock(testClock);
   }
 

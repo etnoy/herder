@@ -70,13 +70,13 @@ class WebTokenServiceTest {
   @Test
   @DisplayName("Can error when parsing an expired token")
   void generateToken_TokenExpired_TokenInvalid() {
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     when(webTokenKeyManager.getOrGenerateKeyForUser(TestConstants.TEST_USER_ID)).thenReturn(testKey);
 
     final String token = webTokenService.generateToken(TestConstants.TEST_USER_ID, true);
 
-    setClock(TestConstants.year2100Clock);
+    setClock(TestConstants.YEAR_2100_CLOCK);
 
     final JwtParser jwtParser = Jwts.parserBuilder().setClock(webTokenClock).setSigningKey(testKey).build();
 
@@ -91,7 +91,7 @@ class WebTokenServiceTest {
   @DisplayName("Can parse a valid admin token")
   void generateToken_TokenExpiresInFutureAndRoleIsAdmin_ValidAdminToken() {
     when(webTokenKeyManager.getOrGenerateKeyForUser(TestConstants.TEST_USER_ID)).thenReturn(testKey);
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     final String token = webTokenService.generateToken(TestConstants.TEST_USER_ID, true);
     final JwtParser jwtParser = Jwts
@@ -108,7 +108,7 @@ class WebTokenServiceTest {
   void generateToken_TokenExpiresInTheFutureAndRoleIsUser_Valid() {
     when(webTokenKeyManager.getOrGenerateKeyForUser(TestConstants.TEST_USER_ID)).thenReturn(testKey);
 
-    setClock(TestConstants.year2100Clock);
+    setClock(TestConstants.YEAR_2100_CLOCK);
 
     final String token = webTokenService.generateToken(TestConstants.TEST_USER_ID, false);
     final JwtParser jwtParser = Jwts
@@ -126,7 +126,7 @@ class WebTokenServiceTest {
   void generateToken_ValidUserIdIsAdmin_GeneratesValidToken() {
     when(webTokenKeyManager.getOrGenerateKeyForUser(TestConstants.TEST_USER_ID)).thenReturn(testKey);
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     final String token = webTokenService.generateToken(TestConstants.TEST_USER_ID, true);
     final Claims claims = Jwts
@@ -305,7 +305,7 @@ class WebTokenServiceTest {
       .signWith(testKey)
       .compact();
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     final Authentication authentication = webTokenService.parseToken(testToken);
 
@@ -332,7 +332,7 @@ class WebTokenServiceTest {
       .signWith(testKey)
       .compact();
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     final Authentication authentication = webTokenService.parseToken(testToken);
 
@@ -366,7 +366,7 @@ class WebTokenServiceTest {
       .signWith(testKey)
       .compact();
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     assertThatThrownBy(() -> {
         webTokenService.parseToken(testToken);
@@ -383,7 +383,7 @@ class WebTokenServiceTest {
   @DisplayName("Can error when parsing a token with an invalid issuer")
   void parseToken_InvalidIssuer_ThrowsBadCredentialsException() {
     when(webTokenKeyManager.getKeyForUser(TestConstants.TEST_USER_ID)).thenReturn(testKey);
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
     final String testToken = Jwts
       .builder()
       .claim("role", "user")

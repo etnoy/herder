@@ -31,6 +31,9 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
 import org.owasp.herder.model.ClassEntity;
 import org.owasp.herder.module.ModuleEntity;
+import org.owasp.herder.scoring.RankedSubmission;
+import org.owasp.herder.scoring.SanitizedRankedSubmission;
+import org.owasp.herder.scoring.SolverType;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
 
@@ -168,11 +171,11 @@ public final class TestConstants {
   public static final String VERY_LONG_STRING =
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-  public static final Clock year2000Clock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
-  public static final WebTokenClock year2000WebTokenClock = new WebTokenClock(year2000Clock);
+  public static final Clock YEAR_2000_CLOCK = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+  public static final WebTokenClock year2000WebTokenClock = new WebTokenClock(YEAR_2000_CLOCK);
 
-  public static final Clock year2100Clock = Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.of("Z"));
-  public static final WebTokenClock year2100WebTokenClock = new WebTokenClock(year2100Clock);
+  public static final Clock YEAR_2100_CLOCK = Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+  public static final WebTokenClock year2100WebTokenClock = new WebTokenClock(YEAR_2100_CLOCK);
 
   public static Stream<String> testStringProvider() {
     return Stream.of(STRINGS);
@@ -208,5 +211,30 @@ public final class TestConstants {
     .builder()
     .name(TestConstants.TEST_MODULE_NAME)
     .locator(TEST_MODULE_LOCATOR)
+    .build();
+
+  public static final RankedSubmission TEST_RANKED_SUBMISSION = RankedSubmission
+    .builder()
+    .module(TEST_MODULE_ENTITY)
+    .user(TEST_USER_ENTITY.withId(TEST_USER_ID))
+    .rank(1L)
+    .time(LocalDateTime.now(YEAR_2000_CLOCK))
+    .baseScore(100L)
+    .bonusScore(50L)
+    .score(150L)
+    .build();
+
+  public static final SanitizedRankedSubmission TEST_SANITIZED_RANKED_SUBMISSION = SanitizedRankedSubmission
+    .builder()
+    .id(TEST_USER_ID)
+    .solverType(SolverType.USER)
+    .displayName(TEST_USER_DISPLAY_NAME)
+    .moduleLocator(TEST_MODULE_LOCATOR)
+    .moduleName(TEST_MODULE_NAME)
+    .rank(1L)
+    .time(LocalDateTime.now(YEAR_2000_CLOCK))
+    .baseScore(100L)
+    .bonusScore(50L)
+    .score(150L)
     .build();
 }

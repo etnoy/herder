@@ -132,7 +132,7 @@ class UserServiceTest extends BaseTest {
 
     when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
       .create(userService.authenticate(TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD))
@@ -176,7 +176,7 @@ class UserServiceTest extends BaseTest {
     LocalDateTime longAgo = LocalDateTime.MIN;
     when(mockUser.getSuspendedUntil()).thenReturn(longAgo);
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
       .create(userService.authenticate(TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD))
@@ -446,7 +446,7 @@ class UserServiceTest extends BaseTest {
   @Test
   @DisplayName("Can suspend user until specific date and time with suspension message")
   void suspendUntil_SuspensionDateInFutureAndHasMessage_Success() {
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
     when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
@@ -469,7 +469,7 @@ class UserServiceTest extends BaseTest {
   @Test
   @DisplayName("Can suspend user until specific date and time")
   void suspendUntil_SuspensionDateInFuture_Success() {
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
     final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
     when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
 
@@ -489,7 +489,7 @@ class UserServiceTest extends BaseTest {
   @Test
   @DisplayName("Can suspend user for duration with message")
   void suspendForDuration_ValidDurationAndHasMessage_Success() {
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
     final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
     when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
 
@@ -503,7 +503,7 @@ class UserServiceTest extends BaseTest {
     ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(UserEntity.class);
     verify(userRepository).save(userArgumentCaptor.capture());
     assertThat(userArgumentCaptor.getValue().getSuspendedUntil())
-      .isEqualTo(LocalDateTime.now(TestConstants.year2000Clock).plusDays(1));
+      .isEqualTo(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK).plusDays(1));
     assertThat(userArgumentCaptor.getValue().getSuspensionMessage()).isEqualTo("Banned");
 
     verify(webTokenKeyManager).invalidateAccessToken(TestConstants.TEST_USER_ID);
@@ -512,7 +512,7 @@ class UserServiceTest extends BaseTest {
   @Test
   @DisplayName("Can suspend user for duration")
   void suspendForDuration_ValidDuration_Success() {
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
     final UserEntity testUser = TestConstants.TEST_USER_ENTITY;
     when(userRepository.findByIdAndIsDeletedFalse(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(testUser));
 
@@ -526,7 +526,7 @@ class UserServiceTest extends BaseTest {
     ArgumentCaptor<UserEntity> userArgumentCaptor = ArgumentCaptor.forClass(UserEntity.class);
     verify(userRepository).save(userArgumentCaptor.capture());
     assertThat(userArgumentCaptor.getValue().getSuspendedUntil())
-      .isEqualTo(LocalDateTime.now(TestConstants.year2000Clock).plusDays(1));
+      .isEqualTo(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK).plusDays(1));
     assertThat(userArgumentCaptor.getValue().getSuspensionMessage()).isNull();
 
     verify(webTokenKeyManager).invalidateAccessToken(TestConstants.TEST_USER_ID);
@@ -535,7 +535,7 @@ class UserServiceTest extends BaseTest {
   @Test
   @DisplayName("Can error if suspending user until past date and time")
   void suspendUntil_SuspensionDateHasPassedAndHasMessage_Errors() {
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
       .create(userService.suspendUntil(TestConstants.TEST_USER_ID, LocalDateTime.MIN, "Banned"))
@@ -568,7 +568,7 @@ class UserServiceTest extends BaseTest {
 
     when(userRepository.findByDisplayName(TestConstants.TEST_USER_DISPLAY_NAME)).thenReturn(Mono.just(mockUser));
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
       .create(userService.create(TestConstants.TEST_USER_DISPLAY_NAME))
@@ -586,7 +586,7 @@ class UserServiceTest extends BaseTest {
     when(userRepository.save(any(UserEntity.class)))
       .thenAnswer(user -> Mono.just(user.getArgument(0, UserEntity.class).withId(TestConstants.TEST_USER_ID)));
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
       .create(userService.create(TestConstants.TEST_USER_DISPLAY_NAME))
@@ -599,7 +599,7 @@ class UserServiceTest extends BaseTest {
 
     final UserEntity createdUser = argument.getValue();
     assertThat(createdUser.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
-    assertThat(createdUser.getCreationTime()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
+    assertThat(createdUser.getCreationTime()).isEqualTo(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK));
     assertThat(createdUser.getId()).isNull();
     assertThat(createdUser.getKey()).isEqualTo(TestConstants.TEST_BYTE_ARRAY);
     assertThat(createdUser.isAdmin()).isFalse();
@@ -655,7 +655,7 @@ class UserServiceTest extends BaseTest {
     when(passwordAuthRepository.save(any(PasswordAuth.class)))
       .thenAnswer(user -> Mono.just(user.getArgument(0, PasswordAuth.class).withId(TestConstants.TEST_USER_ID)));
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
       .create(
@@ -696,7 +696,7 @@ class UserServiceTest extends BaseTest {
   void deleteById_UserInTeam_Errors() {
     final UserEntity testUser = TestConstants.TEST_USER_ENTITY
       .withTeamId(TestConstants.TEST_TEAM_ID)
-      .withSuspendedUntil(LocalDateTime.now(TestConstants.year2100Clock))
+      .withSuspendedUntil(LocalDateTime.now(TestConstants.YEAR_2100_CLOCK))
       .withSuspensionMessage("Banned!")
       .withId(TestConstants.TEST_USER_ID)
       .withTeamId(TestConstants.TEST_TEAM_ID)
@@ -714,7 +714,7 @@ class UserServiceTest extends BaseTest {
   @DisplayName("Can delete user by id")
   void deleteById_ValidUserId_SavesDeletedPlaceholder() {
     final UserEntity testUser = TestConstants.TEST_USER_ENTITY
-      .withSuspendedUntil(LocalDateTime.now(TestConstants.year2100Clock))
+      .withSuspendedUntil(LocalDateTime.now(TestConstants.YEAR_2100_CLOCK))
       .withSuspensionMessage("Banned!")
       .withId(TestConstants.TEST_USER_ID)
       .withAdmin(true);

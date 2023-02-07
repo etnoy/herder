@@ -98,7 +98,7 @@ class FlagControllerTest extends BaseTest {
       .moduleId(TestConstants.TEST_MODULE_ID)
       .flag(TestConstants.TEST_STATIC_FLAG)
       .isValid(true)
-      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
       .build();
 
     when(

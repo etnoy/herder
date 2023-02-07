@@ -71,7 +71,7 @@ class WebTokenServiceIT extends BaseIT {
   void canAcceptTokensThatHaveNotExpiredYet() {
     integrationTestUtils.createTestUser();
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     final String accessToken = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
@@ -79,7 +79,7 @@ class WebTokenServiceIT extends BaseIT {
     );
 
     final Clock rightBeforeTheTokenExpires = Clock.fixed(
-      TestConstants.year2000Clock.instant().plusMillis(webTokenService.getExpirationTime() - 1),
+      TestConstants.YEAR_2000_CLOCK.instant().plusMillis(webTokenService.getExpirationTime() - 1),
       ZoneId.of("Z")
     );
 
@@ -187,7 +187,7 @@ class WebTokenServiceIT extends BaseIT {
   void canRejectTokensThatHaveExpired() {
     integrationTestUtils.createTestUser();
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     final String accessToken = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
@@ -195,7 +195,7 @@ class WebTokenServiceIT extends BaseIT {
     );
 
     final Clock rightAfterTheTokenExpires = Clock.fixed(
-      TestConstants.year2000Clock.instant().plusMillis(webTokenService.getExpirationTime() + 1),
+      TestConstants.YEAR_2000_CLOCK.instant().plusMillis(webTokenService.getExpirationTime() + 1),
       ZoneId.systemDefault()
     );
 

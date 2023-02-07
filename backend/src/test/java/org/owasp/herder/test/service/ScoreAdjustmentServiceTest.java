@@ -81,7 +81,7 @@ class ScoreAdjustmentServiceTest extends BaseTest {
     when(scoreAdjustmentRepository.save(any(ScoreAdjustment.class)))
       .thenAnswer(scoreAdjustment -> Mono.just(scoreAdjustment.getArgument(0, ScoreAdjustment.class)));
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
       .create(scoreAdjustmentService.submitUserAdjustment(TestConstants.TEST_USER_ID, amount, description))
@@ -89,7 +89,7 @@ class ScoreAdjustmentServiceTest extends BaseTest {
         assertThat(scoreAdjustment.getUserIds()).containsExactly(TestConstants.TEST_USER_ID);
         assertThat(scoreAdjustment.getAmount()).isEqualTo(amount);
         assertThat(scoreAdjustment.getDescription()).isEqualTo(description);
-        assertThat(scoreAdjustment.getTime()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
+        assertThat(scoreAdjustment.getTime()).isEqualTo(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK));
       })
       .verifyComplete();
   }
@@ -117,7 +117,7 @@ class ScoreAdjustmentServiceTest extends BaseTest {
 
     when(teamService.getById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(testTeam));
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
       .create(scoreAdjustmentService.submitTeamAdjustment(TestConstants.TEST_TEAM_ID, amount, description))
@@ -125,7 +125,7 @@ class ScoreAdjustmentServiceTest extends BaseTest {
         assertThat(scoreAdjustment.getUserIds()).containsExactlyInAnyOrder("1", "2", "3");
         assertThat(scoreAdjustment.getAmount()).isEqualTo(amount);
         assertThat(scoreAdjustment.getDescription()).isEqualTo(description);
-        assertThat(scoreAdjustment.getTime()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
+        assertThat(scoreAdjustment.getTime()).isEqualTo(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK));
       })
       .verifyComplete();
   }

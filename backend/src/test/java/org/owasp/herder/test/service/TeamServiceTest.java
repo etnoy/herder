@@ -224,14 +224,14 @@ class TeamServiceTest extends BaseTest {
   @Test
   @DisplayName("Can create team")
   void create_ValidDisplayName_TeamCreated() {
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     when(teamRepository.findByDisplayName(TestConstants.TEST_TEAM_DISPLAY_NAME)).thenReturn(Mono.empty());
 
     TeamEntity createdTeam = TeamEntity
       .builder()
       .displayName(TestConstants.TEST_TEAM_DISPLAY_NAME)
-      .creationTime(LocalDateTime.now(TestConstants.year2000Clock))
+      .creationTime(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
       .members(new ArrayList<>())
       .build();
 

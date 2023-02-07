@@ -109,7 +109,7 @@ class SubmissionServiceIT extends BaseIT {
     final String teamId = integrationTestUtils.createTestTeam();
     final String moduleId = integrationTestUtils.createStaticTestModule();
 
-    Clock testClock = TestConstants.year2000Clock;
+    Clock testClock = TestConstants.YEAR_2000_CLOCK;
 
     setClock(testClock);
     integrationTestUtils.submitValidFlag(userId1, moduleId);

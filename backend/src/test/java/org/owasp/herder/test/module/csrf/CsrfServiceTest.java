@@ -102,7 +102,7 @@ class CsrfServiceTest extends BaseTest {
     when(mockCsrfAttack.withFinished(any())).thenReturn(mockCsrfAttack);
     when(csrfAttackRepository.save(mockCsrfAttack)).thenReturn(Mono.just(mockCsrfAttack));
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
       .create(csrfService.attack(TestConstants.TEST_CSRF_PSEUDONYM, TestConstants.TEST_MODULE_ID))
@@ -110,7 +110,7 @@ class CsrfServiceTest extends BaseTest {
 
     ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);
     verify(mockCsrfAttack).withFinished(captor.capture());
-    assertThat(captor.getValue()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
+    assertThat(captor.getValue()).isEqualTo(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK));
   }
 
   @Test
@@ -177,7 +177,7 @@ class CsrfServiceTest extends BaseTest {
     when(mockCsrfAttack.getFinished()).thenReturn(null);
 
     when(csrfAttackRepository.save(any(CsrfAttack.class))).thenReturn(Mono.just(mockCsrfAttack));
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
       .create(csrfService.validate(TestConstants.TEST_CSRF_PSEUDONYM, TestConstants.TEST_MODULE_ID))
@@ -202,7 +202,7 @@ class CsrfServiceTest extends BaseTest {
 
     when(csrfAttackRepository.save(any(CsrfAttack.class))).thenReturn(Mono.just(mockCsrfAttack));
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
       .create(csrfService.validate(TestConstants.TEST_CSRF_PSEUDONYM, TestConstants.TEST_MODULE_ID))
