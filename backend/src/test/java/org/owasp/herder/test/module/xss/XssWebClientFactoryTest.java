@@ -39,18 +39,19 @@ class XssWebClientFactoryTest {
   XssWebClientFactory xssWebClientFactory;
 
   @Test
+  @DisplayName("Can create alert handler")
   void createAlertHandler_ReturnsAlertHandler() {
     assertThat(xssWebClientFactory.createAlertHandler()).isInstanceOf(CollectingAlertHandler.class);
   }
 
   @Test
+  @DisplayName("Can create web client")
   void createWebClient_ReturnsWebClient() {
     assertThat(xssWebClientFactory.createWebClient()).isInstanceOf(WebClient.class);
   }
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     xssWebClientFactory = new XssWebClientFactory();
   }
 }

@@ -45,14 +45,6 @@ public class ClassService {
   }
 
   public Mono<ClassEntity> create(@ValidClassName final String className) {
-    if (className == null) {
-      return Mono.error(new NullPointerException());
-    }
-
-    if (className.isEmpty()) {
-      return Mono.error(new IllegalArgumentException());
-    }
-
     log.debug("Creating class with name " + className);
 
     return Mono
@@ -71,11 +63,9 @@ public class ClassService {
   }
 
   public Mono<ClassEntity> getById(@ValidClassId final String classId) {
-    return Mono
-      .just(classId)
-      .filterWhen(classRepository::existsById)
-      .switchIfEmpty(Mono.error(new ClassIdNotFoundException()))
-      .flatMap(classRepository::findById);
+    return classRepository
+      .findById(classId)
+      .switchIfEmpty(Mono.error(new ClassIdNotFoundException(String.format("Class \"%s\" not found", classId))));
   }
 
   public Mono<ClassEntity> setName(@ValidClassId final String classId, @ValidClassName final String name) {

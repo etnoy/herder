@@ -96,7 +96,6 @@ class ScoreboardServiceTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     testUserIndex = 1;
     testTeamIndex = 1;
 

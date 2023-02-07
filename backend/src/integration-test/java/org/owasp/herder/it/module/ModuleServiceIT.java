@@ -69,7 +69,7 @@ class ModuleServiceIT extends BaseIT {
     @DisplayName("for single module with no solutions or tags")
     void canGetModule() {
       StepVerifier
-        .create(moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
+        .create(moduleService.findListItemByUserIdAndLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
         .expectNext(moduleListItem)
         .verifyComplete();
     }
@@ -82,7 +82,7 @@ class ModuleServiceIT extends BaseIT {
       submissionService.submitFlag(userId, moduleId, "invalidflag2").block();
 
       StepVerifier
-        .create(moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
+        .create(moduleService.findListItemByUserIdAndLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
         .expectNext(moduleListItem)
         .verifyComplete();
     }
@@ -101,7 +101,7 @@ class ModuleServiceIT extends BaseIT {
       moduleService.refreshModuleLists().block();
 
       StepVerifier
-        .create(moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
+        .create(moduleService.findListItemByUserIdAndLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
         .expectNext(moduleListItem.withTags(tags))
         .verifyComplete();
     }
@@ -114,7 +114,7 @@ class ModuleServiceIT extends BaseIT {
       moduleService.refreshModuleLists().block();
 
       StepVerifier
-        .create(moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
+        .create(moduleService.findListItemByUserIdAndLocator(userId, TestConstants.TEST_MODULE_LOCATOR))
         .expectNext(moduleListItem.withIsSolved(true))
         .verifyComplete();
     }

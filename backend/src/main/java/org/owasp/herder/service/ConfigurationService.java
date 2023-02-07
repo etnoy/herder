@@ -89,6 +89,7 @@ public class ConfigurationService {
       .filterWhen(this::existsByKey)
       .switchIfEmpty(Mono.error(new ConfigurationKeyNotFoundException("Configuration key " + key + " not found")))
       .flatMap(configurationRepository::findByKey)
-      .flatMap(configuration -> configurationRepository.save(configuration.withValue(value)));
+      .map(configuration -> configuration.withValue(value))
+      .flatMap(configurationRepository::save);
   }
 }

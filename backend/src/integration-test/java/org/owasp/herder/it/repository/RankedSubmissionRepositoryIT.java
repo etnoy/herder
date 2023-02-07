@@ -88,7 +88,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
     @Test
     @DisplayName("for user and team submissions")
     void canGetScoresForUserAndTeamSubmissions() {
-      Clock testClock = TestConstants.year2000Clock;
+      Clock testClock = TestConstants.YEAR_2000_CLOCK;
 
       submissionRepository
         .save(
@@ -188,7 +188,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
     @Test
     @DisplayName("for user submissions")
     void canGetScoresForUserSubmissions() {
-      Clock testClock = TestConstants.year2000Clock;
+      Clock testClock = TestConstants.YEAR_2000_CLOCK;
 
       submissionRepository
         .save(
@@ -582,7 +582,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
 
       moduleService.setBonusScores(moduleId, scores).block();
 
-      testClock = TestConstants.year2000Clock;
+      testClock = TestConstants.YEAR_2000_CLOCK;
       setClock(testClock);
       integrationTestUtils.submitValidFlag(userId1, moduleId);
 
@@ -690,7 +690,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
 
     final ModuleEntity module = moduleService.getById(moduleId).block();
 
-    Clock testClock = TestConstants.year2000Clock;
+    Clock testClock = TestConstants.YEAR_2000_CLOCK;
 
     submissionRepository
       .save(
@@ -698,7 +698,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
           .builder()
           .userId(userId1)
           .moduleId(moduleId)
-          .time(LocalDateTime.now(TestConstants.year2000Clock))
+          .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
           .isValid(true)
           .time(LocalDateTime.now(testClock))
           .flag("abc")
@@ -714,7 +714,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
           .builder()
           .userId(userId2)
           .moduleId(moduleId)
-          .time(LocalDateTime.now(TestConstants.year2000Clock))
+          .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
           .isValid(true)
           .time(LocalDateTime.now(testClock))
           .flag("abc")
@@ -730,7 +730,7 @@ class RankedSubmissionRepositoryIT extends BaseIT {
           .builder()
           .userId(userId3)
           .moduleId(moduleId)
-          .time(LocalDateTime.now(TestConstants.year2000Clock))
+          .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
           .isValid(true)
           .time(LocalDateTime.now(testClock))
           .flag("abc")

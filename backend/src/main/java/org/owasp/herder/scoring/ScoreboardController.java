@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.scoring;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.owasp.herder.exception.ModuleNotFoundException;
@@ -44,6 +45,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Validated
 @RequestMapping("/api/v1/")
+@SecurityRequirement(name = "bearerAuth")
 public class ScoreboardController {
 
   private final ScoreboardService scoreboardService;

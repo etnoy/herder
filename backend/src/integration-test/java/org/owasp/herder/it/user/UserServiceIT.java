@@ -23,6 +23,7 @@ package org.owasp.herder.it.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Collection;
 import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +33,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.owasp.herder.authentication.PasswordAuthRepository;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
+import org.owasp.herder.scoring.SolverType;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.SolverEntity;
@@ -194,9 +196,21 @@ class UserServiceIT extends BaseIT {
     StepVerifier.create(userService.addUserToTeam(userId, teamId2)).expectError(IllegalStateException.class).verify();
   }
 
+  private SolverEntity getSolverById(
+    final Collection<SolverEntity> solvers,
+    final String solverId,
+    final SolverType solverType
+  ) {
+    return solvers
+      .stream()
+      .filter(solver -> solver.getId().equals(solverId) && solver.getSolverType().equals(solverType))
+      .findFirst()
+      .orElseThrow();
+  }
+
   @Test
-  @DisplayName("Can list principals consisting of teams and users")
-  void canListPrincipalsContainingUsersAndTeams() {
+  @DisplayName("Can list solvers consisting of teams and users")
+  void canListSolversContainingUsersAndTeams() {
     final String userId1 = userService.create("Test 1").block();
     final String userId2 = userService.create("Test 2").block();
     final String userId3 = userService.create("Test 3").block();
@@ -215,33 +229,24 @@ class UserServiceIT extends BaseIT {
       .create(userService.findAllSolvers())
       .recordWith(HashSet::new)
       .expectNextCount(5)
-      .consumeRecordedWith(principals -> {
-        assertThat(principals).filteredOn(principal -> principal.getId().equals(teamId1)).hasSize(1);
-        assertThat(principals).filteredOn(principal -> principal.getId().equals(teamId2)).hasSize(1);
-        assertThat(principals).filteredOn(principal -> principal.getId().equals(teamId3)).hasSize(1);
-        assertThat(principals).filteredOn(principal -> principal.getId().equals(teamId4)).hasSize(1);
-        assertThat(principals).filteredOn(principal -> principal.getId().equals(userId4)).hasSize(1);
+      .consumeRecordedWith(solvers -> {
+        assertThat(solvers)
+          .extracting(SolverEntity::getId)
+          .containsExactlyInAnyOrder(userId4, teamId1, teamId2, teamId3, teamId4);
 
-        assertThat(principals)
-          .filteredOn(principal -> principal.getId().equals(teamId1))
-          .flatExtracting(SolverEntity::getMembers)
-          .hasSize(2);
-        assertThat(principals)
-          .filteredOn(principal -> principal.getId().equals(teamId2))
-          .flatExtracting(SolverEntity::getMembers)
-          .hasSize(1);
-        assertThat(principals)
-          .filteredOn(principal -> principal.getId().equals(teamId3))
-          .flatExtracting(SolverEntity::getMembers)
-          .isEmpty();
-        assertThat(principals)
-          .filteredOn(principal -> principal.getId().equals(teamId4))
-          .flatExtracting(SolverEntity::getMembers)
-          .isEmpty();
-        assertThat(principals)
-          .filteredOn(principal -> principal.getId().equals(userId1))
-          .flatExtracting(SolverEntity::getMembers)
-          .isEmpty();
+        assertThat(getSolverById(solvers, teamId1, SolverType.TEAM).getMembers())
+          .extracting(UserEntity::getId)
+          .containsExactlyInAnyOrder(userId1, userId2);
+
+        assertThat(getSolverById(solvers, teamId2, SolverType.TEAM).getMembers())
+          .extracting(UserEntity::getId)
+          .containsExactlyInAnyOrder(userId3);
+
+        assertThat(getSolverById(solvers, teamId3, SolverType.TEAM).getMembers()).isEmpty();
+
+        assertThat(getSolverById(solvers, teamId4, SolverType.TEAM).getMembers()).isEmpty();
+
+        assertThat(getSolverById(solvers, userId4, SolverType.USER).getMembers()).isEmpty();
       })
       .verifyComplete();
   }
@@ -271,27 +276,6 @@ class UserServiceIT extends BaseIT {
       .create(userService.findAllSolvers())
       .assertNext(user -> {
         assertThat(user.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
-      })
-      .verifyComplete();
-  }
-
-  @Test
-  @DisplayName("Can remove user from team when deleting user")
-  void canRemoveUserFromTeamWhenDeletingUser() {
-    final String userId = userService.create(TestConstants.TEST_USER_DISPLAY_NAME).block();
-    final String teamId = integrationTestUtils.createTestTeam();
-
-    userService.addUserToTeam(userId, teamId).block();
-
-    userService.delete(userId).block();
-
-    StepVerifier
-      .create(userRepository.findById(userId))
-      .assertNext(user -> {
-        assertThat(user.isDeleted()).isTrue();
-        assertThat(user.getDisplayName()).isEmpty();
-        assertThat(user.isEnabled()).isFalse();
-        assertThat(user.getTeamId()).isNull();
       })
       .verifyComplete();
   }

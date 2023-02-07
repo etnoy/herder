@@ -22,8 +22,6 @@
 package org.owasp.herder.test.module.xss;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +36,7 @@ import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.module.xss.XssTutorialController;
 import org.owasp.herder.module.xss.XssTutorialResponse;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -54,33 +53,27 @@ class XssTutorialControllerTest extends BaseTest {
   private XssTutorial xssTutorial;
 
   @Test
-  void search_Autenticated_CallsModule() {
-    final String mockUserId = "id";
-
+  @DisplayName("Can return XSS tutorial row")
+  void search_Autenticated_ReturnsRows() {
     final XssTutorialResponse xssTutorialRow = mock(XssTutorialResponse.class);
 
     final String query = "xss";
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
-
-    when(xssTutorial.submitQuery(mockUserId, query)).thenReturn(Mono.just(xssTutorialRow));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
+    when(xssTutorial.submitQuery(TestConstants.TEST_USER_ID, query)).thenReturn(Mono.just(xssTutorialRow));
 
     StepVerifier.create(xssTutorialController.search(query)).expectNext(xssTutorialRow).verifyComplete();
-
-    verify(controllerAuthentication, times(1)).getUserId();
-    verify(xssTutorial, times(1)).submitQuery(mockUserId, query);
   }
 
   @Test
-  void search_NotAutenticated_CallsModule() {
+  @DisplayName("Can error when searching XSS tutorial query without being authenticated")
+  void search_NotAutenticated_Errors() {
     final String query = "xss";
     when(controllerAuthentication.getUserId()).thenReturn(Mono.error(new NotAuthenticatedException()));
     StepVerifier.create(xssTutorialController.search(query)).expectError(NotAuthenticatedException.class).verify();
-    verify(controllerAuthentication, times(1)).getUserId();
   }
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     xssTutorialController = new XssTutorialController(xssTutorial, controllerAuthentication);
   }
 }

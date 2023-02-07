@@ -19,24 +19,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.test.model;
+package org.owasp.herder.test.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.local.LocalBucketBuilder;
+import java.time.Duration;
+import org.owasp.herder.service.RateLimiter;
+import org.springframework.stereotype.Service;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.owasp.herder.authentication.Role;
+@Service
+public final class ZeroCapacityRateLimiter extends RateLimiter {
 
-@DisplayName("Role unit tests")
-class RoleTest {
-
-  @Test
-  void userRole_ToString_IsRoleUser() {
-    assertThat(Role.ROLE_USER).hasToString("ROLE_USER");
-  }
-
-  @Test
-  void adminRole_ToString_IsRoleAdmin() {
-    assertThat(Role.ROLE_ADMIN).hasToString("ROLE_ADMIN");
+  @Override
+  protected LocalBucketBuilder transformBuilder(LocalBucketBuilder bucketBuilder) {
+    return bucketBuilder.addLimit(Bandwidth.simple(1, Duration.ofDays(100)));
   }
 }

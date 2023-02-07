@@ -242,13 +242,15 @@ public class UserService {
     kick(userId);
 
     return getById(userId)
+      .filter(user -> user.getTeamId() == null)
+      .switchIfEmpty(Mono.error(new IllegalStateException("Cannot delete user if it belongs to team")))
       .map(user ->
         user
-          .withTeamId(null)
           .withEnabled(false)
           .withDeleted(true)
           .withDisplayName("")
           .withSuspensionMessage(null)
+          .withSuspendedUntil(null)
           .withAdmin(false)
       )
       .flatMap(userRepository::save)
@@ -265,10 +267,13 @@ public class UserService {
   public Mono<Void> demote(@ValidUserId final String userId) {
     log.info("Demoting user with id " + userId + " to user");
 
-    return findById(userId)
+    return getById(userId)
+      .filter(UserEntity::isAdmin)
       .map(user -> user.withAdmin(false))
-      .flatMap(userRepository::save)
-      .doOnSuccess(u -> kick(userId))
+      .flatMap(user -> {
+        kick(userId);
+        return userRepository.save(user);
+      })
       .then();
   }
 
@@ -419,15 +424,8 @@ public class UserService {
    * @param userId
    * @return The key if the user exists, otherwise UserNotFoundException
    */
-  public Mono<byte[]> findKeyById(@ValidUserId final String userId) {
-    return getById(userId)
-      .flatMap(user -> {
-        final byte[] key = user.getKey();
-        if (key == null) {
-          return userRepository.save(user.withKey(keyService.generateRandomBytes(16))).map(UserEntity::getKey);
-        }
-        return Mono.just(key);
-      });
+  public Mono<byte[]> findKeyByUserId(@ValidUserId final String userId) {
+    return getById(userId).map(UserEntity::getKey);
   }
 
   public Mono<PasswordAuth> findPasswordAuthByLoginName(@ValidLoginName final String loginName) {
@@ -436,6 +434,11 @@ public class UserService {
 
   public Mono<PasswordAuth> findPasswordAuthByUserId(@ValidUserId final String userId) {
     return passwordAuthRepository.findByUserId(userId);
+  }
+
+  public Mono<PasswordAuth> getPasswordAuthByUserId(@ValidUserId final String userId) {
+    return findPasswordAuthByUserId(userId)
+      .switchIfEmpty(Mono.error(new UserNotFoundException("Password Auth for user id \"" + userId + "\" not found")));
   }
 
   /**
@@ -476,10 +479,13 @@ public class UserService {
   public Mono<Void> promote(@ValidUserId final String userId) {
     log.info("Promoting user with id " + userId + " to admin");
 
-    return findById(userId)
+    return getById(userId)
+      .filter(user -> !user.isAdmin())
       .map(user -> user.withAdmin(true))
-      .flatMap(userRepository::save)
-      .doOnSuccess(u -> kick(userId))
+      .flatMap(user -> {
+        kick(userId);
+        return userRepository.save(user);
+      })
       .then();
   }
 

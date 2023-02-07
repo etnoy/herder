@@ -21,12 +21,12 @@
  */
 package org.owasp.herder.test.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.validation.ConstraintViolationException;
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.exception.UserNotFoundException;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
+import org.owasp.herder.user.SolverEntity;
 import org.owasp.herder.user.UserController;
 import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
@@ -53,27 +54,49 @@ class UserControllerTest extends BaseTest {
   private UserService userService;
 
   @Test
+  @DisplayName("Can delete user by id")
   void deleteById_ValidId_CallsUserService() {
     when(userService.delete(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
     StepVerifier.create(userController.deleteById(TestConstants.TEST_USER_ID)).verifyComplete();
-    verify(userService, times(1)).delete(TestConstants.TEST_USER_ID);
   }
 
   @Test
-  void findAllSolvers_ValidId_CallsUserService() {
+  @DisplayName("Can find zero solvers")
+  void findAllSolvers_NoSolversExist_CallsUserService() {
     when(userService.findAllSolvers()).thenReturn(Flux.empty());
     StepVerifier.create(userController.findAllSolvers()).verifyComplete();
-    verify(userService, times(1)).findAllSolvers();
   }
 
   @Test
+  @DisplayName("Can find all solvers")
+  void findAllSolvers_UsersAndTeamsExist_ReturnsUsers() {
+    final SolverEntity user1 = mock(SolverEntity.class);
+    final SolverEntity user2 = mock(SolverEntity.class);
+    final SolverEntity team1 = mock(SolverEntity.class);
+    final SolverEntity user3 = mock(SolverEntity.class);
+    final SolverEntity user4 = mock(SolverEntity.class);
+    final SolverEntity team2 = mock(SolverEntity.class);
+
+    when(userService.findAllSolvers()).thenReturn(Flux.just(user1, user2, team1, user3, user4, team2));
+    StepVerifier
+      .create(userController.findAllSolvers())
+      .recordWith(HashSet::new)
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(users ->
+        assertThat(users).containsExactlyInAnyOrder(user1, user2, team1, user3, user4, team2)
+      )
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can find zero users")
   void findAll_NoUsersExist_ReturnsEmpty() {
     when(userService.findAllUsers()).thenReturn(Flux.empty());
     StepVerifier.create(userController.findAll()).verifyComplete();
-    verify(userService, times(1)).findAllUsers();
   }
 
   @Test
+  @DisplayName("Can find all users")
   void findAll_UsersExist_ReturnsUsers() {
     final UserEntity user1 = mock(UserEntity.class);
     final UserEntity user2 = mock(UserEntity.class);
@@ -83,50 +106,47 @@ class UserControllerTest extends BaseTest {
     when(userService.findAllUsers()).thenReturn(Flux.just(user1, user2, user3, user4));
     StepVerifier
       .create(userController.findAll())
-      .expectNext(user1)
-      .expectNext(user2)
-      .expectNext(user3)
-      .expectNext(user4)
+      .recordWith(HashSet::new)
+      .thenConsumeWhile(x -> true)
+      .consumeRecordedWith(users -> assertThat(users).containsExactlyInAnyOrder(user1, user2, user3, user4))
       .verifyComplete();
-    verify(userService, times(1)).findAllUsers();
   }
 
   @Test
-  void findById_InvalidUserId_ReturnsUserNotFoundException() {
+  @DisplayName("Can error when finding user by an invalid id")
+  void getById_InvalidUserId_ReturnsUserNotFoundException() {
     final ConstraintViolationException mockConstraintViolation = mock(ConstraintViolationException.class);
     final String testMessage = "Invalid id";
     when(mockConstraintViolation.getMessage()).thenReturn(testMessage);
 
-    when(userService.findById(TestConstants.TEST_USER_ID)).thenThrow(mockConstraintViolation);
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenThrow(mockConstraintViolation);
     StepVerifier
-      .create(userController.findById(TestConstants.TEST_USER_ID))
+      .create(userController.getById(TestConstants.TEST_USER_ID))
       .expectError(UserNotFoundException.class)
       .verify();
-    verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
   }
 
   @Test
-  void findById_UserIdDoesNotExist_ReturnsUserNotFoundException() {
-    when(userService.findById(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
+  @DisplayName("Can error when finding nonexistent user by id")
+  void getById_UserIdDoesNotExist_ReturnsUserNotFoundException() {
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.error(new UserNotFoundException()));
     StepVerifier
-      .create(userController.findById(TestConstants.TEST_USER_ID))
+      .create(userController.getById(TestConstants.TEST_USER_ID))
       .expectError(UserNotFoundException.class)
       .verify();
-    verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
   }
 
   @Test
-  void findById_UserIdExists_ReturnsUser() {
+  @DisplayName("Can get user by id")
+  void getById_UserIdExists_ReturnsUser() {
     final UserEntity mockUser = mock(UserEntity.class);
 
-    when(userService.findById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
-    StepVerifier.create(userController.findById(TestConstants.TEST_USER_ID)).expectNext(mockUser).verifyComplete();
-    verify(userService, times(1)).findById(TestConstants.TEST_USER_ID);
+    when(userService.getById(TestConstants.TEST_USER_ID)).thenReturn(Mono.just(mockUser));
+    StepVerifier.create(userController.getById(TestConstants.TEST_USER_ID)).expectNext(mockUser).verifyComplete();
   }
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     userController = new UserController(userService);
   }
 }

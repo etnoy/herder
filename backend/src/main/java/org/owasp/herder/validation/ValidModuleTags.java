@@ -19,13 +19,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.exception;
+package org.owasp.herder.validation;
 
-public class InvalidFlagException extends RuntimeException {
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import jakarta.validation.constraints.NotNull;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-  private static final long serialVersionUID = -5098332156898854294L;
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = {})
+@NotNull(message = "{org.owasp.herder.ValidModuleTgas.NullMessage}")
+public @interface ValidModuleTags {
+  String message() default "{org.owasp.herder.ValidModuleTags.message}";
 
-  public InvalidFlagException(final String message) {
-    super(message);
-  }
+  Class<?>[] groups() default {};
+
+  Class<? extends Payload>[] payload() default {};
 }

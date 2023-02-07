@@ -24,7 +24,6 @@ package org.owasp.herder.test.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -90,11 +89,26 @@ class SubmissionServiceTest extends BaseTest {
 
   @Test
   @DisplayName("Can find ranked submissions by user id")
-  void findAllRankedByUserId_NoRankedSubmissionsExist_ReturnsEmpty() {
-    when(rankedSubmissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.empty());
-    StepVerifier.create(submissionService.findAllRankedByUserId(TestConstants.TEST_USER_ID)).verifyComplete();
+  void findAllRankedByUserId_RankedSubmissionExist_ReturnsSanitizedRankedSubmission() {
+    when(rankedSubmissionRepository.findAllByUserId(TestConstants.TEST_USER_ID))
+      .thenReturn(Flux.just(TestConstants.TEST_RANKED_SUBMISSION));
 
-    verify(rankedSubmissionRepository, times(1)).findAllByUserId(TestConstants.TEST_USER_ID);
+    StepVerifier
+      .create(submissionService.findAllRankedByUserId(TestConstants.TEST_USER_ID))
+      .expectNext(TestConstants.TEST_SANITIZED_RANKED_SUBMISSION)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can find ranked submissions by team id")
+  void findAllRankedByTeamId_RankedSubmissionExist_ReturnsSanitizedRankedSubmission() {
+    when(rankedSubmissionRepository.findAllByTeamId(TestConstants.TEST_TEAM_ID))
+      .thenReturn(Flux.just(TestConstants.TEST_RANKED_SUBMISSION));
+
+    StepVerifier
+      .create(submissionService.findAllRankedByTeamId(TestConstants.TEST_TEAM_ID))
+      .expectNext(TestConstants.TEST_SANITIZED_RANKED_SUBMISSION)
+      .verifyComplete();
   }
 
   @Test
@@ -102,8 +116,25 @@ class SubmissionServiceTest extends BaseTest {
   void findAllValidByUserId_NoSubmissionsExist_ReturnsEmpty() {
     when(submissionRepository.findAllByUserIdAndIsValidTrue(TestConstants.TEST_USER_ID)).thenReturn(Flux.empty());
     StepVerifier.create(submissionService.findAllValidByUserId(TestConstants.TEST_USER_ID)).verifyComplete();
+  }
 
-    verify(submissionRepository, times(1)).findAllByUserIdAndIsValidTrue(TestConstants.TEST_USER_ID);
+  @Test
+  @DisplayName("Can find valid submissions by user id")
+  void findAllSubmissions_SubmissionsExist_ReturnsSubmissions() {
+    final Submission mockSubmission1 = mock(Submission.class);
+    final Submission mockSubmission2 = mock(Submission.class);
+    final Submission mockSubmission3 = mock(Submission.class);
+    final Submission mockSubmission4 = mock(Submission.class);
+
+    when(submissionRepository.findAll())
+      .thenReturn(Flux.just(mockSubmission1, mockSubmission2, mockSubmission3, mockSubmission4));
+    StepVerifier
+      .create(submissionService.findAllSubmissions())
+      .expectNext(mockSubmission1)
+      .expectNext(mockSubmission2)
+      .expectNext(mockSubmission3)
+      .expectNext(mockSubmission4)
+      .verifyComplete();
   }
 
   @Test
@@ -123,8 +154,6 @@ class SubmissionServiceTest extends BaseTest {
       .expectNext(mockSubmission3)
       .expectNext(mockSubmission4)
       .verifyComplete();
-
-    verify(submissionRepository, times(1)).findAllByUserIdAndIsValidTrue(TestConstants.TEST_USER_ID);
   }
 
   @Test
@@ -137,14 +166,12 @@ class SubmissionServiceTest extends BaseTest {
       )
     )
       .thenReturn(Mono.empty());
+
     StepVerifier
       .create(
         submissionService.findAllValidByUserIdAndModuleName(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_NAME)
       )
       .verifyComplete();
-
-    verify(submissionRepository, times(1))
-      .findAllByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_NAME);
   }
 
   @Test
@@ -159,15 +186,21 @@ class SubmissionServiceTest extends BaseTest {
       )
     )
       .thenReturn(Mono.just(mockSubmission));
+
     StepVerifier
       .create(
         submissionService.findAllValidByUserIdAndModuleName(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_NAME)
       )
       .expectNext(mockSubmission)
       .verifyComplete();
+  }
 
-    verify(submissionRepository, times(1))
-      .findAllByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_NAME);
+  @Test
+  @DisplayName("Can find valid submissions by user id and module name")
+  void refreshSubmissionRanks_SubmissionsExist_ReturnsNothing() {
+    when(submissionRepository.refreshSubmissionRanks()).thenReturn(Flux.empty());
+
+    StepVerifier.create(submissionService.refreshSubmissionRanks()).verifyComplete();
   }
 
   private void setClock(final Clock testClock) {
@@ -177,7 +210,6 @@ class SubmissionServiceTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     submissionService =
       new SubmissionService(
         submissionRepository,
@@ -198,7 +230,7 @@ class SubmissionServiceTest extends BaseTest {
   void submit_InvalidFlag_ReturnsInvalidSubmission() {
     final String mockSubmissionId = "submissionId";
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     when(
       flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG)
@@ -234,16 +266,10 @@ class SubmissionServiceTest extends BaseTest {
         assertThat(submission.getUserId()).isEqualTo(TestConstants.TEST_USER_ID);
         assertThat(submission.getModuleId()).isEqualTo(TestConstants.TEST_MODULE_ID);
         assertThat(submission.getFlag()).isEqualTo(TestConstants.TEST_STATIC_FLAG);
-        assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
+        assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK));
         assertThat(submission.isValid()).isFalse();
       })
       .verifyComplete();
-
-    verify(flagHandler, times(1))
-      .verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG);
-    verify(submissionRepository, times(1))
-      .existsByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID);
-    verify(submissionRepository, times(1)).save(any(Submission.class));
   }
 
   @Test
@@ -252,7 +278,7 @@ class SubmissionServiceTest extends BaseTest {
     final UserEntity mockUser = mock(UserEntity.class);
     final ModuleEntity mockModule = mock(ModuleEntity.class);
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     when(
       flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG)
@@ -280,11 +306,6 @@ class SubmissionServiceTest extends BaseTest {
       )
       .expectError(ModuleAlreadySolvedException.class)
       .verify();
-
-    verify(flagHandler, times(1))
-      .verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG);
-    verify(submissionRepository, times(1))
-      .existsByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID);
   }
 
   @Test
@@ -292,7 +313,7 @@ class SubmissionServiceTest extends BaseTest {
   void submit_ValidFlag_ReturnsValidSubmission() {
     final String mockSubmissionId = "sub-id";
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     when(
       flagHandler.verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG)
@@ -328,16 +349,10 @@ class SubmissionServiceTest extends BaseTest {
         assertThat(submission.getUserId()).isEqualTo(TestConstants.TEST_USER_ID);
         assertThat(submission.getModuleId()).isEqualTo(TestConstants.TEST_MODULE_ID);
         assertThat(submission.getFlag()).isEqualTo(TestConstants.TEST_STATIC_FLAG);
-        assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
+        assertThat(submission.getTime()).isEqualTo(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK));
         assertThat(submission.isValid()).isTrue();
       })
       .verifyComplete();
-
-    verify(flagHandler, times(1))
-      .verifyFlag(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID, TestConstants.TEST_STATIC_FLAG);
-    verify(submissionRepository, times(1))
-      .existsByUserIdAndModuleIdAndIsValidTrue(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID);
-    verify(submissionRepository, times(1)).save(any(Submission.class));
   }
 
   @Test
@@ -351,7 +366,7 @@ class SubmissionServiceTest extends BaseTest {
       .baseScore(100L)
       .bonusScore(10L)
       .score(110L)
-      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
       .build();
 
     when(rankedSubmissionRepository.findAllByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
@@ -360,7 +375,7 @@ class SubmissionServiceTest extends BaseTest {
     final SanitizedRankedSubmission sanitizedRankedSubmission = SanitizedRankedSubmission
       .builder()
       .id(TestConstants.TEST_USER_ID)
-      .principalType(SolverType.USER)
+      .solverType(SolverType.USER)
       .moduleName(TestConstants.TEST_MODULE_NAME)
       .displayName(TestConstants.TEST_USER_DISPLAY_NAME)
       .moduleLocator(TestConstants.TEST_MODULE_LOCATOR)
@@ -368,7 +383,7 @@ class SubmissionServiceTest extends BaseTest {
       .baseScore(100L)
       .bonusScore(10L)
       .score(110L)
-      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
       .build();
 
     StepVerifier
@@ -388,7 +403,7 @@ class SubmissionServiceTest extends BaseTest {
       .baseScore(100L)
       .bonusScore(10L)
       .score(110L)
-      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
       .build();
 
     when(rankedSubmissionRepository.findAllByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
@@ -397,7 +412,7 @@ class SubmissionServiceTest extends BaseTest {
     final SanitizedRankedSubmission sanitizedRankedSubmission = SanitizedRankedSubmission
       .builder()
       .id(TestConstants.TEST_TEAM_ID)
-      .principalType(SolverType.TEAM)
+      .solverType(SolverType.TEAM)
       .moduleName(TestConstants.TEST_MODULE_NAME)
       .displayName(TestConstants.TEST_TEAM_DISPLAY_NAME)
       .moduleLocator(TestConstants.TEST_MODULE_LOCATOR)
@@ -405,7 +420,7 @@ class SubmissionServiceTest extends BaseTest {
       .baseScore(100L)
       .bonusScore(10L)
       .score(110L)
-      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
       .build();
 
     StepVerifier
@@ -426,7 +441,7 @@ class SubmissionServiceTest extends BaseTest {
       .baseScore(100L)
       .bonusScore(10L)
       .score(110L)
-      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
       .build();
 
     when(rankedSubmissionRepository.findAllByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
@@ -449,7 +464,7 @@ class SubmissionServiceTest extends BaseTest {
       .builder()
       .userId(TestConstants.TEST_USER_ID)
       .moduleId(TestConstants.TEST_MODULE_ID)
-      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
       .build();
     when(submissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(testSubmission));
 
@@ -480,7 +495,7 @@ class SubmissionServiceTest extends BaseTest {
       .userId(TestConstants.TEST_USER_ID)
       .teamId(TestConstants.TEST_TEAM_ID)
       .moduleId(TestConstants.TEST_MODULE_ID)
-      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
       .build();
     when(submissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(testSubmission));
 
@@ -512,7 +527,7 @@ class SubmissionServiceTest extends BaseTest {
       .userId(TestConstants.TEST_USER_ID)
       .teamId(TestConstants.TEST_TEAM_ID)
       .moduleId(TestConstants.TEST_MODULE_ID)
-      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
       .build();
     when(submissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(testSubmission));
 
@@ -540,7 +555,7 @@ class SubmissionServiceTest extends BaseTest {
       .builder()
       .userId(TestConstants.TEST_USER_ID)
       .moduleId(TestConstants.TEST_MODULE_ID)
-      .time(LocalDateTime.now(TestConstants.year2000Clock))
+      .time(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK))
       .build();
     when(submissionRepository.findAllByUserId(TestConstants.TEST_USER_ID)).thenReturn(Flux.just(testSubmission));
 

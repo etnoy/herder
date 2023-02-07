@@ -47,7 +47,7 @@ class ScoreboardApiIT extends BaseIT {
   void canReturnEmptySubmissionListForModule() {
     integrationTestUtils.createTestUser();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -75,7 +75,7 @@ class ScoreboardApiIT extends BaseIT {
   void canReturnEmptySubmissionListForUser() {
     final String userId = integrationTestUtils.createTestUser();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -103,7 +103,7 @@ class ScoreboardApiIT extends BaseIT {
   void canReturn404IfModuleDoesNotExist() {
     integrationTestUtils.createTestUser();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -128,7 +128,7 @@ class ScoreboardApiIT extends BaseIT {
   void canReturn404IfUserDoesNotExist() {
     integrationTestUtils.createTestUser();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -148,7 +148,7 @@ class ScoreboardApiIT extends BaseIT {
   void canReturn400IfUserIdIsInvalid() {
     integrationTestUtils.createTestUser();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -168,7 +168,7 @@ class ScoreboardApiIT extends BaseIT {
   void canReturn400IfModuleLocatorIsInvalid() {
     integrationTestUtils.createTestUser();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );

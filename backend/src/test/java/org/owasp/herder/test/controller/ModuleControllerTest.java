@@ -22,8 +22,6 @@
 package org.owasp.herder.test.controller;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +36,7 @@ import org.owasp.herder.module.ModuleController;
 import org.owasp.herder.module.ModuleListItem;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -58,6 +57,7 @@ class ModuleControllerTest extends BaseTest {
   UserService userService;
 
   @Test
+  @DisplayName("Can error if not authenticated when finding all modules by user id")
   void findAllByUserId_NotAuthenticated_ReturnsNotAuthenticatedException() {
     when(controllerAuthentication.getUserId()).thenReturn(Mono.error(new NotAuthenticatedException()));
 
@@ -65,57 +65,31 @@ class ModuleControllerTest extends BaseTest {
   }
 
   @Test
-  void findByName_NameDoesNotExist_ReturnsNothing() {
-    final String mockModuleName = "test-module";
-    final String mockUserId = "id";
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
-    when(moduleService.findListItemByLocator(mockUserId, mockModuleName)).thenReturn(Mono.empty());
-    StepVerifier.create(moduleController.findByName(mockModuleName)).verifyComplete();
+  @DisplayName("Can return nothing when finding list item by nonexistent locator")
+  void findListItemByLocator_LocatorDoesNotExist_ReturnsNothing() {
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
+    when(moduleService.findListItemByUserIdAndLocator(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID))
+      .thenReturn(Mono.empty());
+    StepVerifier.create(moduleController.findListItemByLocator(TestConstants.TEST_MODULE_ID)).verifyComplete();
   }
 
   @Test
-  void findByName_NameExists_ReturnsModuleListItem() {
-    final String mockModuleName = "test-module";
-    final String mockUserId = "id";
-
+  @DisplayName("Can find list item by locator")
+  void findListItemByLocator_LocatorExists_ReturnsModuleListItem() {
     final ModuleListItem mockModuleListItem = mock(ModuleListItem.class);
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
 
-    when(moduleService.findListItemByLocator(mockUserId, mockModuleName)).thenReturn(Mono.just(mockModuleListItem));
-    StepVerifier.create(moduleController.findByName(mockModuleName)).expectNext(mockModuleListItem).verifyComplete();
+    when(moduleService.findListItemByUserIdAndLocator(TestConstants.TEST_USER_ID, TestConstants.TEST_MODULE_ID))
+      .thenReturn(Mono.just(mockModuleListItem));
 
-    verify(moduleService, times(1)).findListItemByLocator(mockUserId, mockModuleName);
-  }
-
-  @Test
-  void findByName_NameDoesNotExist_ReturnsEmpty() {
-    final String mockUserId = "id";
-    final String mockModuleName = "test-module";
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
-
-    when(moduleService.findListItemByLocator(mockUserId, mockModuleName)).thenReturn(Mono.empty());
-    StepVerifier.create(moduleController.findByName(mockModuleName)).verifyComplete();
-    verify(controllerAuthentication, times(1)).getUserId();
-    verify(moduleService, times(1)).findListItemByLocator(mockUserId, mockModuleName);
-  }
-
-  @Test
-  void findByName_ShortNameExists_ReturnsModule() {
-    final String mockUserId = "id";
-    final String mockModuleName = "test-module";
-    final ModuleListItem mockModuleListItem = mock(ModuleListItem.class);
-    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(mockUserId));
-
-    when(moduleService.findListItemByLocator(mockUserId, mockModuleName)).thenReturn(Mono.just(mockModuleListItem));
-    StepVerifier.create(moduleController.findByName(mockModuleName)).expectNext(mockModuleListItem).verifyComplete();
-
-    verify(controllerAuthentication, times(1)).getUserId();
-    verify(moduleService, times(1)).findListItemByLocator(mockUserId, mockModuleName);
+    StepVerifier
+      .create(moduleController.findListItemByLocator(TestConstants.TEST_MODULE_ID))
+      .expectNext(mockModuleListItem)
+      .verifyComplete();
   }
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     moduleController = new ModuleController(moduleService, controllerAuthentication);
   }
 }

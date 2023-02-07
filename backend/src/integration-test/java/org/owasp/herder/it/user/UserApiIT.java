@@ -60,7 +60,7 @@ class UserApiIT extends BaseIT {
     userService.create("User2").block();
     userService.create("User3").block();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -82,7 +82,7 @@ class UserApiIT extends BaseIT {
 
     final String userId = userService.create("User2").block();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -103,7 +103,7 @@ class UserApiIT extends BaseIT {
     integrationTestUtils.createTestAdmin();
     final String userId = userService.create("User2").block();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_ADMIN_LOGIN_NAME,
       TestConstants.TEST_ADMIN_PASSWORD
     );
@@ -131,7 +131,7 @@ class UserApiIT extends BaseIT {
   void canGetOwnUserInformation() {
     final String userId = integrationTestUtils.createTestUser();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );
@@ -163,7 +163,7 @@ class UserApiIT extends BaseIT {
     userService.create("User2").block();
     userService.create("User3").block();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_ADMIN_LOGIN_NAME,
       TestConstants.TEST_ADMIN_PASSWORD
     );
@@ -195,7 +195,7 @@ class UserApiIT extends BaseIT {
   void canReturn404ForInvalidUserId() {
     integrationTestUtils.createTestAdmin();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_ADMIN_LOGIN_NAME,
       TestConstants.TEST_ADMIN_PASSWORD
     );
@@ -217,7 +217,7 @@ class UserApiIT extends BaseIT {
   void canReturn404ForNonExistentUserId() {
     integrationTestUtils.createTestAdmin();
 
-    final String token = integrationTestUtils.performAPILoginWithToken(
+    final String token = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_ADMIN_LOGIN_NAME,
       TestConstants.TEST_ADMIN_PASSWORD
     );

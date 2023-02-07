@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.user;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Validated
 @RequestMapping("/api/v1/")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
   private final UserService userService;
@@ -67,13 +69,11 @@ public class UserController {
 
   @GetMapping(path = "user/{userId}")
   @PreAuthorize("(hasRole('ROLE_USER') and #userId == authentication.principal) or hasRole('ROLE_ADMIN')")
-  public Mono<UserEntity> findById(@PathVariable final String userId) {
-    Mono<UserEntity> userMono;
+  public Mono<UserEntity> getById(@PathVariable final String userId) {
     try {
-      userMono = userService.findById(userId);
+      return userService.getById(userId);
     } catch (ConstraintViolationException e) {
       return Mono.error(new UserNotFoundException(e.getMessage()));
     }
-    return userMono.switchIfEmpty(Mono.error(new UserNotFoundException()));
   }
 }

@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.test.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -31,12 +32,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.authentication.AuthResponse;
 import org.owasp.herder.authentication.ControllerAuthentication;
+import org.owasp.herder.authentication.ImpersonationDto;
 import org.owasp.herder.authentication.LoginController;
 import org.owasp.herder.authentication.LoginResponse;
 import org.owasp.herder.authentication.PasswordLoginDto;
 import org.owasp.herder.authentication.PasswordRegistrationDto;
 import org.owasp.herder.crypto.WebTokenService;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,11 +67,13 @@ class LoginControllerTest extends BaseTest {
   ControllerAuthentication controllerAuthentication;
 
   @Test
-  void login_InvalidCredentials_Returns401() {
-    final String userName = "user";
-    final String password = "password";
+  @DisplayName("Can error when logging in with bad credentials")
+  void login_InvalidCredentials_Errors() {
     final String badCredentials = "Invalid username or password";
-    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(userName, password);
+    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
+    );
     final LoginResponse loginResponse = LoginResponse.builder().errorMessage(badCredentials).build();
 
     final ResponseEntity<LoginResponse> badCredentialsResponse = new ResponseEntity<>(
@@ -76,58 +81,91 @@ class LoginControllerTest extends BaseTest {
       HttpStatus.UNAUTHORIZED
     );
 
-    when(userService.authenticate(userName, password))
+    when(userService.authenticate(TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD))
       .thenReturn(Mono.error(new BadCredentialsException(badCredentials)));
     StepVerifier.create(loginController.login(passwordLoginDto)).expectNext(badCredentialsResponse).verifyComplete();
   }
 
   @Test
+  @DisplayName("Can return token when logging in")
   void login_ValidCredentials_ReturnsToken() {
-    final String userName = "user";
-    final String password = "password";
-    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(userName, password);
+    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
+    );
     final String mockJwt = "token";
-    final Boolean mockUserIsAdmin = false;
-    final String mockUserId = "id";
+    final Boolean userIsAdmin = false;
     final AuthResponse mockAuthResponse = AuthResponse
       .builder()
-      .isAdmin(mockUserIsAdmin)
-      .displayName(userName)
-      .userId(mockUserId)
+      .isAdmin(userIsAdmin)
+      .displayName(TestConstants.TEST_USER_DISPLAY_NAME)
+      .userId(TestConstants.TEST_USER_ID)
       .build();
     final LoginResponse loginResponse = LoginResponse
       .builder()
-      .id(mockUserId)
+      .id(TestConstants.TEST_USER_ID)
       .accessToken(mockJwt)
-      .displayName(userName)
+      .displayName(TestConstants.TEST_USER_DISPLAY_NAME)
       .build();
     final ResponseEntity<LoginResponse> tokenResponse = new ResponseEntity<>(loginResponse, HttpStatus.OK);
 
-    when(userService.authenticate(userName, password)).thenReturn(Mono.just(mockAuthResponse));
-    when(webTokenService.generateToken(mockUserId, mockUserIsAdmin)).thenReturn(mockJwt);
+    when(userService.authenticate(TestConstants.TEST_USER_LOGIN_NAME, TestConstants.TEST_USER_PASSWORD))
+      .thenReturn(Mono.just(mockAuthResponse));
+    when(webTokenService.generateToken(TestConstants.TEST_USER_ID, userIsAdmin)).thenReturn(mockJwt);
+
     StepVerifier.create(loginController.login(passwordLoginDto)).expectNext(tokenResponse).verifyComplete();
   }
 
   @Test
+  @DisplayName("Can return impersonation token when impersonating")
+  void impersonate_ValidCredentials_ReturnsToken() {
+    final ImpersonationDto impersonationDto = new ImpersonationDto(TestConstants.TEST_USER_ID);
+    final String impersonationToken = "token";
+
+    final LoginResponse loginResponse = LoginResponse
+      .builder()
+      .id(TestConstants.TEST_USER_ID)
+      .accessToken(impersonationToken)
+      .displayName(TestConstants.TEST_USER_DISPLAY_NAME)
+      .build();
+    final ResponseEntity<LoginResponse> tokenResponse = new ResponseEntity<>(loginResponse, HttpStatus.OK);
+
+    when(controllerAuthentication.getUserId()).thenReturn(Mono.just(TestConstants.TEST_USER_ID2));
+
+    when(userService.getById(TestConstants.TEST_USER_ID))
+      .thenReturn(
+        Mono.just(
+          TestConstants.TEST_USER_ENTITY
+            .withId(TestConstants.TEST_USER_ID)
+            .withDisplayName(TestConstants.TEST_USER_DISPLAY_NAME)
+        )
+      );
+
+    when(webTokenService.generateImpersonationToken(TestConstants.TEST_USER_ID2, TestConstants.TEST_USER_ID, false))
+      .thenReturn(impersonationToken);
+
+    StepVerifier.create(loginController.impersonate(impersonationDto)).expectNext(tokenResponse).verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can register a new user")
   void register_ValidData_NoError() {
-    final String displayName = "displayName";
-    final String userName = "user";
-    final String password = "password";
-    final String encodedPassword = "encoded";
     final PasswordRegistrationDto passwordRegistrationDto = new PasswordRegistrationDto(
-      displayName,
-      userName,
-      password
+      TestConstants.TEST_USER_DISPLAY_NAME,
+      TestConstants.TEST_USER_LOGIN_NAME,
+      TestConstants.TEST_USER_PASSWORD
     );
-    final String mockUserId = "id";
-    when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
-    when(userService.createPasswordUser(displayName, userName, encodedPassword)).thenReturn(Mono.just(mockUserId));
-    StepVerifier.create(loginController.register(passwordRegistrationDto)).verifyComplete();
+
+    when(passwordEncoder.encode(TestConstants.TEST_USER_PASSWORD)).thenReturn(TestConstants.HASHED_TEST_PASSWORD);
+    when(userService.createPasswordUser(any(), any(), any())).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
+    StepVerifier
+      .create(loginController.register(passwordRegistrationDto))
+      .expectNext(TestConstants.TEST_USER_ID)
+      .verifyComplete();
   }
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     loginController = new LoginController(userService, webTokenService, passwordEncoder, controllerAuthentication);
   }
 }

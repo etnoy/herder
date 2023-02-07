@@ -38,6 +38,7 @@ import org.owasp.herder.validation.ValidModuleBonusScores;
 import org.owasp.herder.validation.ValidModuleId;
 import org.owasp.herder.validation.ValidModuleLocator;
 import org.owasp.herder.validation.ValidModuleName;
+import org.owasp.herder.validation.ValidModuleTags;
 import org.owasp.herder.validation.ValidTeamId;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
@@ -151,11 +152,11 @@ public class ModuleService {
     return moduleRepository.findByName(moduleName);
   }
 
-  public Mono<ModuleListItem> findListItemByLocator(
+  public Mono<ModuleListItem> findListItemByUserIdAndLocator(
     @ValidUserId final String userId,
     @ValidModuleLocator final String moduleLocator
   ) {
-    return moduleListRepository.findListItemByLocator(userId, moduleLocator);
+    return moduleListRepository.findListItemByUserIdAndLocator(userId, moduleLocator);
   }
 
   public Mono<ModuleList> findModuleListByTeamId(@ValidTeamId final String teamId) {
@@ -179,6 +180,19 @@ public class ModuleService {
       .switchIfEmpty(Mono.error(new ModuleNotFoundException("Module id " + moduleId + " not found")));
   }
 
+  /**
+   * Finds the specific module given by the module id. If the module id isn't found, it returns a
+   * mono exception
+   *
+   * @param moduleLocator
+   * @return the corresponding module entity
+   */
+  public Mono<ModuleEntity> getByLocator(@ValidModuleLocator final String moduleLocator) {
+    return moduleRepository
+      .findByLocator(moduleLocator)
+      .switchIfEmpty(Mono.error(new ModuleNotFoundException("Module locator " + moduleLocator + " not found")));
+  }
+
   public Mono<ModuleEntity> open(@ValidModuleId final String moduleId) {
     return getById(moduleId).map(module -> module.withOpen(true)).flatMap(moduleRepository::save);
   }
@@ -187,9 +201,6 @@ public class ModuleService {
     @ValidModuleId final String moduleId,
     @ValidModuleBaseScore final int baseScore
   ) {
-    if (baseScore < 0) {
-      return Mono.error(new IllegalArgumentException("Module base score cannot be a negative number"));
-    }
     return getById(moduleId).map(module -> module.withBaseScore(baseScore)).flatMap(moduleRepository::save);
   }
 
@@ -204,21 +215,16 @@ public class ModuleService {
     return getById(moduleId).map(module -> module.withFlagStatic(false)).flatMap(moduleRepository::save);
   }
 
-  public Mono<Void> setModuleLocator(@ValidModuleId final String moduleId, @ValidModuleName final String locator) {
-    return getById(moduleId).map(module -> module.withLocator(locator)).flatMap(moduleRepository::save).then();
-  }
-
-  public Mono<Void> setModuleName(@ValidModuleId final String moduleId, @ValidModuleName final String name) {
-    return getById(moduleId).map(module -> module.withName(name)).flatMap(moduleRepository::save).then();
-  }
-
   public Mono<ModuleEntity> setStaticFlag(@ValidModuleId final String moduleId, @ValidFlag final String staticFlag) {
     return getById(moduleId)
       .map(module -> module.withFlagStatic(true).withStaticFlag(staticFlag))
       .flatMap(moduleRepository::save);
   }
 
-  public Mono<Void> setTags(@ValidModuleId final String moduleId, final Multimap<String, String> tags) {
+  public Mono<Void> setTags(
+    @ValidModuleId final String moduleId,
+    @ValidModuleTags final Multimap<String, String> tags
+  ) {
     return getById(moduleId).map(module -> module.withTags(tags)).flatMap(moduleRepository::save).then();
   }
 

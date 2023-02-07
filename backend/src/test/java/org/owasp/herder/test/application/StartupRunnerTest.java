@@ -41,7 +41,9 @@ import org.owasp.herder.module.xss.XssTutorial;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 import org.owasp.herder.user.TeamService;
+import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import reactor.core.publisher.Mono;
 
@@ -82,8 +84,8 @@ class StartupRunnerTest extends BaseTest {
   ScoreboardService scoreboardService;
 
   @Test
-  void run_NoArguments_Success() {
-    final String mockUserId = "id";
+  @DisplayName("Can initialize application from empty database")
+  void run_DatabaseEmpty_Initializes() {
     when(
       userService.createPasswordUser(
         "Administrator",
@@ -91,18 +93,90 @@ class StartupRunnerTest extends BaseTest {
         "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G"
       )
     )
-      .thenReturn(Mono.just(mockUserId));
+      .thenReturn(Mono.just(TestConstants.TEST_USER_ID));
 
-    when(userService.create(any(String.class))).thenReturn(Mono.empty());
+    when(userService.create(any(String.class))).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
 
-    when(userService.promote(mockUserId)).thenReturn(Mono.empty());
+    when(userService.promote(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
 
     when(userService.existsByLoginName(any(String.class))).thenReturn(Mono.just(false));
     when(userService.existsByDisplayName(any(String.class))).thenReturn(Mono.just(false));
 
-    when(teamService.existsByDisplayName("Team 1")).thenReturn(Mono.just(true));
+    when(teamService.existsByDisplayName("Team 1")).thenReturn(Mono.just(false));
+
+    when(moduleService.findByLocator(any(String.class)))
+      .thenReturn(Mono.just(TestConstants.TEST_MODULE_ENTITY.withId(TestConstants.TEST_MODULE_ID)));
+
     when(moduleService.refreshModuleLists()).thenReturn(Mono.empty());
     when(submissionService.refreshSubmissionRanks()).thenReturn(Mono.empty());
+    when(submissionService.submitFlag(any(String.class), any(String.class), any(String.class)))
+      .thenReturn(Mono.empty());
+
+    when(scoreboardService.refreshScoreboard()).thenReturn(Mono.empty());
+
+    when(flagTutorial.getFlag(any(String.class))).thenReturn(Mono.just(TestConstants.TEST_STATIC_FLAG));
+    when(userService.addUserToTeam(any(), any())).thenReturn(Mono.empty());
+
+    when(teamService.create(any(String.class))).thenReturn(Mono.just(TestConstants.TEST_TEAM_ID));
+
+    when(userService.getById(any(String.class))).thenReturn(Mono.just(TestConstants.TEST_USER_ENTITY));
+    when(teamService.addMember(any(String.class), any(UserEntity.class))).thenReturn(Mono.empty());
+
+    when(submissionService.setTeamIdOfUserSubmissions(any(String.class), any(String.class))).thenReturn(Mono.empty());
+
+    assertDoesNotThrow(() -> startupRunner.run(null));
+  }
+
+  @Test
+  @DisplayName("Can initialize application from empty database")
+  void run_DatabaseEmptyAndNoFlagTutorial_Initializes() {
+    when(
+      userService.createPasswordUser(
+        "Administrator",
+        "admin",
+        "$2y$08$WpfUVZLcXNNpmM2VwSWlbe25dae.eEC99AOAVUiU5RaJmfFsE9B5G"
+      )
+    )
+      .thenReturn(Mono.just(TestConstants.TEST_USER_ID));
+
+    when(userService.create(any(String.class))).thenReturn(Mono.just(TestConstants.TEST_USER_ID));
+
+    when(userService.promote(TestConstants.TEST_USER_ID)).thenReturn(Mono.empty());
+
+    when(userService.existsByLoginName(any(String.class))).thenReturn(Mono.just(false));
+    when(userService.existsByDisplayName(any(String.class))).thenReturn(Mono.just(false));
+
+    when(teamService.existsByDisplayName("Team 1")).thenReturn(Mono.just(false));
+
+    when(moduleService.findByLocator(any(String.class))).thenReturn(Mono.empty());
+
+    when(moduleService.refreshModuleLists()).thenReturn(Mono.empty());
+    when(submissionService.refreshSubmissionRanks()).thenReturn(Mono.empty());
+
+    when(scoreboardService.refreshScoreboard()).thenReturn(Mono.empty());
+
+    when(userService.addUserToTeam(any(), any())).thenReturn(Mono.empty());
+
+    when(teamService.create(any(String.class))).thenReturn(Mono.just(TestConstants.TEST_TEAM_ID));
+
+    when(userService.getById(any(String.class))).thenReturn(Mono.just(TestConstants.TEST_USER_ENTITY));
+    when(teamService.addMember(any(String.class), any(UserEntity.class))).thenReturn(Mono.empty());
+
+    when(submissionService.setTeamIdOfUserSubmissions(any(String.class), any(String.class))).thenReturn(Mono.empty());
+
+    assertDoesNotThrow(() -> startupRunner.run(null));
+  }
+
+  @Test
+  @DisplayName("Can initialize application with populated database")
+  void run_DatabasePopulated_Initializes() {
+    when(userService.existsByLoginName(any(String.class))).thenReturn(Mono.just(true));
+    when(userService.existsByDisplayName(any(String.class))).thenReturn(Mono.just(true));
+    when(teamService.existsByDisplayName("Team 1")).thenReturn(Mono.just(true));
+
+    when(moduleService.refreshModuleLists()).thenReturn(Mono.empty());
+    when(submissionService.refreshSubmissionRanks()).thenReturn(Mono.empty());
+
     when(scoreboardService.refreshScoreboard()).thenReturn(Mono.empty());
 
     assertDoesNotThrow(() -> startupRunner.run(null));
@@ -110,8 +184,6 @@ class StartupRunnerTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
-
     startupRunner =
       new StartupRunner(userService, teamService, moduleService, submissionService, scoreboardService, flagTutorial);
   }

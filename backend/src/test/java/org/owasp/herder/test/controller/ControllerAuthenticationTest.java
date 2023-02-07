@@ -34,6 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.authentication.ControllerAuthentication;
 import org.owasp.herder.exception.NotAuthenticatedException;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.TestSecurityContextHolder;
 import org.springframework.security.test.context.support.ReactorContextTestExecutionListener;
@@ -50,24 +51,24 @@ class ControllerAuthenticationTest extends BaseTest {
   @Mock
   private Authentication authentication;
 
-  private TestExecutionListener reactorContextTestExecutionListener = new ReactorContextTestExecutionListener();
+  private final TestExecutionListener reactorContextTestExecutionListener = new ReactorContextTestExecutionListener();
 
   @BeforeEach
   void authenticate() throws Exception {
-    // Set up the system under test
     controllerAuthentication = new ControllerAuthentication();
     TestSecurityContextHolder.setAuthentication(authentication);
     reactorContextTestExecutionListener.beforeTestMethod(null);
   }
 
   @Test
+  @DisplayName("Can get authenticated user id")
   void getUserId_UserAuthenticated_ReturnsUserId() {
-    final String mockUserId = "id";
-    when(authentication.getPrincipal()).thenReturn(mockUserId);
-    StepVerifier.create(controllerAuthentication.getUserId()).expectNext(mockUserId).verifyComplete();
+    when(authentication.getPrincipal()).thenReturn(TestConstants.TEST_USER_ID);
+    StepVerifier.create(controllerAuthentication.getUserId()).expectNext(TestConstants.TEST_USER_ID).verifyComplete();
   }
 
   @Test
+  @DisplayName("Can error when getting user id if not authenticated")
   void getUserId_UserNotAuthenticated_ReturnsNotAuthenticatedException() {
     StepVerifier.create(controllerAuthentication.getUserId()).expectError(NotAuthenticatedException.class).verify();
   }

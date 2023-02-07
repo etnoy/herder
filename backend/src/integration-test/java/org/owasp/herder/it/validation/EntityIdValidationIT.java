@@ -95,7 +95,7 @@ class EntityIdValidationIT extends BaseIT {
   @DisplayName("in moduleService.findByLocatorWithSolutionStatus()")
   void moduleService_findByLocatorWithSolutionStatus(final String userId, final String containingMessage) {
     integrationTestUtils.checkConstraintViolation(
-      () -> moduleService.findListItemByLocator(userId, TestConstants.TEST_MODULE_LOCATOR),
+      () -> moduleService.findListItemByUserIdAndLocator(userId, TestConstants.TEST_MODULE_LOCATOR),
       containingMessage
     );
   }
@@ -163,7 +163,7 @@ class EntityIdValidationIT extends BaseIT {
   @MethodSource("invalidIdSource")
   @DisplayName("in userService.findKeyById()")
   void userService_findKeyById(final String userId, final String containingMessage) {
-    integrationTestUtils.checkConstraintViolation(() -> userService.findKeyById(userId), containingMessage);
+    integrationTestUtils.checkConstraintViolation(() -> userService.findKeyByUserId(userId), containingMessage);
   }
 
   @ParameterizedTest

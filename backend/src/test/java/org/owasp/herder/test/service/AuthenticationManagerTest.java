@@ -41,21 +41,23 @@ import reactor.test.StepVerifier;
 @DisplayName("AuthenticationManager unit tests")
 class AuthenticationManagerTest {
 
-  private AuthenticationManager authenticationManager;
+  AuthenticationManager authenticationManager;
 
   @Mock
-  private WebTokenService webTokenService;
+  WebTokenService webTokenService;
 
   @Mock
-  private UserService userService;
+  UserService userService;
+
+  final String testToken = "token";
 
   @Test
+  @DisplayName("Can authenticate a valid token")
   void authenticate_ValidToken_Authenticates() {
     final Authentication mockAuthentication = mock(Authentication.class);
-    final String mockToken = "token";
-    when(mockAuthentication.getCredentials()).thenReturn(mockToken);
+    when(mockAuthentication.getCredentials()).thenReturn(testToken);
 
-    when(webTokenService.parseToken(mockToken)).thenReturn(mockAuthentication);
+    when(webTokenService.parseToken(testToken)).thenReturn(mockAuthentication);
 
     StepVerifier
       .create(authenticationManager.authenticate(mockAuthentication))
@@ -65,18 +67,17 @@ class AuthenticationManagerTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     authenticationManager = new AuthenticationManager(webTokenService);
   }
 
   @Test
+  @DisplayName("Can deny authentication for an invalid token")
   void authenticate_InvalidToken_DoesNotAuthenticate() {
     final Authentication mockAuthentication = mock(Authentication.class);
-    final String mockToken = "token";
     final String invalidToken = "Invalid token";
-    when(mockAuthentication.getCredentials()).thenReturn(mockToken);
+    when(mockAuthentication.getCredentials()).thenReturn(testToken);
 
-    when(webTokenService.parseToken(mockToken)).thenThrow(new BadCredentialsException(invalidToken));
+    when(webTokenService.parseToken(testToken)).thenThrow(new BadCredentialsException(invalidToken));
 
     StepVerifier
       .create(authenticationManager.authenticate(mockAuthentication))

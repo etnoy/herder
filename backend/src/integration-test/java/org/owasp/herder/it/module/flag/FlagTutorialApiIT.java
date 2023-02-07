@@ -85,7 +85,7 @@ class FlagTutorialApiIT extends BaseIT {
   void canAcceptTheCorrectFlag() {
     integrationTestUtils.createTestUser();
 
-    final String accessToken = integrationTestUtils.performAPILoginWithToken(
+    final String accessToken = integrationTestUtils.getTokenFromAPILogin(
       TestConstants.TEST_USER_LOGIN_NAME,
       TestConstants.TEST_USER_PASSWORD
     );

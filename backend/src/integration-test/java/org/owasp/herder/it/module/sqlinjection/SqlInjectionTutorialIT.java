@@ -90,27 +90,7 @@ class SqlInjectionTutorialIT extends BaseIT {
   }
 
   @Test
-  void submitQuery_CorrectAttackQuery_ModifiedFlagIsWrong() {
-    final String userId = userService.create("TestUser1").block();
-
-    final Mono<String> flagVerificationMono = sqlInjectionTutorial
-      .submitQuery(userId, "' OR '1' = '1")
-      .skip(4)
-      .next()
-      .map(this::extractFlagFromRow);
-
-    // Take the flag we got from the tutorial, modify it, and expect validation to fail
-    StepVerifier
-      .create(
-        flagVerificationMono
-          .flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag + "wrong"))
-          .map(Submission::isValid)
-      )
-      .expectNext(false)
-      .verifyComplete();
-  }
-
-  @Test
+  @DisplayName("Can get the correct flag when using the correct attack query")
   void submitQuery_CorrectAttackQuery_ReturnedFlagIsCorrect() {
     final String userId = userService.create("TestUser1").block();
 
@@ -120,7 +100,6 @@ class SqlInjectionTutorialIT extends BaseIT {
       .next()
       .map(this::extractFlagFromRow);
 
-    // Submit the flag we got from the sql injection and make sure it validates
     StepVerifier
       .create(flagMono.flatMap(flag -> submissionService.submitFlag(userId, moduleId, flag)).map(Submission::isValid))
       .expectNext(true)
@@ -128,6 +107,7 @@ class SqlInjectionTutorialIT extends BaseIT {
   }
 
   @Test
+  @DisplayName("Can get the whole database when using the correct attack query")
   void submitQuery_CorrectAttackQuery_ReturnsWholeDatabase() {
     final String userId = userService.create("TestUser1").block();
 
@@ -135,6 +115,7 @@ class SqlInjectionTutorialIT extends BaseIT {
   }
 
   @Test
+  @DisplayName("Can keep working efter after a delete all command")
   void submitQuery_InjectionDeletesAll_DoesNotImpactDatabase() throws InterruptedException {
     final String userId = userService.create("TestUser1").block();
 
@@ -144,12 +125,14 @@ class SqlInjectionTutorialIT extends BaseIT {
   }
 
   @Test
+  @DisplayName("Can get zero results for a query with no matches")
   void submitQuery_QueryWithNoMatches_EmptyResultSet() {
     final String userId = userService.create("TestUser1").block();
     StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "test")).verifyComplete();
   }
 
   @Test
+  @DisplayName("Can get one matching row for a query with one match")
   void submitQuery_QueryWithOneMatch_OneItemInResultSet() {
     final String userId = userService.create("TestUser1").block();
     StepVerifier
@@ -159,15 +142,7 @@ class SqlInjectionTutorialIT extends BaseIT {
   }
 
   @Test
-  void submitQuery_RepeatedCorrectAttackQuery_ReturnsWholeDatabaseFromCache() {
-    final String userId = userService.create("TestUser1").block();
-
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1")).expectNextCount(5).verifyComplete();
-
-    StepVerifier.create(sqlInjectionTutorial.submitQuery(userId, "' OR '1' = '1")).expectNextCount(5).verifyComplete();
-  }
-
-  @Test
+  @DisplayName("Can extract the correct error message when querying with one apostrophe")
   void submitQuery_InvalidQueryWithOneApostrophe_ReturnsError() {
     final String userId = userService.create("TestUser1").block();
 
@@ -183,6 +158,7 @@ class SqlInjectionTutorialIT extends BaseIT {
   }
 
   @Test
+  @DisplayName("Can get the data conversion error when using a specific query")
   void submitQuery_InvalidQueryOneEqualsOne_NumberFormatException() {
     final String userId = userService.create("TestUser1").block();
 

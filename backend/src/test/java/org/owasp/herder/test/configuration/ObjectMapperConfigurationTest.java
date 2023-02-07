@@ -19,56 +19,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.test.module.flag;
+package org.owasp.herder.test.configuration;
 
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.BeforeEach;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.flag.FlagHandler;
-import org.owasp.herder.module.ModuleService;
-import org.owasp.herder.module.flag.FlagTutorial;
-import org.owasp.herder.scoring.ScoreboardService;
-import org.owasp.herder.test.BaseTest;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
+import org.owasp.herder.configuration.ObjectMapperConfiguration;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("FlagTutorial unit tests")
-class FlagTutorialTest extends BaseTest {
+@DisplayName("ObjectMapperConfiguration unit tests")
+class ObjectMapperConfigurationTest {
 
-  private String moduleLocator;
-
-  FlagTutorial flagTutorial;
-
-  @Mock
-  ModuleService moduleService;
-
-  @Mock
-  ScoreboardService scoreboardService;
-
-  @Mock
-  FlagHandler flagHandler;
-
-  @BeforeEach
-  void setup() {
-    flagTutorial = new FlagTutorial(flagHandler);
-
-    moduleLocator = flagTutorial.getLocator();
-  }
+  final ObjectMapperConfiguration objectMapperConfiguration = new ObjectMapperConfiguration();
 
   @Test
-  @DisplayName("getFlag can return flag")
-  void getFlag_ValidData_ReturnsFlag() {
-    final String testUserId = "id";
-    final String flag = "flag";
-
-    when(flagHandler.getDynamicFlag(testUserId, moduleLocator)).thenReturn(Mono.just(flag));
-
-    StepVerifier.create(flagTutorial.getFlag(testUserId)).expectNext(flag).verifyComplete();
+  @DisplayName("Can build the object mapperor factory")
+  void validatorFactory_ReturnsLocalValidatorFactoryBean() {
+    assertThat(objectMapperConfiguration.buildObjectMapper()).isInstanceOf(ObjectMapper.class);
   }
 }

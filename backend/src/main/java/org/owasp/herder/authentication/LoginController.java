@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.authentication;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.owasp.herder.authentication.LoginResponse.LoginResponseBuilder;
@@ -78,14 +79,13 @@ public class LoginController {
 
   @PostMapping(path = "/impersonate")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
-  public Mono<ResponseEntity<LoginResponse>> impersonate(
-    @Valid @RequestBody final ImpersonationDto impersonatedUserId
-  ) {
+  @SecurityRequirement(name = "bearerAuth")
+  public Mono<ResponseEntity<LoginResponse>> impersonate(@Valid @RequestBody final ImpersonationDto impersonationDto) {
     final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
     return controllerAuthentication
       .getUserId()
-      .map(userId -> webTokenService.generateImpersonationToken(userId, impersonatedUserId.getImpersonatedId(), false))
-      .zipWith(userService.getById(impersonatedUserId.getImpersonatedId()))
+      .map(userId -> webTokenService.generateImpersonationToken(userId, impersonationDto.getImpersonatedId(), false))
+      .zipWith(userService.getById(impersonationDto.getImpersonatedId()))
       .map(tuple -> {
         final LoginResponse loginResponse = loginResponseBuilder
           .accessToken(tuple.getT1())
@@ -98,13 +98,11 @@ public class LoginController {
 
   @PostMapping(path = "/register")
   @ResponseStatus(HttpStatus.CREATED)
-  public Mono<Void> register(@Valid @RequestBody final PasswordRegistrationDto registrationDto) {
-    return userService
-      .createPasswordUser(
-        registrationDto.getDisplayName(),
-        registrationDto.getUserName(),
-        passwordEncoder.encode(registrationDto.getPassword())
-      )
-      .then();
+  public Mono<String> register(@Valid @RequestBody final PasswordRegistrationDto registrationDto) {
+    return userService.createPasswordUser(
+      registrationDto.getDisplayName(),
+      registrationDto.getUserName(),
+      passwordEncoder.encode(registrationDto.getPassword())
+    );
   }
 }

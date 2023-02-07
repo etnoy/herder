@@ -37,41 +37,42 @@ import org.springframework.validation.annotation.Validated;
 @Slf4j
 public class WebTokenKeyManager {
 
-  private static final Map<String, Key> userToKeyMap = new HashMap<>();
+  private final Map<String, Key> keys = new HashMap<>();
 
   public Key getOrGenerateKeyForUser(@ValidUserId final String userId) {
-    if (!userToKeyMap.containsKey(userId)) {
+    if (!keys.containsKey(userId)) {
       // No key found, generate new key for user and store it
       return generateUserKey(userId);
     } else {
-      return userToKeyMap.get(userId);
+      return keys.get(userId);
     }
   }
 
   public Key getKeyForUser(@ValidUserId final String userId) {
-    if (!userToKeyMap.containsKey(userId)) {
-      // No key found, generate new key for user and store it
+    if (!keys.containsKey(userId)) {
+      // No key found, throw error
       throw new SignatureException("Signing key is not registred for the subject");
     } else {
-      return userToKeyMap.get(userId);
+      return keys.get(userId);
     }
   }
 
   public void clearAllKeys() {
-    userToKeyMap.clear();
+    keys.clear();
   }
 
   public Key generateUserKey(@ValidUserId final String userId) {
     log.debug("Generating new web token key for user with id " + userId);
 
     final Key userKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
-    userToKeyMap.put(userId, userKey);
+    keys.put(userId, userKey);
+
     return userKey;
   }
 
   public void invalidateAccessToken(@ValidUserId final String userId) {
     log.debug("Invalidating web token for user with id " + userId);
 
-    userToKeyMap.remove(userId);
+    keys.remove(userId);
   }
 }

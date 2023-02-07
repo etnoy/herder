@@ -19,28 +19,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.test.exception;
+package org.owasp.herder.configuration;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import org.springframework.context.annotation.Configuration;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.owasp.herder.exception.ClassIdNotFoundException;
-import org.owasp.herder.test.BaseTest;
-import org.owasp.herder.test.util.TestConstants;
-
-@ExtendWith(MockitoExtension.class)
-@DisplayName("ClassIdNotFoundException unit tests")
-class ClassIdNotFoundExceptionTest extends BaseTest {
-
-  @Test
-  @DisplayName("Can construct an exception")
-  void messageConstructor_ValidMessage_MessageIncluded() {
-    for (final String message : TestConstants.STRINGS) {
-      ClassIdNotFoundException exception = new ClassIdNotFoundException(message);
-      assertThat(exception.getMessage()).isEqualTo(message);
-    }
-  }
-}
+@Configuration
+@OpenAPIDefinition(info = @Info(title = "Herder", version = "v1"))
+@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
+public class OpenApi30Config {}

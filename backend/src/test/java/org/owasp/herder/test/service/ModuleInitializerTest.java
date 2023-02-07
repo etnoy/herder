@@ -314,7 +314,6 @@ class ModuleInitializerTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     moduleInitializer = spy(new ModuleInitializer(applicationContext, moduleService));
     moduleInitializer.setApplicationContext(applicationContext);
   }

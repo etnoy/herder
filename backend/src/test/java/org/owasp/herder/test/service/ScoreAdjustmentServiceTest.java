@@ -23,10 +23,13 @@ package org.owasp.herder.test.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +41,9 @@ import org.owasp.herder.scoring.ScoreAdjustmentRepository;
 import org.owasp.herder.scoring.ScoreAdjustmentService;
 import org.owasp.herder.test.BaseTest;
 import org.owasp.herder.test.util.TestConstants;
+import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.TeamService;
+import org.owasp.herder.user.UserEntity;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -64,28 +69,63 @@ class ScoreAdjustmentServiceTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     scoreAdjustmentService = new ScoreAdjustmentService(scoreAdjustmentRepository, teamService, clock);
   }
 
   @Test
-  void submit_ValidUserId_ReturnsCorrection() {
-    final String mockUserId = "id";
+  @DisplayName("Can submit score adjustment for user")
+  void submitUserAdjustment_ValidUserId_ReturnsCorrection() {
     final int amount = 1000;
     final String description = "Bonus";
 
     when(scoreAdjustmentRepository.save(any(ScoreAdjustment.class)))
       .thenAnswer(scoreAdjustment -> Mono.just(scoreAdjustment.getArgument(0, ScoreAdjustment.class)));
 
-    setClock(TestConstants.year2000Clock);
+    setClock(TestConstants.YEAR_2000_CLOCK);
 
     StepVerifier
-      .create(scoreAdjustmentService.submitUserAdjustment(mockUserId, amount, description))
+      .create(scoreAdjustmentService.submitUserAdjustment(TestConstants.TEST_USER_ID, amount, description))
       .assertNext(scoreAdjustment -> {
-        assertThat(scoreAdjustment.getUserIds()).contains(mockUserId);
+        assertThat(scoreAdjustment.getUserIds()).containsExactly(TestConstants.TEST_USER_ID);
         assertThat(scoreAdjustment.getAmount()).isEqualTo(amount);
         assertThat(scoreAdjustment.getDescription()).isEqualTo(description);
-        assertThat(scoreAdjustment.getTime()).isEqualTo(LocalDateTime.now(TestConstants.year2000Clock));
+        assertThat(scoreAdjustment.getTime()).isEqualTo(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK));
+      })
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can submit score adjustment for team")
+  void submitTeamAdjustment_ValidUserId_ReturnsCorrection() {
+    final int amount = 1000;
+    final String description = "Bonus";
+
+    when(scoreAdjustmentRepository.save(any(ScoreAdjustment.class)))
+      .thenAnswer(scoreAdjustment -> Mono.just(scoreAdjustment.getArgument(0, ScoreAdjustment.class)));
+
+    final UserEntity mockUser1 = mock(UserEntity.class);
+    final UserEntity mockUser2 = mock(UserEntity.class);
+    final UserEntity mockUser3 = mock(UserEntity.class);
+
+    when(mockUser1.getId()).thenReturn("1");
+    when(mockUser2.getId()).thenReturn("2");
+    when(mockUser3.getId()).thenReturn("3");
+
+    final ArrayList<UserEntity> members = new ArrayList<>(List.of(mockUser1, mockUser2, mockUser3));
+
+    final TeamEntity testTeam = TestConstants.TEST_TEAM_ENTITY.withMembers(members);
+
+    when(teamService.getById(TestConstants.TEST_TEAM_ID)).thenReturn(Mono.just(testTeam));
+
+    setClock(TestConstants.YEAR_2000_CLOCK);
+
+    StepVerifier
+      .create(scoreAdjustmentService.submitTeamAdjustment(TestConstants.TEST_TEAM_ID, amount, description))
+      .assertNext(scoreAdjustment -> {
+        assertThat(scoreAdjustment.getUserIds()).containsExactlyInAnyOrder("1", "2", "3");
+        assertThat(scoreAdjustment.getAmount()).isEqualTo(amount);
+        assertThat(scoreAdjustment.getDescription()).isEqualTo(description);
+        assertThat(scoreAdjustment.getTime()).isEqualTo(LocalDateTime.now(TestConstants.YEAR_2000_CLOCK));
       })
       .verifyComplete();
   }

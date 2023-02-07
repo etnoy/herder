@@ -21,6 +21,9 @@
  */
 package org.owasp.herder.test.util;
 
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import java.security.Key;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -29,7 +32,11 @@ import java.util.ArrayList;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.owasp.herder.crypto.WebTokenClock;
+import org.owasp.herder.model.ClassEntity;
 import org.owasp.herder.module.ModuleEntity;
+import org.owasp.herder.scoring.RankedSubmission;
+import org.owasp.herder.scoring.SanitizedRankedSubmission;
+import org.owasp.herder.scoring.SolverType;
 import org.owasp.herder.user.TeamEntity;
 import org.owasp.herder.user.UserEntity;
 
@@ -86,6 +93,8 @@ public final class TestConstants {
   public static final byte[] TEST_BYTE_ARRAY = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
   public static final byte[] TEST_BYTE_ARRAY2 = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
   public static final byte[] TEST_BYTE_ARRAY3 = { 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 127 };
+  public static final byte[] TEST_BYTE_ARRAY4 = { 4, 5, 6, 7, 8, 11, 10, 11, 12, 16, 17, 127 };
+  public static final byte[] TEST_BYTE_ARRAY5 = { 4, 5, 6, 7, 8, 13, 10, 11, 12, 16, 17, 127 };
 
   public static final String[] STRINGS = {
     "Test",
@@ -98,8 +107,8 @@ public final class TestConstants {
     "-",
     "𝕋𝕙𝕖 𝕢𝕦𝕚𝕔𝕜 𝕓𝕣𝕠𝕨𝕟 𝕗𝕠𝕩 𝕛𝕦𝕞𝕡𝕤 𝕠𝕧𝕖𝕣 𝕥𝕙𝕖 𝕝𝕒𝕫𝕪 𝕕𝕠𝕘",
     "❤️ 💔 💌 💕 💞 💓 💗 💖 💘 💝 💟 💜 💛 💚 💙",
-    " ﷽ ",
-    "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ، ",
+    "﷽ ",
+    "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ،",
   };
 
   public static final String[] VALID_STATIC_FLAGS = {
@@ -111,8 +120,8 @@ public final class TestConstants {
     "%",
     "𝕋𝕙𝕖 𝕢𝕦𝕚𝕔𝕜 𝕓𝕣𝕠𝕨𝕟 𝕗𝕠𝕩 𝕛𝕦𝕞𝕡𝕤 𝕠𝕧𝕖𝕣 𝕥𝕙𝕖 𝕝𝕒𝕫𝕪 𝕕𝕠𝕘",
     "❤️ 💔 💌 💕 💞 💓 💗 💖 💘 💝 💟 💜 💛 💚 💙",
-    " ﷽ ",
-    "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ، ",
+    "﷽",
+    "مُنَاقَشَةُ سُبُلِ اِسْتِخْدَامِ اللُّغَةِ فِي النُّظُمِ الْقَائِمَةِ وَفِيم يَخُصَّ التَّطْبِيقَاتُ الْحاسُوبِيَّةُ،",
   };
 
   public static final String[] VALID_NAMES = {
@@ -124,7 +133,7 @@ public final class TestConstants {
     "%*",
     "𝕋𝕙𝕖 𝕢𝕦𝕚𝕔𝕜 𝕓𝕣𝕠𝕨𝕟 𝕗𝕠𝕩 𝕛𝕦𝕞𝕡𝕤",
     "❤️ 💔 💌 💕 💞 💓 💗 💖 💘 💝 💟 💜 💛 💚 💙",
-    " ﷽ ﷽  ﷽  ",
+    "﷽﷽  ﷽",
   };
 
   public static final String[] INVALID_NAMES = { "", null };
@@ -145,6 +154,8 @@ public final class TestConstants {
   // The password "test" hashed with BCrypt
   public static final String HASHED_TEST_PASSWORD = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
 
+  public static final Key TEST_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+
   public static final String TEST_MODULE_LOCATOR = "test-module";
   public static final String TEST_MODULE_ID = "abcdef123456789012345678";
   public static final String TEST_MODULE_NAME = "Test Module";
@@ -152,20 +163,24 @@ public final class TestConstants {
   public static final String TEST_MODULE_TAG_NAME = "test-tag";
 
   public static final String TEST_STATIC_FLAG = "Static Test Flag 123 456";
+  public static final String TEST_DYNAMIC_FLAG = "flag{123456789abcdef}";
 
   public static final String TEST_USER_ID = "abcdef123456789012345678";
   public static final String TEST_USER_ID2 = "abcdef123456789012345679";
 
   public static final String TEST_CLASS_ID = "abcdef1234567890abcd5678";
+  public static final String TEST_CLASS_NAME = "Test Class";
+
+  public static final String TEST_CSRF_PSEUDONYM = "a-target";
 
   public static final String VERY_LONG_STRING =
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-  public static final Clock year2000Clock = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
-  public static final WebTokenClock year2000WebTokenClock = new WebTokenClock(year2000Clock);
+  public static final Clock YEAR_2000_CLOCK = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+  public static final WebTokenClock YEAR_2000_WEB_TOKEN_CLOCK = new WebTokenClock(YEAR_2000_CLOCK);
 
-  public static final Clock year2100Clock = Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.of("Z"));
-  public static final WebTokenClock year2100WebTokenClock = new WebTokenClock(year2100Clock);
+  public static final Clock YEAR_2100_CLOCK = Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.of("Z"));
+  public static final WebTokenClock YEAR_2100_WEB_TOKEN_CLOCK = new WebTokenClock(YEAR_2100_CLOCK);
 
   public static Stream<String> testStringProvider() {
     return Stream.of(STRINGS);
@@ -189,6 +204,8 @@ public final class TestConstants {
     .displayName(TEST_USER_DISPLAY_NAME)
     .build();
 
+  public static final ClassEntity TEST_CLASS_ENTITY = ClassEntity.builder().name(TEST_CLASS_NAME).build();
+
   public static final TeamEntity TEST_TEAM_ENTITY = TeamEntity
     .builder()
     .displayName(TEST_TEAM_DISPLAY_NAME)
@@ -199,5 +216,30 @@ public final class TestConstants {
     .builder()
     .name(TestConstants.TEST_MODULE_NAME)
     .locator(TEST_MODULE_LOCATOR)
+    .build();
+
+  public static final RankedSubmission TEST_RANKED_SUBMISSION = RankedSubmission
+    .builder()
+    .module(TEST_MODULE_ENTITY)
+    .user(TEST_USER_ENTITY.withId(TEST_USER_ID))
+    .rank(1L)
+    .time(LocalDateTime.now(YEAR_2000_CLOCK))
+    .baseScore(100L)
+    .bonusScore(50L)
+    .score(150L)
+    .build();
+
+  public static final SanitizedRankedSubmission TEST_SANITIZED_RANKED_SUBMISSION = SanitizedRankedSubmission
+    .builder()
+    .id(TEST_USER_ID)
+    .solverType(SolverType.USER)
+    .displayName(TEST_USER_DISPLAY_NAME)
+    .moduleLocator(TEST_MODULE_LOCATOR)
+    .moduleName(TEST_MODULE_NAME)
+    .rank(1L)
+    .time(LocalDateTime.now(YEAR_2000_CLOCK))
+    .baseScore(100L)
+    .bonusScore(50L)
+    .score(150L)
     .build();
 }

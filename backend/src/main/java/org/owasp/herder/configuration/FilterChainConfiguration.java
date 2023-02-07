@@ -21,7 +21,6 @@
  */
 package org.owasp.herder.configuration;
 
-import lombok.Generated;
 import org.owasp.herder.authentication.AuthenticationManager;
 import org.owasp.herder.authentication.SecurityContextRepository;
 import org.springframework.context.annotation.Bean;
@@ -34,7 +33,6 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import reactor.core.publisher.Mono;
 
-@Generated
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
@@ -47,9 +45,7 @@ public class FilterChainConfiguration {
     SecurityContextRepository securityContextRepository
   ) {
     return serverHttpSecurity
-      //
       .exceptionHandling()
-      //
       .authenticationEntryPoint((serverWebExchange, authenticationException) ->
         Mono.fromRunnable(() -> {
           serverWebExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -60,16 +56,12 @@ public class FilterChainConfiguration {
         Mono.fromRunnable(() -> serverWebExchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN))
       )
       .and()
-      //
       .csrf()
       .disable()
-      //
       .formLogin()
       .disable()
-      //
       .httpBasic()
       .disable()
-      //
       .authenticationManager(authenticationManager)
       .securityContextRepository(securityContextRepository)
       .authorizeExchange()
@@ -80,6 +72,14 @@ public class FilterChainConfiguration {
       .pathMatchers(HttpMethod.OPTIONS)
       .permitAll()
       .pathMatchers("/api/v1/login")
+      .permitAll()
+      .pathMatchers(
+        "/v3/api-docs/**",
+        "/v3/**",
+        "/webjars/swagger-ui/**",
+        "/webjars/swagger-ui.html",
+        "/swagger-ui.html"
+      )
       .permitAll()
       .anyExchange()
       .authenticated()

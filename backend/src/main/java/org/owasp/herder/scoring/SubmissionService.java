@@ -88,10 +88,6 @@ public class SubmissionService {
     return submissionRepository.findAllByUserIdAndModuleIdAndIsValidTrue(userId, moduleName);
   }
 
-  public Flux<UnrankedScoreboardEntry> getUnrankedScoreboard() {
-    return rankedSubmissionRepository.getUnrankedScoreboard();
-  }
-
   private SanitizedRankedSubmission sanitizeRankedSubmission(final RankedSubmission rankedSubmission) {
     final SanitizedRankedSubmissionBuilder builder = SanitizedRankedSubmission.builder();
 
@@ -99,12 +95,12 @@ public class SubmissionService {
       final TeamEntity team = rankedSubmission.getTeam();
       builder.id(team.getId());
       builder.displayName(team.getDisplayName());
-      builder.principalType(SolverType.TEAM);
+      builder.solverType(SolverType.TEAM);
     } else if (rankedSubmission.getUser() != null) {
       final UserEntity user = rankedSubmission.getUser();
       builder.id(user.getId());
       builder.displayName(user.getDisplayName());
-      builder.principalType(SolverType.USER);
+      builder.solverType(SolverType.USER);
     } else {
       throw new IllegalArgumentException("Ranked submission is missing user or team");
     }
@@ -155,21 +151,12 @@ public class SubmissionService {
   ) {
     final SubmissionBuilder submissionBuilder = Submission.builder();
 
-    if (flag != null) {
-      submissionBuilder.flag(flag);
-    }
+    submissionBuilder.flag(flag);
     submissionBuilder.time(LocalDateTime.now(clock));
 
     return flagHandler // Check if flag is correct
       .verifyFlag(userId, moduleId, flag)
-      // Set isValid field of the submission
-      .map(isValid -> {
-        // This null check is unneccessary since reactor never produces null, but it shuts up a null safety warning
-        if (isValid == null) {
-          isValid = false;
-        }
-        return submissionBuilder.isValid(isValid);
-      })
+      .map(submissionBuilder::isValid)
       // Has this module been solved by this user? In that case, throw exception.
       .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleId))
       .switchIfEmpty(

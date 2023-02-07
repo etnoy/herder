@@ -19,19 +19,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.exception;
+package org.owasp.herder.test.configuration;
 
-import lombok.NoArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@NoArgsConstructor
-@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "User not found")
-public class SubmissionNotFoundException extends RuntimeException {
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.owasp.herder.configuration.CrossOriginConfiguration;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
-  private static final long serialVersionUID = 1142246154205845718L;
+@ExtendWith(MockitoExtension.class)
+@DisplayName("CrossOriginConfiguration unit tests")
+class CrossOriginConfigurationTest {
 
-  public SubmissionNotFoundException(final String message) {
-    super(message);
+  final CrossOriginConfiguration crossOriginConfiguration = new CrossOriginConfiguration();
+
+  @Test
+  @DisplayName("Can get the CORS configuration source")
+  void validatorFactory_ReturnsLocalValidatorFactoryBean() {
+    assertThat(crossOriginConfiguration.corsConfigurationSource()).isInstanceOf(UrlBasedCorsConfigurationSource.class);
   }
 }

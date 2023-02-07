@@ -23,22 +23,22 @@ package org.owasp.herder.it.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.owasp.herder.it.BaseIT;
 import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.test.util.TestConstants;
-import org.owasp.herder.user.UserEntity;
 import org.owasp.herder.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.BodyInserters;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@DisplayName("UserController API integration tests")
-class UserControllerApiIT extends BaseIT {
+@DisplayName("LoginController API integration tests")
+class LoginControllerApiIT extends BaseIT {
 
   @Autowired
   UserService userService;
@@ -50,63 +50,49 @@ class UserControllerApiIT extends BaseIT {
   IntegrationTestUtils integrationTestUtils;
 
   @Test
-  @DisplayName("Can list users as admin")
-  void listUsers_IsAdmin_ReturnsUserList() {
-    HashSet<String> userIdSet = new HashSet<>();
-
-    userIdSet.add(integrationTestUtils.createTestAdmin());
-
-    final String token = integrationTestUtils.getTokenFromAPILogin(
-      TestConstants.TEST_ADMIN_LOGIN_NAME,
-      TestConstants.TEST_ADMIN_PASSWORD
-    );
-
-    userIdSet.add(userService.create("Test User 2").block());
-    userIdSet.add(userService.create("Test User 3").block());
-    userIdSet.add(userService.create("Test User 4").block());
-
-    StepVerifier
-      .create(
-        webTestClient
-          .get()
-          .uri("/api/v1/users")
-          .header("Authorization", "Bearer " + token)
-          .accept(MediaType.APPLICATION_JSON)
-          .exchange()
-          .expectStatus()
-          .isOk()
-          .expectHeader()
-          .contentType(MediaType.APPLICATION_JSON)
-          .returnResult(UserEntity.class)
-          .getResponseBody()
-          .map(UserEntity::getId)
+  @DisplayName("Can register user via API")
+  void register_ValidData_ReturnsValidUser() {
+    final String userId = webTestClient
+      .post()
+      .uri("/api/v1/register")
+      .contentType(MediaType.APPLICATION_JSON)
+      .body(
+        BodyInserters.fromPublisher(
+          Mono.just(
+            "{\"displayName\": \"" +
+            TestConstants.TEST_USER_DISPLAY_NAME +
+            "\", \"userName\": \"" +
+            TestConstants.TEST_USER_LOGIN_NAME +
+            "\",  \"password\": \"" +
+            TestConstants.TEST_USER_PASSWORD +
+            "\"}"
+          ),
+          String.class
+        )
       )
-      .recordWith(HashSet::new)
-      .thenConsumeWhile(x -> true)
-      .consumeRecordedWith(users -> assertThat(users).containsExactlyElementsOf(userIdSet))
-      .verifyComplete();
-  }
-
-  @Test
-  @DisplayName("Can deny list users as user")
-  void listUsers_IsUser_ReturnsUserList() {
-    HashSet<String> userIdSet = new HashSet<>();
-
-    userIdSet.add(integrationTestUtils.createTestUser());
-
-    final String token = integrationTestUtils.getTokenFromAPILogin(
-      TestConstants.TEST_USER_LOGIN_NAME,
-      TestConstants.TEST_USER_PASSWORD
-    );
-
-    webTestClient
-      .get()
-      .uri("/api/v1/users")
-      .header("Authorization", "Bearer " + token)
-      .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus()
-      .isForbidden();
+      .isCreated()
+      .expectBody(String.class)
+      .returnResult()
+      .getResponseBody();
+
+    StepVerifier
+      .create(userService.getById(userId))
+      .assertNext(user -> {
+        assertThat(user.getDisplayName()).isEqualTo(TestConstants.TEST_USER_DISPLAY_NAME);
+        assertThat(user.getId()).isEqualTo(userId);
+      })
+      .verifyComplete();
+
+    StepVerifier
+      .create(userService.getPasswordAuthByUserId(userId))
+      .assertNext(passwordAuth -> {
+        assertThat(passwordAuth.getLoginName()).isEqualTo(TestConstants.TEST_USER_LOGIN_NAME);
+        assertThat(passwordAuth.getHashedPassword()).hasSizeGreaterThan(20);
+        assertThat(passwordAuth.getHashedPassword()).contains("$");
+      })
+      .verifyComplete();
   }
 
   @BeforeEach

@@ -34,6 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.SanitizedRankedSubmission;
 import org.owasp.herder.scoring.ScoreboardController;
+import org.owasp.herder.scoring.ScoreboardEntry;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.BaseTest;
@@ -67,6 +68,7 @@ class ScoreboardControllerTest extends BaseTest {
   SubmissionService submissionService;
 
   @Test
+  @DisplayName("Can get scoreboard by user id")
   void getScoreboardByUserId_ValidUserId_ReturnsScoreboard() {
     final SanitizedRankedSubmission rankedSubmission1 = mock(SanitizedRankedSubmission.class);
     final SanitizedRankedSubmission rankedSubmission2 = mock(SanitizedRankedSubmission.class);
@@ -83,6 +85,23 @@ class ScoreboardControllerTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can get scoreboard")
+  void getScoreboard_SubmissionsExist_ReturnsScoreboard() {
+    final ScoreboardEntry scoreboardEntry1 = mock(ScoreboardEntry.class);
+    final ScoreboardEntry scoreboardEntry2 = mock(ScoreboardEntry.class);
+
+    final Flux<ScoreboardEntry> scoreboard = Flux.just(scoreboardEntry1, scoreboardEntry2);
+    when(scoreboardService.getScoreboard()).thenReturn(scoreboard);
+
+    StepVerifier
+      .create(scoreboardController.getScoreboard())
+      .expectNext(scoreboardEntry1)
+      .expectNext(scoreboardEntry2)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can error when getting scoreboard for invalid user id")
   void getScoreboardByUserId_InvalidUserId_Errors() {
     when(userService.existsById(TestConstants.TEST_USER_ID))
       .thenThrow(new ConstraintViolationException("bad data", null));
@@ -94,6 +113,7 @@ class ScoreboardControllerTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can get scoreboard for module locator")
   void getScoreboardByModuleLocator_ValidLocator_ReturnsScoreboard() {
     final SanitizedRankedSubmission rankedSubmission1 = mock(SanitizedRankedSubmission.class);
     final SanitizedRankedSubmission rankedSubmission2 = mock(SanitizedRankedSubmission.class);
@@ -111,6 +131,7 @@ class ScoreboardControllerTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can error when getting scoreboard for invalid module locator")
   void getScoreboardByModuleLocator_InvalidLocator_ReturnsScoreboard() {
     when(moduleService.existsByLocator(TestConstants.TEST_MODULE_LOCATOR))
       .thenThrow(new ConstraintViolationException("bad data", null));
@@ -122,6 +143,7 @@ class ScoreboardControllerTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can get scoreboard for team id")
   void getScoreboardByTeamId_ValidTeamId_ReturnsScoreboard() {
     final SanitizedRankedSubmission rankedSubmission1 = mock(SanitizedRankedSubmission.class);
     final SanitizedRankedSubmission rankedSubmission2 = mock(SanitizedRankedSubmission.class);
@@ -138,6 +160,7 @@ class ScoreboardControllerTest extends BaseTest {
   }
 
   @Test
+  @DisplayName("Can error when getting scoreboard for invalid team id")
   void getScoreboardByTeamId_InvalidTeamId_ReturnsScoreboard() {
     when(teamService.existsById(TestConstants.TEST_TEAM_ID))
       .thenThrow(new ConstraintViolationException("bad data", null));
@@ -150,7 +173,6 @@ class ScoreboardControllerTest extends BaseTest {
 
   @BeforeEach
   void setup() {
-    // Set up the system under test
     scoreboardController =
       new ScoreboardController(scoreboardService, userService, teamService, submissionService, moduleService);
   }

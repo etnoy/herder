@@ -38,6 +38,7 @@ class SqlInjectionDatabaseClientFactoryTest extends BaseTest {
   private final SqlInjectionDatabaseClientFactory sqlInjectionDatabaseClientFactory = new SqlInjectionDatabaseClientFactory();
 
   @Test
+  @DisplayName("Can create a sql database client")
   void create_ValidConnectionUrl_ReturnsDatabaseClient() {
     final String dbName = "testdb";
     final DatabaseClient client = sqlInjectionDatabaseClientFactory.create(dbName);

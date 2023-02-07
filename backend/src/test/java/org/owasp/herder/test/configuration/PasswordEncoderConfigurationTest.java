@@ -19,39 +19,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.owasp.herder.test.model;
+package org.owasp.herder.test.configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import jakarta.validation.constraints.NotNull;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.owasp.herder.authentication.PasswordLoginDto;
-import org.owasp.herder.test.util.TestConstants;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.owasp.herder.configuration.PasswordEncoderConfiguration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-@DisplayName("PasswordLoginDto unit tests")
-class PasswordLoginDtoTest {
+@ExtendWith(MockitoExtension.class)
+@DisplayName("PasswordEncoderConfiguration unit tests")
+class PasswordEncoderConfigurationTest {
 
-  @Test
-  void buildComment_ValidComment_Builds() {
-    for (final String userName : TestConstants.STRINGS) {
-      for (final String password : TestConstants.STRINGS) {
-        final PasswordLoginDto passwordLoginDto = new PasswordLoginDto(userName, password);
-        assertThat(passwordLoginDto.getUserName()).hasToString(userName);
-        assertThat(passwordLoginDto.getPassword()).hasToString(password);
-      }
-    }
-  }
+  final PasswordEncoderConfiguration passwordEncoderConfiguration = new PasswordEncoderConfiguration();
 
   @Test
-  void equals_EqualsVerifier_AsExpected() {
-    EqualsVerifier.forClass(PasswordLoginDto.class).withIgnoredAnnotations(NotNull.class).verify();
-  }
-
-  @Test
-  void toString_ValidData_AsExpected() {
-    final PasswordLoginDto passwordLoginDto = new PasswordLoginDto("loginName", "password");
-    assertThat(passwordLoginDto).hasToString("PasswordLoginDto(userName=loginName, password=password)");
+  @DisplayName("Can get the bcrypt password encoder")
+  void passwordEncoder_ReturnsBryptEncoder() {
+    assertThat(passwordEncoderConfiguration.passwordEncoder()).isInstanceOf(BCryptPasswordEncoder.class);
   }
 }

@@ -26,10 +26,12 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.Value;
 import lombok.With;
+import lombok.experimental.Accessors;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -38,6 +40,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @With
 @Document
+@Getter
 public class Submission implements Serializable {
 
   private static final long serialVersionUID = -5485881248601955741L;
@@ -57,7 +60,10 @@ public class Submission implements Serializable {
   LocalDateTime time;
 
   @JsonProperty("isValid")
-  boolean isValid;
+  @NonNull
+  @Accessors(fluent = true)
+  @Builder.Default
+  Boolean isValid = false;
 
   @ToString.Exclude
   String flag;
