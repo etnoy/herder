@@ -156,7 +156,7 @@ public class SubmissionService {
 
     return flagHandler // Check if flag is correct
       .verifyFlag(userId, moduleId, flag)
-      .map(isValid -> submissionBuilder.isValid(isValid))
+      .map(submissionBuilder::isValid)
       // Has this module been solved by this user? In that case, throw exception.
       .filterWhen(u -> validSubmissionDoesNotExistByUserIdAndModuleId(userId, moduleId))
       .switchIfEmpty(

@@ -37,6 +37,7 @@ import org.owasp.herder.it.util.IntegrationTestUtils;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleRepository;
 import org.owasp.herder.module.ModuleService;
+import org.owasp.herder.scoring.SanitizedRankedSubmission;
 import org.owasp.herder.scoring.SolverType;
 import org.owasp.herder.scoring.Submission;
 import org.owasp.herder.scoring.SubmissionRepository;
@@ -137,10 +138,14 @@ class SubmissionServiceIT extends BaseIT {
       .create(submissionService.findAllRankedByModuleLocator(TestConstants.TEST_MODULE_LOCATOR))
       .recordWith(ArrayList::new)
       .thenConsumeWhile(x -> true)
-      .consumeRecordedWith(rankedSubmissions -> {
-        assertThat(rankedSubmissions).extracting("id").containsExactly(teamId, userId2);
-        assertThat(rankedSubmissions).extracting("principalType").containsExactly(SolverType.TEAM, SolverType.USER);
-        assertThat(rankedSubmissions).extracting("rank").containsExactly(1L, 2L);
+      .consumeRecordedWith(sanitizedRankedSubmissions -> {
+        assertThat(sanitizedRankedSubmissions)
+          .extracting(SanitizedRankedSubmission::getId)
+          .containsExactly(teamId, userId2);
+        assertThat(sanitizedRankedSubmissions)
+          .extracting(SanitizedRankedSubmission::getSolverType)
+          .containsExactly(SolverType.TEAM, SolverType.USER);
+        assertThat(sanitizedRankedSubmissions).extracting(SanitizedRankedSubmission::getRank).containsExactly(1L, 2L);
       })
       .verifyComplete();
   }
