@@ -38,6 +38,7 @@ import org.owasp.herder.validation.ValidModuleBonusScores;
 import org.owasp.herder.validation.ValidModuleId;
 import org.owasp.herder.validation.ValidModuleLocator;
 import org.owasp.herder.validation.ValidModuleName;
+import org.owasp.herder.validation.ValidModuleTags;
 import org.owasp.herder.validation.ValidTeamId;
 import org.owasp.herder.validation.ValidUserId;
 import org.springframework.stereotype.Service;
@@ -220,8 +221,10 @@ public class ModuleService {
       .flatMap(moduleRepository::save);
   }
 
-  // TODO: validate tags
-  public Mono<Void> setTags(@ValidModuleId final String moduleId, final Multimap<String, String> tags) {
+  public Mono<Void> setTags(
+    @ValidModuleId final String moduleId,
+    @ValidModuleTags final Multimap<String, String> tags
+  ) {
     return getById(moduleId).map(module -> module.withTags(tags)).flatMap(moduleRepository::save).then();
   }
 
