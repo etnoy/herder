@@ -34,6 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.module.ModuleService;
 import org.owasp.herder.scoring.SanitizedRankedSubmission;
 import org.owasp.herder.scoring.ScoreboardController;
+import org.owasp.herder.scoring.ScoreboardEntry;
 import org.owasp.herder.scoring.ScoreboardService;
 import org.owasp.herder.scoring.SubmissionService;
 import org.owasp.herder.test.BaseTest;
@@ -80,6 +81,22 @@ class ScoreboardControllerTest extends BaseTest {
       .create(scoreboardController.getScoreboardByUserId(TestConstants.TEST_USER_ID))
       .expectNext(rankedSubmission1)
       .expectNext(rankedSubmission2)
+      .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can get scoreboard")
+  void getScoreboard_SubmissionsExist_ReturnsScoreboard() {
+    final ScoreboardEntry scoreboardEntry1 = mock(ScoreboardEntry.class);
+    final ScoreboardEntry scoreboardEntry2 = mock(ScoreboardEntry.class);
+
+    final Flux<ScoreboardEntry> scoreboard = Flux.just(scoreboardEntry1, scoreboardEntry2);
+    when(scoreboardService.getScoreboard()).thenReturn(scoreboard);
+
+    StepVerifier
+      .create(scoreboardController.getScoreboard())
+      .expectNext(scoreboardEntry1)
+      .expectNext(scoreboardEntry2)
       .verifyComplete();
   }
 

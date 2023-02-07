@@ -41,6 +41,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.crypto.KeyService;
 import org.owasp.herder.exception.DuplicateModuleLocatorException;
+import org.owasp.herder.exception.DuplicateModuleNameException;
 import org.owasp.herder.exception.ModuleNotFoundException;
 import org.owasp.herder.module.ModuleEntity;
 import org.owasp.herder.module.ModuleList;
@@ -107,6 +108,18 @@ class ModuleServiceTest extends BaseTest {
     verify(moduleRepository).save(argument.capture());
     assertThat(argument.getValue().getName()).isEqualTo(TestConstants.TEST_MODULE_NAME);
     assertThat(argument.getValue().getLocator()).isEqualTo(TestConstants.TEST_MODULE_LOCATOR);
+  }
+
+  @Test
+  @DisplayName("Can error when creating a module with duplicate module name")
+  void create_ModuleNameExists_Errors() {
+    when(moduleRepository.findByLocator(TestConstants.TEST_MODULE_LOCATOR)).thenReturn(Mono.empty());
+    when(moduleRepository.findByName(TestConstants.TEST_MODULE_NAME)).thenReturn(Mono.just(mock(ModuleEntity.class)));
+
+    StepVerifier
+      .create(moduleService.create(TestConstants.TEST_MODULE_NAME, TestConstants.TEST_MODULE_LOCATOR))
+      .expectError(DuplicateModuleNameException.class)
+      .verify();
   }
 
   @Test
