@@ -21,6 +21,7 @@
  */
 package org.owasp.herder.test.service;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,12 +36,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.herder.authentication.AuthenticationManager;
 import org.owasp.herder.authentication.SecurityContextRepository;
 import org.owasp.herder.test.BaseTest;
+import org.owasp.herder.test.util.TestConstants;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -89,7 +93,6 @@ class SecurityContextRepositoryTest extends BaseTest {
   @Test
   @DisplayName("Can load security context")
   void load_ValidHeader_ReturnsSecurityContext() {
-    final Long mockUserId = 581L;
     final ServerWebExchange mockServerWebExchange = mock(ServerWebExchange.class);
 
     final String token = "authToken";
@@ -106,7 +109,7 @@ class SecurityContextRepositoryTest extends BaseTest {
     );
 
     final Authentication mockAuthentication = new UsernamePasswordAuthenticationToken(
-      mockUserId,
+      TestConstants.TEST_USER_ID,
       token,
       mockAuthorities
     );
@@ -118,6 +121,31 @@ class SecurityContextRepositoryTest extends BaseTest {
       .create(securityContextRepository.load(mockServerWebExchange).map(SecurityContext::getAuthentication))
       .expectNext(mockAuthentication)
       .verifyComplete();
+  }
+
+  @Test
+  @DisplayName("Can error if authentication fails when loading security context")
+  void load_FailedAuthentication_ReturnsForbidden() {
+    final ServerWebExchange mockServerWebExchange = mock(ServerWebExchange.class);
+
+    final String token = "authToken";
+
+    final ServerHttpRequest mockServerHttpRequest = mock(ServerHttpRequest.class);
+    when(mockServerWebExchange.getRequest()).thenReturn(mockServerHttpRequest);
+    final HttpHeaders mockHttpHeaders = mock(HttpHeaders.class);
+    when(mockServerHttpRequest.getHeaders()).thenReturn(mockHttpHeaders);
+    final String mockAuthorizationHeader = "Bearer " + token;
+    when(mockHttpHeaders.getFirst(HttpHeaders.AUTHORIZATION)).thenReturn(mockAuthorizationHeader);
+
+    when(authenticationManager.authenticate(any()))
+      .thenReturn(Mono.error(new BadCredentialsException("Wrong password")));
+
+    StepVerifier
+      .create(securityContextRepository.load(mockServerWebExchange))
+      .expectErrorMatches(throwable ->
+        throwable instanceof ResponseStatusException && throwable.getMessage().contains("Wrong password")
+      )
+      .verify();
   }
 
   @Test
