@@ -80,14 +80,12 @@ public class LoginController {
   @PostMapping(path = "/impersonate")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @SecurityRequirement(name = "bearerAuth")
-  public Mono<ResponseEntity<LoginResponse>> impersonate(
-    @Valid @RequestBody final ImpersonationDto impersonatedUserId
-  ) {
+  public Mono<ResponseEntity<LoginResponse>> impersonate(@Valid @RequestBody final ImpersonationDto impersonationDto) {
     final LoginResponseBuilder loginResponseBuilder = LoginResponse.builder();
     return controllerAuthentication
       .getUserId()
-      .map(userId -> webTokenService.generateImpersonationToken(userId, impersonatedUserId.getImpersonatedId(), false))
-      .zipWith(userService.getById(impersonatedUserId.getImpersonatedId()))
+      .map(userId -> webTokenService.generateImpersonationToken(userId, impersonationDto.getImpersonatedId(), false))
+      .zipWith(userService.getById(impersonationDto.getImpersonatedId()))
       .map(tuple -> {
         final LoginResponse loginResponse = loginResponseBuilder
           .accessToken(tuple.getT1())
