@@ -50,11 +50,15 @@ import org.springframework.validation.annotation.Validated;
 @RequiredArgsConstructor
 public class WebTokenService {
 
-  private static final String IMPERSONATOR = "impersonator";
+  private static final String IMPERSONATOR_CLAIM = "impersonator";
 
-  private static final String ADMIN = "admin";
+  private static final String ADMIN_ROLE = "admin";
 
-  private static final String HERDER = "herder";
+  private static final String USER_ROLE = "user";
+
+  private static final String ROLE_CLAIM = "role";
+
+  private static final String HERDER_ISSUER = "herder";
 
   private final WebTokenKeyManager webTokenKeyManager;
 
@@ -79,15 +83,15 @@ public class WebTokenService {
     String role;
 
     if (isAdmin) {
-      role = ADMIN;
+      role = ADMIN_ROLE;
     } else {
-      role = "user";
+      role = USER_ROLE;
     }
 
     return Jwts
       .builder()
-      .claim("role", role)
-      .setIssuer(HERDER)
+      .claim(ROLE_CLAIM, role)
+      .setIssuer(HERDER_ISSUER)
       .setSubject(userId)
       .setIssuedAt(creationTime)
       .setExpiration(expirationTime)
@@ -104,17 +108,17 @@ public class WebTokenService {
     final Date expirationTime = new Date(creationTime.getTime() + getExpirationTime());
     final Key userKey = webTokenKeyManager.getOrGenerateKeyForUser(impersonatorUserId);
 
-    String role = "user";
+    String role = USER_ROLE;
 
     if (impersonateAnAdmin) {
-      role = ADMIN;
+      role = ADMIN_ROLE;
     }
 
     return Jwts
       .builder()
-      .claim("role", role)
-      .claim(IMPERSONATOR, impersonatorUserId)
-      .setIssuer(HERDER)
+      .claim(ROLE_CLAIM, role)
+      .claim(IMPERSONATOR_CLAIM, impersonatorUserId)
+      .setIssuer(HERDER_ISSUER)
       .setSubject(impersonatedUserId)
       .setIssuedAt(creationTime)
       .setExpiration(expirationTime)
@@ -134,8 +138,8 @@ public class WebTokenService {
               public Key resolveSigningKey(@SuppressWarnings("rawtypes") JwsHeader header, Claims claims) {
                 String subjectId;
 
-                if (claims.containsKey(IMPERSONATOR)) {
-                  subjectId = claims.get(IMPERSONATOR, String.class);
+                if (claims.containsKey(IMPERSONATOR_CLAIM)) {
+                  subjectId = claims.get(IMPERSONATOR_CLAIM, String.class);
                 } else {
                   subjectId = claims.getSubject();
                 }
@@ -148,7 +152,7 @@ public class WebTokenService {
               }
             }
           )
-          .requireIssuer(HERDER)
+          .requireIssuer(HERDER_ISSUER)
           .setClock(webTokenClock)
           .build()
           .parseClaimsJws(token)
@@ -161,21 +165,14 @@ public class WebTokenService {
 
     final String userId = parsedClaims.getSubject();
 
-    if (userId == null || userId.isEmpty()) {
-      final String userIdErrorMessage = "Invalid userid " + userId + " found in token";
-
-      log.debug(userIdErrorMessage);
-      throw new BadCredentialsException(userIdErrorMessage);
-    }
-
-    final String role = parsedClaims.get("role", String.class);
+    final String role = parsedClaims.get(ROLE_CLAIM, String.class);
 
     ArrayList<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-    if (role.equals(ADMIN)) {
+    if (role.equals(ADMIN_ROLE)) {
       authorities.add(new SimpleGrantedAuthority(Role.ROLE_ADMIN.name()));
       authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
-    } else if (role.equals("user")) {
+    } else if (role.equals(USER_ROLE)) {
       authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
     } else {
       // Invalid role found, bail out

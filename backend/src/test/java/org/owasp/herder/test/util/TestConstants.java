@@ -21,6 +21,9 @@
  */
 package org.owasp.herder.test.util;
 
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import java.security.Key;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -151,6 +154,8 @@ public final class TestConstants {
   // The password "test" hashed with BCrypt
   public static final String HASHED_TEST_PASSWORD = "$2y$12$53B6QcsGwF3Os1GVFUFSQOhIPXnWFfuEkRJdbknFWnkXfUBMUKhaW";
 
+  public static final Key TEST_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+
   public static final String TEST_MODULE_LOCATOR = "test-module";
   public static final String TEST_MODULE_ID = "abcdef123456789012345678";
   public static final String TEST_MODULE_NAME = "Test Module";
@@ -172,10 +177,10 @@ public final class TestConstants {
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
   public static final Clock YEAR_2000_CLOCK = Clock.fixed(Instant.parse("2000-01-01T10:00:00.00Z"), ZoneId.of("Z"));
-  public static final WebTokenClock year2000WebTokenClock = new WebTokenClock(YEAR_2000_CLOCK);
+  public static final WebTokenClock YEAR_2000_WEB_TOKEN_CLOCK = new WebTokenClock(YEAR_2000_CLOCK);
 
   public static final Clock YEAR_2100_CLOCK = Clock.fixed(Instant.parse("2100-01-01T10:00:00.00Z"), ZoneId.of("Z"));
-  public static final WebTokenClock year2100WebTokenClock = new WebTokenClock(YEAR_2100_CLOCK);
+  public static final WebTokenClock YEAR_2100_WEB_TOKEN_CLOCK = new WebTokenClock(YEAR_2100_CLOCK);
 
   public static Stream<String> testStringProvider() {
     return Stream.of(STRINGS);
